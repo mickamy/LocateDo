@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mickamy/LocateDo/config"
-	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mickamy/LocateDo/config"
+	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 )
 
 func TestNew(t *testing.T) {

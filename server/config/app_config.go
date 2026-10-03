@@ -48,6 +48,10 @@ func (e Env) IsProduction() bool {
 
 type LogLevel string
 
+func (l LogLevel) String() string {
+	return string(l)
+}
+
 const (
 	LogLevelDebug LogLevel = "debug"
 	LogLevelInfo  LogLevel = "info"

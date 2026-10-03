@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/caarlos0/env/v11"
+
 	"github.com/mickamy/LocateDo/internal/lib/validator"
 )
 

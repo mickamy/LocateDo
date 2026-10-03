@@ -13,9 +13,6 @@ formatters:
 
 linters:
   default: all
-  enable:
-    - deadmut
-    - pointless
   settings:
     errcheck:
       exclude-functions:
