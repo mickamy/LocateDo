@@ -1,0 +1,9 @@
+place.add.title:
+  comment: "Title of the add-place screen"
+todo.remaining:
+  comment: "Shown on the place card"
+permission.always:
+  comment: "Always-on location prompt"
+  platforms: [ios]
+permission.android_background:
+  platforms: [android]

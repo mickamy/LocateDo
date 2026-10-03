@@ -1,0 +1,18 @@
+app:
+  name: "LocateDo"
+place:
+  add:
+    title: "場所を追加"
+  distance: "{distance} 先"
+todo:
+  remaining:
+    plural:
+      other: "{place} に残り {count} 件"
+  assigned: "{owner} の {count} 件を {assignee} が担当"
+  progress: "{percent}% 完了"
+  quote: "「100% 終わった」と言って去った"
+  multiline: "1 行目\n2 行目"
+  url: "https://locatedo.app/help を参照"
+permission:
+  always: "到着時にお知らせするため、バックグラウンドでの位置情報が必要です。"
+  android_background: "到着時の通知のため「常に許可」を選んでください。"

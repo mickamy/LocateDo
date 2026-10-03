@@ -1,0 +1,21 @@
+app:
+  name: "LocateDo"
+place:
+  add:
+    title: "Add a place"
+  distance: "{distance} away"
+todo:
+  remaining:
+    plural:
+      one: "{count:int} item left at {place}"
+      other: "{count:int} items left at {place}"
+  assigned: "{assignee} took {count:int} items from {owner}"
+  progress: "{percent:int}% done"
+  quote: "She said \"it's 100% done\" & left <3"
+  multiline: "Line one\nLine two"
+  url: "See https://locatedo.app/help"
+permission:
+  always: "LocateDo needs your location in the background to remind you when you arrive."
+  android_background: "Allow all the time to get reminders when you arrive."
+share:
+  cta: "Share with your household"
