@@ -6,21 +6,93 @@ on:
       - "server/**"
       - ".github/workflows/server-ci.yml"
 
+concurrency:
+  group: server-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: server
+
 jobs:
   test:
     name: go test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      db:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: locatedo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U admin -d locatedo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: |
+            server/go.sum
+            server/tools/go.sum
+      - run: make .env
+      - run: make db-migrate
+      - run: make test
 
   lint:
     name: golangci-lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.14.0
+          working-directory: server
+
+  generate:
+    name: generated code is current
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: |
+            server/go.sum
+            server/tools/go.sum
+      - run: make .env
+      - run: make gen-sqlc gen-mapper gen-di
+      - name: Check for changes
+        run: |
+          git add -N .
+          git diff --exit-code --stat -- .
 
   tidy:
     name: go mod tidy
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: |
+            server/go.sum
+            server/tools/go.sum
+      - run: go mod tidy
+      - run: go mod tidy
+        working-directory: server/tools
+      - name: Check for changes
+        run: git diff --exit-code -- go.mod go.sum tools/go.mod tools/go.sum
