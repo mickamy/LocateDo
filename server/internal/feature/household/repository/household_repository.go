@@ -19,6 +19,11 @@ type Household interface {
 	Create(ctx context.Context, id, ownerID uuid.UUID) (model.Household, error)
 	Find(ctx context.Context, id uuid.UUID) (model.Household, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	// MoveContents moves places, todos, and custom categories from one
+	// household to another; places in a built-in category switch to the
+	// destination's category with the same key, or become uncategorized. Call
+	// it on a bound repository: it defers foreign-key checks to commit.
+	MoveContents(ctx context.Context, from, to uuid.UUID) error
 	Bind(tx tx.Tx) Household
 }
 
@@ -75,6 +80,37 @@ func (r household) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 	if n == 0 {
 		return aerrors.NotFound("household")
+	}
+	return nil
+}
+
+func (r household) MoveContents(ctx context.Context, from, to uuid.UUID) error {
+	if err := r.q.DeferConstraints(ctx); err != nil {
+		return fmt.Errorf("defer constraints: %w", err)
+	}
+	if err := r.q.RemapBuiltinCategories(ctx, queries.RemapBuiltinCategoriesParams{
+		FromHouseholdID: from,
+		ToHouseholdID:   to,
+	}); err != nil {
+		return fmt.Errorf("remap built-in categories: %w", err)
+	}
+	if err := r.q.MoveCustomCategories(ctx, queries.MoveCustomCategoriesParams{
+		FromHouseholdID: from,
+		ToHouseholdID:   to,
+	}); err != nil {
+		return fmt.Errorf("move custom categories: %w", err)
+	}
+	if err := r.q.MovePlaces(ctx, queries.MovePlacesParams{
+		FromHouseholdID: from,
+		ToHouseholdID:   to,
+	}); err != nil {
+		return fmt.Errorf("move places: %w", err)
+	}
+	if err := r.q.MoveTodos(ctx, queries.MoveTodosParams{
+		FromHouseholdID: from,
+		ToHouseholdID:   to,
+	}); err != nil {
+		return fmt.Errorf("move todos: %w", err)
 	}
 	return nil
 }

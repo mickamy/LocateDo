@@ -44,3 +44,33 @@ SET accepted_by = sqlc.arg(accepted_by),
 WHERE token_hash = sqlc.arg(token_hash)
   AND accepted_at IS NULL
 RETURNING id, household_id, created_by, expires_at;
+
+-- name: DeferConstraints :exec
+SET CONSTRAINTS ALL DEFERRED;
+
+-- name: RemapBuiltinCategories :exec
+UPDATE places p
+SET category_id = t.id
+FROM categories o
+         LEFT JOIN categories t
+                   ON t.household_id = sqlc.arg(to_household_id)
+                       AND t.builtin_key = o.builtin_key
+WHERE p.household_id = sqlc.arg(from_household_id)
+  AND p.category_id = o.id
+  AND o.builtin_key IS NOT NULL;
+
+-- name: MoveCustomCategories :exec
+UPDATE categories
+SET household_id = sqlc.arg(to_household_id)
+WHERE household_id = sqlc.arg(from_household_id)
+  AND builtin_key IS NULL;
+
+-- name: MovePlaces :exec
+UPDATE places
+SET household_id = sqlc.arg(to_household_id)
+WHERE household_id = sqlc.arg(from_household_id);
+
+-- name: MoveTodos :exec
+UPDATE todos
+SET household_id = sqlc.arg(to_household_id)
+WHERE household_id = sqlc.arg(from_household_id);

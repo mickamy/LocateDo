@@ -127,6 +127,15 @@ func (q *Queries) CreateMembership(ctx context.Context, arg CreateMembershipPara
 	return err
 }
 
+const deferConstraints = `-- name: DeferConstraints :exec
+SET CONSTRAINTS ALL DEFERRED
+`
+
+func (q *Queries) DeferConstraints(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deferConstraints)
+	return err
+}
+
 const deleteHousehold = `-- name: DeleteHousehold :execrows
 DELETE
 FROM households
@@ -209,4 +218,75 @@ func (q *Queries) GetMembershipByUser(ctx context.Context, userID uuid.UUID) (Ge
 		&i.JoinedAt,
 	)
 	return i, err
+}
+
+const moveCustomCategories = `-- name: MoveCustomCategories :exec
+UPDATE categories
+SET household_id = $1
+WHERE household_id = $2
+  AND builtin_key IS NULL
+`
+
+type MoveCustomCategoriesParams struct {
+	ToHouseholdID   uuid.UUID
+	FromHouseholdID uuid.UUID
+}
+
+func (q *Queries) MoveCustomCategories(ctx context.Context, arg MoveCustomCategoriesParams) error {
+	_, err := q.db.Exec(ctx, moveCustomCategories, arg.ToHouseholdID, arg.FromHouseholdID)
+	return err
+}
+
+const movePlaces = `-- name: MovePlaces :exec
+UPDATE places
+SET household_id = $1
+WHERE household_id = $2
+`
+
+type MovePlacesParams struct {
+	ToHouseholdID   uuid.UUID
+	FromHouseholdID uuid.UUID
+}
+
+func (q *Queries) MovePlaces(ctx context.Context, arg MovePlacesParams) error {
+	_, err := q.db.Exec(ctx, movePlaces, arg.ToHouseholdID, arg.FromHouseholdID)
+	return err
+}
+
+const moveTodos = `-- name: MoveTodos :exec
+UPDATE todos
+SET household_id = $1
+WHERE household_id = $2
+`
+
+type MoveTodosParams struct {
+	ToHouseholdID   uuid.UUID
+	FromHouseholdID uuid.UUID
+}
+
+func (q *Queries) MoveTodos(ctx context.Context, arg MoveTodosParams) error {
+	_, err := q.db.Exec(ctx, moveTodos, arg.ToHouseholdID, arg.FromHouseholdID)
+	return err
+}
+
+const remapBuiltinCategories = `-- name: RemapBuiltinCategories :exec
+UPDATE places p
+SET category_id = t.id
+FROM categories o
+         LEFT JOIN categories t
+                   ON t.household_id = $2
+                       AND t.builtin_key = o.builtin_key
+WHERE p.household_id = $1
+  AND p.category_id = o.id
+  AND o.builtin_key IS NOT NULL
+`
+
+type RemapBuiltinCategoriesParams struct {
+	FromHouseholdID uuid.UUID
+	ToHouseholdID   uuid.UUID
+}
+
+func (q *Queries) RemapBuiltinCategories(ctx context.Context, arg RemapBuiltinCategoriesParams) error {
+	_, err := q.db.Exec(ctx, remapBuiltinCategories, arg.FromHouseholdID, arg.ToHouseholdID)
+	return err
 }
