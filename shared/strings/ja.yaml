@@ -12,10 +12,50 @@ common:
   edit: "編集"
   delete: "削除"
   more: "その他"
+onboarding:
+  tagline: "行く場所が、やることを思い出させる。"
+  description: "よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。"
+  permissions: "そのために位置情報の許可をお願いします。"
+  start: "はじめる"
+  notifications_title: "着いたらお知らせ"
+  notifications_description: "未完了の TODO がある場所に着くと、通知でお知らせします。"
+  allow_notifications: "通知を許可"
+  later: "あとで"
+always_prompt:
+  title: "アプリを閉じていてもお知らせ"
+  description: "アプリを閉じている間も到着に気づくには、位置情報を「常に許可」にする必要があります。あとから設定で変更できます。"
+  allow: "「常に許可」にする"
+  later: "あとで"
+settings:
+  location:
+    title: "位置情報"
+    always: "常に許可"
+    when_in_use: "使用中のみ"
+    denied: "許可されていません"
+    not_determined: "未設定"
+    needs_always: "アプリを閉じている間も到着をお知らせするには「常に許可」が必要です。"
+    allow: "位置情報を許可"
+  notifications:
+    title: "通知"
+    authorized: "許可"
+    denied: "許可されていません"
+    not_determined: "未設定"
+    needs_allow: "到着のお知らせは通知で届きます。"
+    allow: "通知を許可"
+  open_settings: "設定を開く"
+  default_radius:
+    title: "新しい場所"
+    label: "通知の範囲（半径）の初期値"
+  about:
+    title: "このアプリについて"
+    version: "バージョン"
 home:
   nearby_summary:
     plural:
       other: "現在地の近くに {count} 件の TODO があります"
+  permission_banner:
+    location: "アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。"
+    notifications: "お知らせを受け取るには、通知を許可してください。"
   empty:
     title: "場所がまだありません"
     message: "場所を追加すると、着いたときにお知らせします。"

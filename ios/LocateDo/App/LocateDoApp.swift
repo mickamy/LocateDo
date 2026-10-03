@@ -5,6 +5,7 @@ import SwiftUI
 struct LocateDoApp: App {
     private let container: ModelContainer
     private let router = AppRouter()
+    private let preferences = AppPreferences()
     private let locationProvider = LocationProvider()
     private let notifier: ArrivalNotifier
     private let geofence: GeofenceMonitor
@@ -32,6 +33,7 @@ struct LocateDoApp: App {
         }
         .modelContainer(container)
         .environment(router)
+        .environment(preferences)
         .environment(locationProvider)
         .environment(notifier)
         .environment(geofence)

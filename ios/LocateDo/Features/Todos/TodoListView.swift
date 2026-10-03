@@ -62,6 +62,7 @@ struct TodoListView: View {
                 isAddingTodo = true
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
     }
 

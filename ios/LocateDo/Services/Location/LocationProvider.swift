@@ -43,6 +43,10 @@ final class LocationProvider {
         }
     }
 
+    func refreshAuthorizationStatus() {
+        authorizationStatus = manager.authorizationStatus
+    }
+
     func stop() {
         updates?.cancel()
         updates = nil

@@ -3,10 +3,19 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(AppPreferences.self) private var preferences
 
     var body: some View {
+        if preferences.hasCompletedOnboarding {
+            tabs
+        } else {
+            OnboardingView()
+        }
+    }
+
+    private var tabs: some View {
         @Bindable var router = router
-        TabView(selection: $router.selectedTab) {
+        return TabView(selection: $router.selectedTab) {
             Tab(.tabHome, systemImage: "house", value: AppTab.home) {
                 NearbyView()
             }
@@ -31,6 +40,7 @@ struct RootView: View {
     RootView()
         .modelContainer(container)
         .environment(router)
+        .environment(AppPreferences(defaults: UserDefaults(suiteName: "preview")!))
         .environment(locationProvider)
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))

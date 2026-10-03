@@ -12,11 +12,51 @@ common:
   edit: "Edit"
   delete: "Delete"
   more: "More"
+onboarding:
+  tagline: "Where you go reminds you what to do."
+  description: "Add the places you visit and the things to do there. LocateDo reminds you when you arrive."
+  permissions: "LocateDo asks for your location to do that."
+  start: "Get started"
+  notifications_title: "Get notified when you arrive"
+  notifications_description: "LocateDo sends a notification when you arrive at a place that still has open to-dos."
+  allow_notifications: "Allow notifications"
+  later: "Not now"
+always_prompt:
+  title: "Remind you even when the app is closed"
+  description: "To notice when you arrive while LocateDo is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
+  allow: "Allow “Always”"
+  later: "Not now"
+settings:
+  location:
+    title: "Location"
+    always: "Always"
+    when_in_use: "While using the app"
+    denied: "Not allowed"
+    not_determined: "Not asked yet"
+    needs_always: "Arrival reminders need “Always” so LocateDo can notice when you arrive while it is closed."
+    allow: "Allow location"
+  notifications:
+    title: "Notifications"
+    authorized: "Allowed"
+    denied: "Not allowed"
+    not_determined: "Not asked yet"
+    needs_allow: "Reminders are delivered as notifications."
+    allow: "Allow notifications"
+  open_settings: "Open Settings"
+  default_radius:
+    title: "New places"
+    label: "Default notification radius"
+  about:
+    title: "About"
+    version: "Version"
 home:
   nearby_summary:
     plural:
       one: "{count:int} to-do near you"
       other: "{count:int} to-dos near you"
+  permission_banner:
+    location: "Allow “Always” location to get reminders while the app is closed."
+    notifications: "Allow notifications to get reminders."
   empty:
     title: "No places yet"
     message: "Add a place to get reminded when you arrive."

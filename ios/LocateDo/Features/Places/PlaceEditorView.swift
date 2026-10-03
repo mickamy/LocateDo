@@ -6,22 +6,22 @@ import SwiftUI
 struct PlaceEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(LocationProvider.self) private var locationProvider
-    @Environment(ArrivalNotifier.self) private var notifier
     @Environment(GeofenceMonitor.self) private var geofence
 
     let place: Place?
+    var onSave: (() -> Void)?
     @State private var name: String
     @State private var coordinate: CLLocationCoordinate2D?
     @State private var radiusMeters: Double
     @State private var category: PlaceCategory
     @State private var isPickingLocation = false
 
-    init(place: Place? = nil) {
+    init(place: Place? = nil, defaultRadiusMeters: Double = Place.defaultRadiusMeters, onSave: (() -> Void)? = nil) {
         self.place = place
+        self.onSave = onSave
         _name = State(initialValue: place?.name ?? "")
         _coordinate = State(initialValue: place?.coordinate)
-        _radiusMeters = State(initialValue: place?.radiusMeters ?? Place.defaultRadiusMeters)
+        _radiusMeters = State(initialValue: place?.radiusMeters ?? defaultRadiusMeters)
         _category = State(initialValue: place?.category ?? .other)
     }
 
@@ -140,10 +140,9 @@ struct PlaceEditorView: View {
             ))
         }
         try? modelContext.save()
+        onSave?()
         dismiss()
         Task {
-            locationProvider.requestAlwaysAuthorization()
-            await notifier.requestAuthorization()
             await geofence.sync()
         }
     }
