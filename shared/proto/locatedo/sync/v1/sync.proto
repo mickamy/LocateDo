@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package locatedo.sync.v1;
+
+import "buf/validate/validate.proto";
+import "locatedo/category/v1/category.proto";
+import "locatedo/household/v1/household.proto";
+import "locatedo/place/v1/place.proto";
+import "locatedo/todo/v1/todo.proto";
+
+service SyncService {
+  // Returns every change in the household after cursor, ordered by version.
+  rpc Pull(PullRequest) returns (PullResponse);
+}
+
+enum EntityKind {
+  ENTITY_KIND_UNSPECIFIED = 0;
+  ENTITY_KIND_MEMBERSHIP = 1;
+  ENTITY_KIND_CATEGORY = 2;
+  ENTITY_KIND_PLACE = 3;
+  ENTITY_KIND_TODO = 4;
+}
+
+// A row that was deleted. For memberships, id is the user_id.
+message Deletion {
+  EntityKind kind = 1;
+  string id = 2;
+  int64 version = 3;
+}
+
+message Change {
+  oneof kind {
+    locatedo.household.v1.Membership membership = 1;
+    locatedo.category.v1.Category category = 2;
+    locatedo.place.v1.Place place = 3;
+    locatedo.todo.v1.Todo todo = 4;
+    Deletion deletion = 5;
+  }
+}
+
+message PullRequest {
+  string household_id = 1 [(buf.validate.field).string.uuid = true];
+  // 0 for a first sync.
+  int64 cursor = 2 [(buf.validate.field).int64.gte = 0];
+}
+
+message PullResponse {
+  repeated Change changes = 1;
+  // The household version the changes were read at. Send it as the next cursor.
+  int64 cursor = 2;
+  // The given cursor is older than the retained tombstones. changes holds the
+  // full current state; drop local data for the household before applying it.
+  bool reset = 3;
+}

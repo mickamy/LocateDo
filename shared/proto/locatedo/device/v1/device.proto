@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package locatedo.device.v1;
+
+import "buf/validate/validate.proto";
+
+service DeviceService {
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+}
+
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  PLATFORM_IOS = 1;
+  PLATFORM_ANDROID = 2;
+}
+
+message RegisterDeviceRequest {
+  Platform platform = 1 [(buf.validate.field).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+  string push_token = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 4096
+  }];
+}
+
+message RegisterDeviceResponse {}

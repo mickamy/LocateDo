@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package locatedo.place.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+service PlaceService {
+  // Creates or overwrites a place. The last write to reach the server wins.
+  rpc PutPlace(PutPlaceRequest) returns (PutPlaceResponse);
+  // Deletes the place and its todos.
+  rpc DeletePlace(DeletePlaceRequest) returns (DeletePlaceResponse);
+}
+
+message Place {
+  string id = 1;
+  string household_id = 2;
+  string name = 3;
+  double lat = 4;
+  double lng = 5;
+  int32 radius_m = 6;
+  optional string category_id = 7;
+  int32 sort_order = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  int64 version = 10;
+}
+
+message PlaceInput {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  double lat = 3 [(buf.validate.field).double = {
+    gte: -90
+    lte: 90
+  }];
+  double lng = 4 [(buf.validate.field).double = {
+    gte: -180
+    lte: 180
+  }];
+  int32 radius_m = 5 [(buf.validate.field).int32 = {
+    gte: 50
+    lte: 500
+  }];
+  optional string category_id = 6 [(buf.validate.field).string.uuid = true];
+  int32 sort_order = 7;
+}
+
+message PutPlaceRequest {
+  string household_id = 1 [(buf.validate.field).string.uuid = true];
+  PlaceInput place = 2 [(buf.validate.field).required = true];
+}
+
+message PutPlaceResponse {}
+
+message DeletePlaceRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message DeletePlaceResponse {}

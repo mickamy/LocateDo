@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package locatedo.household.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "locatedo/category/v1/category.proto";
+import "locatedo/place/v1/place.proto";
+import "locatedo/todo/v1/todo.proto";
+
+service HouseholdService {
+  // Creates the caller's household from the data the device built while signed
+  // out. Everything is written in one transaction, or nothing is.
+  rpc CreateHousehold(CreateHouseholdRequest) returns (CreateHouseholdResponse);
+  // Pro households only. The token is valid for 72 hours.
+  rpc CreateInvite(CreateInviteRequest) returns (CreateInviteResponse);
+  // The invitee does not need Pro.
+  rpc AcceptInvite(AcceptInviteRequest) returns (AcceptInviteResponse);
+  // Removes a member, or leaves when user_id is the caller.
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
+}
+
+enum Plan {
+  PLAN_UNSPECIFIED = 0;
+  PLAN_FREE = 1;
+  PLAN_PRO = 2;
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_OWNER = 1;
+  ROLE_MEMBER = 2;
+}
+
+message Household {
+  string id = 1;
+  string owner_id = 2;
+  Plan plan = 3;
+}
+
+message Membership {
+  string household_id = 1;
+  string user_id = 2;
+  Role role = 3;
+  string display_name = 4;
+  google.protobuf.Timestamp joined_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  int64 version = 7;
+}
+
+message InitialTodo {
+  locatedo.todo.v1.TodoInput todo = 1 [(buf.validate.field).required = true];
+  optional google.protobuf.Timestamp completed_at = 2;
+}
+
+message CreateHouseholdRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  repeated locatedo.category.v1.CategoryInput categories = 2 [(buf.validate.field).repeated.max_items = 100];
+  repeated locatedo.place.v1.PlaceInput places = 3 [(buf.validate.field).repeated.max_items = 1000];
+  repeated InitialTodo todos = 4 [(buf.validate.field).repeated.max_items = 10000];
+}
+
+message CreateHouseholdResponse {
+  Household household = 1;
+}
+
+message CreateInviteRequest {
+  string household_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message CreateInviteResponse {
+  string token = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+message AcceptInviteRequest {
+  string token = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message AcceptInviteResponse {
+  Household household = 1;
+}
+
+message RemoveMemberRequest {
+  string household_id = 1 [(buf.validate.field).string.uuid = true];
+  string user_id = 2 [(buf.validate.field).string.uuid = true];
+}
+
+message RemoveMemberResponse {}

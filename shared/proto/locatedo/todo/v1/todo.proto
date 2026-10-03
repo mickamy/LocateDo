@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package locatedo.todo.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+service TodoService {
+  // Creates or overwrites a todo's content. Completion is left untouched, so an
+  // edit never undoes another member's completion.
+  rpc PutTodo(PutTodoRequest) returns (PutTodoResponse);
+  rpc SetTodoCompletion(SetTodoCompletionRequest) returns (SetTodoCompletionResponse);
+  rpc DeleteTodo(DeleteTodoRequest) returns (DeleteTodoResponse);
+}
+
+message Todo {
+  string id = 1;
+  string household_id = 2;
+  string place_id = 3;
+  string title = 4;
+  optional string assignee_id = 5;
+  optional google.protobuf.Timestamp completed_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+  int64 version = 8;
+}
+
+message TodoInput {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string place_id = 2 [(buf.validate.field).string.uuid = true];
+  string title = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 200
+  }];
+  optional string assignee_id = 4 [(buf.validate.field).string.uuid = true];
+}
+
+message PutTodoRequest {
+  string household_id = 1 [(buf.validate.field).string.uuid = true];
+  TodoInput todo = 2 [(buf.validate.field).required = true];
+}
+
+message PutTodoResponse {}
+
+message SetTodoCompletionRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  // When the todo was completed on the device. Unset reopens it.
+  optional google.protobuf.Timestamp completed_at = 2;
+}
+
+message SetTodoCompletionResponse {}
+
+message DeleteTodoRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message DeleteTodoResponse {}

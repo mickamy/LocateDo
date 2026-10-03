@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package locatedo.account.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+service AccountService {
+  rpc SignInWithApple(SignInWithAppleRequest) returns (SignInWithAppleResponse);
+  rpc SignInWithGoogle(SignInWithGoogleRequest) returns (SignInWithGoogleResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+}
+
+message Session {
+  string user_id = 1;
+  string access_token = 2;
+  google.protobuf.Timestamp access_token_expires_at = 3;
+  string refresh_token = 4;
+  bool new_user = 5;
+}
+
+message SignInWithAppleRequest {
+  string identity_token = 1 [(buf.validate.field).string.min_len = 1];
+  optional string display_name = 2 [(buf.validate.field).string.max_len = 100];
+}
+
+message SignInWithAppleResponse {
+  Session session = 1;
+}
+
+message SignInWithGoogleRequest {
+  string id_token = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message SignInWithGoogleResponse {
+  Session session = 1;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message RefreshTokenResponse {
+  Session session = 1;
+}
+
+message DeleteAccountRequest {}
+
+message DeleteAccountResponse {}
