@@ -68,11 +68,25 @@ CREATE TABLE memberships
     joined_at    timestamptz NOT NULL DEFAULT now(),
     updated_at   timestamptz NOT NULL,
     version      bigint      NOT NULL,
-    PRIMARY KEY (household_id, user_id)
+    PRIMARY KEY (household_id, user_id),
+    UNIQUE (user_id)
 );
 
-CREATE INDEX memberships_user_id_idx ON memberships (user_id);
 CREATE INDEX memberships_household_id_version_idx ON memberships (household_id, version);
+
+CREATE TABLE household_invites
+(
+    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
+    household_id uuid        NOT NULL REFERENCES households (id) ON DELETE CASCADE,
+    token_hash   bytea       NOT NULL UNIQUE,
+    created_by   uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    expires_at   timestamptz NOT NULL,
+    accepted_by  uuid REFERENCES users (id) ON DELETE SET NULL,
+    accepted_at  timestamptz,
+    created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX household_invites_household_id_idx ON household_invites (household_id);
 
 CREATE TABLE categories
 (
@@ -144,6 +158,7 @@ CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
 
 -- +goose Down
 DROP TABLE deletions;
+DROP TABLE household_invites;
 DROP TABLE todos;
 DROP TABLE places;
 DROP TABLE categories;
