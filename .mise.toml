@@ -1,0 +1,6 @@
+[tools]
+actionlint = "1.7.12"
+buf = "1.73.0"
+golangci-lint = "2.14.0"
+pinact = "5.0.0"
+swiftlint = "0.65.1"
