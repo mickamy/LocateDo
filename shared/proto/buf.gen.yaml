@@ -9,19 +9,11 @@ managed:
   override:
     - file_option: go_package_prefix
       value: github.com/mickamy/LocateDo/internal/gen
+clean: true
 plugins:
-  # Go server: messages + Connect handlers/clients
   - remote: buf.build/protocolbuffers/go:v1.36.12
     out: ../../server/internal/gen
     opt: paths=source_relative
   - remote: buf.build/connectrpc/go:v1.21.0
     out: ../../server/internal/gen
     opt: paths=source_relative
-  # iOS app: messages + Connect clients (async/await only)
-  - remote: buf.build/apple/swift:v1.38.1
-    out: ../../ios/LocateDo/Generated
-  - remote: buf.build/connectrpc/swift:v1.2.3
-    out: ../../ios/LocateDo/Generated
-    opt:
-      - GenerateAsyncMethods=true
-      - GenerateCallbackMethods=false

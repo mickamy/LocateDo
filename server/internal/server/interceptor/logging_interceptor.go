@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"connectrpc.com/connect"
+
 	"github.com/mickamy/LocateDo/config"
 	"github.com/mickamy/LocateDo/internal/lib/execution"
 	"github.com/mickamy/LocateDo/internal/lib/logger"

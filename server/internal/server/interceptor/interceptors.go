@@ -3,6 +3,7 @@ package interceptor
 import (
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
+
 	"github.com/mickamy/LocateDo/internal/di"
 )
 

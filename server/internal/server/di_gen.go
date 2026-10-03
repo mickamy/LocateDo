@@ -4,6 +4,13 @@ package server
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
+	"github.com/mickamy/LocateDo/internal/feature/account/handler"
+	handler3 "github.com/mickamy/LocateDo/internal/feature/category/handler"
+	handler6 "github.com/mickamy/LocateDo/internal/feature/device/handler"
+	handler2 "github.com/mickamy/LocateDo/internal/feature/household/handler"
+	handler4 "github.com/mickamy/LocateDo/internal/feature/place/handler"
+	handler7 "github.com/mickamy/LocateDo/internal/feature/sync/handler"
+	handler5 "github.com/mickamy/LocateDo/internal/feature/todo/handler"
 	"github.com/mickamy/LocateDo/internal/server/health"
 )
 
@@ -12,8 +19,22 @@ func NewHandlers(infra di.Infra) *Handlers {
 	writer := infra.Writer
 	reader := infra.Reader
 	health2 := health.NewHealth(writer, reader)
+	account := handler.NewAccount()
+	household := handler2.NewHousehold()
+	category := handler3.NewCategory()
+	place := handler4.NewPlace()
+	todo := handler5.NewTodo()
+	device := handler6.NewDevice()
+	sync := handler7.NewSync()
 
 	return &Handlers{
-		Health: health2,
+		Health:    health2,
+		Account:   account,
+		Household: household,
+		Category:  category,
+		Place:     place,
+		Todo:      todo,
+		Device:    device,
+		Sync:      sync,
 	}
 }

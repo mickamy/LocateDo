@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"connectrpc.com/connect"
+
 	"github.com/mickamy/LocateDo/internal/lib/logger"
 )
 
