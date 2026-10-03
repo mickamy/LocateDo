@@ -3,6 +3,7 @@ export ENV MODULE_ROOT DATABASE_URL DATABASE_WRITER_URL DATABASE_READER_URL
 
 BUILD_DIR = bin
 GOOSE = go tool -modfile=tools/go.mod goose -dir internal/infra/storage/db/migrate/sql
+SQLC = go tool -modfile=tools/go.mod sqlc
 DB_USER = admin
 DB_NAME = locatedo
 
@@ -87,6 +88,9 @@ gen-buf:
 
 gen-go:
 	go generate ./...
+
+gen-sqlc:
+	$(SQLC) generate
 
 new-migration:
 	@if [ -z "$(name)" ]; then \
