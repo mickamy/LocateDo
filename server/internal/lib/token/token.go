@@ -72,15 +72,16 @@ func (s Signer) VerifyAccess(raw string, now time.Time) (uuid.UUID, error) {
 	return userID, nil
 }
 
-// NewRefresh returns an opaque token for the client and the hash to store.
-func NewRefresh() (string, []byte) {
+// NewOpaque returns a random token for the client and the hash to store;
+// refresh tokens and household invites both use it.
+func NewOpaque() (string, []byte) {
 	b := make([]byte, refreshByteLen)
 	_, _ = rand.Read(b)
 	raw := base64.RawURLEncoding.EncodeToString(b)
-	return raw, HashRefresh(raw)
+	return raw, HashOpaque(raw)
 }
 
-func HashRefresh(raw string) []byte {
+func HashOpaque(raw string) []byte {
 	sum := sha256.Sum256([]byte(raw))
 	return sum[:]
 }

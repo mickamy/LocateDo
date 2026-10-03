@@ -220,6 +220,90 @@ func (q *Queries) GetMembershipByUser(ctx context.Context, userID uuid.UUID) (Ge
 	return i, err
 }
 
+const importCategory = `-- name: ImportCategory :exec
+INSERT INTO categories (id, household_id, builtin_key, name, icon, color, sort_order)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+`
+
+type ImportCategoryParams struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	BuiltinKey  *string
+	Name        *string
+	Icon        string
+	Color       string
+	SortOrder   int32
+}
+
+func (q *Queries) ImportCategory(ctx context.Context, arg ImportCategoryParams) error {
+	_, err := q.db.Exec(ctx, importCategory,
+		arg.ID,
+		arg.HouseholdID,
+		arg.BuiltinKey,
+		arg.Name,
+		arg.Icon,
+		arg.Color,
+		arg.SortOrder,
+	)
+	return err
+}
+
+const importPlace = `-- name: ImportPlace :exec
+INSERT INTO places (id, household_id, name, lat, lng, radius_m, category_id, sort_order)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+`
+
+type ImportPlaceParams struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	Name        string
+	Lat         float64
+	Lng         float64
+	RadiusM     int32
+	CategoryID  *uuid.UUID
+	SortOrder   int32
+}
+
+func (q *Queries) ImportPlace(ctx context.Context, arg ImportPlaceParams) error {
+	_, err := q.db.Exec(ctx, importPlace,
+		arg.ID,
+		arg.HouseholdID,
+		arg.Name,
+		arg.Lat,
+		arg.Lng,
+		arg.RadiusM,
+		arg.CategoryID,
+		arg.SortOrder,
+	)
+	return err
+}
+
+const importTodo = `-- name: ImportTodo :exec
+INSERT INTO todos (id, household_id, place_id, title, assignee_id, completed_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type ImportTodoParams struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	PlaceID     uuid.UUID
+	Title       string
+	AssigneeID  *uuid.UUID
+	CompletedAt *time.Time
+}
+
+func (q *Queries) ImportTodo(ctx context.Context, arg ImportTodoParams) error {
+	_, err := q.db.Exec(ctx, importTodo,
+		arg.ID,
+		arg.HouseholdID,
+		arg.PlaceID,
+		arg.Title,
+		arg.AssigneeID,
+		arg.CompletedAt,
+	)
+	return err
+}
+
 const moveCustomCategories = `-- name: MoveCustomCategories :exec
 UPDATE categories
 SET household_id = $1

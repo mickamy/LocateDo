@@ -35,7 +35,7 @@ type RefreshToken struct {
 
 func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTokenOutput, error) {
 	now := clock.Now(ctx)
-	hash := token.HashRefresh(in.RefreshToken)
+	hash := token.HashOpaque(in.RefreshToken)
 
 	var session model.Session
 	// Set when the request is refused but the transaction must still commit,

@@ -74,3 +74,15 @@ WHERE household_id = sqlc.arg(from_household_id);
 UPDATE todos
 SET household_id = sqlc.arg(to_household_id)
 WHERE household_id = sqlc.arg(from_household_id);
+
+-- name: ImportCategory :exec
+INSERT INTO categories (id, household_id, builtin_key, name, icon, color, sort_order)
+VALUES ($1, $2, $3, $4, $5, $6, $7);
+
+-- name: ImportPlace :exec
+INSERT INTO places (id, household_id, name, lat, lng, radius_m, category_id, sort_order)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+
+-- name: ImportTodo :exec
+INSERT INTO todos (id, household_id, place_id, title, assignee_id, completed_at)
+VALUES ($1, $2, $3, $4, $5, $6);

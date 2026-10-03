@@ -20,7 +20,7 @@ func startSession(
 	userID, familyID uuid.UUID,
 	now time.Time,
 ) (model.Session, error) {
-	raw, hash := token.NewRefresh()
+	raw, hash := token.NewOpaque()
 	err := tokens.Create(ctx, model.RefreshToken{
 		UserID:    userID,
 		FamilyID:  familyID,

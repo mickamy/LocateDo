@@ -10,7 +10,9 @@ var (
 	ErrConflict     = errors.New("already exists")
 	ErrPrecondition = errors.New("precondition failed")
 
-	ErrUnauthenticated = errors.New("unauthenticated")
+	ErrUnauthenticated  = errors.New("unauthenticated")
+	ErrPermissionDenied = errors.New("permission denied")
+	ErrInvalidArgument  = errors.New("invalid argument")
 )
 
 func NotFound(entity string) error {
@@ -27,4 +29,12 @@ func Precondition(detail string) error {
 
 func Unauthenticated(detail string) error {
 	return fmt.Errorf("%s: %w", detail, ErrUnauthenticated)
+}
+
+func PermissionDenied(detail string) error {
+	return fmt.Errorf("%s: %w", detail, ErrPermissionDenied)
+}
+
+func InvalidArgument(detail string) error {
+	return fmt.Errorf("%s: %w", detail, ErrInvalidArgument)
 }

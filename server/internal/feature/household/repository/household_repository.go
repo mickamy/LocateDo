@@ -24,6 +24,10 @@ type Household interface {
 	// destination's category with the same key, or become uncategorized. Call
 	// it on a bound repository: it defers foreign-key checks to commit.
 	MoveContents(ctx context.Context, from, to uuid.UUID) error
+	// Import writes categories, places, and todos into the household. A place
+	// or todo referring to a row that is neither imported nor already there
+	// is an invalid argument.
+	Import(ctx context.Context, householdID uuid.UUID, c model.Contents) error
 	Bind(tx tx.Tx) Household
 }
 
@@ -113,4 +117,61 @@ func (r household) MoveContents(ctx context.Context, from, to uuid.UUID) error {
 		return fmt.Errorf("move todos: %w", err)
 	}
 	return nil
+}
+
+func (r household) Import(ctx context.Context, householdID uuid.UUID, c model.Contents) error {
+	for _, cat := range c.Categories {
+		err := r.q.ImportCategory(ctx, queries.ImportCategoryParams{
+			ID:          cat.ID,
+			HouseholdID: householdID,
+			BuiltinKey:  cat.BuiltinKey,
+			Name:        cat.Name,
+			Icon:        cat.Icon,
+			Color:       cat.Color,
+			SortOrder:   cat.SortOrder,
+		})
+		if err != nil {
+			return importError("category", cat.ID, err)
+		}
+	}
+	for _, p := range c.Places {
+		err := r.q.ImportPlace(ctx, queries.ImportPlaceParams{
+			ID:          p.ID,
+			HouseholdID: householdID,
+			Name:        p.Name,
+			Lat:         p.Lat,
+			Lng:         p.Lng,
+			RadiusM:     p.RadiusM,
+			CategoryID:  p.CategoryID,
+			SortOrder:   p.SortOrder,
+		})
+		if err != nil {
+			return importError("place", p.ID, err)
+		}
+	}
+	for _, t := range c.Todos {
+		err := r.q.ImportTodo(ctx, queries.ImportTodoParams{
+			ID:          t.ID,
+			HouseholdID: householdID,
+			PlaceID:     t.PlaceID,
+			Title:       t.Title,
+			AssigneeID:  t.AssigneeID,
+			CompletedAt: t.CompletedAt,
+		})
+		if err != nil {
+			return importError("todo", t.ID, err)
+		}
+	}
+	return nil
+}
+
+func importError(kind string, id uuid.UUID, err error) error {
+	switch {
+	case db.IsForeignKeyViolation(err):
+		return aerrors.InvalidArgument(fmt.Sprintf("%s %s refers to an unknown row", kind, id))
+	case db.IsUniqueViolation(err):
+		return aerrors.Conflict(fmt.Sprintf("%s %s", kind, id))
+	default:
+		return fmt.Errorf("import %s %s: %w", kind, id, err)
+	}
 }

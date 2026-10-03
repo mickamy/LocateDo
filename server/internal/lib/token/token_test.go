@@ -92,18 +92,18 @@ func TestSigner_VerifyAccess_rejects(t *testing.T) {
 	}
 }
 
-func TestNewRefresh(t *testing.T) {
+func TestNewOpaque(t *testing.T) {
 	t.Parallel()
 
 	// act
-	raw1, hash1 := token.NewRefresh()
-	raw2, hash2 := token.NewRefresh()
+	raw1, hash1 := token.NewOpaque()
+	raw2, hash2 := token.NewOpaque()
 
 	// assert
 	assert.Len(t, raw1, 43)
 	assert.NotEqual(t, raw1, raw2)
 	assert.NotEqual(t, hash1, hash2)
-	assert.Equal(t, hash1, token.HashRefresh(raw1))
+	assert.Equal(t, hash1, token.HashOpaque(raw1))
 	assert.NotContains(t, string(hash1), raw1)
 }
 
