@@ -1,0 +1,66 @@
+default_platform(:ios)
+
+APP_IDENTIFIER = "com.locatedo.LocateDo"
+PROJECT = "LocateDo.xcodeproj"
+SCHEME = "LocateDo"
+
+platform :ios do
+  desc "Create the App ID (with push notifications) and the App Store Connect record"
+  lane :bootstrap do
+    api_key
+    produce(
+      app_identifier: APP_IDENTIFIER,
+      app_name: "LocateDo",
+      language: "en-US",
+      sku: "locatedo-ios",
+      enable_services: { push_notification: "on" }
+    )
+  end
+
+  desc "Create or sync the distribution certificate and App Store profile through match"
+  lane :certificates do
+    api_key
+    match(type: "appstore")
+  end
+
+  desc "Build a signed archive and upload it to TestFlight"
+  lane :beta do
+    setup_ci if is_ci
+    api_key
+    match(type: "appstore", readonly: true)
+
+    build_number = latest_testflight_build_number(initial_build_number: 0) + 1
+    update_code_signing_settings(
+      path: PROJECT,
+      targets: [SCHEME],
+      build_configurations: ["Release"],
+      use_automatic_signing: false,
+      code_sign_identity: "Apple Distribution",
+      profile_name: ENV.fetch("sigh_#{APP_IDENTIFIER}_appstore_profile-name")
+    )
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      xcargs: "CURRENT_PROJECT_VERSION=#{build_number}"
+    )
+    upload_to_testflight(
+      changelog: changelog_from_git_commits(
+        commits_count: 10,
+        pretty: "- %s",
+        merge_commit_filtering: "exclude_merges"
+      )
+    )
+  end
+
+  private_lane :api_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+      is_key_content_base64: true
+    )
+  end
+end

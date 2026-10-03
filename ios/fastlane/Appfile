@@ -1,0 +1,2 @@
+app_identifier("com.locatedo.LocateDo")
+team_id(ENV.fetch("APPLE_TEAM_ID"))

@@ -58,3 +58,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# fastlane (local)
+fastlane/.env*
+!fastlane/.env.example
+
+# gym output
+build/
