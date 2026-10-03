@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"

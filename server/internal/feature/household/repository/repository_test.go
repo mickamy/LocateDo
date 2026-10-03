@@ -3,8 +3,8 @@ package repository_test
 import (
 	"testing"
 	"time"
+	"uuid"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,7 +24,7 @@ func TestHousehold_createFindDelete(t *testing.T) {
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
 	ownerID := createUser(t, d)
-	id := uuid.Must(uuid.NewV7())
+	id := uuid.NewV7()
 
 	// act
 	var created model.Household
@@ -180,7 +180,7 @@ func createUser(t *testing.T, d tdb.DB) uuid.UUID {
 func createHousehold(t *testing.T, d tdb.DB, households repository.Household, ownerID uuid.UUID) uuid.UUID {
 	t.Helper()
 
-	id := uuid.Must(uuid.NewV7())
+	id := uuid.NewV7()
 	inTx(t, d, func(tx tx.Tx) {
 		_, err := households.Bind(tx).Create(t.Context(), id, ownerID)
 		require.NoError(t, err)

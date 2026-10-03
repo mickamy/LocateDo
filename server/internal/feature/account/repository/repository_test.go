@@ -3,8 +3,8 @@ package repository_test
 import (
 	"testing"
 	"time"
+	"uuid"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -91,7 +91,7 @@ func TestRefreshToken_useOnce(t *testing.T) {
 	d := tdb.New(t)
 	u := createUser(t, d, repository.NewUser(d.Reader), "apple-sub")
 	tokens := repository.NewRefreshToken(d.Reader)
-	familyID := uuid.Must(uuid.NewV7())
+	familyID := uuid.NewV7()
 	hash := []byte("hash-1")
 	inTx(t, d, func(tx tx.Tx) {
 		require.NoError(t, tokens.Bind(tx).Create(t.Context(), model.RefreshToken{
@@ -131,8 +131,8 @@ func TestRefreshToken_RevokeFamily(t *testing.T) {
 	d := tdb.New(t)
 	u := createUser(t, d, repository.NewUser(d.Reader), "apple-sub")
 	tokens := repository.NewRefreshToken(d.Reader)
-	revoked := uuid.Must(uuid.NewV7())
-	kept := uuid.Must(uuid.NewV7())
+	revoked := uuid.NewV7()
+	kept := uuid.NewV7()
 	inTx(t, d, func(tx tx.Tx) {
 		for i, family := range []uuid.UUID{revoked, revoked, kept} {
 			require.NoError(t, tokens.Bind(tx).Create(t.Context(), model.RefreshToken{
@@ -176,7 +176,7 @@ func TestAppleToken_saveAndFind(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []byte("sealed-2"), got)
 
-	_, err = apple.Find(t.Context(), uuid.Must(uuid.NewV7()))
+	_, err = apple.Find(t.Context(), uuid.NewV7())
 	require.ErrorIs(t, err, aerrors.ErrNotFound)
 }
 
@@ -192,7 +192,7 @@ func TestUser_Delete_cascadesTokens(t *testing.T) {
 	inTx(t, d, func(tx tx.Tx) {
 		require.NoError(t, tokens.Bind(tx).Create(t.Context(), model.RefreshToken{
 			UserID:    u.ID,
-			FamilyID:  uuid.Must(uuid.NewV7()),
+			FamilyID:  uuid.NewV7(),
 			ExpiresAt: now.Add(time.Hour),
 		}, []byte("hash")))
 		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, []byte("sealed")))

@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 const (
@@ -62,12 +62,12 @@ func (s Signer) VerifyAccess(raw string, now time.Time) (uuid.UUID, error) {
 		jwt.WithTimeFunc(func() time.Time { return now }),
 	)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("%w: %w", ErrInvalid, err)
+		return uuid.Nil(), fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
 
 	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("%w: subject: %w", ErrInvalid, err)
+		return uuid.Nil(), fmt.Errorf("%w: subject: %w", ErrInvalid, err)
 	}
 	return userID, nil
 }

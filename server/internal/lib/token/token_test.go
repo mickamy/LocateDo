@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -34,7 +34,7 @@ func TestSigner_roundTrip(t *testing.T) {
 
 	// arrange
 	signer := mustSigner(t, testKey)
-	userID := uuid.Must(uuid.NewV7())
+	userID := uuid.NewV7()
 
 	// act
 	raw, expiresAt, err := signer.IssueAccess(userID, now)
@@ -50,7 +50,7 @@ func TestSigner_roundTrip(t *testing.T) {
 func TestSigner_VerifyAccess_rejects(t *testing.T) {
 	t.Parallel()
 
-	userID := uuid.Must(uuid.NewV7())
+	userID := uuid.NewV7()
 	valid := issue(t, testKey, userID)
 
 	tests := []struct {

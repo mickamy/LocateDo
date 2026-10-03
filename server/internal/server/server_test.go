@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+	"uuid"
 
 	"connectrpc.com/connect"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -125,7 +125,7 @@ func newTestServer(t *testing.T) (*httptest.Server, di.Lib) {
 func accessToken(t *testing.T, lib di.Lib, now time.Time) string {
 	t.Helper()
 
-	raw, _, err := lib.Signer.IssueAccess(uuid.Must(uuid.NewV7()), now)
+	raw, _, err := lib.Signer.IssueAccess(uuid.NewV7(), now)
 	require.NoError(t, err)
 	return raw
 }

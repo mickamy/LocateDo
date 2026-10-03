@@ -3,8 +3,7 @@ package caller
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type contextKey struct{}

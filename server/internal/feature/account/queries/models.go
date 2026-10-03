@@ -7,7 +7,7 @@ package queries
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type User struct {

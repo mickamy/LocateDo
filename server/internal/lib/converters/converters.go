@@ -2,9 +2,9 @@ package converters
 
 import (
 	"time"
+	"uuid"
 
 	"github.com/go-kanna/kanna/mapper"
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

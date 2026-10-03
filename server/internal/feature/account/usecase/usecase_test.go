@@ -7,8 +7,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"uuid"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -240,7 +240,7 @@ func TestDeleteAccount_unknownUser(t *testing.T) {
 
 	e := newEnv(t)
 
-	err := e.deleteAccount.Do(e.ctx, usecase.DeleteAccountInput{UserID: uuid.Must(uuid.NewV7())})
+	err := e.deleteAccount.Do(e.ctx, usecase.DeleteAccountInput{UserID: uuid.NewV7()})
 
 	require.ErrorIs(t, err, aerrors.ErrNotFound)
 	assert.Empty(t, e.apple.revokedTokens())

@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
@@ -69,7 +68,7 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 			return fmt.Errorf("save apple token: %w", err)
 		}
 
-		session, err = startSession(ctx, uc.tokens.Bind(tx), uc.signer, user.ID, uuid.Must(uuid.NewV7()), now)
+		session, err = startSession(ctx, uc.tokens.Bind(tx), uc.signer, user.ID, uuid.NewV7(), now)
 		if err != nil {
 			return err
 		}

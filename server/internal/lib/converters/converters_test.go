@@ -3,8 +3,8 @@ package converters_test
 import (
 	"testing"
 	"time"
+	"uuid"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mickamy/LocateDo/internal/lib/converters"
