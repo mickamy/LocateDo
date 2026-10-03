@@ -15,8 +15,18 @@ struct LocateDoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            if Self.isRunningTests {
+                EmptyView()
+            } else {
+                RootView()
+            }
         }
         .modelContainer(container)
+    }
+
+    // The unit test host must not trigger location prompts or start location updates.
+    private static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["XCTestBundlePath"] != nil
     }
 }

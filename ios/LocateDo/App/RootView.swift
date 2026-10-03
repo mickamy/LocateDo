@@ -1,6 +1,9 @@
+import SwiftData
 import SwiftUI
 
 struct RootView: View {
+    @State private var locationProvider = LocationProvider()
+
     var body: some View {
         TabView {
             Tab(.tabHome, systemImage: "house") {
@@ -16,9 +19,11 @@ struct RootView: View {
                 SettingsView()
             }
         }
+        .environment(locationProvider)
     }
 }
 
 #Preview {
     RootView()
+        .modelContainer(try! AppModelContainer.make(inMemory: true))
 }

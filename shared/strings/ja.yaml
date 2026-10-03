@@ -5,6 +5,36 @@ tab:
   map: "マップ"
   todos: "TODO"
   settings: "設定"
+common:
+  cancel: "キャンセル"
+  save: "保存"
+  done: "完了"
+  edit: "編集"
+home:
+  nearby_summary:
+    plural:
+      other: "現在地の近くに {count} 件の TODO があります"
+  empty:
+    title: "場所がまだありません"
+    message: "場所を追加すると、着いたときにお知らせします。"
+  add_place: "場所を追加"
+place:
+  editor:
+    title_new: "場所を追加"
+    title_edit: "場所を編集"
+    name_label: "場所の名前"
+    name_placeholder: "例) 自宅、会社、スーパー"
+    location_label: "位置"
+    choose_on_map: "地図から選択"
+    no_location: "位置がまだ選ばれていません"
+    radius_label: "通知の範囲（半径）"
+    category_label: "カテゴリ"
+  picker:
+    title: "位置を選択"
+    search_placeholder: "場所を検索"
+    use_current_location: "現在地を使う"
+    use_this_location: "この位置にする"
+    selected: "選択した位置"
 category:
   shopping: "買い物"
   work: "仕事"

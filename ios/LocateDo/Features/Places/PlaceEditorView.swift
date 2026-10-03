@@ -1,0 +1,141 @@
+import CoreLocation
+import MapKit
+import SwiftData
+import SwiftUI
+
+struct PlaceEditorView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    let place: Place?
+    @State private var name: String
+    @State private var coordinate: CLLocationCoordinate2D?
+    @State private var radiusMeters: Double
+    @State private var category: PlaceCategory
+    @State private var isPickingLocation = false
+
+    init(place: Place? = nil) {
+        self.place = place
+        _name = State(initialValue: place?.name ?? "")
+        _coordinate = State(initialValue: place?.coordinate)
+        _radiusMeters = State(initialValue: place?.radiusMeters ?? Place.defaultRadiusMeters)
+        _category = State(initialValue: place?.category ?? .other)
+    }
+
+    private var canSave: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && coordinate != nil
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField(text: $name, prompt: Text(.placeEditorNamePlaceholder)) {
+                        Text(.placeEditorNameLabel)
+                    }
+                }
+                Section {
+                    if let coordinate {
+                        locationPreview(coordinate)
+                    } else {
+                        Text(.placeEditorNoLocation)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button(.placeEditorChooseOnMap, systemImage: "map") {
+                        isPickingLocation = true
+                    }
+                } header: {
+                    Text(.placeEditorLocationLabel)
+                }
+                Section {
+                    Slider(value: $radiusMeters, in: Place.radiusRange, step: 50)
+                    Text(DistanceFormatting.string(meters: radiusMeters))
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text(.placeEditorRadiusLabel)
+                }
+                Section {
+                    Picker(selection: $category) {
+                        ForEach(PlaceCategory.allCases) { category in
+                            Label(category.title, systemImage: category.systemImage)
+                                .tag(category)
+                        }
+                    } label: {
+                        Text(.placeEditorCategoryLabel)
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                } header: {
+                    Text(.placeEditorCategoryLabel)
+                }
+            }
+            .navigationTitle(Text(place == nil ? .placeEditorTitleNew : .placeEditorTitleEdit))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(.commonCancel) {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(.commonSave) {
+                        save()
+                    }
+                    .disabled(!canSave)
+                }
+            }
+            .sheet(isPresented: $isPickingLocation) {
+                PlacePickerMapView(initialCoordinate: coordinate) { picked, suggestedName in
+                    coordinate = picked
+                    if name.isEmpty, let suggestedName {
+                        name = suggestedName
+                    }
+                }
+            }
+        }
+    }
+
+    private func locationPreview(_ coordinate: CLLocationCoordinate2D) -> some View {
+        let region = MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: radiusMeters * 4,
+            longitudinalMeters: radiusMeters * 4
+        )
+        return Map(position: .constant(.region(region))) {
+            Marker(coordinate: coordinate) {
+                Text(.placePickerSelected)
+            }
+            MapCircle(center: coordinate, radius: radiusMeters)
+                .foregroundStyle(.blue.opacity(0.15))
+                .stroke(.blue, lineWidth: 1)
+        }
+        .frame(height: 160)
+        .allowsHitTesting(false)
+        .listRowInsets(EdgeInsets())
+    }
+
+    private func save() {
+        guard let coordinate else {
+            return
+        }
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        if let place {
+            place.name = trimmedName
+            place.latitude = coordinate.latitude
+            place.longitude = coordinate.longitude
+            place.radiusMeters = radiusMeters
+            place.category = category
+            place.updatedAt = .now
+        } else {
+            modelContext.insert(Place(
+                name: trimmedName,
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
+                radiusMeters: radiusMeters,
+                category: category
+            ))
+        }
+        dismiss()
+    }
+}

@@ -5,6 +5,37 @@ tab:
   map: "Map"
   todos: "To-Do"
   settings: "Settings"
+common:
+  cancel: "Cancel"
+  save: "Save"
+  done: "Done"
+  edit: "Edit"
+home:
+  nearby_summary:
+    plural:
+      one: "{count:int} to-do near you"
+      other: "{count:int} to-dos near you"
+  empty:
+    title: "No places yet"
+    message: "Add a place to get reminded when you arrive."
+  add_place: "Add a place"
+place:
+  editor:
+    title_new: "Add a place"
+    title_edit: "Edit place"
+    name_label: "Name"
+    name_placeholder: "e.g., Supermarket, Office"
+    location_label: "Location"
+    choose_on_map: "Choose on map"
+    no_location: "No location selected yet"
+    radius_label: "Notify within"
+    category_label: "Category"
+  picker:
+    title: "Choose a location"
+    search_placeholder: "Search for a place"
+    use_current_location: "Use current location"
+    use_this_location: "Use this location"
+    selected: "Selected location"
 category:
   shopping: "Shopping"
   work: "Work"
