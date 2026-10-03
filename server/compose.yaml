@@ -4,6 +4,12 @@ services:
       dockerfile: Dockerfile.dev
       args:
         BIN_NAME: api
+    env_file: .env
+    environment:
+      MODULE_ROOT: /src
+      DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
+      DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
+      DATABASE_READER_URL: postgres://locatedo_reader:password@db:5432/locatedo?sslmode=disable
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
@@ -18,6 +24,12 @@ services:
       dockerfile: Dockerfile.dev
       args:
         BIN_NAME: worker
+    env_file: .env
+    environment:
+      MODULE_ROOT: /src
+      DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
+      DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
+      DATABASE_READER_URL: postgres://locatedo_reader:password@db:5432/locatedo?sslmode=disable
     volumes:
       - .:/src
       - go:/go

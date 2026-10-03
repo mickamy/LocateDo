@@ -4,9 +4,16 @@ package server
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
+	"github.com/mickamy/LocateDo/internal/server/health"
 )
 
 // NewHandlers initializes dependencies and constructs Handlers.
 func NewHandlers(infra di.Infra) *Handlers {
-	return &Handlers{}
+	writer := infra.Writer
+	reader := infra.Reader
+	health2 := health.NewHealth(writer, reader)
+
+	return &Handlers{
+		Health: health2,
+	}
 }

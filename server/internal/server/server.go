@@ -10,6 +10,8 @@ import (
 func Handler(cfg di.Config, handlers Handlers) http.Handler {
 	mux := http.NewServeMux()
 
+	mux.Handle("GET /healthz", handlers.Health)
+
 	return mux
 }
 
