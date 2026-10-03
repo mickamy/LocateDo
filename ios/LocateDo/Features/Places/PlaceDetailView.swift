@@ -6,6 +6,8 @@ struct PlaceDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationProvider.self) private var locationProvider
+    @Environment(GeofenceMonitor.self) private var geofence
+    @Environment(ArrivalNotifier.self) private var notifier
 
     let place: Place
     @Query private var todos: [Todo]
@@ -81,6 +83,20 @@ struct PlaceDetailView: View {
                     Button(.placeDetailDelete, systemImage: "trash", role: .destructive) {
                         isConfirmingDelete = true
                     }
+                    #if DEBUG
+                    Button {
+                        Task {
+                            await notifier.requestAuthorization()
+                            await geofence.simulateArrival(at: place)
+                        }
+                    } label: {
+                        Label {
+                            Text(verbatim: "Simulate arrival (debug)")
+                        } icon: {
+                            Image(systemName: "location.fill.viewfinder")
+                        }
+                    }
+                    #endif
                 } label: {
                     Label(.commonMore, systemImage: "ellipsis.circle")
                 }
@@ -134,5 +150,9 @@ struct PlaceDetailView: View {
     private func deletePlace() {
         dismiss()
         modelContext.delete(place)
+        try? modelContext.save()
+        Task {
+            await geofence.sync()
+        }
     }
 }

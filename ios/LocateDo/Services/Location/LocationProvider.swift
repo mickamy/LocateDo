@@ -37,6 +37,12 @@ final class LocationProvider {
         }
     }
 
+    func requestAlwaysAuthorization() {
+        if manager.authorizationStatus == .authorizedWhenInUse {
+            manager.requestAlwaysAuthorization()
+        }
+    }
+
     func stop() {
         updates?.cancel()
         updates = nil

@@ -62,6 +62,11 @@ todo:
     all: "すべて"
     open: "未完了"
     done: "完了"
+notification:
+  arrived_title: "{place} に到着しました"
+  more:
+    plural:
+      other: "他 {count} 件"
 category:
   shopping: "買い物"
   work: "仕事"

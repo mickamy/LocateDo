@@ -6,6 +6,9 @@ import SwiftUI
 struct PlaceEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocationProvider.self) private var locationProvider
+    @Environment(ArrivalNotifier.self) private var notifier
+    @Environment(GeofenceMonitor.self) private var geofence
 
     let place: Place?
     @State private var name: String
@@ -136,6 +139,12 @@ struct PlaceEditorView: View {
                 category: category
             ))
         }
+        try? modelContext.save()
         dismiss()
+        Task {
+            locationProvider.requestAlwaysAuthorization()
+            await notifier.requestAuthorization()
+            await geofence.sync()
+        }
     }
 }

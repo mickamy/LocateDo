@@ -3,13 +3,22 @@ import SwiftUI
 
 @main
 struct LocateDoApp: App {
-    let container: ModelContainer
+    private let container: ModelContainer
+    private let router = AppRouter()
+    private let locationProvider = LocationProvider()
+    private let notifier: ArrivalNotifier
+    private let geofence: GeofenceMonitor
 
     init() {
         do {
             container = try AppModelContainer.make()
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
+        }
+        notifier = ArrivalNotifier(router: router)
+        geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
+        if !Self.isRunningTests {
+            geofence.start()
         }
     }
 
@@ -22,6 +31,10 @@ struct LocateDoApp: App {
             }
         }
         .modelContainer(container)
+        .environment(router)
+        .environment(locationProvider)
+        .environment(notifier)
+        .environment(geofence)
     }
 
     // The unit test host must not trigger location prompts or start location updates.

@@ -4,15 +4,17 @@ import SwiftUI
 
 struct NearbyView: View {
     @Environment(LocationProvider.self) private var locationProvider
+    @Environment(AppRouter.self) private var router
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @State private var isAddingPlace = false
+    @State private var path = NavigationPath()
 
     private var nearbyPlaces: [NearbyPlace] {
         Nearby.places(places, from: locationProvider.location)
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if places.isEmpty {
                     emptyState
@@ -39,7 +41,22 @@ struct NearbyView: View {
             .task {
                 locationProvider.start()
             }
+            .onChange(of: router.pendingPlaceID, initial: true) {
+                openPendingPlace()
+            }
+            .onChange(of: places.count) {
+                openPendingPlace()
+            }
         }
+    }
+
+    private func openPendingPlace() {
+        guard let placeID = router.pendingPlaceID,
+              let place = places.first(where: { $0.id == placeID }) else {
+            return
+        }
+        router.pendingPlaceID = nil
+        path = NavigationPath([place])
     }
 
     private var emptyState: some View {

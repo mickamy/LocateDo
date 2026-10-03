@@ -2,28 +2,36 @@ import SwiftData
 import SwiftUI
 
 struct RootView: View {
-    @State private var locationProvider = LocationProvider()
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
-        TabView {
-            Tab(.tabHome, systemImage: "house") {
+        @Bindable var router = router
+        TabView(selection: $router.selectedTab) {
+            Tab(.tabHome, systemImage: "house", value: AppTab.home) {
                 NearbyView()
             }
-            Tab(.tabMap, systemImage: "map") {
+            Tab(.tabMap, systemImage: "map", value: AppTab.map) {
                 MapTabView()
             }
-            Tab(.tabTodos, systemImage: "checklist") {
+            Tab(.tabTodos, systemImage: "checklist", value: AppTab.todos) {
                 TodoListView()
             }
-            Tab(.tabSettings, systemImage: "gearshape") {
+            Tab(.tabSettings, systemImage: "gearshape", value: AppTab.settings) {
                 SettingsView()
             }
         }
-        .environment(locationProvider)
     }
 }
 
 #Preview {
+    let container = try! AppModelContainer.make(inMemory: true)
+    let router = AppRouter()
+    let locationProvider = LocationProvider()
+    let notifier = ArrivalNotifier(router: router)
     RootView()
-        .modelContainer(try! AppModelContainer.make(inMemory: true))
+        .modelContainer(container)
+        .environment(router)
+        .environment(locationProvider)
+        .environment(notifier)
+        .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))
 }

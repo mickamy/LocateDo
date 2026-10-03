@@ -63,6 +63,12 @@ todo:
     all: "All"
     open: "Open"
     done: "Done"
+notification:
+  arrived_title: "You’re at {place}"
+  more:
+    plural:
+      one: "+{count:int} more"
+      other: "+{count:int} more"
 category:
   shopping: "Shopping"
   work: "Work"
