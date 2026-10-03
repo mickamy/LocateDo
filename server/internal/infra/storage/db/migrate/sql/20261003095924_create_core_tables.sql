@@ -16,6 +16,27 @@ CREATE TABLE user_identities
     UNIQUE (provider, subject)
 );
 
+CREATE TABLE refresh_tokens
+(
+    id         uuid PRIMARY KEY     DEFAULT uuidv7(),
+    user_id    uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    family_id  uuid        NOT NULL,
+    token_hash bytea       NOT NULL UNIQUE,
+    expires_at timestamptz NOT NULL,
+    used_at    timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX refresh_tokens_user_id_idx ON refresh_tokens (user_id);
+CREATE INDEX refresh_tokens_family_id_idx ON refresh_tokens (family_id);
+
+CREATE TABLE apple_tokens
+(
+    user_id                  uuid PRIMARY KEY     REFERENCES users (id) ON DELETE CASCADE,
+    refresh_token_ciphertext bytea       NOT NULL,
+    updated_at               timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE devices
 (
     id           uuid PRIMARY KEY     DEFAULT uuidv7(),
@@ -129,5 +150,7 @@ DROP TABLE categories;
 DROP TABLE memberships;
 DROP TABLE households;
 DROP TABLE devices;
+DROP TABLE apple_tokens;
+DROP TABLE refresh_tokens;
 DROP TABLE user_identities;
 DROP TABLE users;

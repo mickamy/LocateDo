@@ -100,11 +100,13 @@ func (x *Session) GetNewUser() bool {
 }
 
 type SignInWithAppleRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	IdentityToken string                 `protobuf:"bytes,1,opt,name=identity_token,json=identityToken,proto3" json:"identity_token,omitempty"`
-	DisplayName   *string                `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3,oneof" json:"display_name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	IdentityToken     string                 `protobuf:"bytes,1,opt,name=identity_token,json=identityToken,proto3" json:"identity_token,omitempty"`
+	DisplayName       *string                `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3,oneof" json:"display_name,omitempty"`
+	AuthorizationCode string                 `protobuf:"bytes,3,opt,name=authorization_code,json=authorizationCode,proto3" json:"authorization_code,omitempty"`
+	Nonce             string                 `protobuf:"bytes,4,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *SignInWithAppleRequest) Reset() {
@@ -147,6 +149,20 @@ func (x *SignInWithAppleRequest) GetIdentityToken() string {
 func (x *SignInWithAppleRequest) GetDisplayName() string {
 	if x != nil && x.DisplayName != nil {
 		return *x.DisplayName
+	}
+	return ""
+}
+
+func (x *SignInWithAppleRequest) GetAuthorizationCode() string {
+	if x != nil {
+		return x.AuthorizationCode
+	}
+	return ""
+}
+
+func (x *SignInWithAppleRequest) GetNonce() string {
+	if x != nil {
+		return x.Nonce
 	}
 	return ""
 }
@@ -453,10 +469,13 @@ const file_locatedo_account_v1_account_proto_rawDesc = "" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12Q\n" +
 	"\x17access_token_expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x14accessTokenExpiresAt\x12#\n" +
 	"\rrefresh_token\x18\x04 \x01(\tR\frefreshToken\x12\x19\n" +
-	"\bnew_user\x18\x05 \x01(\bR\anewUser\"\x8a\x01\n" +
+	"\bnew_user\x18\x05 \x01(\bR\anewUser\"\xe4\x01\n" +
 	"\x16SignInWithAppleRequest\x12.\n" +
 	"\x0eidentity_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\ridentityToken\x12/\n" +
-	"\fdisplay_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18dH\x00R\vdisplayName\x88\x01\x01B\x0f\n" +
+	"\fdisplay_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18dH\x00R\vdisplayName\x88\x01\x01\x126\n" +
+	"\x12authorization_code\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x11authorizationCode\x12 \n" +
+	"\x05nonce\x18\x04 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x10\x18\x80\x01R\x05nonceB\x0f\n" +
 	"\r_display_name\"Q\n" +
 	"\x17SignInWithAppleResponse\x126\n" +
 	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\"=\n" +
