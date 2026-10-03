@@ -93,6 +93,7 @@ func Analyze(catalogs []locale.Catalog, defaultLang string, meta locale.Meta) (M
 		diags = append(diags, crossCheck(messages, index, c)...)
 	}
 	diags = append(diags, checkMeta(meta, index)...)
+	diags = append(diags, checkInfoplist(messages, meta)...)
 	diags = append(diags, checkResourceNames(messages, def)...)
 	if HasErrors(diags) {
 		return Model{}, diags
@@ -214,6 +215,32 @@ func checkMeta(meta locale.Meta, index map[string]int) []Diag {
 			diags = append(diags, errorf(meta.File, meta.Entries[key].Line,
 				"meta: key %q does not exist in the default locale", key))
 		}
+	}
+	return diags
+}
+
+func checkInfoplist(messages []Message, meta locale.Meta) []Diag {
+	seen := make(map[string]string)
+	var diags []Diag
+	for _, msg := range messages {
+		plistKey := meta.Infoplist(msg.Key)
+		if plistKey == "" {
+			continue
+		}
+		line := meta.Entries[msg.Key].Line
+		switch {
+		case msg.Plural:
+			diags = append(diags, errorf(meta.File, line, "meta: key %q: infoplist strings cannot be plural", msg.Key))
+		case len(msg.Params) > 0:
+			diags = append(diags, errorf(meta.File, line,
+				"meta: key %q: infoplist strings cannot have placeholders", msg.Key))
+		}
+		if prev, ok := seen[plistKey]; ok {
+			diags = append(diags, errorf(meta.File, line,
+				"meta: keys %q and %q both map to Info.plist key %q", prev, msg.Key, plistKey))
+			continue
+		}
+		seen[plistKey] = msg.Key
 	}
 	return diags
 }

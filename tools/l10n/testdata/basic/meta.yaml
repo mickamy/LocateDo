@@ -4,6 +4,8 @@ todo.remaining:
   comment: "Shown on the place card"
 permission.always:
   comment: "Always-on location prompt"
-  platforms: [ios]
+  infoplist: NSLocationAlwaysAndWhenInUseUsageDescription
+permission.when_in_use:
+  infoplist: NSLocationWhenInUseUsageDescription
 permission.android_background:
   platforms: [android]

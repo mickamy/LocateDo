@@ -15,4 +15,5 @@ todo:
   url: "https://locatedo.app/help を参照"
 permission:
   always: "到着時にお知らせするため、バックグラウンドでの位置情報が必要です。"
+  when_in_use: "近くの場所を表示するために位置情報を使います。"
   android_background: "到着時の通知のため「常に許可」を選んでください。"

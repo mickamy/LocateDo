@@ -18,24 +18,6 @@
         }
       }
     },
-    "permission.always" : {
-      "comment" : "Always-on location prompt",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LocateDo needs your location in the background to remind you when you arrive."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "到着時にお知らせするため、バックグラウンドでの位置情報が必要です。"
-          }
-        }
-      }
-    },
     "place.add.title" : {
       "comment" : "Title of the add-place screen",
       "extractionState" : "manual",

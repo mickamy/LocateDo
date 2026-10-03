@@ -18,12 +18,13 @@ import (
 	"github.com/mickamy/LocateDo/tools/l10n/internal/xcstrings"
 )
 
-const usage = "usage: l10n <generate|check> -src <dir> -xcstrings <path> [-default <lang>]"
+const usage = "usage: l10n <generate|check> -src <dir> -xcstrings <path> [-infoplist <path>] [-default <lang>]"
 
 type options struct {
 	src         string
 	defaultLang string
 	xcstrings   string
+	infoplist   string
 }
 
 func main() {
@@ -71,6 +72,7 @@ func parseFlags(cmd string, args []string, stderr io.Writer) (options, error) {
 	fs.StringVar(&opts.src, "src", "", "directory holding <lang>.yaml files and meta.yaml")
 	fs.StringVar(&opts.defaultLang, "default", "en", "default language")
 	fs.StringVar(&opts.xcstrings, "xcstrings", "", "Localizable.xcstrings to generate")
+	fs.StringVar(&opts.infoplist, "infoplist", "", "InfoPlist.xcstrings to generate (required when meta uses infoplist)")
 	if err := fs.Parse(args); err != nil {
 		return options{}, fmt.Errorf("parse flags: %w", err)
 	}
@@ -93,7 +95,19 @@ func build(opts options) (map[string][]byte, []analyze.Diag, error) {
 	if analyze.HasErrors(diags) {
 		return nil, diags, nil
 	}
-	return map[string][]byte{opts.xcstrings: xcstrings.Generate(model)}, diags, nil
+	outputs := map[string][]byte{opts.xcstrings: xcstrings.Generate(model)}
+	if opts.infoplist != "" {
+		outputs[opts.infoplist] = xcstrings.GenerateInfoPlist(model)
+	} else if hasInfoplist(model) {
+		return nil, nil, errors.New("meta.yaml uses infoplist, so -infoplist is required")
+	}
+	return outputs, diags, nil
+}
+
+func hasInfoplist(model analyze.Model) bool {
+	return slices.ContainsFunc(model.Messages, func(msg analyze.Message) bool {
+		return model.Meta.Infoplist(msg.Key) != ""
+	})
 }
 
 func write(outputs map[string][]byte, stdout io.Writer) error {

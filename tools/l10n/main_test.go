@@ -124,6 +124,50 @@ func TestRun_errorsStopGenerate(t *testing.T) {
 	}
 }
 
+func TestRun_infoplist(t *testing.T) {
+	t.Parallel()
+
+	src := writeFixture(t, enSrc+"permission:\n  when_in_use: \"Shows places near you.\"\n",
+		jaSrc+"permission:\n  when_in_use: \"近くの場所を表示します。\"\n")
+	meta := "permission.when_in_use:\n  infoplist: NSLocationWhenInUseUsageDescription\n"
+	if err := os.WriteFile(filepath.Join(src, "meta.yaml"), []byte(meta), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	outDir := t.TempDir()
+	localizable := filepath.Join(outDir, "Localizable.xcstrings")
+	infoplist := filepath.Join(outDir, "InfoPlist.xcstrings")
+	var discard bytes.Buffer
+
+	err := l10n.Run([]string{"generate", "-src", src, "-xcstrings", localizable}, &discard, &discard)
+	if err == nil || !strings.Contains(err.Error(), "-infoplist is required") {
+		t.Errorf("generate without -infoplist: err = %v, want a required-flag error", err)
+	}
+
+	args := []string{"generate", "-src", src, "-xcstrings", localizable, "-infoplist", infoplist}
+	if err := l10n.Run(args, &discard, &discard); err != nil {
+		t.Fatalf("generate returned error: %v", err)
+	}
+	data, err := os.ReadFile(infoplist)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `"NSLocationWhenInUseUsageDescription" : {`) {
+		t.Errorf("InfoPlist.xcstrings does not contain the plist key:\n%s", data)
+	}
+	data, err = os.ReadFile(localizable)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "permission.when_in_use") {
+		t.Errorf("Localizable.xcstrings still contains the infoplist key:\n%s", data)
+	}
+
+	args[0] = "check"
+	if err := l10n.Run(args, &discard, &discard); err != nil {
+		t.Errorf("check after generate returned error: %v", err)
+	}
+}
+
 func TestRun_usage(t *testing.T) {
 	t.Parallel()
 

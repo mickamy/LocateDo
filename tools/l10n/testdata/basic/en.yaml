@@ -16,6 +16,7 @@ todo:
   url: "See https://locatedo.app/help"
 permission:
   always: "LocateDo needs your location in the background to remind you when you arrive."
+  when_in_use: "LocateDo uses your location to show the places near you."
   android_background: "Allow all the time to get reminders when you arrive."
 share:
   cta: "Share with your household"

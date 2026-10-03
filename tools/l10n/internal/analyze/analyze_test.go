@@ -252,6 +252,27 @@ func TestAnalyze_errors(t *testing.T) {
 			ja:   "a:\n  b_c: \"x\"\na_b:\n  c: \"y\"\n",
 			want: `both map to Android resource name "a_b_c"`,
 		},
+		{
+			name: "infoplist on plural",
+			en:   "items:\n  plural:\n    one: \"{count} item\"\n    other: \"{count} items\"\n",
+			ja:   "items:\n  plural:\n    other: \"{count} 件\"\n",
+			meta: "items:\n  infoplist: NSSomething\n",
+			want: "infoplist strings cannot be plural",
+		},
+		{
+			name: "infoplist with placeholders",
+			en:   "hello: \"Hello, {name}!\"\n",
+			ja:   "hello: \"{name} さん\"\n",
+			meta: "hello:\n  infoplist: NSSomething\n",
+			want: "infoplist strings cannot have placeholders",
+		},
+		{
+			name: "duplicate infoplist key",
+			en:   "a: \"x\"\nb: \"y\"\n",
+			ja:   "a: \"x\"\nb: \"y\"\n",
+			meta: "a:\n  infoplist: NSSomething\nb:\n  infoplist: NSSomething\n",
+			want: `both map to Info.plist key "NSSomething"`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

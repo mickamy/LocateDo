@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -21,10 +22,13 @@ const (
 
 var Platforms = []string{PlatformIOS, PlatformAndroid}
 
+var plistKeyPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9]*$`)
+
 type MetaEntry struct {
 	Line      int
 	Comment   string
 	Platforms []string
+	Infoplist string
 }
 
 type Meta struct {
@@ -36,9 +40,19 @@ func (m Meta) Comment(key string) string {
 	return m.Entries[key].Comment
 }
 
+func (m Meta) Infoplist(key string) string {
+	return m.Entries[key].Infoplist
+}
+
 func (m Meta) Includes(key, platform string) bool {
 	e, ok := m.Entries[key]
-	if !ok || len(e.Platforms) == 0 {
+	if !ok {
+		return true
+	}
+	if e.Infoplist != "" && platform != PlatformIOS {
+		return false
+	}
+	if len(e.Platforms) == 0 {
 		return true
 	}
 	return slices.Contains(e.Platforms, platform)
@@ -98,7 +112,7 @@ func metaKey(n *yaml.Node) (string, error) {
 
 func parseMetaEntry(key string, n *yaml.Node) (MetaEntry, error) {
 	if n.Kind != yaml.MappingNode || len(n.Content) == 0 {
-		return MetaEntry{}, errorAt(n.Line, "key %q: value must be a mapping with comment and/or platforms", key)
+		return MetaEntry{}, errorAt(n.Line, "key %q: value must be a mapping with comment, platforms, or infoplist", key)
 	}
 	var entry MetaEntry
 	seen := make(map[string]bool)
@@ -121,9 +135,19 @@ func parseMetaEntry(key string, n *yaml.Node) (MetaEntry, error) {
 				return MetaEntry{}, err
 			}
 			entry.Platforms = platforms
+		case "infoplist":
+			if val.Kind != yaml.ScalarNode || val.Tag != "!!str" || !plistKeyPattern.MatchString(val.Value) {
+				return MetaEntry{}, errorAt(val.Line,
+					"key %q: infoplist must be an Info.plist key such as NSLocationWhenInUseUsageDescription", key)
+			}
+			entry.Infoplist = val.Value
 		default:
-			return MetaEntry{}, errorAt(fieldNode.Line, "key %q: unknown field %q (want comment or platforms)", key, field)
+			return MetaEntry{}, errorAt(fieldNode.Line,
+				"key %q: unknown field %q (want comment, platforms, or infoplist)", key, field)
 		}
+	}
+	if entry.Infoplist != "" && slices.Contains(entry.Platforms, PlatformAndroid) {
+		return MetaEntry{}, errorAt(n.Line, "key %q: infoplist strings are iOS-only; drop android from platforms", key)
 	}
 	return entry, nil
 }

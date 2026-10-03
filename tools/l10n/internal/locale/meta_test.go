@@ -65,6 +65,37 @@ android_only:
 	}
 }
 
+func TestParseMeta_infoplist(t *testing.T) {
+	t.Parallel()
+
+	src := `
+permission.when_in_use:
+  infoplist: NSLocationWhenInUseUsageDescription
+permission.always:
+  comment: "Always-on location prompt"
+  infoplist: NSLocationAlwaysAndWhenInUseUsageDescription
+  platforms: [ios]
+`
+	m, err := locale.ParseMeta([]byte(src))
+	if err != nil {
+		t.Fatalf("ParseMeta() returned error: %v", err)
+	}
+	if got := m.Infoplist("permission.when_in_use"); got != "NSLocationWhenInUseUsageDescription" {
+		t.Errorf("Infoplist(permission.when_in_use) = %q", got)
+	}
+	if got := m.Infoplist("missing"); got != "" {
+		t.Errorf("Infoplist(missing) = %q, want empty", got)
+	}
+	for _, key := range []string{"permission.when_in_use", "permission.always"} {
+		if !m.Includes(key, locale.PlatformIOS) {
+			t.Errorf("Includes(%q, ios) = false, want true", key)
+		}
+		if m.Includes(key, locale.PlatformAndroid) {
+			t.Errorf("Includes(%q, android) = true, want false", key)
+		}
+	}
+}
+
 func TestParseMeta_empty(t *testing.T) {
 	t.Parallel()
 
@@ -105,6 +136,11 @@ func TestParseMeta_error(t *testing.T) {
 		{name: "duplicate key", src: "a:\n  comment: \"x\"\na:\n  comment: \"y\"\n"},
 		{name: "duplicate field", src: "a:\n  comment: \"x\"\n  comment: \"y\"\n"},
 		{name: "multiple documents", src: "a:\n  comment: \"x\"\n---\nb:\n  comment: \"y\"\n"},
+		{name: "infoplist not a string", src: "a:\n  infoplist: 1\n"},
+		{name: "infoplist empty", src: "a:\n  infoplist: \"\"\n"},
+		{name: "infoplist with spaces", src: "a:\n  infoplist: \"NS Location\"\n"},
+		{name: "infoplist starting with digit", src: "a:\n  infoplist: 1Key\n"},
+		{name: "infoplist with android", src: "a:\n  infoplist: NSSomething\n  platforms: [android]\n"},
 	}
 
 	for _, tt := range tests {

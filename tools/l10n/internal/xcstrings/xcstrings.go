@@ -20,12 +20,29 @@ type entry struct {
 type object []entry
 
 func Generate(m analyze.Model) []byte {
+	return generate(m, func(msg analyze.Message) (string, bool) {
+		if m.Meta.Infoplist(msg.Key) != "" || !m.Meta.Includes(msg.Key, locale.PlatformIOS) {
+			return "", false
+		}
+		return msg.Key, true
+	})
+}
+
+func GenerateInfoPlist(m analyze.Model) []byte {
+	return generate(m, func(msg analyze.Message) (string, bool) {
+		plistKey := m.Meta.Infoplist(msg.Key)
+		return plistKey, plistKey != ""
+	})
+}
+
+func generate(m analyze.Model, keyFor func(analyze.Message) (string, bool)) []byte {
 	strs := make(object, 0, len(m.Messages))
 	for _, msg := range m.Messages {
-		if !m.Meta.Includes(msg.Key, locale.PlatformIOS) {
+		key, ok := keyFor(msg)
+		if !ok {
 			continue
 		}
-		strs = append(strs, entry{msg.Key, message(m, msg)})
+		strs = append(strs, entry{key, message(m, msg)})
 	}
 	root := object{
 		{"sourceLanguage", m.DefaultLang},

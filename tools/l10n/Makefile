@@ -1,6 +1,7 @@
 BUILD_DIR = bin
 SRC = ../../shared/strings
 XCSTRINGS = ../../ios/LocateDo/Localizable.xcstrings
+INFOPLIST = ../../ios/LocateDo/InfoPlist.xcstrings
 
 .PHONY: build \
 		clean \
@@ -35,7 +36,7 @@ lint-fix:
 	golangci-lint run --fix
 
 generate:
-	go run . generate -src $(SRC) -xcstrings $(XCSTRINGS)
+	go run . generate -src $(SRC) -xcstrings $(XCSTRINGS) -infoplist $(INFOPLIST)
 
 check:
-	go run . check -src $(SRC) -xcstrings $(XCSTRINGS)
+	go run . check -src $(SRC) -xcstrings $(XCSTRINGS) -infoplist $(INFOPLIST)
