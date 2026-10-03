@@ -53,6 +53,16 @@ todo:
     title_placeholder: "e.g., Buy milk"
     place_label: "Place"
   completed_section: "Completed"
+  list:
+    empty_title: "No to-dos yet"
+    empty_message: "Add a to-do to a place and we’ll remind you when you arrive."
+    no_places_title: "Add a place first"
+    no_places_message: "To-dos belong to places. Add one from the Home tab."
+    filter_empty: "No to-dos match this filter"
+  filter:
+    all: "All"
+    open: "Open"
+    done: "Done"
 category:
   shopping: "Shopping"
   work: "Work"

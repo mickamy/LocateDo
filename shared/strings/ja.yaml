@@ -52,6 +52,16 @@ todo:
     title_placeholder: "例) 牛乳を買う"
     place_label: "場所"
   completed_section: "完了済み"
+  list:
+    empty_title: "TODO がまだありません"
+    empty_message: "場所に TODO を追加すると、着いたときにお知らせします。"
+    no_places_title: "先に場所を追加してください"
+    no_places_message: "TODO は場所に紐づきます。ホームタブから場所を追加できます。"
+    filter_empty: "この条件の TODO はありません"
+  filter:
+    all: "すべて"
+    open: "未完了"
+    done: "完了"
 category:
   shopping: "買い物"
   work: "仕事"
