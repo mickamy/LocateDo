@@ -4,6 +4,8 @@ services:
       dockerfile: Dockerfile.dev
       args:
         BIN_NAME: api
+    ports:
+      - "127.0.0.1:8080:8080"
     volumes:
       - .:/src
       - go:/go
