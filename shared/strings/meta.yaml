@@ -1,0 +1,4 @@
+permission.when_in_use:
+  infoplist: NSLocationWhenInUseUsageDescription
+permission.always:
+  infoplist: NSLocationAlwaysAndWhenInUseUsageDescription

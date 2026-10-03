@@ -1,0 +1,10 @@
+app:
+  name: "LocateDo"
+tab:
+  home: "ホーム"
+  map: "マップ"
+  todos: "TODO"
+  settings: "設定"
+permission:
+  when_in_use: "近くの場所と、そこまでの距離を表示するために位置情報を使います。"
+  always: "場所に着いたときにお知らせするため、バックグラウンドでも位置情報が必要です。"
