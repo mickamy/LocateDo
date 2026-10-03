@@ -1,0 +1,133 @@
+-- +goose Up
+CREATE TABLE users
+(
+    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
+    display_name text        NOT NULL DEFAULT '',
+    created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE user_identities
+(
+    user_id    uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    provider   text        NOT NULL CHECK (provider IN ('apple', 'google')),
+    subject    text        NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, provider),
+    UNIQUE (provider, subject)
+);
+
+CREATE TABLE devices
+(
+    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
+    user_id      uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    platform     text        NOT NULL CHECK (platform IN ('ios', 'android')),
+    push_token   text        NOT NULL,
+    last_seen_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (platform, push_token)
+);
+
+CREATE INDEX devices_user_id_idx ON devices (user_id);
+
+CREATE TABLE households
+(
+    id            uuid PRIMARY KEY     DEFAULT uuidv7(),
+    owner_id      uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    plan          text        NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro')),
+    version       bigint      NOT NULL DEFAULT 0,
+    created_at    timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX households_owner_id_idx ON households (owner_id);
+
+CREATE TABLE memberships
+(
+    household_id uuid        NOT NULL REFERENCES households (id) ON DELETE CASCADE,
+    user_id      uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    role         text        NOT NULL CHECK (role IN ('owner', 'member')),
+    joined_at    timestamptz NOT NULL DEFAULT now(),
+    updated_at   timestamptz NOT NULL,
+    version      bigint      NOT NULL,
+    PRIMARY KEY (household_id, user_id)
+);
+
+CREATE INDEX memberships_user_id_idx ON memberships (user_id);
+CREATE INDEX memberships_household_id_version_idx ON memberships (household_id, version);
+
+CREATE TABLE categories
+(
+    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
+    household_id uuid        NOT NULL REFERENCES households (id) ON DELETE CASCADE,
+    builtin_key  text CHECK (builtin_key IN ('shopping', 'work', 'life', 'other')),
+    name         text,
+    icon         text        NOT NULL,
+    color        text        NOT NULL,
+    sort_order   integer     NOT NULL DEFAULT 0,
+    updated_at   timestamptz NOT NULL,
+    version      bigint      NOT NULL,
+    UNIQUE (id, household_id),
+    UNIQUE (household_id, builtin_key),
+    CHECK (builtin_key IS NOT NULL OR name IS NOT NULL)
+);
+
+CREATE INDEX categories_household_id_version_idx ON categories (household_id, version);
+
+CREATE TABLE places
+(
+    id           uuid PRIMARY KEY          DEFAULT uuidv7(),
+    household_id uuid             NOT NULL REFERENCES households (id) ON DELETE CASCADE,
+    name         text             NOT NULL,
+    lat          double precision NOT NULL CHECK (lat BETWEEN -90 AND 90),
+    lng          double precision NOT NULL CHECK (lng BETWEEN -180 AND 180),
+    radius_m     integer          NOT NULL DEFAULT 100 CHECK (radius_m BETWEEN 50 AND 500),
+    category_id  uuid,
+    sort_order   integer          NOT NULL DEFAULT 0,
+    updated_at   timestamptz      NOT NULL,
+    version      bigint           NOT NULL,
+    UNIQUE (id, household_id),
+    FOREIGN KEY (category_id, household_id)
+        REFERENCES categories (id, household_id) ON DELETE SET NULL (category_id)
+);
+
+CREATE INDEX places_household_id_version_idx ON places (household_id, version);
+CREATE INDEX places_category_id_idx ON places (category_id);
+
+CREATE TABLE todos
+(
+    id               uuid PRIMARY KEY     DEFAULT uuidv7(),
+    household_id     uuid        NOT NULL REFERENCES households (id) ON DELETE CASCADE,
+    place_id         uuid        NOT NULL,
+    title            text        NOT NULL,
+    assignee_id      uuid REFERENCES users (id) ON DELETE SET NULL,
+    completed_at     timestamptz,
+    updated_at       timestamptz NOT NULL,
+    version          bigint      NOT NULL,
+    FOREIGN KEY (place_id, household_id)
+        REFERENCES places (id, household_id) ON DELETE CASCADE
+);
+
+CREATE INDEX todos_household_id_version_idx ON todos (household_id, version);
+CREATE INDEX todos_place_id_idx ON todos (place_id);
+
+CREATE TABLE deletions
+(
+    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
+    household_id uuid        NOT NULL REFERENCES households (id) ON DELETE CASCADE,
+    table_name   text        NOT NULL CHECK (table_name IN ('memberships', 'categories', 'places', 'todos')),
+    row_id       uuid        NOT NULL,
+    version      bigint      NOT NULL,
+    deleted_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX deletions_household_id_version_idx ON deletions (household_id, version);
+CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
+
+-- +goose Down
+DROP TABLE deletions;
+DROP TABLE todos;
+DROP TABLE places;
+DROP TABLE categories;
+DROP TABLE memberships;
+DROP TABLE households;
+DROP TABLE devices;
+DROP TABLE user_identities;
+DROP TABLE users;
