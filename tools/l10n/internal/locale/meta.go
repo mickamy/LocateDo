@@ -1,0 +1,144 @@
+package locale
+
+import (
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"slices"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/mickamy/LocateDo/tools/l10n/internal/template"
+)
+
+const (
+	MetaFile        = "meta.yaml"
+	PlatformIOS     = "ios"
+	PlatformAndroid = "android"
+)
+
+var Platforms = []string{PlatformIOS, PlatformAndroid}
+
+type MetaEntry struct {
+	Line      int
+	Comment   string
+	Platforms []string
+}
+
+type Meta map[string]MetaEntry
+
+func (m Meta) Comment(key string) string {
+	return m[key].Comment
+}
+
+func (m Meta) Includes(key, platform string) bool {
+	e, ok := m[key]
+	if !ok || len(e.Platforms) == 0 {
+		return true
+	}
+	return slices.Contains(e.Platforms, platform)
+}
+
+func LoadMeta(path string) (Meta, error) {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return Meta{}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read meta file: %w", err)
+	}
+	m, err := ParseMeta(data)
+	if err != nil {
+		return nil, withFile(err, path)
+	}
+	return m, nil
+}
+
+func ParseMeta(data []byte) (Meta, error) {
+	root, err := parseDocument(data)
+	if err != nil {
+		return nil, err
+	}
+	m := make(Meta, len(root.Content)/2)
+	for keyNode, valNode := range pairs(root) {
+		key, err := metaKey(keyNode)
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := m[key]; ok {
+			return nil, errorAt(keyNode.Line, "duplicate key %q", key)
+		}
+		entry, err := parseMetaEntry(key, resolve(valNode))
+		if err != nil {
+			return nil, err
+		}
+		entry.Line = keyNode.Line
+		m[key] = entry
+	}
+	return m, nil
+}
+
+func metaKey(n *yaml.Node) (string, error) {
+	if n.Kind != yaml.ScalarNode || n.Tag != "!!str" {
+		return "", errorAt(n.Line, "key must be a string")
+	}
+	for segment := range strings.SplitSeq(n.Value, ".") {
+		if !template.ValidName(segment) {
+			return "", errorAt(n.Line, "invalid key %q: each dot-separated segment must match [a-z][a-z0-9_]*", n.Value)
+		}
+	}
+	return n.Value, nil
+}
+
+func parseMetaEntry(key string, n *yaml.Node) (MetaEntry, error) {
+	if n.Kind != yaml.MappingNode || len(n.Content) == 0 {
+		return MetaEntry{}, errorAt(n.Line, "key %q: value must be a mapping with comment and/or platforms", key)
+	}
+	var entry MetaEntry
+	seen := make(map[string]bool)
+	for fieldNode, valNode := range pairs(n) {
+		field := fieldNode.Value
+		if seen[field] {
+			return MetaEntry{}, errorAt(fieldNode.Line, "key %q: duplicate field %q", key, field)
+		}
+		seen[field] = true
+		val := resolve(valNode)
+		switch field {
+		case "comment":
+			if val.Kind != yaml.ScalarNode || val.Tag != "!!str" {
+				return MetaEntry{}, errorAt(val.Line, "key %q: comment must be a string", key)
+			}
+			entry.Comment = val.Value
+		case "platforms":
+			platforms, err := parsePlatforms(key, val)
+			if err != nil {
+				return MetaEntry{}, err
+			}
+			entry.Platforms = platforms
+		default:
+			return MetaEntry{}, errorAt(fieldNode.Line, "key %q: unknown field %q (want comment or platforms)", key, field)
+		}
+	}
+	return entry, nil
+}
+
+func parsePlatforms(key string, n *yaml.Node) ([]string, error) {
+	if n.Kind != yaml.SequenceNode || len(n.Content) == 0 {
+		return nil, errorAt(n.Line, "key %q: platforms must be a non-empty list", key)
+	}
+	platforms := make([]string, 0, len(n.Content))
+	for _, item := range n.Content {
+		p := resolve(item)
+		if p.Kind != yaml.ScalarNode || p.Tag != "!!str" || !slices.Contains(Platforms, p.Value) {
+			return nil, errorAt(p.Line, "key %q: unknown platform %q (want %s)",
+				key, p.Value, strings.Join(Platforms, " or "))
+		}
+		if slices.Contains(platforms, p.Value) {
+			return nil, errorAt(p.Line, "key %q: duplicate platform %q", key, p.Value)
+		}
+		platforms = append(platforms, p.Value)
+	}
+	return platforms, nil
+}
