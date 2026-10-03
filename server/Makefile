@@ -90,9 +90,9 @@ gen-di:
 	go tool -modfile=tools/go.mod kanna-di ./config ./internal/...
 
 gen-mapper:
-	cd internal/lib/converters && go tool -modfile=../../../tools/go.mod kanna-mapper -converters=. -direction=to \
+	go tool -modfile=tools/go.mod kanna-mapper -converters=./internal/lib/converters -direction=to \
 		-types=github.com/mickamy/LocateDo/internal/feature/account/model.Session:*github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1.Session \
-		-destination=../../feature/account/mapper -package=mapper
+		-destination=internal/feature/account/mapper -package=mapper
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate
