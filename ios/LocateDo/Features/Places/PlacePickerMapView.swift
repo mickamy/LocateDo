@@ -192,14 +192,12 @@ struct PlacePickerMapView: View {
     }
 
     private func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        guard let request = MKReverseGeocodingRequest(location: location),
-              let item = try? await request.mapItems.first,
+        guard let geocoded = await Geocoding.lookUp(coordinate),
               var current = selection, current.isAt(coordinate) else {
             return
         }
-        current.name = current.name ?? item.name
-        current.address = item.address?.shortAddress ?? item.address?.fullAddress
+        current.name = current.name ?? geocoded.name
+        current.address = geocoded.address
         selection = current
     }
 

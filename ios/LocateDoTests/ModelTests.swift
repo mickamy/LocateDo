@@ -52,6 +52,38 @@ struct ModelTests {
         #expect(place.openTodos.map(\.title) == ["Milk", "Bread"])
     }
 
+    @Test func appendingAnInsertedTodoDoesNotDuplicateIt() throws {
+        let context = try makeContext()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        context.insert(place)
+        let todo = Todo(title: "Milk", place: place)
+        context.insert(todo)
+        place.todos.append(todo)
+        try context.save()
+
+        #expect(place.todos.count == 1)
+        #expect(try context.fetch(FetchDescriptor<Todo>()).count == 1)
+        #expect(todo.place === place)
+    }
+
+    @Test func completedTodosAreNewestFirst() throws {
+        let context = try makeContext()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        context.insert(place)
+        let milk = Todo(title: "Milk", place: place)
+        let bread = Todo(title: "Bread", place: place)
+        let eggs = Todo(title: "Eggs", place: place)
+        for todo in [milk, bread, eggs] {
+            context.insert(todo)
+        }
+        milk.complete(at: Date(timeIntervalSince1970: 10))
+        bread.complete(at: Date(timeIntervalSince1970: 30))
+        try context.save()
+
+        #expect(place.completedTodos.map(\.title) == ["Bread", "Milk"])
+        #expect(place.openTodos.map(\.title) == ["Eggs"])
+    }
+
     @Test func deletingPlaceCascadesToTodos() throws {
         let context = try makeContext()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)

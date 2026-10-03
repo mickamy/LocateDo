@@ -10,6 +10,8 @@ common:
   save: "保存"
   done: "完了"
   edit: "編集"
+  delete: "削除"
+  more: "その他"
 home:
   nearby_summary:
     plural:
@@ -35,6 +37,21 @@ place:
     use_current_location: "現在地を使う"
     use_this_location: "この位置にする"
     selected: "選択した位置"
+  detail:
+    todos_label: "この場所の TODO"
+    no_todos: "TODO がまだありません"
+    add_todo: "TODO を追加"
+    distance: "現在地から {distance}"
+    delete: "この場所を削除"
+    delete_confirm_title: "「{name}」を削除しますか？"
+    delete_confirm_message: "この場所の TODO も削除されます。"
+todo:
+  editor:
+    title: "TODO を追加"
+    title_label: "やること"
+    title_placeholder: "例) 牛乳を買う"
+    place_label: "場所"
+  completed_section: "完了済み"
 category:
   shopping: "買い物"
   work: "仕事"

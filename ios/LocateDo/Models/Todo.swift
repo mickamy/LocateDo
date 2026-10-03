@@ -32,3 +32,13 @@ final class Todo {
         updatedAt = now
     }
 }
+
+nonisolated extension [Todo] {
+    var open: [Todo] {
+        filter { !$0.isCompleted }.sorted { $0.createdAt < $1.createdAt }
+    }
+
+    var completedNewestFirst: [Todo] {
+        filter(\.isCompleted).sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
+    }
+}

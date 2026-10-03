@@ -47,6 +47,10 @@ final class Place {
     }
 
     var openTodos: [Todo] {
-        todos.filter { !$0.isCompleted }.sorted { $0.createdAt < $1.createdAt }
+        todos.open
+    }
+
+    var completedTodos: [Todo] {
+        todos.completedNewestFirst
     }
 }
