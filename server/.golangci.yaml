@@ -50,6 +50,7 @@ linters:
     - gocognit         # Thresholds are often too low for complex but necessary logic
     - goconst          # Repeated strings in tests are clearer than abstract constants
     - godot            # Punctuation in comments is a stylistic choice, not a code quality issue
+    - godox            # TODOs are intentional and tracked in docs
     - gomoddirectives  # Local replace directives are needed for example modules
     - gomodguard       # Deprecated; use gomodguard_v2 instead
     - ireturn          # Returning interfaces is a valid design pattern

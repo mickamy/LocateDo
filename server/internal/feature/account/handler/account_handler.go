@@ -1,13 +1,69 @@
 package handler
 
-import "github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
+import (
+	"context"
+
+	"connectrpc.com/connect"
+
+	"github.com/mickamy/LocateDo/internal/di"
+	"github.com/mickamy/LocateDo/internal/errors/aerrors"
+	"github.com/mickamy/LocateDo/internal/errors/cerrors"
+	"github.com/mickamy/LocateDo/internal/feature/account/mapper"
+	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
+	accountv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1"
+	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
+	"github.com/mickamy/LocateDo/internal/lib/caller"
+)
 
 type Account struct {
 	accountv1connect.UnimplementedAccountServiceHandler
+
+	_               di.Infra                 `di:"embed"`
+	_               di.Lib                   `di:"embed"`
+	signInWithApple *usecase.SignInWithApple `di:""`
+	refreshToken    *usecase.RefreshToken    `di:""`
+	deleteAccount   *usecase.DeleteAccount   `di:""`
 }
 
 var _ accountv1connect.AccountServiceHandler = (*Account)(nil)
 
-func NewAccount() *Account {
-	return &Account{}
+func (h *Account) SignInWithApple(
+	ctx context.Context,
+	req *connect.Request[accountv1.SignInWithAppleRequest],
+) (*connect.Response[accountv1.SignInWithAppleResponse], error) {
+	out, err := h.signInWithApple.Do(ctx, usecase.SignInWithAppleInput{
+		IdentityToken:     req.Msg.GetIdentityToken(),
+		AuthorizationCode: req.Msg.GetAuthorizationCode(),
+		Nonce:             req.Msg.GetNonce(),
+		DisplayName:       req.Msg.GetDisplayName(),
+	})
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.SignInWithAppleResponse{Session: mapper.SessionToAccountv1(out.Session)}), nil
+}
+
+func (h *Account) RefreshToken(
+	ctx context.Context,
+	req *connect.Request[accountv1.RefreshTokenRequest],
+) (*connect.Response[accountv1.RefreshTokenResponse], error) {
+	out, err := h.refreshToken.Do(ctx, usecase.RefreshTokenInput{RefreshToken: req.Msg.GetRefreshToken()})
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.RefreshTokenResponse{Session: mapper.SessionToAccountv1(out.Session)}), nil
+}
+
+func (h *Account) DeleteAccount(
+	ctx context.Context,
+	_ *connect.Request[accountv1.DeleteAccountRequest],
+) (*connect.Response[accountv1.DeleteAccountResponse], error) {
+	userID, ok := caller.UserID(ctx)
+	if !ok {
+		return nil, cerrors.Map(aerrors.Unauthenticated("no caller"))
+	}
+	if err := h.deleteAccount.Do(ctx, usecase.DeleteAccountInput{UserID: userID}); err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.DeleteAccountResponse{}), nil
 }

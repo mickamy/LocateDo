@@ -15,8 +15,8 @@ import (
 	"github.com/mickamy/LocateDo/internal/server/interceptor"
 )
 
-func Handler(cfg di.Config, handlers Handlers) http.Handler {
-	opt := interceptor.Option(cfg)
+func Handler(cfg di.Config, lib di.Lib, handlers Handlers) http.Handler {
+	opt := interceptor.Option(cfg, lib)
 
 	mux := http.NewServeMux()
 
@@ -33,14 +33,14 @@ func Handler(cfg di.Config, handlers Handlers) http.Handler {
 	return mux
 }
 
-func New(addr string, cfg di.Config, handlers Handlers) *http.Server {
+func New(addr string, cfg di.Config, lib di.Lib, handlers Handlers) *http.Server {
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
 
 	return &http.Server{
 		Addr:              addr,
-		Handler:           Handler(cfg, handlers),
+		Handler:           Handler(cfg, lib, handlers),
 		ReadHeaderTimeout: 10 * time.Second,
 		Protocols:         protocols,
 	}

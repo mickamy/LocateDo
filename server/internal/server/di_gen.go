@@ -15,11 +15,11 @@ import (
 )
 
 // NewHandlers initializes dependencies and constructs Handlers.
-func NewHandlers(infra di.Infra) *Handlers {
+func NewHandlers(infra di.Infra, lib di.Lib) *Handlers {
 	writer := infra.Writer
 	reader := infra.Reader
 	health2 := health.NewHealth(writer, reader)
-	account := handler.NewAccount()
+	account := handler.NewAccount(infra, lib)
 	household := handler2.NewHousehold()
 	category := handler3.NewCategory()
 	place := handler4.NewPlace()

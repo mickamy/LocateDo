@@ -14,6 +14,7 @@ import (
 
 type Handlers struct {
 	_         di.Infra             `di:"embed"`
+	_         di.Lib               `di:"embed"`
 	Health    health.Health        `di:""`
 	Account   *account.Account     `di:""`
 	Household *household.Household `di:""`

@@ -20,8 +20,10 @@ DB_NAME = locatedo
 		db-migrate \
 		db-reset \
 		gen \
-		gen-buf \
 		gen-go \
+		gen-di \
+		gen-mapper \
+		gen-sqlc \
 		new-migration \
 
 .env:
@@ -79,13 +81,18 @@ db-migrate:
 
 db-reset: db-drop db-create db-migrate
 
-gen: gen-go gen-sqlc
+gen: gen-go gen-sqlc gen-mapper
 
 gen-go:
 	go generate ./...
 
 gen-di:
 	go tool -modfile=tools/go.mod kanna-di ./config ./internal/...
+
+gen-mapper:
+	cd internal/lib/converters && go tool -modfile=../../../tools/go.mod kanna-mapper -converters=. -direction=to \
+		-types=github.com/mickamy/LocateDo/internal/feature/account/model.Session:*github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1.Session \
+		-destination=../../feature/account/mapper -package=mapper
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate

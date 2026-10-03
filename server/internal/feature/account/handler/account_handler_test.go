@@ -1,0 +1,119 @@
+package handler_test
+
+import (
+	"context"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"connectrpc.com/connect"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/mickamy/LocateDo/config"
+	"github.com/mickamy/LocateDo/internal/di"
+	accountv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1"
+	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
+	"github.com/mickamy/LocateDo/internal/infra/apple"
+	"github.com/mickamy/LocateDo/internal/server"
+	"github.com/mickamy/LocateDo/test/tinfra"
+)
+
+func TestAccount_signInRefreshDelete(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	client := newClient(t)
+
+	// act & assert: sign in
+	signedIn, err := client.SignInWithApple(t.Context(), connect.NewRequest(&accountv1.SignInWithAppleRequest{
+		IdentityToken:     "identity:apple-sub",
+		AuthorizationCode: "auth-code",
+		Nonce:             "0123456789abcdef",
+	}))
+	require.NoError(t, err)
+	session := signedIn.Msg.GetSession()
+	assert.True(t, session.GetNewUser())
+	assert.NotEmpty(t, session.GetAccessToken())
+	assert.NotEmpty(t, session.GetRefreshToken())
+	assert.True(t, session.GetAccessTokenExpiresAt().AsTime().After(time.Now()))
+
+	// act & assert: refresh
+	refreshed, err := client.RefreshToken(t.Context(), connect.NewRequest(&accountv1.RefreshTokenRequest{
+		RefreshToken: session.GetRefreshToken(),
+	}))
+	require.NoError(t, err)
+	assert.Equal(t, session.GetUserId(), refreshed.Msg.GetSession().GetUserId())
+	assert.False(t, refreshed.Msg.GetSession().GetNewUser())
+
+	// act & assert: delete
+	del := connect.NewRequest(&accountv1.DeleteAccountRequest{})
+	del.Header().Set("Authorization", "Bearer "+refreshed.Msg.GetSession().GetAccessToken())
+	_, err = client.DeleteAccount(t.Context(), del)
+	require.NoError(t, err)
+
+	_, err = client.RefreshToken(t.Context(), connect.NewRequest(&accountv1.RefreshTokenRequest{
+		RefreshToken: refreshed.Msg.GetSession().GetRefreshToken(),
+	}))
+	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
+}
+
+func TestAccount_SignInWithApple_invalidToken(t *testing.T) {
+	t.Parallel()
+
+	client := newClient(t)
+
+	_, err := client.SignInWithApple(t.Context(), connect.NewRequest(&accountv1.SignInWithAppleRequest{
+		IdentityToken:     "forged",
+		AuthorizationCode: "auth-code",
+		Nonce:             "0123456789abcdef",
+	}))
+
+	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
+}
+
+func TestAccount_DeleteAccount_requiresToken(t *testing.T) {
+	t.Parallel()
+
+	client := newClient(t)
+
+	_, err := client.DeleteAccount(t.Context(), connect.NewRequest(&accountv1.DeleteAccountRequest{}))
+
+	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
+}
+
+func newClient(t *testing.T) accountv1connect.AccountServiceClient {
+	t.Helper()
+
+	infra := tinfra.New(t)
+	infra.Apple = fakeApple{}
+	lib := di.MustNewLib(di.NewConfig())
+	cfg := di.Config{App: config.App{Env: config.EnvTest}}
+
+	handlers := server.NewHandlers(infra, lib)
+	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
+	t.Cleanup(srv.Close)
+	return accountv1connect.NewAccountServiceClient(srv.Client(), srv.URL)
+}
+
+// fakeApple accepts identity tokens of the form "identity:<subject>".
+type fakeApple struct{}
+
+var _ apple.Auth = fakeApple{}
+
+func (fakeApple) VerifyIdentityToken(_ context.Context, raw, _ string, _ time.Time) (apple.Identity, error) {
+	subject, ok := strings.CutPrefix(raw, "identity:")
+	if !ok {
+		return apple.Identity{}, apple.ErrInvalidToken
+	}
+	return apple.Identity{Subject: subject}, nil
+}
+
+func (fakeApple) ExchangeCode(_ context.Context, code string, _ time.Time) (string, error) {
+	return "apple-refresh:" + code, nil
+}
+
+func (fakeApple) Revoke(context.Context, string, time.Time) error {
+	return nil
+}
