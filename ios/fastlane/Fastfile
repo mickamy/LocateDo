@@ -1,26 +1,94 @@
 default_platform(:ios)
+skip_docs
 
 APP_IDENTIFIER = "com.locatedo.LocateDo"
 PROJECT = "LocateDo.xcodeproj"
 SCHEME = "LocateDo"
 
 platform :ios do
+  # produce still wants an Apple ID login, so this talks to the API directly.
   desc "Create the App ID (with push notifications) and the App Store Connect record"
   lane :bootstrap do
     api_key
-    produce(
-      app_identifier: APP_IDENTIFIER,
-      app_name: "LocateDo",
-      language: "en-US",
-      sku: "locatedo-ios",
-      enable_services: { push_notification: "on" }
-    )
+    connect_api
+    bundle = Spaceship::ConnectAPI::BundleId.find(APP_IDENTIFIER) ||
+      Spaceship::ConnectAPI::BundleId.create(
+        name: "LocateDo",
+        platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
+        identifier: APP_IDENTIFIER
+      )
+    push = Spaceship::ConnectAPI::BundleIdCapability::Type::PUSH_NOTIFICATIONS
+    if bundle.get_capabilities.any? { |capability| capability.capability_type == push }
+      UI.message("Push notifications already enabled on #{APP_IDENTIFIER}")
+    else
+      bundle.create_capability(push)
+      UI.success("Enabled push notifications on #{APP_IDENTIFIER}")
+    end
+    if Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+      UI.message("App Store Connect app already exists")
+    else
+      # The public API cannot create apps; TestFlight needs the record, Firebase App Distribution does not.
+      UI.important("Create the App Store Connect app by hand: https://appstoreconnect.apple.com/apps " \
+                   "(New App, iOS, name LocateDo, bundle ID #{APP_IDENTIFIER}, SKU locatedo-ios)")
+    end
   end
 
-  desc "Create or sync the distribution certificate and App Store profile through match"
+  desc "Create or sync the distribution certificate and the App Store / Ad Hoc profiles through match"
   lane :certificates do
     api_key
     match(type: "appstore")
+    match(type: "adhoc", force_for_new_devices: true)
+  end
+
+  desc "Register a device for Ad Hoc builds and refresh the Ad Hoc profile (name:, udid:)"
+  lane :add_device do |options|
+    api_key
+    register_device(name: options.fetch(:name), udid: options.fetch(:udid))
+    match(type: "adhoc", force_for_new_devices: true)
+  end
+
+  desc "List the devices registered to the team"
+  lane :devices do
+    api_key
+    registered_devices.each do |device|
+      UI.message("#{device.status.ljust(8)} #{device.device_class.to_s.ljust(10)} #{device.udid}  #{device.name}")
+    end
+  end
+
+  desc "Disable every enabled device (the API cannot delete devices; the yearly count resets at renewal)"
+  lane :disable_devices do
+    api_key
+    enabled = registered_devices.select { |device| device.status == "ENABLED" }
+    UI.user_error!("No enabled devices") if enabled.empty?
+    enabled.each { |device| UI.message("#{device.udid}  #{device.name}") }
+    UI.user_error!("Aborted") unless UI.confirm("Disable these #{enabled.count} devices?")
+    enabled.each do |device|
+      Spaceship::ConnectAPI::Device.disable(device.udid)
+      UI.success("Disabled #{device.name}")
+    end
+  end
+
+  desc "List the bundle identifiers (App IDs) registered to the team"
+  lane :bundle_ids do
+    api_key
+    bundle_identifiers.each do |bundle|
+      UI.message("#{bundle.platform.to_s.ljust(10)} #{bundle.identifier.ljust(40)} #{bundle.name}")
+    end
+  end
+
+  desc "Delete bundle identifiers (identifiers:com.example.a,com.example.b); the app's own identifier is refused"
+  lane :delete_bundle_ids do |options|
+    api_key
+    wanted = options.fetch(:identifiers).split(",").map(&:strip)
+    UI.user_error!("Refusing to delete #{APP_IDENTIFIER}") if wanted.include?(APP_IDENTIFIER)
+    registered = bundle_identifiers
+    targets = wanted.map do |identifier|
+      registered.find { |bundle| bundle.identifier == identifier } ||
+        UI.user_error!("No bundle identifier #{identifier}")
+    end
+    targets.each { |bundle| UI.message("#{bundle.identifier}  #{bundle.name}") }
+    UI.user_error!("Aborted") unless UI.confirm("Delete these #{targets.count} bundle identifiers?")
+    targets.each { |bundle| delete_bundle_identifier(bundle: bundle) }
   end
 
   desc "Build a signed archive and upload it to TestFlight"
@@ -28,30 +96,24 @@ platform :ios do
     setup_ci if is_ci
     api_key
     match(type: "appstore", readonly: true)
-
     build_number = latest_testflight_build_number(initial_build_number: 0) + 1
-    update_code_signing_settings(
-      path: PROJECT,
-      targets: [SCHEME],
-      build_configurations: ["Release"],
-      use_automatic_signing: false,
-      code_sign_identity: "Apple Distribution",
-      profile_name: ENV.fetch("sigh_#{APP_IDENTIFIER}_appstore_profile-name")
-    )
-    build_app(
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: "Release",
-      export_method: "app-store",
-      output_directory: "build",
-      xcargs: "CURRENT_PROJECT_VERSION=#{build_number}"
-    )
-    upload_to_testflight(
-      changelog: changelog_from_git_commits(
-        commits_count: 10,
-        pretty: "- %s",
-        merge_commit_filtering: "exclude_merges"
-      )
+    archive(export_method: "app-store", profile_type: "appstore", build_number: build_number)
+    upload_to_testflight(changelog: changelog)
+  end
+
+  desc "Build an Ad Hoc archive and distribute it through Firebase App Distribution"
+  lane :firebase do
+    setup_ci if is_ci
+    api_key
+    match(type: "adhoc", readonly: true)
+    archive(export_method: "ad-hoc", profile_type: "adhoc", build_number: number_of_commits)
+    # Without a service account the plugin falls back to the Firebase CLI login (local runs).
+    credentials = ENV["FIREBASE_SERVICE_CREDENTIALS_CONTENT"].to_s
+    firebase_app_distribution(
+      app: ENV.fetch("FIREBASE_APP_ID"),
+      service_credentials_json_data: credentials.empty? ? nil : credentials.unpack1("m"),
+      groups: ENV["FIREBASE_TESTER_GROUPS"],
+      release_notes: changelog
     )
   end
 
@@ -61,6 +123,60 @@ platform :ios do
       issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
       key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
       is_key_content_base64: true
+    )
+  end
+
+  # Signing is overridden per build so the project keeps automatic signing for Xcode.
+  private_lane :archive do |options|
+    profile_name = ENV.fetch("sigh_#{APP_IDENTIFIER}_#{options[:profile_type]}_profile-name")
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: options[:export_method],
+      export_options: { provisioningProfiles: { APP_IDENTIFIER => profile_name } },
+      output_directory: "build",
+      xcargs: [
+        "CURRENT_PROJECT_VERSION=#{options[:build_number]}",
+        "CODE_SIGN_STYLE=Manual",
+        "CODE_SIGN_IDENTITY='Apple Distribution'",
+        "PROVISIONING_PROFILE_SPECIFIER='#{profile_name}'",
+        "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}"
+      ].join(" ")
+    )
+  end
+
+  private_lane :connect_api do
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(
+      hash: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+    )
+  end
+
+  private_lane :registered_devices do
+    connect_api
+    Spaceship::ConnectAPI::Device.all
+  end
+
+  private_lane :bundle_identifiers do
+    connect_api
+    Spaceship::ConnectAPI::BundleId.all
+  end
+
+  # Spaceship has no delete for bundle IDs, so this calls DELETE /v1/bundleIds/{id} directly.
+  private_lane :delete_bundle_identifier do |options|
+    bundle = options.fetch(:bundle)
+    Spaceship::ConnectAPI.provisioning_request_client.delete("v1/bundleIds/#{bundle.id}")
+    UI.success("Deleted #{bundle.identifier}")
+  rescue Spaceship::UnexpectedResponse => e
+    detail = e.message[/"detail" : "([^"]+)"/, 1] || e.message.lines.first.to_s.strip
+    UI.error("Could not delete #{bundle.identifier}: #{detail}")
+  end
+
+  private_lane :changelog do
+    changelog_from_git_commits(
+      commits_count: 10,
+      pretty: "- %s",
+      merge_commit_filtering: "exclude_merges"
     )
   end
 end
