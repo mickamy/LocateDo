@@ -27,14 +27,17 @@ type MetaEntry struct {
 	Platforms []string
 }
 
-type Meta map[string]MetaEntry
+type Meta struct {
+	File    string
+	Entries map[string]MetaEntry
+}
 
 func (m Meta) Comment(key string) string {
-	return m[key].Comment
+	return m.Entries[key].Comment
 }
 
 func (m Meta) Includes(key, platform string) bool {
-	e, ok := m[key]
+	e, ok := m.Entries[key]
 	if !ok || len(e.Platforms) == 0 {
 		return true
 	}
@@ -44,38 +47,39 @@ func (m Meta) Includes(key, platform string) bool {
 func LoadMeta(path string) (Meta, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
-		return Meta{}, nil
+		return Meta{File: path}, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("read meta file: %w", err)
+		return Meta{}, fmt.Errorf("read meta file: %w", err)
 	}
 	m, err := ParseMeta(data)
 	if err != nil {
-		return nil, withFile(err, path)
+		return Meta{}, withFile(err, path)
 	}
+	m.File = path
 	return m, nil
 }
 
 func ParseMeta(data []byte) (Meta, error) {
 	root, err := parseDocument(data)
 	if err != nil {
-		return nil, err
+		return Meta{}, err
 	}
-	m := make(Meta, len(root.Content)/2)
+	m := Meta{Entries: make(map[string]MetaEntry, len(root.Content)/2)}
 	for keyNode, valNode := range pairs(root) {
 		key, err := metaKey(keyNode)
 		if err != nil {
-			return nil, err
+			return Meta{}, err
 		}
-		if _, ok := m[key]; ok {
-			return nil, errorAt(keyNode.Line, "duplicate key %q", key)
+		if _, ok := m.Entries[key]; ok {
+			return Meta{}, errorAt(keyNode.Line, "duplicate key %q", key)
 		}
 		entry, err := parseMetaEntry(key, resolve(valNode))
 		if err != nil {
-			return nil, err
+			return Meta{}, err
 		}
 		entry.Line = keyNode.Line
-		m[key] = entry
+		m.Entries[key] = entry
 	}
 	return m, nil
 }

@@ -28,8 +28,8 @@ android_only:
 	if err != nil {
 		t.Fatalf("ParseMeta() returned error: %v", err)
 	}
-	if len(m) != 4 {
-		t.Errorf("len(Meta) = %d, want 4", len(m))
+	if len(m.Entries) != 4 {
+		t.Errorf("len(Entries) = %d, want 4", len(m.Entries))
 	}
 
 	if got := m.Comment("place.add.title"); got != "Title of the add-place screen" {
@@ -38,10 +38,10 @@ android_only:
 	if got := m.Comment("missing"); got != "" {
 		t.Errorf("Comment(missing) = %q, want empty", got)
 	}
-	if got := m["permission.always"].Line; got != 6 {
+	if got := m.Entries["permission.always"].Line; got != 6 {
 		t.Errorf("permission.always Line = %d, want 6", got)
 	}
-	if got := m["android_only"].Platforms; !reflect.DeepEqual(got, []string{"android"}) {
+	if got := m.Entries["android_only"].Platforms; !reflect.DeepEqual(got, []string{"android"}) {
 		t.Errorf("android_only Platforms = %v, want [android]", got)
 	}
 
@@ -74,8 +74,8 @@ func TestParseMeta_empty(t *testing.T) {
 			t.Errorf("ParseMeta(%q) returned error: %v", src, err)
 			continue
 		}
-		if len(m) != 0 {
-			t.Errorf("ParseMeta(%q): len(Meta) = %d, want 0", src, len(m))
+		if len(m.Entries) != 0 {
+			t.Errorf("ParseMeta(%q): len(Entries) = %d, want 0", src, len(m.Entries))
 		}
 	}
 }
@@ -123,19 +123,25 @@ func TestLoadMeta(t *testing.T) {
 
 	dir := t.TempDir()
 
-	m, err := locale.LoadMeta(filepath.Join(dir, locale.MetaFile))
+	path := filepath.Join(dir, locale.MetaFile)
+	m, err := locale.LoadMeta(path)
 	if err != nil {
 		t.Fatalf("LoadMeta(missing) returned error: %v", err)
 	}
-	if len(m) != 0 {
-		t.Errorf("LoadMeta(missing): len(Meta) = %d, want 0", len(m))
+	if len(m.Entries) != 0 {
+		t.Errorf("LoadMeta(missing): len(Entries) = %d, want 0", len(m.Entries))
+	}
+	if m.Includes("greeting", locale.PlatformIOS) != true {
+		t.Error("Includes() on an empty Meta = false, want true")
 	}
 
-	path := filepath.Join(dir, locale.MetaFile)
 	writeFile(t, path, "greeting:\n  comment: \"Shown on launch\"\n")
 	m, err = locale.LoadMeta(path)
 	if err != nil {
 		t.Fatalf("LoadMeta() returned error: %v", err)
+	}
+	if m.File != path {
+		t.Errorf("File = %q, want %q", m.File, path)
 	}
 	if got := m.Comment("greeting"); got != "Shown on launch" {
 		t.Errorf("Comment(greeting) = %q", got)
