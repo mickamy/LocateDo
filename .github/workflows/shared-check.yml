@@ -6,18 +6,46 @@ on:
       - "shared/**"
       - "tools/l10n/**"
       - "server/internal/gen/**"
-      - "ios/LocateDo/Generated/**"
+      - "ios/LocateDo/Localizable.xcstrings"
+      - "ios/LocateDo/InfoPlist.xcstrings"
       - ".github/workflows/shared-check.yml"
 
 jobs:
   proto:
     name: buf lint / breaking / generate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: bufbuild/buf-action@85aebf73123b5c15fd5528aaecbf9129cddf7fa7 # v1.6.0
+        with:
+          input: shared/proto
+          lint: true
+          format: true
+          breaking: true
+          breaking_against: ${{ github.event.repository.clone_url }}#format=git,commit=${{ github.event.pull_request.base.sha }},subdir=shared/proto
+          push: false
+          archive: false
+      - name: Check generated code is current
+        working-directory: shared/proto
+        run: |
+          buf generate
+          git -C ../.. add -N server/internal/gen
+          git -C ../.. diff --exit-code --stat -- server/internal/gen
 
   strings:
     name: l10n check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tools/l10n/go.mod
+          cache-dependency-path: tools/l10n/go.sum
+      - run: make -C tools/l10n test
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.13.1
+          working-directory: tools/l10n
+      - run: make -C tools/l10n check

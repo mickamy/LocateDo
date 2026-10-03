@@ -6,15 +6,39 @@ on:
       - "ios/**"
       - ".github/workflows/ios-ci.yml"
 
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: xcodebuild test
-    runs-on: macos-latest
+    runs-on: xcode-27
+    timeout-minutes: 30
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project ios/LocateDo.xcodeproj \
+            -scheme LocateDo \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -parallel-testing-enabled NO \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: TestResults.xcresult
+          path: TestResults.xcresult
 
   lint:
     name: SwiftLint
-    runs-on: macos-latest
+    runs-on: macos-26
+    timeout-minutes: 10
     steps:
-      - run: echo "not implemented yet"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: swiftlint lint --strict --reporter github-actions-logging
+        working-directory: ios
