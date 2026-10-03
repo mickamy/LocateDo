@@ -1,0 +1,44 @@
+services:
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      args:
+        BIN_NAME: api
+    volumes:
+      - .:/src
+      - go:/go
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      args:
+        BIN_NAME: worker
+    volumes:
+      - .:/src
+      - go:/go
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: locatedo
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d locatedo" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  go:
+  db-data:

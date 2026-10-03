@@ -1,0 +1,16 @@
+ARG GO_VERSION=1.27.1
+
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}
+
+ARG MAIN_GO_FILE
+ENV MAIN_GO_FILE=$MAIN_GO_FILE
+ARG BIN_NAME
+ENV BIN_NAME=$BIN_NAME
+
+WORKDIR /src
+
+COPY . .
+
+RUN go mod download
+
+CMD ["sh", "-c", "go tool -modfile=tools/go.mod air -c .air.${BIN_NAME}.toml"]

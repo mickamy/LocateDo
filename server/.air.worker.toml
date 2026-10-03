@@ -1,0 +1,7 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./bin/worker ./cmd/worker/main.go"
+bin = "./bin/worker"
+include_ext = ["go", "tpl", "tmpl", "html"]
