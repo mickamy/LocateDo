@@ -24,6 +24,11 @@ linters:
         rules:
           json: snake
           yaml: snake
+    wrapcheck:
+      ignore-package-globs:
+        # aerrors and cerrors construct errors; wrapping them defeats the purpose.
+        - github.com/mickamy/LocateDo/internal/errors/aerrors
+        - github.com/mickamy/LocateDo/internal/errors/cerrors
     usetesting:
       context-background: true
       context-todo: true
@@ -72,6 +77,7 @@ linters:
           - gocyclo    # Each table case adds branches; cyclomatic complexity is not a quality signal in tests
           - maintidx   # Table-driven tests grow long by design; the maintainability index is not useful there
           - unparam    # Test helpers often take parameters with a single value today; keeping the signature is clearer
+          - wrapcheck  # Tests assert on returned errors directly; wrapping adds no context to a failing assertion
 
 issues:
   max-issues-per-linter: 0
