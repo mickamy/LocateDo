@@ -1,0 +1,13 @@
+title = "LocateDo"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Files that only contain placeholders or generated code"
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''\.env\.example$''',
+  '''server/internal/gen/.*''',
+  '''ios/LocateDo/Generated/.*''',
+]

@@ -1,0 +1,23 @@
+name: shared-check
+
+on:
+  pull_request:
+    paths:
+      - "shared/**"
+      - "tools/l10n/**"
+      - "server/internal/gen/**"
+      - "ios/LocateDo/Generated/**"
+      - ".github/workflows/shared-check.yml"
+
+jobs:
+  proto:
+    name: buf lint / breaking / generate
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"
+
+  strings:
+    name: l10n check
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"

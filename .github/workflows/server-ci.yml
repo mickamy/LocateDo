@@ -1,0 +1,26 @@
+name: server-ci
+
+on:
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/server-ci.yml"
+
+jobs:
+  test:
+    name: go test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"
+
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"
+
+  tidy:
+    name: go mod tidy
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"

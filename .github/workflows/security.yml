@@ -1,0 +1,19 @@
+name: security
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * 1" # Monday 00:00 UTC
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet"
