@@ -5,6 +5,11 @@ tab:
   map: "マップ"
   todos: "TODO"
   settings: "設定"
+category:
+  shopping: "買い物"
+  work: "仕事"
+  life: "生活"
+  other: "その他"
 permission:
   when_in_use: "近くの場所と、そこまでの距離を表示するために位置情報を使います。"
   always: "場所に着いたときにお知らせするため、バックグラウンドでも位置情報が必要です。"
