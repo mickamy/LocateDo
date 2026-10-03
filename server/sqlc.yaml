@@ -1,4 +1,23 @@
 version: "2"
+overrides:
+  go:
+    overrides:
+      - db_type: "uuid"
+        go_type: "github.com/google/uuid.UUID"
+      - db_type: "uuid"
+        nullable: true
+        go_type:
+          import: "github.com/google/uuid"
+          type: "UUID"
+          pointer: true
+      - db_type: "timestamptz"
+        go_type: "time.Time"
+      - db_type: "timestamptz"
+        nullable: true
+        go_type:
+          import: "time"
+          type: "Time"
+          pointer: true
 sql:
   - engine: "postgresql"
     schema: "internal/infra/storage/db/migrate/sql"
@@ -9,20 +28,12 @@ sql:
         out: "internal/feature/account/queries"
         sql_package: "pgx/v5"
         omit_unused_structs: true
-        overrides:
-          - db_type: "uuid"
-            go_type: "github.com/google/uuid.UUID"
-          - db_type: "uuid"
-            nullable: true
-            go_type:
-              import: "github.com/google/uuid"
-              type: "UUID"
-              pointer: true
-          - db_type: "timestamptz"
-            go_type: "time.Time"
-          - db_type: "timestamptz"
-            nullable: true
-            go_type:
-              import: "time"
-              type: "Time"
-              pointer: true
+  - engine: "postgresql"
+    schema: "internal/infra/storage/db/migrate/sql"
+    queries: "internal/feature/household/queries/household_queries.sql"
+    gen:
+      go:
+        package: "queries"
+        out: "internal/feature/household/queries"
+        sql_package: "pgx/v5"
+        omit_unused_structs: true
