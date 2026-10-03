@@ -9,6 +9,8 @@ var (
 	ErrNotFound     = errors.New("not found")
 	ErrConflict     = errors.New("already exists")
 	ErrPrecondition = errors.New("precondition failed")
+
+	ErrUnauthenticated = errors.New("unauthenticated")
 )
 
 func NotFound(entity string) error {
@@ -21,4 +23,8 @@ func Conflict(detail string) error {
 
 func Precondition(detail string) error {
 	return fmt.Errorf("%s: %w", detail, ErrPrecondition)
+}
+
+func Unauthenticated(detail string) error {
+	return fmt.Errorf("%s: %w", detail, ErrUnauthenticated)
 }

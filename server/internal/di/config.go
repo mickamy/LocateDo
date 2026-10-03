@@ -6,4 +6,6 @@ import "github.com/mickamy/LocateDo/config"
 type Config struct {
 	App      config.App      `di:""`
 	Database config.Database `di:""`
+	Auth     config.Auth     `di:""`
+	Apple    config.Apple    `di:""`
 }

@@ -1,5 +1,5 @@
 include .env
-export ENV MODULE_ROOT DATABASE_URL DATABASE_WRITER_URL DATABASE_READER_URL
+export ENV MODULE_ROOT DATABASE_URL DATABASE_WRITER_URL DATABASE_READER_URL JWT_SIGNING_KEY SEAL_KEY
 
 BUILD_DIR = bin
 GOOSE = go tool -modfile=tools/go.mod goose -dir internal/infra/storage/db/migrate/sql
@@ -25,6 +25,8 @@ DB_NAME = locatedo
 		new-migration \
 
 .env:
+	JWT_SIGNING_KEY=$$(openssl rand -base64 48) \
+	SEAL_KEY=$$(openssl rand -base64 32) \
 	envsubst < .env.example > $@
 
 build:

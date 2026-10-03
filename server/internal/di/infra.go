@@ -3,11 +3,16 @@ package di
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/mickamy/LocateDo/config"
+	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
+
+const appleHTTPTimeout = 10 * time.Second
 
 //kanna:container must returns=Infra
 type Infra struct {
@@ -17,6 +22,7 @@ type Infra struct {
 	Reader         db.Reader         `di:"with=provideReader"`
 	Transactor     tx.Transactor     `di:"with=provideTransactor"`
 	ReadTransactor tx.ReadTransactor `di:"with=provideReadTransactor"`
+	Apple          apple.Auth        `di:"with=provideApple"`
 }
 
 func (infra *Infra) Close() error {
@@ -48,4 +54,21 @@ func provideTransactor(writer db.Writer) tx.Transactor {
 
 func provideReadTransactor(reader db.Reader) tx.ReadTransactor {
 	return tx.NewReadTransactor(reader)
+}
+
+func provideApple(cfg config.Apple) (apple.Auth, error) {
+	appleCfg := apple.Config{
+		BaseURL:  cfg.BaseURL,
+		BundleID: cfg.BundleID,
+		TeamID:   cfg.TeamID,
+		KeyID:    cfg.KeyID,
+	}
+	if cfg.PrivateKey != "" {
+		key, err := apple.ParsePrivateKey([]byte(cfg.PrivateKey))
+		if err != nil {
+			return nil, fmt.Errorf("parse APPLE_PRIVATE_KEY: %w", err)
+		}
+		appleCfg.PrivateKey = key
+	}
+	return apple.NewClient(appleCfg, &http.Client{Timeout: appleHTTPTimeout}), nil
 }

@@ -16,6 +16,8 @@ func Map(err error) *connect.Error {
 		return connect.NewError(connect.CodeNotFound, err)
 	case errors.Is(err, aerrors.ErrPrecondition):
 		return connect.NewError(connect.CodeFailedPrecondition, err)
+	case errors.Is(err, aerrors.ErrUnauthenticated):
+		return connect.NewError(connect.CodeUnauthenticated, err)
 	default:
 		return connect.NewError(connect.CodeInternal, err)
 	}

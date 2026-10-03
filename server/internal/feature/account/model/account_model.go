@@ -19,6 +19,14 @@ type User struct {
 	CreatedAt   time.Time
 }
 
+type Session struct {
+	UserID               uuid.UUID
+	AccessToken          string
+	AccessTokenExpiresAt time.Time
+	RefreshToken         string
+	NewUser              bool
+}
+
 type RefreshToken struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID

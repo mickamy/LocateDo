@@ -12,12 +12,10 @@ func New(t *testing.T) di.Infra {
 	t.Helper()
 
 	d := tdb.New(t)
-	i := di.Infra{
+	return di.Infra{
 		Writer:         d.Writer,
 		Reader:         d.Reader,
 		Transactor:     d.Transactor,
 		ReadTransactor: tx.NewReadTransactor(d.Reader),
 	}
-
-	return i
 }

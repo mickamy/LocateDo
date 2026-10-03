@@ -11,10 +11,14 @@ import (
 func NewConfig() Config {
 	app := config.ParseApp()
 	database := config.ParseDatabase()
+	auth := config.ParseAuth()
+	apple := config.ParseApple()
 
 	return Config{
 		App:      app,
 		Database: database,
+		Auth:     auth,
+		Apple:    apple,
 	}
 }
 
@@ -31,18 +35,51 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 	}
 	transactor := provideTransactor(writer)
 	readTransactor := provideReadTransactor(reader)
+	apple := config2.Apple
+	apple2, err := provideApple(apple)
+	if err != nil {
+		return *new(Infra), err
+	}
 
 	return Infra{
 		Writer:         writer,
 		Reader:         reader,
 		Transactor:     transactor,
 		ReadTransactor: readTransactor,
+		Apple:          apple2,
 	}, nil
 }
 
 // MustNewInfra initializes dependencies and constructs Infra or panics on failure.
 func MustNewInfra(context2 context.Context, config2 Config) Infra {
 	v, err := NewInfra(context2, config2)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+// NewLib initializes dependencies and constructs Lib.
+func NewLib(config2 Config) (Lib, error) {
+	auth := config2.Auth
+	signer, err := provideSigner(auth)
+	if err != nil {
+		return *new(Lib), err
+	}
+	box, err := provideBox(auth)
+	if err != nil {
+		return *new(Lib), err
+	}
+
+	return Lib{
+		Signer: signer,
+		Box:    box,
+	}, nil
+}
+
+// MustNewLib initializes dependencies and constructs Lib or panics on failure.
+func MustNewLib(config2 Config) Lib {
+	v, err := NewLib(config2)
 	if err != nil {
 		panic(err)
 	}

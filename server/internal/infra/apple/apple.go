@@ -32,7 +32,18 @@ const (
 	maxResponseBytes   = 1 << 20
 )
 
-var ErrInvalidToken = errors.New("invalid apple identity token")
+var (
+	ErrInvalidToken  = errors.New("invalid apple identity token")
+	ErrNotConfigured = errors.New("sign in with apple private key is not configured")
+)
+
+type Auth interface {
+	VerifyIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error)
+	ExchangeCode(ctx context.Context, code string, now time.Time) (string, error)
+	Revoke(ctx context.Context, refreshToken string, now time.Time) error
+}
+
+var _ Auth = Client{}
 
 type Config struct {
 	BaseURL    string
@@ -153,6 +164,9 @@ func (c Client) Revoke(ctx context.Context, refreshToken string, now time.Time) 
 }
 
 func (c Client) clientSecret(now time.Time) (string, error) {
+	if c.cfg.PrivateKey == nil {
+		return "", ErrNotConfigured
+	}
 	claims := jwt.RegisteredClaims{
 		Issuer:    c.cfg.TeamID,
 		Subject:   c.cfg.BundleID,
