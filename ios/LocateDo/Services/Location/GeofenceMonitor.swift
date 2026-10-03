@@ -104,7 +104,12 @@ final class GeofenceMonitor {
         }
         let openTodos = place.openTodos
         let now = Date()
-        guard NotificationPolicy.shouldNotify(openTodoCount: openTodos.count, lastNotifiedAt: place.lastNotifiedAt, now: now) else {
+        let shouldNotify = NotificationPolicy.shouldNotify(
+            openTodoCount: openTodos.count,
+            lastNotifiedAt: place.lastNotifiedAt,
+            now: now
+        )
+        guard shouldNotify else {
             logger.info("Skipped notification for \(place.name, privacy: .public)")
             return
         }
@@ -125,7 +130,7 @@ final class GeofenceMonitor {
             ("conditionUnsupported", event.conditionUnsupported),
             ("conditionLimitExceeded", event.conditionLimitExceeded),
             ("persistenceUnavailable", event.persistenceUnavailable),
-            ("serviceSessionRequired", event.serviceSessionRequired),
+            ("serviceSessionRequired", event.serviceSessionRequired)
         ]
         let active = flags.filter(\.1).map(\.0)
         return active.isEmpty ? "no diagnostic flags" : active.joined(separator: ", ")

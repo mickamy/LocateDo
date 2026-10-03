@@ -1,0 +1,15 @@
+included:
+  - LocateDo
+  - LocateDoTests
+
+opt_in_rules:
+  - empty_count
+  - sorted_imports
+  - unneeded_parentheses_in_closure_argument
+
+line_length:
+  warning: 120
+  error: 160
+
+identifier_name:
+  min_length: 2

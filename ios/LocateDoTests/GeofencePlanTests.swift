@@ -24,7 +24,8 @@ struct GeofencePlanTests {
         var current: [String: GeofenceRegion] = [:]
         current[unchanged.id.uuidString] = GeofenceRegion(place: unchanged)
         current[resized.id.uuidString] = GeofenceRegion(place: resized)
-        current[staleID.uuidString] = GeofenceRegion(place: Place(id: staleID, name: "Stale", latitude: 0, longitude: 0))
+        let stale = Place(id: staleID, name: "Stale", latitude: 0, longitude: 0)
+        current[staleID.uuidString] = GeofenceRegion(place: stale)
         resized.radiusMeters = 200
 
         let desired = GeofencePlan.regions(for: [unchanged, resized, added], near: nil)

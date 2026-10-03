@@ -36,7 +36,8 @@ struct PlaceDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     if let location = locationProvider.location {
-                        Text(.placeDetailDistance(DistanceFormatting.string(meters: location.distance(from: place.location))))
+                        let distance = DistanceFormatting.string(meters: location.distance(from: place.location))
+                        Text(.placeDetailDistance(distance))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

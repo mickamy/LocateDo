@@ -31,7 +31,11 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         content.sound = .default
         content.threadIdentifier = place.id.uuidString
         content.userInfo = [Self.placeIDKey: place.id.uuidString]
-        let request = UNNotificationRequest(identifier: "arrival-\(place.id.uuidString)", content: content, trigger: nil)
+        let request = UNNotificationRequest(
+            identifier: "arrival-\(place.id.uuidString)",
+            content: content,
+            trigger: nil
+        )
         try? await center.add(request)
     }
 

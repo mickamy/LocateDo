@@ -33,6 +33,7 @@ struct RootView: View {
 }
 
 #Preview {
+    // swiftlint:disable:next force_try
     let container = try! AppModelContainer.make(inMemory: true)
     let router = AppRouter()
     let locationProvider = LocationProvider()
