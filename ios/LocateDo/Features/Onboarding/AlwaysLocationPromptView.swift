@@ -9,6 +9,7 @@ struct AlwaysLocationPromptView: View {
             Image(systemName: "location.circle.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
+                .accessibilityHidden(true)
             Text(.alwaysPromptTitle)
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)

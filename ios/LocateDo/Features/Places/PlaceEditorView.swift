@@ -51,10 +51,14 @@ struct PlaceEditorView: View {
                     Text(.placeEditorLocationLabel)
                 }
                 Section {
-                    Slider(value: $radiusMeters, in: Place.radiusRange, step: 50)
+                    Slider(value: $radiusMeters, in: Place.radiusRange, step: 50) {
+                        Text(.placeEditorRadiusLabel)
+                    }
+                    .accessibilityValue(Text(DistanceFormatting.string(meters: radiusMeters)))
                     Text(DistanceFormatting.string(meters: radiusMeters))
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                 } header: {
                     Text(.placeEditorRadiusLabel)
                 }
@@ -115,6 +119,7 @@ struct PlaceEditorView: View {
         }
         .frame(height: 160)
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
         .listRowInsets(EdgeInsets())
     }
 

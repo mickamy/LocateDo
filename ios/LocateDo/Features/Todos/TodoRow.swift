@@ -2,7 +2,6 @@ import SwiftUI
 
 struct TodoRow: View {
     let todo: Todo
-    var showsPlace = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -14,17 +13,24 @@ struct TodoRow: View {
                     .foregroundStyle(todo.isCompleted ? Color.accentColor : Color.secondary)
             }
             .buttonStyle(.plain)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(todo.title)
-                    .strikethrough(todo.isCompleted)
-                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
-                if showsPlace, let place = todo.place {
-                    Text(place.name)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text(todo.title)
+                .strikethrough(todo.isCompleted)
+                .foregroundStyle(todo.isCompleted ? .secondary : .primary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(todo.title)
+        .accessibilityValue(Text(status))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            toggle()
+        }
+    }
+
+    private var status: LocalizedStringResource {
+        if todo.isCompleted {
+            return .todoFilterDone
+        }
+        return .todoFilterOpen
     }
 
     private func toggle() {

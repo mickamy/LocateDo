@@ -140,6 +140,7 @@ struct PlaceDetailView: View {
         }
         .frame(height: 200)
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {

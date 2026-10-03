@@ -41,10 +41,14 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    Slider(value: $preferences.defaultRadiusMeters, in: Place.radiusRange, step: 50)
+                    Slider(value: $preferences.defaultRadiusMeters, in: Place.radiusRange, step: 50) {
+                        Text(.settingsDefaultRadiusLabel)
+                    }
+                    .accessibilityValue(Text(DistanceFormatting.string(meters: preferences.defaultRadiusMeters)))
                     Text(DistanceFormatting.string(meters: preferences.defaultRadiusMeters))
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                 } header: {
                     Text(.settingsDefaultRadiusTitle)
                 } footer: {

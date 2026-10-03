@@ -132,6 +132,7 @@ struct NearbyView: View {
                 }
                 .frame(height: 140)
                 .allowsHitTesting(false)
+                .accessibilityHidden(true)
                 .listRowInsets(EdgeInsets())
             } footer: {
                 let count = Nearby.openTodoCount(nearbyPlaces)
