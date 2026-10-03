@@ -30,7 +30,8 @@ DB_NAME = locatedo
 
 build:
 	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/server ./cmd/server
+	go build -o $(BUILD_DIR)/api ./cmd/api
+	go build -o $(BUILD_DIR)/worker ./cmd/worker
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -77,14 +78,7 @@ db-migrate:
 
 db-reset: db-drop db-create db-migrate
 
-gen: gen-buf gen-go
-
-gen-buf:
-	@command -v buf >/dev/null 2>&1 || { \
-		echo "buf is not installed"; \
-		exit 1; \
-	}
-	buf generate
+gen: gen-go gen-sqlc
 
 gen-go:
 	go generate ./...
