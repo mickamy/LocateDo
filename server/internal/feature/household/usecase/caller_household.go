@@ -7,10 +7,12 @@ import (
 	"uuid"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
-	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
+	"github.com/mickamy/LocateDo/internal/feature/household/repository"
 )
 
-func callerHousehold(ctx context.Context, memberships hrepository.Membership, userID uuid.UUID) (uuid.UUID, error) {
+// CallerHousehold returns the household the caller belongs to; other features
+// use it to scope their writes.
+func CallerHousehold(ctx context.Context, memberships repository.Membership, userID uuid.UUID) (uuid.UUID, error) {
 	m, err := memberships.FindByUser(ctx, userID)
 	if errors.Is(err, aerrors.ErrNotFound) {
 		return uuid.UUID{}, aerrors.PermissionDenied("not a member of a household")

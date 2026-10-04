@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"uuid"
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -16,6 +14,7 @@ import (
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1/householdv1connect"
 	"github.com/mickamy/LocateDo/internal/lib/caller"
+	"github.com/mickamy/LocateDo/internal/lib/ids"
 )
 
 type Household struct {
@@ -32,11 +31,11 @@ func (h *Household) CreateHousehold(
 	ctx context.Context,
 	req *connect.Request[householdv1.CreateHouseholdRequest],
 ) (*connect.Response[householdv1.CreateHouseholdResponse], error) {
-	userID, err := callerID(ctx)
+	userID, err := caller.UserID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	householdID, err := parseID("id", req.Msg.GetId())
+	householdID, err := ids.Parse("id", req.Msg.GetId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -62,11 +61,11 @@ func (h *Household) CreateInvite(
 	ctx context.Context,
 	req *connect.Request[householdv1.CreateInviteRequest],
 ) (*connect.Response[householdv1.CreateInviteResponse], error) {
-	userID, err := callerID(ctx)
+	userID, err := caller.UserID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	householdID, err := parseID("household_id", req.Msg.GetHouseholdId())
+	householdID, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -85,7 +84,7 @@ func (h *Household) AcceptInvite(
 	ctx context.Context,
 	req *connect.Request[householdv1.AcceptInviteRequest],
 ) (*connect.Response[householdv1.AcceptInviteResponse], error) {
-	userID, err := callerID(ctx)
+	userID, err := caller.UserID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -103,15 +102,15 @@ func (h *Household) RemoveMember(
 	ctx context.Context,
 	req *connect.Request[householdv1.RemoveMemberRequest],
 ) (*connect.Response[householdv1.RemoveMemberResponse], error) {
-	callerUserID, err := callerID(ctx)
+	callerUserID, err := caller.UserID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	householdID, err := parseID("household_id", req.Msg.GetHouseholdId())
+	householdID, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	userID, err := parseID("user_id", req.Msg.GetUserId())
+	userID, err := ids.Parse("user_id", req.Msg.GetUserId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -124,20 +123,4 @@ func (h *Household) RemoveMember(
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&householdv1.RemoveMemberResponse{}), nil
-}
-
-func callerID(ctx context.Context) (uuid.UUID, error) {
-	id, ok := caller.UserID(ctx)
-	if !ok {
-		return uuid.UUID{}, aerrors.Unauthenticated("no caller")
-	}
-	return id, nil
-}
-
-func parseID(field, raw string) (uuid.UUID, error) {
-	id, err := uuid.Parse(raw)
-	if err != nil {
-		return uuid.UUID{}, aerrors.InvalidArgument(fmt.Sprintf("%s: %v", field, err))
-	}
-	return id, nil
 }

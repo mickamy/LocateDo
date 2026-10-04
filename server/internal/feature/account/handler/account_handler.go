@@ -6,7 +6,6 @@ import (
 	"connectrpc.com/connect"
 
 	"github.com/mickamy/LocateDo/internal/di"
-	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/errors/cerrors"
 	"github.com/mickamy/LocateDo/internal/feature/account/mapper"
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
@@ -58,9 +57,9 @@ func (h *Account) DeleteAccount(
 	ctx context.Context,
 	_ *connect.Request[accountv1.DeleteAccountRequest],
 ) (*connect.Response[accountv1.DeleteAccountResponse], error) {
-	userID, ok := caller.UserID(ctx)
-	if !ok {
-		return nil, cerrors.Map(aerrors.Unauthenticated("no caller"))
+	userID, err := caller.UserID(ctx)
+	if err != nil {
+		return nil, cerrors.Map(err)
 	}
 	if err := h.deleteAccount.Do(ctx, usecase.DeleteAccountInput{UserID: userID}); err != nil {
 		return nil, cerrors.Map(err)

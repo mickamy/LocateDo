@@ -7,6 +7,7 @@ import (
 
 	"github.com/mickamy/LocateDo/internal/di"
 	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
+	husecase "github.com/mickamy/LocateDo/internal/feature/household/usecase"
 	"github.com/mickamy/LocateDo/internal/feature/place/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
@@ -27,9 +28,9 @@ type DeletePlace struct {
 
 func (uc DeletePlace) Do(ctx context.Context, in DeletePlaceInput) error {
 	if err := uc.transactor.WithTx(ctx, func(tx tx.Tx) error {
-		householdID, err := callerHousehold(ctx, uc.memberships.Bind(tx), in.UserID)
+		householdID, err := husecase.CallerHousehold(ctx, uc.memberships.Bind(tx), in.UserID)
 		if err != nil {
-			return err
+			return fmt.Errorf("caller household: %w", err)
 		}
 		if err := uc.places.Bind(tx).Delete(ctx, in.PlaceID, householdID); err != nil {
 			return fmt.Errorf("delete place: %w", err)

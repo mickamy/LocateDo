@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"uuid"
 
 	"connectrpc.com/connect"
 
@@ -15,6 +13,7 @@ import (
 	placev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1/placev1connect"
 	"github.com/mickamy/LocateDo/internal/lib/caller"
+	"github.com/mickamy/LocateDo/internal/lib/ids"
 )
 
 type Place struct {
@@ -29,11 +28,11 @@ func (h *Place) PutPlace(
 	ctx context.Context,
 	req *connect.Request[placev1.PutPlaceRequest],
 ) (*connect.Response[placev1.PutPlaceResponse], error) {
-	userID, err := callerID(ctx)
+	userID, err := caller.UserID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	householdID, err := parseID("household_id", req.Msg.GetHouseholdId())
+	householdID, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -53,11 +52,11 @@ func (h *Place) DeletePlace(
 	ctx context.Context,
 	req *connect.Request[placev1.DeletePlaceRequest],
 ) (*connect.Response[placev1.DeletePlaceResponse], error) {
-	userID, err := callerID(ctx)
+	userID, err := caller.UserID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	id, err := parseID("id", req.Msg.GetId())
+	id, err := ids.Parse("id", req.Msg.GetId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -66,20 +65,4 @@ func (h *Place) DeletePlace(
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&placev1.DeletePlaceResponse{}), nil
-}
-
-func callerID(ctx context.Context) (uuid.UUID, error) {
-	id, ok := caller.UserID(ctx)
-	if !ok {
-		return uuid.UUID{}, aerrors.Unauthenticated("no caller")
-	}
-	return id, nil
-}
-
-func parseID(field, raw string) (uuid.UUID, error) {
-	id, err := uuid.Parse(raw)
-	if err != nil {
-		return uuid.UUID{}, aerrors.InvalidArgument(fmt.Sprintf("%s: %v", field, err))
-	}
-	return id, nil
 }
