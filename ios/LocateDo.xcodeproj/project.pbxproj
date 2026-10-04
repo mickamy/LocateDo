@@ -6,6 +6,10 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3B34EEB33071027900D47174 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -56,6 +60,7 @@
 		3BB55BED3070E8CE008A116A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -110,7 +115,6 @@
 				3BB55BEC3070E8CE008A116A /* Sources */,
 				3BB55BED3070E8CE008A116A /* Frameworks */,
 				3BB55BEE3070E8CE008A116A /* Resources */,
-				3BF1AEBA3071100000D47174 /* Copy GoogleService-Info.plist */,
 			);
 			buildRules = (
 			);
@@ -118,6 +122,9 @@
 				3BB55BF23070E8CE008A116A /* LocateDo */,
 			);
 			name = LocateDo;
+			packageProductDependencies = (
+				3BF1AEBE3071100000D47174 /* FirebaseAnalytics */,
+			);
 			productName = LocateDo;
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
 			productType = "com.apple.product-type.application";
@@ -177,23 +184,6 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		3BF1AEBA3071100000D47174 /* Copy GoogleService-Info.plist */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			inputPaths = (
-				"$(SRCROOT)/Scripts/copy-google-service-info.sh",
-				"$(SRCROOT)/Firebase/GoogleService-Info-$(CONFIGURATION).plist",
-			);
-			name = "Copy GoogleService-Info.plist";
-			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
-			);
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Scripts/copy-google-service-info.sh\"";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3B34EEAB3071027900D47174 /* Sources */ = {
@@ -266,31 +256,6 @@
 			};
 			name = Release;
 		};
-		3BF1AEBB3071100000D47174 /* Staging configuration for PBXNativeTarget "LocateDoTests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocateDo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LocateDo";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Staging;
-		};
 		3BB55BFF3070E8CE008A116A /* Debug configuration for PBXNativeTarget "LocateDo" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -300,7 +265,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = AZ28EH9G9N;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "GoogleService-Info-*.plist";
 				GENERATE_INFOPLIST_FILE = YES;
+				INCLUDED_SOURCE_FILE_NAMES = "GoogleService-Info-$(CONFIGURATION).plist";
 				INFOPLIST_FILE = LocateDo/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "LocateDo needs your location in the background to remind you when you arrive at a place.";
@@ -345,7 +312,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = AZ28EH9G9N;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "GoogleService-Info-*.plist";
 				GENERATE_INFOPLIST_FILE = YES;
+				INCLUDED_SOURCE_FILE_NAMES = "GoogleService-Info-$(CONFIGURATION).plist";
 				INFOPLIST_FILE = LocateDo/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "LocateDo needs your location in the background to remind you when you arrive at a place.";
@@ -380,51 +349,6 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
-		};
-		3BF1AEBC3071100000D47174 /* Staging configuration for PBXNativeTarget "LocateDo" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Stg";
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = AZ28EH9G9N;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = LocateDo/Info.plist;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "LocateDo needs your location in the background to remind you when you arrive at a place.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LocateDo uses your location to show the places near you and the distance to them.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Staging;
 		};
 		3BB55C013070E8CE008A116A /* Debug configuration for PBXProject "LocateDo" */ = {
 			isa = XCBuildConfiguration;
@@ -540,6 +464,78 @@
 			};
 			name = Release;
 		};
+		3BF1AEBB3071100000D47174 /* Staging configuration for PBXNativeTarget "LocateDoTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LocateDo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LocateDo";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Staging;
+		};
+		3BF1AEBC3071100000D47174 /* Staging configuration for PBXNativeTarget "LocateDo" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Stg";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "GoogleService-Info-*.plist";
+				GENERATE_INFOPLIST_FILE = YES;
+				INCLUDED_SOURCE_FILE_NAMES = "GoogleService-Info-$(CONFIGURATION).plist";
+				INFOPLIST_FILE = LocateDo/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "LocateDo needs your location in the background to remind you when you arrive at a place.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LocateDo uses your location to show the places near you and the distance to them.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Staging;
+		};
 		3BF1AEBD3071100000D47174 /* Staging configuration for PBXProject "LocateDo" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -635,6 +631,14 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3BF1AEBE3071100000D47174 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3BB55BE83070E8CE008A116A /* Project object */;
 	validationLevel = 1;

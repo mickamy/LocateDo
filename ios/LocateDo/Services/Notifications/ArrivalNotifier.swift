@@ -60,6 +60,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     ) {
         if let raw = response.notification.request.content.userInfo[Self.placeIDKey] as? String,
            let placeID = UUID(uuidString: raw) {
+            Analytics.log(.arrivalOpened)
             Task { @MainActor in
                 router.open(placeID: placeID)
             }

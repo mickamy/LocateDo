@@ -19,6 +19,7 @@ struct LocateDoApp: App {
         notifier = ArrivalNotifier(router: router)
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         if !Self.isRunningTests {
+            Analytics.configure()
             geofence.start()
         }
     }

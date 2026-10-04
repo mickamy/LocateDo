@@ -130,6 +130,7 @@ final class GeofenceMonitor {
         await notifier.notifyArrival(at: place, todoTitles: openTodos.map(\.title))
         place.lastNotifiedAt = now
         try? context.save()
+        Analytics.log(.arrivalNotified, parameters: ["open_todos": openTodos.count])
         logger.notice("Notified arrival at \(place.name, privacy: .public)")
     }
 

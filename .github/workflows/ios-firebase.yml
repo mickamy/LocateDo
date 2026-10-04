@@ -32,8 +32,8 @@ jobs:
           ssh-private-key: ${{ secrets.MATCH_SSH_PRIVATE_KEY }}
       - name: Write GoogleService-Info.plist
         run: |
-          mkdir -p Firebase
-          printf '%s' "$GOOGLE_SERVICE_INFO" | base64 --decode > Firebase/GoogleService-Info-Staging.plist
+          mkdir -p LocateDo/Firebase
+          printf '%s' "$GOOGLE_SERVICE_INFO" | base64 --decode > LocateDo/Firebase/GoogleService-Info-Staging.plist
         working-directory: ios
         env:
           GOOGLE_SERVICE_INFO: ${{ secrets.FIREBASE_GOOGLE_SERVICE_INFO_STAGING }}
