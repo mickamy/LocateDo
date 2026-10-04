@@ -172,6 +172,10 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         var queue: [Result<Locatedo_Account_V1_RefreshTokenResponse, ConnectError>] = []
         var refreshCalls = 0
         var lastRefreshToken: String?
+        var signInResult: Result<Locatedo_Account_V1_SignInWithAppleResponse, ConnectError> =
+            .failure(ConnectError(code: .unimplemented, message: nil))
+        var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest?
+        var deleteCalls = 0
     }
 
     private let state = Mutex(State())
@@ -184,8 +188,20 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         state.withLock { $0.lastRefreshToken }
     }
 
+    var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest? {
+        state.withLock { $0.lastSignIn }
+    }
+
+    var deleteCalls: Int {
+        state.withLock { $0.deleteCalls }
+    }
+
     func enqueue(_ result: Result<Locatedo_Account_V1_RefreshTokenResponse, ConnectError>) {
         state.withLock { $0.queue.append(result) }
+    }
+
+    func respondToSignIn(with result: Result<Locatedo_Account_V1_SignInWithAppleResponse, ConnectError>) {
+        state.withLock { $0.signInResult = result }
     }
 
     func refreshToken(
@@ -208,7 +224,11 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         request: Locatedo_Account_V1_SignInWithAppleRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Account_V1_SignInWithAppleResponse> {
-        ResponseMessage(result: .failure(ConnectError(code: .unimplemented, message: nil)))
+        let result = state.withLock { state in
+            state.lastSignIn = request
+            return state.signInResult
+        }
+        return ResponseMessage(result: result)
     }
 
     func signInWithGoogle(
@@ -222,6 +242,7 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         request: Locatedo_Account_V1_DeleteAccountRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse> {
-        ResponseMessage(result: .failure(ConnectError(code: .unimplemented, message: nil)))
+        state.withLock { $0.deleteCalls += 1 }
+        return ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountResponse()))
     }
 }

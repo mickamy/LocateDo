@@ -30,4 +30,10 @@ final class AppPreferences {
         let storedRadius = defaults.double(forKey: Key.defaultRadiusMeters)
         defaultRadiusMeters = Place.radiusRange.contains(storedRadius) ? storedRadius : Place.defaultRadiusMeters
     }
+
+    func reset() {
+        hasCompletedOnboarding = false
+        hasPromptedAlwaysLocation = false
+        defaultRadiusMeters = Place.defaultRadiusMeters
+    }
 }

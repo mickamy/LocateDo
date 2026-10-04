@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
     @Environment(AppPreferences.self) private var preferences
+    @Environment(AccountManager.self) private var account
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     #if DEBUG
@@ -17,6 +18,17 @@ struct SettingsView: View {
         @Bindable var preferences = preferences
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink {
+                        AccountView()
+                    } label: {
+                        LabeledContent {
+                            Text(account.isSignedIn ? .settingsAccountSignedIn : .settingsAccountNotSignedIn)
+                        } label: {
+                            Label(.settingsAccountTitle, systemImage: "person.crop.circle")
+                        }
+                    }
+                }
                 Section {
                     LabeledContent {
                         Text(locationStatus)

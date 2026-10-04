@@ -47,6 +47,23 @@ settings:
     not_determined: "Not asked yet"
     needs_allow: "Reminders are delivered as notifications."
     allow: "Allow notifications"
+  account:
+    title: "Account"
+    signed_in: "Signed in with Apple"
+    not_signed_in: "Not signed in"
+    description: "Sign in with Apple to keep your places and to-dos in your account."
+    benefits:
+      sync_title: "Keep your lists"
+      sync_message: "Your places and to-dos stay with your account, even when you change phones."
+      share_title: "Share with family"
+      share_message: "Add places and to-dos together and get reminded when you arrive."
+      privacy_title: "Your location stays private"
+      privacy_message: "Your location never leaves this iPhone, and we don’t ask for your email."
+    sign_in_failed: "Couldn’t sign in. Try again."
+    delete: "Delete account"
+    delete_confirm_title: "Delete your account?"
+    delete_confirm_message: "Your account and the data saved on the server will be deleted. Places and to-dos on this device will be removed too."
+    delete_failed: "Couldn’t delete your account. Try again."
   open_settings: "Open Settings"
   default_radius:
     title: "New places"

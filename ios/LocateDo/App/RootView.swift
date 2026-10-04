@@ -1,9 +1,11 @@
+import OSLog
 import SwiftData
 import SwiftUI
 
 struct RootView: View {
     @Environment(AppRouter.self) private var router
     @Environment(AppPreferences.self) private var preferences
+    @Environment(AccountManager.self) private var account
 
     var body: some View {
         if preferences.hasCompletedOnboarding {
@@ -29,6 +31,14 @@ struct RootView: View {
                 SettingsView()
             }
         }
+        .task {
+            do {
+                try await account.uploadLocalDataIfNeeded()
+            } catch {
+                Logger(subsystem: "com.locatedo.LocateDo", category: "account")
+                    .error("Initial upload failed: \(error, privacy: .public)")
+            }
+        }
     }
 }
 
@@ -38,6 +48,13 @@ struct RootView: View {
     let router = AppRouter()
     let locationProvider = LocationProvider()
     let notifier = ArrivalNotifier(router: router)
+    let tokens = AccessTokenStore()
+    let api = APIClient(environment: APIEnvironment(baseURL: URL(string: "http://localhost:8080")!), tokens: tokens)
+    let authenticator = Authenticator(
+        store: KeychainSessionStore(service: "preview"),
+        account: api.account,
+        tokens: tokens
+    )
     RootView()
         .modelContainer(container)
         .environment(router)
@@ -45,4 +62,11 @@ struct RootView: View {
         .environment(locationProvider)
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))
+        .environment(authenticator)
+        .environment(AccountManager(
+            account: api.account,
+            household: api.household,
+            authenticator: authenticator,
+            context: container.mainContext
+        ))
 }
