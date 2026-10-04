@@ -8,10 +8,61 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
+	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
+
+func TestHousehold_createFindDelete(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	households := repository.NewHousehold(d.Reader)
+	ownerID := createUser(t, d)
+	id := uuid.NewV7()
+
+	// act
+	var created model.Household
+	inTx(t, d, func(tx tx.Tx) {
+		var err error
+		created, err = households.Bind(tx).Create(t.Context(), id, ownerID)
+		require.NoError(t, err)
+	})
+	found, err := households.Find(t.Context(), id)
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, id, created.ID)
+	assert.Equal(t, model.PlanFree, created.Plan)
+	assert.Equal(t, created, found)
+
+	inTx(t, d, func(tx tx.Tx) {
+		require.NoError(t, households.Bind(tx).Delete(t.Context(), id))
+		require.ErrorIs(t, households.Bind(tx).Delete(t.Context(), id), aerrors.ErrNotFound)
+	})
+	_, err = households.Find(t.Context(), id)
+	require.ErrorIs(t, err, aerrors.ErrNotFound)
+}
+
+func TestHousehold_Create_duplicateID(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	households := repository.NewHousehold(d.Reader)
+	id := createHousehold(t, d, households, createUser(t, d))
+
+	// act
+	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
+		_, err := households.Bind(tx).Create(t.Context(), id, createUser(t, d))
+		return err
+	})
+
+	// assert
+	require.ErrorIs(t, err, aerrors.ErrConflict)
+}
 
 func TestHousehold_MoveContents(t *testing.T) {
 	t.Parallel()
