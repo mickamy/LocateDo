@@ -32,7 +32,7 @@ struct TodoEditorView: View {
                 Section {
                     Picker(selection: $place) {
                         ForEach(places) { candidate in
-                            Label(candidate.name, systemImage: candidate.category.systemImage)
+                            Text(candidate.name)
                                 .tag(Optional(candidate))
                         }
                     } label: {
