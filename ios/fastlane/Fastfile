@@ -142,7 +142,7 @@ platform :ios do
     )
   end
 
-  # Signing is overridden per build so the project keeps automatic signing for Xcode.
+  # The Release and Staging configurations carry the match profiles in the project; Debug stays automatic.
   private_lane :archive do |options|
     app_identifier = options.fetch(:app_identifier)
     profile_name = ENV.fetch("sigh_#{app_identifier}_#{options[:profile_type]}_profile-name")
@@ -153,13 +153,7 @@ platform :ios do
       export_method: options[:export_method],
       export_options: { provisioningProfiles: { app_identifier => profile_name } },
       output_directory: "build",
-      xcargs: [
-        "CURRENT_PROJECT_VERSION=#{options[:build_number]}",
-        "CODE_SIGN_STYLE=Manual",
-        "CODE_SIGN_IDENTITY='Apple Distribution'",
-        "PROVISIONING_PROFILE_SPECIFIER='#{profile_name}'",
-        "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}"
-      ].join(" ")
+      xcargs: "CURRENT_PROJECT_VERSION=#{options[:build_number]}"
     )
   end
 
