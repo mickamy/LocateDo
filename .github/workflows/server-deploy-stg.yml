@@ -17,6 +17,13 @@ jobs:
         run: |
           make -C server .env
 
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: |
+            server/go.sum
+            server/tools/go.sum
+
       - name: Migrate database
         run: |
           make -C server db-migrate
