@@ -11,19 +11,24 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/internal/lib/token"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 func TestRefreshToken_rotates(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	e := newEnv(t)
-	signedIn, err := e.signIn.Do(e.ctx, signInInput("apple-sub", ""))
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	lib := newLib()
+	signedIn, err := usecase.NewSignInWithApple(infra, lib).Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
 	later := clock.Set(t.Context(), clock.NewFixed(now.Add(2*time.Hour)))
 
 	// act
-	out, err := e.refresh.Do(later, usecase.RefreshTokenInput{RefreshToken: signedIn.Session.RefreshToken})
+	out, err := usecase.NewRefreshToken(infra, lib).Do(later, usecase.RefreshTokenInput{
+		RefreshToken: signedIn.Session.RefreshToken,
+	})
 
 	// assert
 	require.NoError(t, err)
@@ -37,16 +42,19 @@ func TestRefreshToken_reuseRevokesFamily(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	e := newEnv(t)
-	signedIn, err := e.signIn.Do(e.ctx, signInInput("apple-sub", ""))
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	lib := newLib()
+	refresh := usecase.NewRefreshToken(infra, lib)
+	signedIn, err := usecase.NewSignInWithApple(infra, lib).Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
 	stolen := signedIn.Session.RefreshToken
-	rotated, err := e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: stolen})
+	rotated, err := refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: stolen})
 	require.NoError(t, err)
 
 	// act
-	_, reuseErr := e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: stolen})
-	_, rotatedErr := e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: rotated.Session.RefreshToken})
+	_, reuseErr := refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: stolen})
+	_, rotatedErr := refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: rotated.Session.RefreshToken})
 
 	// assert
 	require.ErrorIs(t, reuseErr, aerrors.ErrUnauthenticated)
@@ -58,17 +66,21 @@ func TestRefreshToken_reuseKeepsOtherFamilies(t *testing.T) {
 	t.Parallel()
 
 	// arrange: the same user signed in on two devices
-	e := newEnv(t)
-	phone, err := e.signIn.Do(e.ctx, signInInput("apple-sub", ""))
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	lib := newLib()
+	signIn := usecase.NewSignInWithApple(infra, lib)
+	refresh := usecase.NewRefreshToken(infra, lib)
+	phone, err := signIn.Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
-	tablet, err := e.signIn.Do(e.ctx, signInInput("apple-sub", ""))
+	tablet, err := signIn.Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
-	_, err = e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: phone.Session.RefreshToken})
+	_, err = refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: phone.Session.RefreshToken})
 	require.NoError(t, err)
 
 	// act
-	_, reuseErr := e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: phone.Session.RefreshToken})
-	_, tabletErr := e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: tablet.Session.RefreshToken})
+	_, reuseErr := refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: phone.Session.RefreshToken})
+	_, tabletErr := refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: tablet.Session.RefreshToken})
 
 	// assert
 	require.ErrorIs(t, reuseErr, aerrors.ErrUnauthenticated)
@@ -78,9 +90,11 @@ func TestRefreshToken_reuseKeepsOtherFamilies(t *testing.T) {
 func TestRefreshToken_unknown(t *testing.T) {
 	t.Parallel()
 
-	e := newEnv(t)
+	d := tdb.New(t)
 
-	_, err := e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: "never-issued"})
+	_, err := usecase.NewRefreshToken(d.Infra(), newLib()).Do(fixedClock(t), usecase.RefreshTokenInput{
+		RefreshToken: "never-issued",
+	})
 
 	require.ErrorIs(t, err, aerrors.ErrUnauthenticated)
 }
@@ -89,17 +103,20 @@ func TestRefreshToken_expired(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	e := newEnv(t)
-	signedIn, err := e.signIn.Do(e.ctx, signInInput("apple-sub", ""))
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	lib := newLib()
+	refresh := usecase.NewRefreshToken(infra, lib)
+	signedIn, err := usecase.NewSignInWithApple(infra, lib).Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
 	expired := clock.Set(t.Context(), clock.NewFixed(now.Add(token.RefreshTTL)))
 
 	// act
-	_, err = e.refresh.Do(expired, usecase.RefreshTokenInput{RefreshToken: signedIn.Session.RefreshToken})
+	_, err = refresh.Do(expired, usecase.RefreshTokenInput{RefreshToken: signedIn.Session.RefreshToken})
 
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrUnauthenticated)
 	// refused without being consumed, so it still works before expiry
-	_, err = e.refresh.Do(e.ctx, usecase.RefreshTokenInput{RefreshToken: signedIn.Session.RefreshToken})
+	_, err = refresh.Do(fixedClock(t), usecase.RefreshTokenInput{RefreshToken: signedIn.Session.RefreshToken})
 	require.NoError(t, err)
 }

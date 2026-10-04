@@ -17,7 +17,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/server"
-	"github.com/mickamy/LocateDo/test/tinfra"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 func TestAccount_signInRefreshDelete(t *testing.T) {
@@ -86,7 +86,7 @@ func TestAccount_DeleteAccount_requiresToken(t *testing.T) {
 func newClient(t *testing.T) accountv1connect.AccountServiceClient {
 	t.Helper()
 
-	infra := tinfra.New(t)
+	infra := tdb.New(t).Infra()
 	infra.Apple = fakeApple{}
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}

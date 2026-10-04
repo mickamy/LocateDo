@@ -20,9 +20,9 @@ func TestMembership_lifecycle(t *testing.T) {
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
 	memberships := repository.NewMembership(d.Reader)
-	ownerID := d.Seed.User(t)
+	ownerID := d.Seeder.User(t)
 	householdID := createHousehold(t, d, households, ownerID)
-	memberID := d.Seed.User(t)
+	memberID := d.Seeder.User(t)
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {
@@ -59,9 +59,9 @@ func TestMembership_Create_userAlreadyInAHousehold(t *testing.T) {
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
 	memberships := repository.NewMembership(d.Reader)
-	userID := d.Seed.User(t)
-	first := createHousehold(t, d, households, d.Seed.User(t))
-	second := createHousehold(t, d, households, d.Seed.User(t))
+	userID := d.Seeder.User(t)
+	first := createHousehold(t, d, households, d.Seeder.User(t))
+	second := createHousehold(t, d, households, d.Seeder.User(t))
 	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, memberships.Bind(tx).Create(t.Context(), model.Membership{
 			HouseholdID: first, UserID: userID, Role: model.RoleMember,

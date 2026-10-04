@@ -16,52 +16,35 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
-	"github.com/mickamy/LocateDo/internal/lib/seal"
-	"github.com/mickamy/LocateDo/internal/lib/token"
-	"github.com/mickamy/LocateDo/test/tinfra"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 var now = time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
 
-type env struct {
-	ctx           context.Context //nolint:containedctx // test fixture
-	users         repository.User
-	appleTokens   repository.AppleToken
-	signer        token.Signer
-	box           seal.Box
-	apple         *fakeApple
-	signIn        *usecase.SignInWithApple
-	refresh       *usecase.RefreshToken
-	deleteAccount *usecase.DeleteAccount
-}
-
-func newEnv(t *testing.T) *env {
+func fixedClock(t *testing.T) context.Context {
 	t.Helper()
 
-	infra := tinfra.New(t)
+	return clock.Set(t.Context(), clock.NewFixed(now))
+}
+
+// fakedApple returns the wiring with the Apple client replaced by a fake.
+func fakedApple(d tdb.DB) (di.Infra, *fakeApple) {
 	fake := &fakeApple{}
+	infra := d.Infra()
 	infra.Apple = fake
-	lib := di.MustNewLib(di.NewConfig())
-
-	return &env{
-		ctx:           clock.Set(t.Context(), clock.NewFixed(now)),
-		users:         repository.NewUser(infra.Reader),
-		appleTokens:   repository.NewAppleToken(infra.Reader),
-		signer:        lib.Signer,
-		box:           lib.Box,
-		apple:         fake,
-		signIn:        usecase.NewSignInWithApple(infra, lib),
-		refresh:       usecase.NewRefreshToken(infra, lib),
-		deleteAccount: usecase.NewDeleteAccount(infra, lib),
-	}
+	return infra, fake
 }
 
-func (e *env) openAppleToken(t *testing.T, userID uuid.UUID) string {
+func newLib() di.Lib {
+	return di.MustNewLib(di.NewConfig())
+}
+
+func openAppleToken(t *testing.T, d tdb.DB, lib di.Lib, userID uuid.UUID) string {
 	t.Helper()
 
-	sealed, err := e.appleTokens.Find(t.Context(), userID)
+	sealed, err := repository.NewAppleToken(d.Reader).Find(t.Context(), userID)
 	require.NoError(t, err)
-	plain, err := e.box.Open(sealed, userID[:])
+	plain, err := lib.Box.Open(sealed, userID[:])
 	require.NoError(t, err)
 	return string(plain)
 }

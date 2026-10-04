@@ -16,42 +16,42 @@ import (
 	placev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1/placev1connect"
 	"github.com/mickamy/LocateDo/internal/server"
-	"github.com/mickamy/LocateDo/test/tinfra"
-	"github.com/mickamy/LocateDo/test/tseed"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 func TestPlace_putThenDelete(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	e := newEnv(t)
-	h := e.seed.Household(t, hmodel.PlanPro)
-	member := e.token(t, e.seed.Member(t, h.ID))
+	d := tdb.New(t)
+	client := newClient(t, d)
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	member := token(t, d.Seeder.Member(t, h.ID))
 	input := placeInput()
 
 	// act & assert: a member adds a place
-	_, err := e.client.PutPlace(t.Context(), authed(member, &placev1.PutPlaceRequest{
+	_, err := client.PutPlace(t.Context(), authed(member, &placev1.PutPlaceRequest{
 		HouseholdId: h.ID.String(),
 		Place:       input,
 	}))
 	require.NoError(t, err)
-	assert.Equal(t, 1, e.seed.Count(t, "places", h.ID))
+	assert.Equal(t, 1, d.Seeder.Count(t, "places", h.ID))
 
 	// act & assert: sending the same id again overwrites instead of adding
 	input.Name = "Grocery"
-	_, err = e.client.PutPlace(t.Context(), authed(member, &placev1.PutPlaceRequest{
+	_, err = client.PutPlace(t.Context(), authed(member, &placev1.PutPlaceRequest{
 		HouseholdId: h.ID.String(),
 		Place:       input,
 	}))
 	require.NoError(t, err)
-	assert.Equal(t, 1, e.seed.Count(t, "places", h.ID))
+	assert.Equal(t, 1, d.Seeder.Count(t, "places", h.ID))
 
 	// act & assert: deleting twice is fine
-	_, err = e.client.DeletePlace(t.Context(), authed(member, &placev1.DeletePlaceRequest{Id: input.GetId()}))
+	_, err = client.DeletePlace(t.Context(), authed(member, &placev1.DeletePlaceRequest{Id: input.GetId()}))
 	require.NoError(t, err)
-	_, err = e.client.DeletePlace(t.Context(), authed(member, &placev1.DeletePlaceRequest{Id: input.GetId()}))
+	_, err = client.DeletePlace(t.Context(), authed(member, &placev1.DeletePlaceRequest{Id: input.GetId()}))
 	require.NoError(t, err)
-	assert.Zero(t, e.seed.Count(t, "places", h.ID))
+	assert.Zero(t, d.Seeder.Count(t, "places", h.ID))
 }
 
 func TestPlace_PutPlace_rejects(t *testing.T) {
@@ -60,32 +60,32 @@ func TestPlace_PutPlace_rejects(t *testing.T) {
 	tests := []struct {
 		name string
 		// arrange returns the caller's token and the household to write to.
-		arrange func(t *testing.T, e *env) (string, uuid.UUID)
+		arrange func(t *testing.T, d tdb.DB) (string, uuid.UUID)
 		want    connect.Code
 	}{
 		{
 			name: "free household at the limit",
-			arrange: func(t *testing.T, e *env) (string, uuid.UUID) {
-				h := e.seed.Household(t, hmodel.PlanFree)
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID) {
+				h := d.Seeder.Household(t, hmodel.PlanFree)
 				for range hmodel.MaxFreePlaces {
-					e.seed.Place(t, h.ID)
+					d.Seeder.Place(t, h.ID)
 				}
-				return e.token(t, h.OwnerID), h.ID
+				return token(t, h.OwnerID), h.ID
 			},
 			want: connect.CodeFailedPrecondition,
 		},
 		{
 			name: "another household",
-			arrange: func(t *testing.T, e *env) (string, uuid.UUID) {
-				h := e.seed.Household(t, hmodel.PlanPro)
-				return e.token(t, h.OwnerID), e.seed.Household(t, hmodel.PlanPro).ID
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID) {
+				h := d.Seeder.Household(t, hmodel.PlanPro)
+				return token(t, h.OwnerID), d.Seeder.Household(t, hmodel.PlanPro).ID
 			},
 			want: connect.CodePermissionDenied,
 		},
 		{
 			name: "no token",
-			arrange: func(t *testing.T, e *env) (string, uuid.UUID) {
-				return "", e.seed.Household(t, hmodel.PlanPro).ID
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID) {
+				return "", d.Seeder.Household(t, hmodel.PlanPro).ID
 			},
 			want: connect.CodeUnauthenticated,
 		},
@@ -95,11 +95,12 @@ func TestPlace_PutPlace_rejects(t *testing.T) {
 			t.Parallel()
 
 			// arrange
-			e := newEnv(t)
-			token, householdID := tt.arrange(t, e)
+			d := tdb.New(t)
+			client := newClient(t, d)
+			tok, householdID := tt.arrange(t, d)
 
 			// act
-			_, err := e.client.PutPlace(t.Context(), authed(token, &placev1.PutPlaceRequest{
+			_, err := client.PutPlace(t.Context(), authed(tok, &placev1.PutPlaceRequest{
 				HouseholdId: householdID.String(),
 				Place:       placeInput(),
 			}))
@@ -110,33 +111,21 @@ func TestPlace_PutPlace_rejects(t *testing.T) {
 	}
 }
 
-type env struct {
-	seed   tseed.Seeder
-	lib    di.Lib
-	client placev1connect.PlaceServiceClient
-}
-
-func newEnv(t *testing.T) *env {
+func newClient(t *testing.T, d tdb.DB) placev1connect.PlaceServiceClient {
 	t.Helper()
 
-	infra := tinfra.New(t)
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
-
-	handlers := server.NewHandlers(infra, lib)
+	handlers := server.NewHandlers(d.Infra(), lib)
 	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
 	t.Cleanup(srv.Close)
-	return &env{
-		seed:   tseed.New(infra.Writer),
-		lib:    lib,
-		client: placev1connect.NewPlaceServiceClient(srv.Client(), srv.URL),
-	}
+	return placev1connect.NewPlaceServiceClient(srv.Client(), srv.URL)
 }
 
-func (e *env) token(t *testing.T, userID uuid.UUID) string {
+func token(t *testing.T, userID uuid.UUID) string {
 	t.Helper()
 
-	raw, _, err := e.lib.Signer.IssueAccess(userID, time.Now())
+	raw, _, err := di.MustNewLib(di.NewConfig()).Signer.IssueAccess(userID, time.Now())
 	require.NoError(t, err)
 	return raw
 }

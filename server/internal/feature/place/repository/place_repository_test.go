@@ -21,8 +21,8 @@ func TestPlace_Upsert_insertThenUpdate(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
-	categoryID := d.Seed.Category(t, householdID)
+	householdID := d.Seeder.Household(t, hmodel.PlanFree).ID
+	categoryID := d.Seeder.Category(t, householdID)
 	p := model.Place{
 		ID:          uuid.NewV7(),
 		HouseholdID: householdID,
@@ -64,8 +64,8 @@ func TestPlace_Upsert_unknownCategoryBecomesNull(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
-	otherCategory := d.Seed.Category(t, d.Seed.Household(t, hmodel.PlanFree).ID)
+	householdID := d.Seeder.Household(t, hmodel.PlanFree).ID
+	otherCategory := d.Seeder.Category(t, d.Seeder.Household(t, hmodel.PlanFree).ID)
 	missing := uuid.NewV7()
 
 	tests := map[string]*uuid.UUID{
@@ -103,9 +103,9 @@ func TestPlace_Upsert_idInAnotherHousehold(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	otherHousehold := d.Seed.Household(t, hmodel.PlanFree).ID
-	taken := d.Seed.Place(t, otherHousehold)
-	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
+	otherHousehold := d.Seeder.Household(t, hmodel.PlanFree).ID
+	taken := d.Seeder.Place(t, otherHousehold)
+	householdID := d.Seeder.Household(t, hmodel.PlanFree).ID
 
 	// act
 	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
@@ -153,11 +153,11 @@ func TestPlace_ExistsAndCount(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
-	otherHousehold := d.Seed.Household(t, hmodel.PlanFree).ID
-	first := d.Seed.Place(t, householdID)
-	d.Seed.Place(t, householdID)
-	elsewhere := d.Seed.Place(t, otherHousehold)
+	householdID := d.Seeder.Household(t, hmodel.PlanFree).ID
+	otherHousehold := d.Seeder.Household(t, hmodel.PlanFree).ID
+	first := d.Seeder.Place(t, householdID)
+	d.Seeder.Place(t, householdID)
+	elsewhere := d.Seeder.Place(t, otherHousehold)
 
 	// act
 	n, err := places.Count(t.Context(), householdID)
@@ -179,10 +179,10 @@ func TestPlace_Delete(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
-	otherHousehold := d.Seed.Household(t, hmodel.PlanFree).ID
-	id := d.Seed.Place(t, householdID)
-	elsewhere := d.Seed.Place(t, otherHousehold)
+	householdID := d.Seeder.Household(t, hmodel.PlanFree).ID
+	otherHousehold := d.Seeder.Household(t, hmodel.PlanFree).ID
+	id := d.Seeder.Place(t, householdID)
+	elsewhere := d.Seeder.Place(t, otherHousehold)
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {

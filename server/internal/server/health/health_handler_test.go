@@ -10,15 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mickamy/LocateDo/internal/server/health"
-	"github.com/mickamy/LocateDo/test/tinfra"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 func TestHealth_ServeHTTP(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	infra := tinfra.New(t)
-	h := health.NewHealth(infra.Writer, infra.Reader)
+	d := tdb.New(t)
+	h := health.NewHealth(d.Writer, d.Reader)
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 

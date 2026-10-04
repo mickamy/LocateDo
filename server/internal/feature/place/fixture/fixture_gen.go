@@ -3,6 +3,8 @@
 package fixture
 
 import (
+	"uuid"
+
 	"github.com/brianvoe/gofakeit/v7"
 
 	"github.com/mickamy/LocateDo/internal/feature/place/model"
@@ -10,11 +12,13 @@ import (
 
 func Place(setters ...func(m *model.Place)) model.Place {
 	m := model.Place{
-		Name:      gofakeit.Name(),
-		Lat:       gofakeit.Float64Range(-90, 90),
-		Lng:       gofakeit.Float64Range(-180, 180),
-		RadiusM:   int32(gofakeit.Number(50, 500)),
-		SortOrder: gofakeit.Int32(),
+		ID:          uuid.MustParse(gofakeit.UUID()),
+		HouseholdID: uuid.MustParse(gofakeit.UUID()),
+		Name:        gofakeit.Name(),
+		Lat:         gofakeit.Float64Range(-90, 90),
+		Lng:         gofakeit.Float64Range(-180, 180),
+		RadiusM:     int32(gofakeit.Number(50, 500)),
+		SortOrder:   gofakeit.Int32(),
 	}
 	for _, s := range setters {
 		s(&m)

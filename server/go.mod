@@ -8,7 +8,7 @@ require (
 	connectrpc.com/validate v0.7.0
 	github.com/brianvoe/gofakeit/v7 v7.17.1
 	github.com/caarlos0/env/v11 v11.4.1
-	github.com/go-kanna/kanna v0.1.3
+	github.com/go-kanna/kanna v0.1.5
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.11.0

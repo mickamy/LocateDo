@@ -18,7 +18,7 @@ import (
 	placev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1/placev1connect"
 	"github.com/mickamy/LocateDo/internal/server"
-	"github.com/mickamy/LocateDo/test/tinfra"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 const placeID = "0199a6f0-0000-7000-8000-000000000001"
@@ -117,7 +117,7 @@ func newTestServer(t *testing.T) (*httptest.Server, di.Lib) {
 
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
 	lib := di.MustNewLib(di.NewConfig())
-	handlers := server.NewHandlers(tinfra.New(t), lib)
+	handlers := server.NewHandlers(tdb.New(t).Infra(), lib)
 	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
 	t.Cleanup(srv.Close)
 	return srv, lib

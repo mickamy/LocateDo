@@ -20,7 +20,7 @@ func TestHousehold_createFindDelete(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
-	ownerID := d.Seed.User(t)
+	ownerID := d.Seeder.User(t)
 	id := uuid.NewV7()
 
 	// act
@@ -52,11 +52,11 @@ func TestHousehold_Create_duplicateID(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
-	id := createHousehold(t, d, households, d.Seed.User(t))
+	id := createHousehold(t, d, households, d.Seeder.User(t))
 
 	// act
 	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
-		_, err := households.Bind(tx).Create(t.Context(), id, d.Seed.User(t))
+		_, err := households.Bind(tx).Create(t.Context(), id, d.Seeder.User(t))
 		return err
 	})
 
@@ -70,20 +70,20 @@ func TestHousehold_MoveContents(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
-	from := createHousehold(t, d, households, d.Seed.User(t))
-	to := createHousehold(t, d, households, d.Seed.User(t))
+	from := createHousehold(t, d, households, d.Seeder.User(t))
+	to := createHousehold(t, d, households, d.Seeder.User(t))
 
-	fromShopping := d.Seed.BuiltinCategory(t, from, "shopping")
-	fromWork := d.Seed.BuiltinCategory(t, from, "work")
-	custom := d.Seed.Category(t, from)
-	toShopping := d.Seed.BuiltinCategory(t, to, "shopping")
+	fromShopping := d.Seeder.BuiltinCategory(t, from, "shopping")
+	fromWork := d.Seeder.BuiltinCategory(t, from, "work")
+	custom := d.Seeder.Category(t, from)
+	toShopping := d.Seeder.BuiltinCategory(t, to, "shopping")
 
-	inShopping := d.Seed.CategorizedPlace(t, from, fromShopping)
-	inWork := d.Seed.CategorizedPlace(t, from, fromWork)
-	inCustom := d.Seed.CategorizedPlace(t, from, custom)
-	uncategorized := d.Seed.Place(t, from)
-	todo := d.Seed.Todo(t, from, inShopping)
-	versionBefore := d.Seed.Version(t, to)
+	inShopping := d.Seeder.CategorizedPlace(t, from, fromShopping)
+	inWork := d.Seeder.CategorizedPlace(t, from, fromWork)
+	inCustom := d.Seeder.CategorizedPlace(t, from, custom)
+	uncategorized := d.Seeder.Place(t, from)
+	todo := d.Seeder.Todo(t, from, inShopping)
+	versionBefore := d.Seeder.Version(t, to)
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {
@@ -99,7 +99,7 @@ func TestHousehold_MoveContents(t *testing.T) {
 	assert.Equal(t, to, categoryHousehold(t, d, custom))
 	assert.Equal(t, to, todoHousehold(t, d, todo))
 
-	assert.Greater(t, d.Seed.Version(t, to), versionBefore, "moved rows reach the destination's members")
+	assert.Greater(t, d.Seeder.Version(t, to), versionBefore, "moved rows reach the destination's members")
 	_, err := households.Find(t.Context(), from)
 	require.ErrorIs(t, err, aerrors.ErrNotFound)
 	var leftover int
@@ -114,8 +114,8 @@ func TestHousehold_MoveContents_empty(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
-	from := createHousehold(t, d, households, d.Seed.User(t))
-	to := createHousehold(t, d, households, d.Seed.User(t))
+	from := createHousehold(t, d, households, d.Seeder.User(t))
+	to := createHousehold(t, d, households, d.Seeder.User(t))
 
 	// act & assert
 	d.InTx(t, func(tx tx.Tx) {
@@ -162,7 +162,7 @@ func TestHousehold_FindForUpdate(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	households := repository.NewHousehold(d.Reader)
-	id := createHousehold(t, d, households, d.Seed.User(t))
+	id := createHousehold(t, d, households, d.Seeder.User(t))
 
 	// act
 	var locked model.Household

@@ -9,17 +9,20 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
+	"github.com/mickamy/LocateDo/test/tdb"
 )
 
 func TestCreateInvite(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	e := newEnv(t)
-	h := e.seed.Household(t, model.PlanPro)
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, model.PlanPro)
 
 	// act
-	out, err := e.createInvite.Do(e.ctx, usecase.CreateInviteInput{UserID: h.OwnerID, HouseholdID: h.ID})
+	out, err := usecase.NewCreateInvite(d.Infra()).Do(fixedClock(t), usecase.CreateInviteInput{
+		UserID: h.OwnerID, HouseholdID: h.ID,
+	})
 
 	// assert
 	require.NoError(t, err)
@@ -32,32 +35,31 @@ func TestCreateInvite_rejects(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		arrange func(t *testing.T, e *env) usecase.CreateInviteInput
+		arrange func(t *testing.T, d tdb.DB) usecase.CreateInviteInput
 		want    error
 	}{
 		{
 			name: "free plan",
-			arrange: func(t *testing.T, e *env) usecase.CreateInviteInput {
-				h := e.seed.Household(t, model.PlanFree)
+			arrange: func(t *testing.T, d tdb.DB) usecase.CreateInviteInput {
+				h := d.Seeder.Household(t, model.PlanFree)
 				return usecase.CreateInviteInput{UserID: h.OwnerID, HouseholdID: h.ID}
 			},
 			want: aerrors.ErrPrecondition,
 		},
 		{
 			name: "not the owner",
-			arrange: func(t *testing.T, e *env) usecase.CreateInviteInput {
-				householdID := e.seed.Household(t, model.PlanPro).ID
-				memberID := e.seed.Member(t, householdID)
-				return usecase.CreateInviteInput{UserID: memberID, HouseholdID: householdID}
+			arrange: func(t *testing.T, d tdb.DB) usecase.CreateInviteInput {
+				h := d.Seeder.Household(t, model.PlanPro)
+				return usecase.CreateInviteInput{UserID: d.Seeder.Member(t, h.ID), HouseholdID: h.ID}
 			},
 			want: aerrors.ErrPermissionDenied,
 		},
 		{
 			name: "household is full",
-			arrange: func(t *testing.T, e *env) usecase.CreateInviteInput {
-				h := e.seed.Household(t, model.PlanPro)
+			arrange: func(t *testing.T, d tdb.DB) usecase.CreateInviteInput {
+				h := d.Seeder.Household(t, model.PlanPro)
 				for range model.MaxMembers - 1 {
-					e.seed.Member(t, h.ID)
+					d.Seeder.Member(t, h.ID)
 				}
 				return usecase.CreateInviteInput{UserID: h.OwnerID, HouseholdID: h.ID}
 			},
@@ -68,10 +70,10 @@ func TestCreateInvite_rejects(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			e := newEnv(t)
-			in := tt.arrange(t, e)
+			d := tdb.New(t)
+			in := tt.arrange(t, d)
 
-			_, err := e.createInvite.Do(e.ctx, in)
+			_, err := usecase.NewCreateInvite(d.Infra()).Do(fixedClock(t), in)
 
 			require.ErrorIs(t, err, tt.want)
 		})

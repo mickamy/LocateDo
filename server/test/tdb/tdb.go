@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mickamy/LocateDo/config"
+	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db/migrate"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
@@ -25,7 +26,7 @@ type DB struct {
 	Writer     db.Writer
 	Reader     db.Reader
 	Transactor tx.Transactor
-	Seed       tseed.Seeder
+	Seeder     tseed.Seeder
 }
 
 // New provisions an isolated database and returns typed pools connected to
@@ -46,7 +47,16 @@ func New(t *testing.T) DB {
 	require.NoError(t, err)
 	t.Cleanup(reader.Close)
 
-	return DB{Writer: writer, Reader: reader, Transactor: tx.NewTransactor(writer), Seed: tseed.New(writer)}
+	return DB{Writer: writer, Reader: reader, Transactor: tx.NewTransactor(writer), Seeder: tseed.New(writer)}
+}
+
+func (d DB) Infra() di.Infra {
+	return di.Infra{
+		Writer:         d.Writer,
+		Reader:         d.Reader,
+		Transactor:     d.Transactor,
+		ReadTransactor: tx.NewReadTransactor(d.Reader),
+	}
 }
 
 func (d DB) InTx(t *testing.T, fn func(tx tx.Tx)) {
