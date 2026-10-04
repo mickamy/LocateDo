@@ -73,6 +73,7 @@ final class GeofenceMonitor {
     }
 
     private func run() async {
+        await authorizationDecided()
         updateServiceSession(for: locationProvider.authorizationStatus)
         authorizationWatch = Task { [locationProvider] in
             for await status in Observations({ locationProvider.authorizationStatus }) {
@@ -96,6 +97,17 @@ final class GeofenceMonitor {
             }
         } catch {
             logger.error("Event stream ended: \(error, privacy: .public)")
+        }
+    }
+
+    // CLMonitor opens an implicit service session that prompts for When In Use, which would preempt onboarding.
+    private func authorizationDecided() async {
+        if locationProvider.authorizationStatus != .notDetermined {
+            return
+        }
+        for await status in Observations({ [locationProvider] in locationProvider.authorizationStatus })
+        where status != .notDetermined {
+            return
         }
     }
 
