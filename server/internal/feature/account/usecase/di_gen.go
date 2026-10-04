@@ -5,6 +5,7 @@ package usecase
 import (
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository3 "github.com/mickamy/LocateDo/internal/feature/device/repository"
 	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
@@ -62,5 +63,19 @@ func NewSignInWithApple(infra di.Infra, lib di.Lib) *SignInWithApple {
 		apple:       apple,
 		signer:      signer,
 		box:         box,
+	}
+}
+
+// NewSignOut initializes dependencies and constructs SignOut.
+func NewSignOut(infra di.Infra) *SignOut {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	tokens := repository.NewRefreshToken(reader)
+	devices := repository3.NewDevice(reader)
+
+	return &SignOut{
+		transactor: transactor,
+		tokens:     tokens,
+		devices:    devices,
 	}
 }

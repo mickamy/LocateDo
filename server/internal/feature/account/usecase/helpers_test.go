@@ -14,7 +14,11 @@ import (
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
+	dfixture "github.com/mickamy/LocateDo/internal/feature/device/fixture"
+	dmodel "github.com/mickamy/LocateDo/internal/feature/device/model"
+	drepository "github.com/mickamy/LocateDo/internal/feature/device/repository"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
+	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -47,6 +51,25 @@ func openAppleToken(t *testing.T, d tdb.DB, lib di.Lib, userID uuid.UUID) string
 	plain, err := lib.Box.Open(sealed, userID[:])
 	require.NoError(t, err)
 	return string(plain)
+}
+
+func registerDevice(t *testing.T, d tdb.DB, userID uuid.UUID) dmodel.Device {
+	t.Helper()
+
+	device := dfixture.Device(func(m *dmodel.Device) { m.UserID = userID; m.LastSeenAt = now })
+	d.InTx(t, func(tx tx.Tx) {
+		require.NoError(t, drepository.NewDevice(d.Reader).Bind(tx).Upsert(t.Context(), device))
+	})
+	return device
+}
+
+func countDevices(t *testing.T, d tdb.DB, pushToken string) int {
+	t.Helper()
+
+	var n int
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT count(*) FROM devices WHERE push_token = $1", pushToken).Scan(&n))
+	return n
 }
 
 func signInInput(subject, displayName string) usecase.SignInWithAppleInput {

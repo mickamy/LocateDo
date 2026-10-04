@@ -15,6 +15,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/di"
 	accountv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
+	devicev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/device/v1"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/server"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -58,6 +59,49 @@ func TestAccount_signInRefreshDelete(t *testing.T) {
 		RefreshToken: refreshed.Msg.GetSession().GetRefreshToken(),
 	}))
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
+}
+
+func TestAccount_SignOut_withoutAccessToken(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	client := newClient(t)
+	signedIn, err := client.SignInWithApple(t.Context(), connect.NewRequest(&accountv1.SignInWithAppleRequest{
+		IdentityToken:     "identity:apple-sub",
+		AuthorizationCode: "auth-code",
+		Nonce:             "0123456789abcdef",
+	}))
+	require.NoError(t, err)
+	refreshToken := signedIn.Msg.GetSession().GetRefreshToken()
+
+	// act
+	_, err = client.SignOut(t.Context(), connect.NewRequest(&accountv1.SignOutRequest{
+		RefreshToken: refreshToken,
+		Device: &accountv1.SignOutRequest_Device{
+			Platform:  devicev1.Platform_PLATFORM_IOS,
+			PushToken: "push-token",
+		},
+	}))
+
+	// assert
+	require.NoError(t, err)
+	_, err = client.RefreshToken(t.Context(), connect.NewRequest(&accountv1.RefreshTokenRequest{
+		RefreshToken: refreshToken,
+	}))
+	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
+}
+
+func TestAccount_SignOut_unspecifiedPlatform(t *testing.T) {
+	t.Parallel()
+
+	client := newClient(t)
+
+	_, err := client.SignOut(t.Context(), connect.NewRequest(&accountv1.SignOutRequest{
+		RefreshToken: "refresh-token",
+		Device:       &accountv1.SignOutRequest_Device{PushToken: "push-token"},
+	}))
+
+	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 }
 
 func TestAccount_SignInWithApple_invalidToken(t *testing.T) {
