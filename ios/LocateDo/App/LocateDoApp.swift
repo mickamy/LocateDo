@@ -14,6 +14,7 @@ struct LocateDoApp: App {
     private let sync: SyncEngine
     private let account: AccountManager
     private let writes: LocalWrites
+    private let network: NetworkMonitor
 
     init() {
         do {
@@ -46,16 +47,25 @@ struct LocateDoApp: App {
             preferences.reset()
             await geofence.sync()
         } onHouseholdReady: {
-            await sync.drain()
+            await sync.sync()
         }
         writes = LocalWrites(context: container.mainContext) { [authenticator] in
             authenticator.isSignedIn
         } onQueued: {
             sync.scheduleDrain()
         }
+        network = NetworkMonitor {
+            Task {
+                await sync.sync()
+            }
+        }
+        geofence.onArrival = {
+            await sync.sync()
+        }
         if !Self.isRunningTests {
             Analytics.configure()
             geofence.start()
+            network.start()
         }
     }
 

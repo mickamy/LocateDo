@@ -12,6 +12,7 @@ final class GeofenceMonitor {
     private var monitor: CLMonitor?
     private var serviceSession: CLServiceSession?
     private var eventLoop: Task<Void, Never>?
+    @ObservationIgnored var onArrival: () async -> Void = {}
 
     init(container: ModelContainer, notifier: ArrivalNotifier, locationProvider: LocationProvider) {
         self.container = container
@@ -101,6 +102,7 @@ final class GeofenceMonitor {
             return
         }
         await arrived(at: placeID)
+        await onArrival()
     }
 
     #if DEBUG

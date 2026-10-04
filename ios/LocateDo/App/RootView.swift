@@ -43,7 +43,7 @@ struct RootView: View {
                 Logger(subsystem: "com.locatedo.LocateDo", category: "account")
                     .error("Initial upload failed: \(error, privacy: .public)")
             }
-            await sync.drain()
+            await sync.sync()
         }
     }
 }
