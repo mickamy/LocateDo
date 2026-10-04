@@ -25,11 +25,6 @@ struct AccountView: View {
         .navigationTitle(Text(.settingsAccountTitle))
         .navigationBarTitleDisplayMode(.inline)
         .disabled(account.isWorking)
-        .overlay {
-            if account.isWorking {
-                ProgressView()
-            }
-        }
         .confirmationDialog(
             Text(.settingsAccountDeleteConfirmTitle),
             isPresented: $isConfirmingDelete,
@@ -51,8 +46,16 @@ struct AccountView: View {
             Label(.settingsAccountSignedIn, systemImage: "person.crop.circle.badge.checkmark")
         }
         Section {
-            Button(.settingsAccountDelete, role: .destructive) {
+            Button(role: .destructive) {
                 isConfirmingDelete = true
+            } label: {
+                HStack {
+                    Text(.settingsAccountDelete)
+                    Spacer()
+                    if account.isWorking {
+                        ProgressView()
+                    }
+                }
             }
         } footer: {
             failureText
@@ -99,13 +102,27 @@ struct AccountView: View {
                 failureText
                     .font(.footnote)
                     .multilineTextAlignment(.center)
-                SignInWithAppleButton(.signIn, onRequest: prepare, onCompletion: complete)
-                    .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                    .frame(height: 50)
+                signInButton
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
         }
+    }
+
+    private var signInButton: some View {
+        ZStack {
+            SignInWithAppleButton(.signIn, onRequest: prepare, onCompletion: complete)
+                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                .opacity(account.isWorking ? 0 : 1)
+            if account.isWorking {
+                Capsule()
+                    .fill(colorScheme == .dark ? Color.white : Color.black)
+                ProgressView()
+                    .tint(colorScheme == .dark ? Color.black : Color.white)
+            }
+        }
+        .frame(height: 50)
+        .clipShape(.capsule)
     }
 
     private func benefit(
