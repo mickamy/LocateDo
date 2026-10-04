@@ -1,13 +1,17 @@
 import SwiftUI
 
 private struct SyncRefreshable: ViewModifier {
+    private static let minimumSpin: Duration = .seconds(1)
+
     @Environment(Authenticator.self) private var authenticator
     @Environment(SyncEngine.self) private var sync
 
     func body(content: Content) -> some View {
         if authenticator.isSignedIn {
             content.refreshable {
-                await sync.sync()
+                async let synced: Void = sync.sync()
+                try? await Task.sleep(for: Self.minimumSpin)
+                await synced
             }
         } else {
             content
