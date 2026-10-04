@@ -62,7 +62,7 @@ func (q *Queries) CountMemberships(ctx context.Context, householdID uuid.UUID) (
 const createHousehold = `-- name: CreateHousehold :one
 INSERT INTO households (id, owner_id)
 VALUES ($1, $2)
-RETURNING id, owner_id, plan, created_at
+RETURNING id, owner_id, plan, version, created_at
 `
 
 type CreateHouseholdParams struct {
@@ -70,20 +70,14 @@ type CreateHouseholdParams struct {
 	OwnerID uuid.UUID
 }
 
-type CreateHouseholdRow struct {
-	ID        uuid.UUID
-	OwnerID   uuid.UUID
-	Plan      string
-	CreatedAt time.Time
-}
-
-func (q *Queries) CreateHousehold(ctx context.Context, arg CreateHouseholdParams) (CreateHouseholdRow, error) {
+func (q *Queries) CreateHousehold(ctx context.Context, arg CreateHouseholdParams) (Household, error) {
 	row := q.db.QueryRow(ctx, createHousehold, arg.ID, arg.OwnerID)
-	var i CreateHouseholdRow
+	var i Household
 	err := row.Scan(
 		&i.ID,
 		&i.OwnerID,
 		&i.Plan,
+		&i.Version,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -171,51 +165,39 @@ func (q *Queries) DeleteMembership(ctx context.Context, arg DeleteMembershipPara
 }
 
 const getHousehold = `-- name: GetHousehold :one
-SELECT id, owner_id, plan, created_at
+SELECT id, owner_id, plan, version, created_at
 FROM households
 WHERE id = $1
 `
 
-type GetHouseholdRow struct {
-	ID        uuid.UUID
-	OwnerID   uuid.UUID
-	Plan      string
-	CreatedAt time.Time
-}
-
-func (q *Queries) GetHousehold(ctx context.Context, id uuid.UUID) (GetHouseholdRow, error) {
+func (q *Queries) GetHousehold(ctx context.Context, id uuid.UUID) (Household, error) {
 	row := q.db.QueryRow(ctx, getHousehold, id)
-	var i GetHouseholdRow
+	var i Household
 	err := row.Scan(
 		&i.ID,
 		&i.OwnerID,
 		&i.Plan,
+		&i.Version,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getHouseholdForUpdate = `-- name: GetHouseholdForUpdate :one
-SELECT id, owner_id, plan, created_at
+SELECT id, owner_id, plan, version, created_at
 FROM households
 WHERE id = $1
 FOR UPDATE
 `
 
-type GetHouseholdForUpdateRow struct {
-	ID        uuid.UUID
-	OwnerID   uuid.UUID
-	Plan      string
-	CreatedAt time.Time
-}
-
-func (q *Queries) GetHouseholdForUpdate(ctx context.Context, id uuid.UUID) (GetHouseholdForUpdateRow, error) {
+func (q *Queries) GetHouseholdForUpdate(ctx context.Context, id uuid.UUID) (Household, error) {
 	row := q.db.QueryRow(ctx, getHouseholdForUpdate, id)
-	var i GetHouseholdForUpdateRow
+	var i Household
 	err := row.Scan(
 		&i.ID,
 		&i.OwnerID,
 		&i.Plan,
+		&i.Version,
 		&i.CreatedAt,
 	)
 	return i, err

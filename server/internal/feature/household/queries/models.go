@@ -3,3 +3,17 @@
 //   sqlc v1.31.1
 
 package queries
+
+import (
+	"time"
+
+	"uuid"
+)
+
+type Household struct {
+	ID        uuid.UUID
+	OwnerID   uuid.UUID
+	Plan      string
+	Version   int64
+	CreatedAt time.Time
+}

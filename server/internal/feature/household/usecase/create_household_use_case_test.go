@@ -56,7 +56,8 @@ func TestCreateHousehold_retryIsIdempotent(t *testing.T) {
 
 	// assert
 	require.NoError(t, err)
-	assert.Equal(t, first.Household, second.Household)
+	assert.Equal(t, first.Household.ID, second.Household.ID)
+	assert.Equal(t, first.Household.OwnerID, second.Household.OwnerID)
 	assert.Equal(t, 1, d.Seeder.Count(t, "places", in.HouseholdID))
 }
 

@@ -37,6 +37,7 @@ type Household struct {
 	ID        uuid.UUID
 	OwnerID   uuid.UUID
 	Plan      Plan
+	Version   int64
 	CreatedAt time.Time
 }
 

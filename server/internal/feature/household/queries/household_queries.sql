@@ -1,15 +1,15 @@
 -- name: CreateHousehold :one
 INSERT INTO households (id, owner_id)
 VALUES ($1, $2)
-RETURNING id, owner_id, plan, created_at;
+RETURNING id, owner_id, plan, version, created_at;
 
 -- name: GetHousehold :one
-SELECT id, owner_id, plan, created_at
+SELECT id, owner_id, plan, version, created_at
 FROM households
 WHERE id = $1;
 
 -- name: GetHouseholdForUpdate :one
-SELECT id, owner_id, plan, created_at
+SELECT id, owner_id, plan, version, created_at
 FROM households
 WHERE id = $1
 FOR UPDATE;

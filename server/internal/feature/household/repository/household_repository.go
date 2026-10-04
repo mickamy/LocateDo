@@ -60,6 +60,7 @@ func (r household) Create(ctx context.Context, id, ownerID uuid.UUID) (model.Hou
 		ID:        row.ID,
 		OwnerID:   row.OwnerID,
 		Plan:      model.Plan(row.Plan),
+		Version:   row.Version,
 		CreatedAt: row.CreatedAt,
 	}, nil
 }
@@ -76,6 +77,7 @@ func (r household) Find(ctx context.Context, id uuid.UUID) (model.Household, err
 		ID:        row.ID,
 		OwnerID:   row.OwnerID,
 		Plan:      model.Plan(row.Plan),
+		Version:   row.Version,
 		CreatedAt: row.CreatedAt,
 	}, nil
 }
@@ -92,6 +94,7 @@ func (r household) FindForUpdate(ctx context.Context, id uuid.UUID) (model.House
 		ID:        row.ID,
 		OwnerID:   row.OwnerID,
 		Plan:      model.Plan(row.Plan),
+		Version:   row.Version,
 		CreatedAt: row.CreatedAt,
 	}, nil
 }
