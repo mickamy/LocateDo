@@ -116,8 +116,8 @@ func newClient(t *testing.T, d tdb.DB) placev1connect.PlaceServiceClient {
 
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
-	handlers := server.NewHandlers(d.Infra(), lib)
-	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
+	handlers := server.NewHandlers(cfg, d.Infra(), lib)
+	srv := httptest.NewServer(server.Handler(*handlers))
 	t.Cleanup(srv.Close)
 	return placev1connect.NewPlaceServiceClient(srv.Client(), srv.URL)
 }

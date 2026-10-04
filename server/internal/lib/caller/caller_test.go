@@ -29,3 +29,22 @@ func TestUserID_missing(t *testing.T) {
 
 	require.ErrorIs(t, err, aerrors.ErrUnauthenticated)
 }
+
+func TestHouseholdID(t *testing.T) {
+	t.Parallel()
+
+	id := uuid.NewV7()
+
+	got, err := caller.HouseholdID(caller.SetHousehold(t.Context(), id))
+
+	require.NoError(t, err)
+	assert.Equal(t, id, got)
+}
+
+func TestHouseholdID_missing(t *testing.T) {
+	t.Parallel()
+
+	_, err := caller.HouseholdID(t.Context())
+
+	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
+}

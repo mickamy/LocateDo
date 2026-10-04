@@ -91,8 +91,8 @@ func newClient(t *testing.T) accountv1connect.AccountServiceClient {
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
 
-	handlers := server.NewHandlers(infra, lib)
-	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
+	handlers := server.NewHandlers(cfg, infra, lib)
+	srv := httptest.NewServer(server.Handler(*handlers))
 	t.Cleanup(srv.Close)
 	return accountv1connect.NewAccountServiceClient(srv.Client(), srv.URL)
 }

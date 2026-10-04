@@ -12,10 +12,12 @@ import (
 	handler7 "github.com/mickamy/LocateDo/internal/feature/sync/handler"
 	handler5 "github.com/mickamy/LocateDo/internal/feature/todo/handler"
 	"github.com/mickamy/LocateDo/internal/server/health"
+	"github.com/mickamy/LocateDo/internal/server/interceptor"
 )
 
 // NewHandlers initializes dependencies and constructs Handlers.
-func NewHandlers(infra di.Infra, lib di.Lib) *Handlers {
+func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
+	interceptors := interceptor.NewInterceptors(config, infra, lib)
 	writer := infra.Writer
 	reader := infra.Reader
 	health2 := health.NewHealth(writer, reader)
@@ -28,13 +30,14 @@ func NewHandlers(infra di.Infra, lib di.Lib) *Handlers {
 	sync := handler7.NewSync()
 
 	return &Handlers{
-		Health:    health2,
-		Account:   account,
-		Household: household,
-		Category:  category,
-		Place:     place,
-		Todo:      todo,
-		Device:    device,
-		Sync:      sync,
+		Interceptors: interceptors,
+		Health:       health2,
+		Account:      account,
+		Household:    household,
+		Category:     category,
+		Place:        place,
+		Todo:         todo,
+		Device:       device,
+		Sync:         sync,
 	}
 }

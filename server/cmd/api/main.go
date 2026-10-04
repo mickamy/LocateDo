@@ -42,10 +42,10 @@ func run(cfg di.Config) error {
 	}()
 
 	lib := di.MustNewLib(cfg)
-	handlers := server.NewHandlers(infra, lib)
+	handlers := server.NewHandlers(cfg, infra, lib)
 
 	port := strings.TrimPrefix(cmp.Or(os.Getenv("PORT"), "8080"), ":")
-	srv := server.New(":"+port, cfg, lib, *handlers)
+	srv := server.New(":"+port, *handlers)
 
 	var lc net.ListenConfig
 	ln, err := lc.Listen(ctx, "tcp", srv.Addr)

@@ -117,8 +117,8 @@ func newTestServer(t *testing.T) (*httptest.Server, di.Lib) {
 
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
 	lib := di.MustNewLib(di.NewConfig())
-	handlers := server.NewHandlers(tdb.New(t).Infra(), lib)
-	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
+	handlers := server.NewHandlers(cfg, tdb.New(t).Infra(), lib)
+	srv := httptest.NewServer(server.Handler(*handlers))
 	t.Cleanup(srv.Close)
 	return srv, lib
 }

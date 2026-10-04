@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/category/v1/categoryv1connect"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/device/v1/devicev1connect"
@@ -12,11 +11,10 @@ import (
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1/placev1connect"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/sync/v1/syncv1connect"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/todo/v1/todov1connect"
-	"github.com/mickamy/LocateDo/internal/server/interceptor"
 )
 
-func Handler(cfg di.Config, lib di.Lib, handlers Handlers) http.Handler {
-	opt := interceptor.Option(cfg, lib)
+func Handler(handlers Handlers) http.Handler {
+	opt := handlers.Interceptors.Option()
 
 	mux := http.NewServeMux()
 
@@ -33,14 +31,14 @@ func Handler(cfg di.Config, lib di.Lib, handlers Handlers) http.Handler {
 	return mux
 }
 
-func New(addr string, cfg di.Config, lib di.Lib, handlers Handlers) *http.Server {
+func New(addr string, handlers Handlers) *http.Server {
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
 
 	return &http.Server{
 		Addr:              addr,
-		Handler:           Handler(cfg, lib, handlers),
+		Handler:           Handler(handlers),
 		ReadHeaderTimeout: 10 * time.Second,
 		Protocols:         protocols,
 	}

@@ -125,8 +125,8 @@ func newClient(t *testing.T, d tdb.DB) categoryv1connect.CategoryServiceClient {
 
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
-	handlers := server.NewHandlers(d.Infra(), lib)
-	srv := httptest.NewServer(server.Handler(cfg, lib, *handlers))
+	handlers := server.NewHandlers(cfg, d.Infra(), lib)
+	srv := httptest.NewServer(server.Handler(*handlers))
 	t.Cleanup(srv.Close)
 	return categoryv1connect.NewCategoryServiceClient(srv.Client(), srv.URL)
 }
