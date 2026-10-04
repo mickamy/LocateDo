@@ -8,6 +8,7 @@ import (
 
 func init() {
 	mapper.Register(BuiltinCategoryToKey)
+	mapper.Register(KeyToBuiltinCategory)
 }
 
 var builtinKeys = map[categoryv1.BuiltinCategory]string{
@@ -24,4 +25,17 @@ func BuiltinCategoryToKey(b categoryv1.BuiltinCategory) *string {
 		return nil
 	}
 	return &key
+}
+
+// KeyToBuiltinCategory returns UNSPECIFIED for a user-created category.
+func KeyToBuiltinCategory(key *string) categoryv1.BuiltinCategory {
+	if key == nil {
+		return categoryv1.BuiltinCategory_BUILTIN_CATEGORY_UNSPECIFIED
+	}
+	for b, k := range builtinKeys {
+		if k == *key {
+			return b
+		}
+	}
+	return categoryv1.BuiltinCategory_BUILTIN_CATEGORY_UNSPECIFIED
 }

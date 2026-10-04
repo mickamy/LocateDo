@@ -112,6 +112,14 @@ gen-mapper:
 	$(MAPPER) -destination=internal/feature/todo/mapper -package=mapper \
 		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt,$(PKG)/feature/todo/model.Todo.UpdatedAt,$(PKG)/feature/todo/model.Todo.Version' \
 		-types='$(PKG)/feature/todo/model.Todo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput'
+	$(MAPPER) -converters=./internal/feature/household/mapper -converters=./internal/feature/category/mapper \
+		-converters=./internal/feature/sync/mapper \
+		-destination=internal/feature/sync/mapper -package=mapper \
+		-types='$(PKG)/feature/household/model.Membership->*$(PKG)/gen/locatedo/household/v1.Membership' \
+		-types='$(PKG)/feature/category/model.Category->*$(PKG)/gen/locatedo/category/v1.Category' \
+		-types='$(PKG)/feature/place/model.Place->*$(PKG)/gen/locatedo/place/v1.Place' \
+		-types='$(PKG)/feature/todo/model.Todo->*$(PKG)/gen/locatedo/todo/v1.Todo' \
+		-types='$(PKG)/feature/sync/model.Deletion->*$(PKG)/gen/locatedo/sync/v1.Deletion'
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate

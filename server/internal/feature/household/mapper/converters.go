@@ -9,6 +9,7 @@ import (
 
 func init() {
 	mapper.Register(PlanToHouseholdv1)
+	mapper.Register(RoleToHouseholdv1)
 }
 
 func PlanToHouseholdv1(p model.Plan) householdv1.Plan {
@@ -19,5 +20,16 @@ func PlanToHouseholdv1(p model.Plan) householdv1.Plan {
 		return householdv1.Plan_PLAN_PRO
 	default:
 		return householdv1.Plan_PLAN_UNSPECIFIED
+	}
+}
+
+func RoleToHouseholdv1(r model.Role) householdv1.Role {
+	switch r {
+	case model.RoleOwner:
+		return householdv1.Role_ROLE_OWNER
+	case model.RoleMember:
+		return householdv1.Role_ROLE_MEMBER
+	default:
+		return householdv1.Role_ROLE_UNSPECIFIED
 	}
 }

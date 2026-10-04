@@ -27,7 +27,7 @@ func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
 	place := handler4.NewPlace(infra)
 	todo := handler5.NewTodo(infra)
 	device := handler6.NewDevice()
-	sync := handler7.NewSync()
+	sync := handler7.NewSync(infra)
 
 	return &Handlers{
 		Interceptors: interceptors,
