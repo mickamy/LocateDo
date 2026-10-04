@@ -21,7 +21,8 @@ type PutPlaceInput struct {
 }
 
 // PutPlace creates or overwrites a place. A free household keeps every place
-// it already has but cannot add one beyond the limit.
+// it already has but cannot add one beyond the limit; the limit is checked
+// after the write so the transaction, not a pre-check, enforces it.
 type PutPlace struct {
 	_           di.Infra               `di:"embed"`
 	transactor  tx.Transactor          `di:""`
@@ -45,35 +46,26 @@ func (uc PutPlace) Do(ctx context.Context, in PutPlaceInput) error {
 			return fmt.Errorf("lock household: %w", err)
 		}
 		places := uc.places.Bind(tx)
-		if h.Plan == hmodel.PlanFree {
-			if err := requireRoomForPlace(ctx, places, in.Place); err != nil {
-				return err
-			}
+		exists, err := places.Exists(ctx, in.Place.ID, householdID)
+		if err != nil {
+			return fmt.Errorf("check place: %w", err)
 		}
 		if err := places.Upsert(ctx, in.Place); err != nil {
 			return fmt.Errorf("upsert place: %w", err)
 		}
+		if exists {
+			return nil
+		}
+		n, err := places.Count(ctx, householdID)
+		if err != nil {
+			return fmt.Errorf("count places: %w", err)
+		}
+		if !h.Plan.AllowsPlaces(n) {
+			return aerrors.Precondition(fmt.Sprintf("the free plan allows %d places", hmodel.MaxFreePlaces))
+		}
 		return nil
 	}); err != nil {
 		return fmt.Errorf("put place: %w", err)
-	}
-	return nil
-}
-
-func requireRoomForPlace(ctx context.Context, places repository.Place, p model.Place) error {
-	exists, err := places.Exists(ctx, p.ID, p.HouseholdID)
-	if err != nil {
-		return fmt.Errorf("check place: %w", err)
-	}
-	if exists {
-		return nil
-	}
-	n, err := places.Count(ctx, p.HouseholdID)
-	if err != nil {
-		return fmt.Errorf("count places: %w", err)
-	}
-	if n >= hmodel.MaxFreePlaces {
-		return aerrors.Precondition(fmt.Sprintf("a free household holds up to %d places", hmodel.MaxFreePlaces))
 	}
 	return nil
 }

@@ -18,6 +18,14 @@ const (
 	PlanPro  Plan = "pro"
 )
 
+func (p Plan) AllowsPlaces(n int) bool {
+	return p == PlanPro || n <= MaxFreePlaces
+}
+
+func (p Plan) AllowsOpenTodos(n int) bool {
+	return p == PlanPro || n <= MaxFreeOpenTodos
+}
+
 type Role string
 
 const (

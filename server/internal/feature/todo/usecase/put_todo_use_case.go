@@ -23,7 +23,9 @@ type PutTodoInput struct {
 
 // PutTodo creates or overwrites a todo's content, never its completion. A
 // free household keeps every todo it has but cannot open one beyond the
-// limit. A todo for a place that is gone is dropped and reported as success.
+// limit; the limit is checked after the write so the transaction, not a
+// pre-check, enforces it. A todo for a place that is gone is dropped and
+// reported as success.
 type PutTodo struct {
 	_           di.Infra               `di:"embed"`
 	transactor  tx.Transactor          `di:""`
@@ -57,25 +59,19 @@ func (uc PutTodo) Do(ctx context.Context, in PutTodoInput) error {
 		if err != nil {
 			return fmt.Errorf("upsert todo: %w", err)
 		}
-		if written && isNew && h.Plan == hmodel.PlanFree {
-			return requireOpenTodosWithinLimit(ctx, todos, householdID)
+		if !written || !isNew {
+			return nil
+		}
+		n, err := todos.CountOpen(ctx, householdID)
+		if err != nil {
+			return fmt.Errorf("count open todos: %w", err)
+		}
+		if !h.Plan.AllowsOpenTodos(n) {
+			return aerrors.Precondition(fmt.Sprintf("the free plan allows %d open todos", hmodel.MaxFreeOpenTodos))
 		}
 		return nil
 	}); err != nil {
 		return fmt.Errorf("put todo: %w", err)
-	}
-	return nil
-}
-
-// requireOpenTodosWithinLimit runs after the write so that a rollback, not a
-// pre-check, enforces the limit; the count then includes the new row.
-func requireOpenTodosWithinLimit(ctx context.Context, todos repository.Todo, householdID uuid.UUID) error {
-	n, err := todos.CountOpen(ctx, householdID)
-	if err != nil {
-		return fmt.Errorf("count open todos: %w", err)
-	}
-	if n > hmodel.MaxFreeOpenTodos {
-		return aerrors.Precondition(fmt.Sprintf("a free household holds up to %d open todos", hmodel.MaxFreeOpenTodos))
 	}
 	return nil
 }

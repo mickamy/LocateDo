@@ -55,8 +55,15 @@ func (uc SetTodoCompletion) Do(ctx context.Context, in SetTodoCompletionInput) e
 			return fmt.Errorf("set completion: %w", err)
 		}
 		reopening := in.CompletedAt == nil && current.CompletedAt != nil
-		if reopening && h.Plan == hmodel.PlanFree {
-			return requireOpenTodosWithinLimit(ctx, todos, householdID)
+		if !reopening {
+			return nil
+		}
+		n, err := todos.CountOpen(ctx, householdID)
+		if err != nil {
+			return fmt.Errorf("count open todos: %w", err)
+		}
+		if !h.Plan.AllowsOpenTodos(n) {
+			return aerrors.Precondition(fmt.Sprintf("the free plan allows %d open todos", hmodel.MaxFreeOpenTodos))
 		}
 		return nil
 	}); err != nil {
