@@ -54,6 +54,7 @@ settings:
   about:
     title: "About"
     version: "Version"
+    privacy_policy: "Privacy Policy"
 home:
   open_summary:
     plural:

@@ -54,6 +54,7 @@ settings:
   about:
     title: "このアプリについて"
     version: "バージョン"
+    privacy_policy: "プライバシーポリシー"
 home:
   open_summary:
     plural:
