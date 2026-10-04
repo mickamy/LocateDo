@@ -5,7 +5,6 @@ APP_IDENTIFIER = "com.locatedo.LocateDo"
 STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
 DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
 PROJECT = "LocateDo.xcodeproj"
-SCHEME = "LocateDo"
 
 platform :ios do
   # produce still wants an Apple ID login, so this talks to the API directly.
@@ -108,6 +107,7 @@ platform :ios do
     build_number = latest_testflight_build_number(initial_build_number: 0) + 1
     archive(
       app_identifier: APP_IDENTIFIER,
+      scheme: "prod",
       configuration: "Release",
       export_method: "app-store",
       profile_type: "appstore",
@@ -123,6 +123,7 @@ platform :ios do
     match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, readonly: true)
     archive(
       app_identifier: STAGING_APP_IDENTIFIER,
+      scheme: "stg",
       configuration: "Staging",
       export_method: "ad-hoc",
       profile_type: "adhoc",
@@ -153,7 +154,7 @@ platform :ios do
     profile_name = ENV.fetch("sigh_#{app_identifier}_#{options[:profile_type]}_profile-name")
     build_app(
       project: PROJECT,
-      scheme: SCHEME,
+      scheme: options.fetch(:scheme),
       configuration: options.fetch(:configuration),
       export_method: options[:export_method],
       export_options: { provisioningProfiles: { app_identifier => profile_name } },

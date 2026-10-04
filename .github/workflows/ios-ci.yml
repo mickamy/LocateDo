@@ -22,7 +22,7 @@ jobs:
           set -o pipefail
           xcodebuild test \
             -project ios/LocateDo.xcodeproj \
-            -scheme LocateDo \
+            -scheme dev \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             -parallel-testing-enabled NO \
             -resultBundlePath TestResults.xcresult \
