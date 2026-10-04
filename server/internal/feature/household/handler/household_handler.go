@@ -54,6 +54,7 @@ func (h *Household) CreateHousehold(
 	}
 	return connect.NewResponse(&householdv1.CreateHouseholdResponse{
 		Household: mapper.HouseholdToHouseholdv1(out.Household),
+		Cursor:    out.Household.Version,
 	}), nil
 }
 

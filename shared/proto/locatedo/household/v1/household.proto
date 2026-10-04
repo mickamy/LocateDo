@@ -62,6 +62,9 @@ message CreateHouseholdRequest {
 
 message CreateHouseholdResponse {
   Household household = 1;
+  // The household version the upload landed at. The device already holds
+  // everything up to here, so it is the cursor for its first Pull.
+  int64 cursor = 2;
 }
 
 message CreateInviteRequest {

@@ -66,6 +66,10 @@ func (uc CreateHousehold) Do(ctx context.Context, in CreateHouseholdInput) (Crea
 		if err := households.Import(ctx, h.ID, in.Contents); err != nil {
 			return fmt.Errorf("import contents: %w", err)
 		}
+		// Re-read for the version the import left behind.
+		if h, err = households.Find(ctx, h.ID); err != nil {
+			return fmt.Errorf("find household: %w", err)
+		}
 		return nil
 	}); err != nil {
 		return CreateHouseholdOutput{}, fmt.Errorf("create household: %w", err)

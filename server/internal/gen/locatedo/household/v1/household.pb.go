@@ -397,8 +397,11 @@ func (x *CreateHouseholdRequest) GetTodos() []*InitialTodo {
 }
 
 type CreateHouseholdResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Household     *Household             `protobuf:"bytes,1,opt,name=household,proto3" json:"household,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Household *Household             `protobuf:"bytes,1,opt,name=household,proto3" json:"household,omitempty"`
+	// The household version the upload landed at. The device already holds
+	// everything up to here, so it is the cursor for its first Pull.
+	Cursor        int64 `protobuf:"varint,2,opt,name=cursor,proto3" json:"cursor,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -438,6 +441,13 @@ func (x *CreateHouseholdResponse) GetHousehold() *Household {
 		return x.Household
 	}
 	return nil
+}
+
+func (x *CreateHouseholdResponse) GetCursor() int64 {
+	if x != nil {
+		return x.Cursor
+	}
+	return 0
 }
 
 type CreateInviteRequest struct {
@@ -741,9 +751,10 @@ const file_locatedo_household_v1_household_proto_rawDesc = "" +
 	"categories\x18\x02 \x03(\v2#.locatedo.category.v1.CategoryInputB\b\xbaH\x05\x92\x01\x02\x10dR\n" +
 	"categories\x12@\n" +
 	"\x06places\x18\x03 \x03(\v2\x1d.locatedo.place.v1.PlaceInputB\t\xbaH\x06\x92\x01\x03\x10\xe8\aR\x06places\x12C\n" +
-	"\x05todos\x18\x04 \x03(\v2\".locatedo.household.v1.InitialTodoB\t\xbaH\x06\x92\x01\x03\x10\x90NR\x05todos\"Y\n" +
+	"\x05todos\x18\x04 \x03(\v2\".locatedo.household.v1.InitialTodoB\t\xbaH\x06\x92\x01\x03\x10\x90NR\x05todos\"q\n" +
 	"\x17CreateHouseholdResponse\x12>\n" +
-	"\thousehold\x18\x01 \x01(\v2 .locatedo.household.v1.HouseholdR\thousehold\"B\n" +
+	"\thousehold\x18\x01 \x01(\v2 .locatedo.household.v1.HouseholdR\thousehold\x12\x16\n" +
+	"\x06cursor\x18\x02 \x01(\x03R\x06cursor\"B\n" +
 	"\x13CreateInviteRequest\x12+\n" +
 	"\fhousehold_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vhouseholdId\"g\n" +
 	"\x14CreateInviteResponse\x12\x14\n" +

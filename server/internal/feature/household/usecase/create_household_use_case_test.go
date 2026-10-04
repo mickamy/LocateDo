@@ -33,6 +33,7 @@ func TestCreateHousehold_imports(t *testing.T) {
 	assert.Equal(t, householdID, out.Household.ID)
 	assert.Equal(t, userID, out.Household.OwnerID)
 	assert.Equal(t, model.PlanFree, out.Household.Plan)
+	assert.Equal(t, d.Seeder.Version(t, householdID), out.Household.Version, "the version after the import")
 	m, err := repository.NewMembership(d.Reader).FindByUser(t.Context(), userID)
 	require.NoError(t, err)
 	assert.Equal(t, model.RoleOwner, m.Role)

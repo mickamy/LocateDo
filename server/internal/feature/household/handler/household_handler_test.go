@@ -46,6 +46,8 @@ func TestHousehold_createInviteAcceptRemove(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, householdID, created.Msg.GetHousehold().GetId())
 	assert.Equal(t, householdv1.Plan_PLAN_FREE, created.Msg.GetHousehold().GetPlan())
+	assert.Equal(t, d.Seeder.Version(t, uuid.MustParse(householdID)), created.Msg.GetCursor(),
+		"the device can start pulling from here")
 	assert.Equal(t, 1, completedTodos(t, d, householdID), "only the todo sent with completed_at is completed")
 
 	// act & assert: inviting needs pro
