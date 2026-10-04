@@ -1,0 +1,61 @@
+name: server-db-reset-stg
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type "reset" to drop every row in the stg database
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-stg
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    if: inputs.confirm == 'reset'
+    runs-on: self-hosted
+    environment: stg
+    timeout-minutes: 10
+    env:
+      COMPOSE_FILE: compose.stg.yaml
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: |
+            server/go.sum
+            server/tools/go.sum
+
+      - name: Create .env file
+        run: |
+          make -B -C server .env
+
+      - name: Stop api and worker
+        working-directory: server
+        run: |
+          docker compose stop api worker
+
+      - name: Reset database
+        run: |
+          make -C server db-reset
+
+      - name: Start api and worker
+        if: always()
+        working-directory: server
+        run: |
+          docker compose start api worker
+
+      - name: Remove .env file
+        if: always()
+        run: |
+          rm -f server/.env
