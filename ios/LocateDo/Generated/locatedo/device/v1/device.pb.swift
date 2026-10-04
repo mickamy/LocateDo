@@ -58,6 +58,44 @@ nonisolated enum Locatedo_Device_V1_Platform: SwiftProtobuf.Enum, Swift.CaseIter
 
 }
 
+nonisolated enum Locatedo_Device_V1_ApnsEnvironment: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+  case unspecified // = 0
+  case sandbox // = 1
+  case production // = 2
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .unspecified
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unspecified
+    case 1: self = .sandbox
+    case 2: self = .production
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .unspecified: return 0
+    case .sandbox: return 1
+    case .production: return 2
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [Locatedo_Device_V1_ApnsEnvironment] = [
+    .unspecified,
+    .sandbox,
+    .production,
+  ]
+
+}
+
 nonisolated struct Locatedo_Device_V1_RegisterDeviceRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -66,6 +104,8 @@ nonisolated struct Locatedo_Device_V1_RegisterDeviceRequest: Sendable {
   var platform: Locatedo_Device_V1_Platform = .unspecified
 
   var pushToken: String = String()
+
+  var apnsEnvironment: Locatedo_Device_V1_ApnsEnvironment = .unspecified
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -90,9 +130,13 @@ nonisolated extension Locatedo_Device_V1_Platform: SwiftProtobuf._ProtoNameProvi
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PLATFORM_UNSPECIFIED\0\u{1}PLATFORM_IOS\0\u{1}PLATFORM_ANDROID\0")
 }
 
+nonisolated extension Locatedo_Device_V1_ApnsEnvironment: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0APNS_ENVIRONMENT_UNSPECIFIED\0\u{1}APNS_ENVIRONMENT_SANDBOX\0\u{1}APNS_ENVIRONMENT_PRODUCTION\0")
+}
+
 nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}platform\0\u{3}push_token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}platform\0\u{3}push_token\0\u{3}apns_environment\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -102,6 +146,7 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularEnumField(value: &self.platform) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.pushToken) }()
+      case 3: try { try decoder.decodeSingularEnumField(value: &self.apnsEnvironment) }()
       default: break
       }
     }
@@ -114,12 +159,16 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
     if !self.pushToken.isEmpty {
       try visitor.visitSingularStringField(value: self.pushToken, fieldNumber: 2)
     }
+    if self.apnsEnvironment != .unspecified {
+      try visitor.visitSingularEnumField(value: self.apnsEnvironment, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Locatedo_Device_V1_RegisterDeviceRequest, rhs: Locatedo_Device_V1_RegisterDeviceRequest) -> Bool {
     if lhs.platform != rhs.platform {return false}
     if lhs.pushToken != rhs.pushToken {return false}
+    if lhs.apnsEnvironment != rhs.apnsEnvironment {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

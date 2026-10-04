@@ -39,11 +39,12 @@ CREATE TABLE apple_tokens
 
 CREATE TABLE devices
 (
-    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
-    user_id      uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    platform     text        NOT NULL CHECK (platform IN ('ios', 'android')),
-    push_token   text        NOT NULL,
-    last_seen_at timestamptz NOT NULL DEFAULT now(),
+    id               uuid PRIMARY KEY     DEFAULT uuidv7(),
+    user_id          uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    platform         text        NOT NULL CHECK (platform IN ('ios', 'android')),
+    push_token       text        NOT NULL,
+    apns_environment text        CHECK (apns_environment IN ('sandbox', 'production')),
+    last_seen_at     timestamptz NOT NULL DEFAULT now(),
     UNIQUE (platform, push_token)
 );
 

@@ -83,18 +83,20 @@ func (q *Queries) ListHouseholdPushTokens(ctx context.Context, arg ListHousehold
 }
 
 const upsertDevice = `-- name: UpsertDevice :exec
-INSERT INTO devices (user_id, platform, push_token, last_seen_at)
-VALUES ($1, $2, $3, $4)
+INSERT INTO devices (user_id, platform, push_token, apns_environment, last_seen_at)
+VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (platform, push_token) DO UPDATE
-    SET user_id      = EXCLUDED.user_id,
-        last_seen_at = EXCLUDED.last_seen_at
+    SET user_id          = EXCLUDED.user_id,
+        apns_environment = EXCLUDED.apns_environment,
+        last_seen_at     = EXCLUDED.last_seen_at
 `
 
 type UpsertDeviceParams struct {
-	UserID     uuid.UUID
-	Platform   string
-	PushToken  string
-	LastSeenAt time.Time
+	UserID          uuid.UUID
+	Platform        string
+	PushToken       string
+	ApnsEnvironment *string
+	LastSeenAt      time.Time
 }
 
 // A token already registered, to anyone, moves to this user.
@@ -103,6 +105,7 @@ func (q *Queries) UpsertDevice(ctx context.Context, arg UpsertDeviceParams) erro
 		arg.UserID,
 		arg.Platform,
 		arg.PushToken,
+		arg.ApnsEnvironment,
 		arg.LastSeenAt,
 	)
 	return err

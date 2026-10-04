@@ -50,6 +50,45 @@ func TestDevice_Upsert_tokenMovesToTheLatestUser(t *testing.T) {
 	assert.True(t, now.Add(time.Hour).Equal(lastSeenAt))
 }
 
+func TestDevice_Upsert_apnsEnvironment(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		platform model.Platform
+		env      model.APNsEnvironment
+		want     *string
+	}{
+		"iOS keeps its environment": {platform: model.PlatformIOS, env: model.APNsSandbox, want: new("sandbox")},
+		"Android stores NULL":       {platform: model.PlatformAndroid, env: "", want: nil},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			d := tdb.New(t)
+			devices := repository.NewDevice(d.Reader)
+			dev := fixture.Device(func(m *model.Device) {
+				m.UserID = d.Seeder.User(t)
+				m.Platform = tt.platform
+				m.APNsEnvironment = tt.env
+				m.LastSeenAt = now
+			})
+
+			// act
+			d.InTx(t, func(tx tx.Tx) {
+				require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
+			})
+
+			// assert
+			var got *string
+			require.NoError(t, d.Writer.QueryRow(t.Context(),
+				"SELECT apns_environment FROM devices WHERE push_token = $1", dev.PushToken).Scan(&got))
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestDevice_Upsert_unknownUser(t *testing.T) {
 	t.Parallel()
 

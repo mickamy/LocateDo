@@ -13,7 +13,8 @@ func DeviceFromRegisterDeviceRequest(src *devicev1.RegisterDeviceRequest) model.
 		return model.Device{}
 	}
 	return model.Device{
-		Platform:  PlatformFromDevicev1(src.GetPlatform()),
-		PushToken: src.GetPushToken(),
+		Platform:        PlatformFromDevicev1(src.GetPlatform()),
+		PushToken:       src.GetPushToken(),
+		APNsEnvironment: APNsEnvironmentFromDevicev1(src.GetApnsEnvironment()),
 	}
 }

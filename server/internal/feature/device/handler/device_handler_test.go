@@ -26,7 +26,11 @@ func TestDevice_registerThenTakeOver(t *testing.T) {
 	client := newClient(t, d)
 	first := d.Seeder.User(t)
 	second := d.Seeder.User(t)
-	req := &devicev1.RegisterDeviceRequest{Platform: devicev1.Platform_PLATFORM_IOS, PushToken: "apns-token"}
+	req := &devicev1.RegisterDeviceRequest{
+		Platform:        devicev1.Platform_PLATFORM_IOS,
+		PushToken:       "apns-token",
+		ApnsEnvironment: devicev1.ApnsEnvironment_APNS_ENVIRONMENT_SANDBOX,
+	}
 
 	// act
 	_, err := client.RegisterDevice(t.Context(), authed(token(t, first), req))
@@ -36,9 +40,11 @@ func TestDevice_registerThenTakeOver(t *testing.T) {
 
 	// assert
 	var owner uuid.UUID
+	var env string
 	require.NoError(t, d.Writer.QueryRow(t.Context(),
-		"SELECT user_id FROM devices WHERE push_token = 'apns-token'").Scan(&owner))
+		"SELECT user_id, apns_environment FROM devices WHERE push_token = 'apns-token'").Scan(&owner, &env))
 	assert.Equal(t, second, owner, "the token follows whoever signed in last")
+	assert.Equal(t, "sandbox", env)
 }
 
 func TestDevice_RegisterDevice_rejects(t *testing.T) {
@@ -64,9 +70,34 @@ func TestDevice_RegisterDevice_rejects(t *testing.T) {
 			want: connect.CodeInvalidArgument,
 		},
 		{
+			name: "iOS without an APNs environment",
+			arrange: func(t *testing.T, d tdb.DB) (string, *devicev1.RegisterDeviceRequest) {
+				return token(t, d.Seeder.User(t)), &devicev1.RegisterDeviceRequest{
+					Platform:  devicev1.Platform_PLATFORM_IOS,
+					PushToken: "apns-token",
+				}
+			},
+			want: connect.CodeInvalidArgument,
+		},
+		{
+			name: "Android with an APNs environment",
+			arrange: func(t *testing.T, d tdb.DB) (string, *devicev1.RegisterDeviceRequest) {
+				return token(t, d.Seeder.User(t)), &devicev1.RegisterDeviceRequest{
+					Platform:        devicev1.Platform_PLATFORM_ANDROID,
+					PushToken:       "fcm-token",
+					ApnsEnvironment: devicev1.ApnsEnvironment_APNS_ENVIRONMENT_PRODUCTION,
+				}
+			},
+			want: connect.CodeInvalidArgument,
+		},
+		{
 			name: "no token",
 			arrange: func(_ *testing.T, _ tdb.DB) (string, *devicev1.RegisterDeviceRequest) {
-				return "", &devicev1.RegisterDeviceRequest{Platform: devicev1.Platform_PLATFORM_IOS, PushToken: "apns-token"}
+				return "", &devicev1.RegisterDeviceRequest{
+					Platform:        devicev1.Platform_PLATFORM_IOS,
+					PushToken:       "apns-token",
+					ApnsEnvironment: devicev1.ApnsEnvironment_APNS_ENVIRONMENT_PRODUCTION,
+				}
 			},
 			want: connect.CodeUnauthenticated,
 		},

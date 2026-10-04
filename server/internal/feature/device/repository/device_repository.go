@@ -38,11 +38,17 @@ func (r device) Bind(tx tx.Tx) Device {
 }
 
 func (r device) Upsert(ctx context.Context, d model.Device) error {
+	var env *string
+	if d.APNsEnvironment != "" {
+		v := string(d.APNsEnvironment)
+		env = &v
+	}
 	err := r.q.UpsertDevice(ctx, queries.UpsertDeviceParams{
-		UserID:     d.UserID,
-		Platform:   string(d.Platform),
-		PushToken:  d.PushToken,
-		LastSeenAt: d.LastSeenAt,
+		UserID:          d.UserID,
+		Platform:        string(d.Platform),
+		PushToken:       d.PushToken,
+		ApnsEnvironment: env,
+		LastSeenAt:      d.LastSeenAt,
 	})
 	switch {
 	case db.IsForeignKeyViolation(err):

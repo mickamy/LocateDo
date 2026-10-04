@@ -14,6 +14,12 @@ enum Platform {
   PLATFORM_ANDROID = 2;
 }
 
+enum ApnsEnvironment {
+  APNS_ENVIRONMENT_UNSPECIFIED = 0;
+  APNS_ENVIRONMENT_SANDBOX = 1;
+  APNS_ENVIRONMENT_PRODUCTION = 2;
+}
+
 message RegisterDeviceRequest {
   Platform platform = 1 [(buf.validate.field).enum = {
     defined_only: true
@@ -23,6 +29,13 @@ message RegisterDeviceRequest {
     min_len: 1
     max_len: 4096
   }];
+  ApnsEnvironment apns_environment = 3 [(buf.validate.field).enum.defined_only = true];
+
+  option (buf.validate.message).cel = {
+    id: "register_device_request.apns_environment"
+    message: "apns_environment is required on iOS and not allowed on Android"
+    expression: "(this.platform == 1) == (this.apns_environment != 0)"
+  };
 }
 
 message RegisterDeviceResponse {}

@@ -71,12 +71,62 @@ func (Platform) EnumDescriptor() ([]byte, []int) {
 	return file_locatedo_device_v1_device_proto_rawDescGZIP(), []int{0}
 }
 
+type ApnsEnvironment int32
+
+const (
+	ApnsEnvironment_APNS_ENVIRONMENT_UNSPECIFIED ApnsEnvironment = 0
+	ApnsEnvironment_APNS_ENVIRONMENT_SANDBOX     ApnsEnvironment = 1
+	ApnsEnvironment_APNS_ENVIRONMENT_PRODUCTION  ApnsEnvironment = 2
+)
+
+// Enum value maps for ApnsEnvironment.
+var (
+	ApnsEnvironment_name = map[int32]string{
+		0: "APNS_ENVIRONMENT_UNSPECIFIED",
+		1: "APNS_ENVIRONMENT_SANDBOX",
+		2: "APNS_ENVIRONMENT_PRODUCTION",
+	}
+	ApnsEnvironment_value = map[string]int32{
+		"APNS_ENVIRONMENT_UNSPECIFIED": 0,
+		"APNS_ENVIRONMENT_SANDBOX":     1,
+		"APNS_ENVIRONMENT_PRODUCTION":  2,
+	}
+)
+
+func (x ApnsEnvironment) Enum() *ApnsEnvironment {
+	p := new(ApnsEnvironment)
+	*p = x
+	return p
+}
+
+func (x ApnsEnvironment) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ApnsEnvironment) Descriptor() protoreflect.EnumDescriptor {
+	return file_locatedo_device_v1_device_proto_enumTypes[1].Descriptor()
+}
+
+func (ApnsEnvironment) Type() protoreflect.EnumType {
+	return &file_locatedo_device_v1_device_proto_enumTypes[1]
+}
+
+func (x ApnsEnvironment) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ApnsEnvironment.Descriptor instead.
+func (ApnsEnvironment) EnumDescriptor() ([]byte, []int) {
+	return file_locatedo_device_v1_device_proto_rawDescGZIP(), []int{1}
+}
+
 type RegisterDeviceRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Platform      Platform               `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
-	PushToken     string                 `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Platform        Platform               `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
+	PushToken       string                 `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
+	ApnsEnvironment ApnsEnvironment        `protobuf:"varint,3,opt,name=apns_environment,json=apnsEnvironment,proto3,enum=locatedo.device.v1.ApnsEnvironment" json:"apns_environment,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *RegisterDeviceRequest) Reset() {
@@ -123,6 +173,13 @@ func (x *RegisterDeviceRequest) GetPushToken() string {
 	return ""
 }
 
+func (x *RegisterDeviceRequest) GetApnsEnvironment() ApnsEnvironment {
+	if x != nil {
+		return x.ApnsEnvironment
+	}
+	return ApnsEnvironment_APNS_ENVIRONMENT_UNSPECIFIED
+}
+
 type RegisterDeviceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -163,18 +220,24 @@ var File_locatedo_device_v1_device_proto protoreflect.FileDescriptor
 
 const file_locatedo_device_v1_device_proto_rawDesc = "" +
 	"\n" +
-	"\x1flocatedo/device/v1/device.proto\x12\x12locatedo.device.v1\x1a\x1bbuf/validate/validate.proto\"\x88\x01\n" +
+	"\x1flocatedo/device/v1/device.proto\x12\x12locatedo.device.v1\x1a\x1bbuf/validate/validate.proto\"\x8c\x03\n" +
 	"\x15RegisterDeviceRequest\x12D\n" +
 	"\bplatform\x18\x01 \x01(\x0e2\x1c.locatedo.device.v1.PlatformB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\bplatform\x12)\n" +
 	"\n" +
 	"push_token\x18\x02 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x01\x18\x80 R\tpushToken\"\x18\n" +
+	"\xbaH\ar\x05\x10\x01\x18\x80 R\tpushToken\x12X\n" +
+	"\x10apns_environment\x18\x03 \x01(\x0e2#.locatedo.device.v1.ApnsEnvironmentB\b\xbaH\x05\x82\x01\x02\x10\x01R\x0fapnsEnvironment:\xa7\x01\xbaH\xa3\x01\x1a\xa0\x01\n" +
+	"(register_device_request.apns_environment\x12>apns_environment is required on iOS and not allowed on Android\x1a4(this.platform == 1) == (this.apns_environment != 0)\"\x18\n" +
 	"\x16RegisterDeviceResponse*L\n" +
 	"\bPlatform\x12\x18\n" +
 	"\x14PLATFORM_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fPLATFORM_IOS\x10\x01\x12\x14\n" +
-	"\x10PLATFORM_ANDROID\x10\x022x\n" +
+	"\x10PLATFORM_ANDROID\x10\x02*r\n" +
+	"\x0fApnsEnvironment\x12 \n" +
+	"\x1cAPNS_ENVIRONMENT_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18APNS_ENVIRONMENT_SANDBOX\x10\x01\x12\x1f\n" +
+	"\x1bAPNS_ENVIRONMENT_PRODUCTION\x10\x022x\n" +
 	"\rDeviceService\x12g\n" +
 	"\x0eRegisterDevice\x12).locatedo.device.v1.RegisterDeviceRequest\x1a*.locatedo.device.v1.RegisterDeviceResponseB\xd5\x01\n" +
 	"\x16com.locatedo.device.v1B\vDeviceProtoP\x01ZDgithub.com/mickamy/LocateDo/internal/gen/locatedo/device/v1;devicev1\xa2\x02\x03LDX\xaa\x02\x12Locatedo.Device.V1\xca\x02\x12Locatedo\\Device\\V1\xe2\x02\x1eLocatedo\\Device\\V1\\GPBMetadata\xea\x02\x14Locatedo::Device::V1b\x06proto3"
@@ -191,22 +254,24 @@ func file_locatedo_device_v1_device_proto_rawDescGZIP() []byte {
 	return file_locatedo_device_v1_device_proto_rawDescData
 }
 
-var file_locatedo_device_v1_device_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_locatedo_device_v1_device_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_locatedo_device_v1_device_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_locatedo_device_v1_device_proto_goTypes = []any{
 	(Platform)(0),                  // 0: locatedo.device.v1.Platform
-	(*RegisterDeviceRequest)(nil),  // 1: locatedo.device.v1.RegisterDeviceRequest
-	(*RegisterDeviceResponse)(nil), // 2: locatedo.device.v1.RegisterDeviceResponse
+	(ApnsEnvironment)(0),           // 1: locatedo.device.v1.ApnsEnvironment
+	(*RegisterDeviceRequest)(nil),  // 2: locatedo.device.v1.RegisterDeviceRequest
+	(*RegisterDeviceResponse)(nil), // 3: locatedo.device.v1.RegisterDeviceResponse
 }
 var file_locatedo_device_v1_device_proto_depIdxs = []int32{
 	0, // 0: locatedo.device.v1.RegisterDeviceRequest.platform:type_name -> locatedo.device.v1.Platform
-	1, // 1: locatedo.device.v1.DeviceService.RegisterDevice:input_type -> locatedo.device.v1.RegisterDeviceRequest
-	2, // 2: locatedo.device.v1.DeviceService.RegisterDevice:output_type -> locatedo.device.v1.RegisterDeviceResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 1: locatedo.device.v1.RegisterDeviceRequest.apns_environment:type_name -> locatedo.device.v1.ApnsEnvironment
+	2, // 2: locatedo.device.v1.DeviceService.RegisterDevice:input_type -> locatedo.device.v1.RegisterDeviceRequest
+	3, // 3: locatedo.device.v1.DeviceService.RegisterDevice:output_type -> locatedo.device.v1.RegisterDeviceResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_locatedo_device_v1_device_proto_init() }
@@ -219,7 +284,7 @@ func file_locatedo_device_v1_device_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_locatedo_device_v1_device_proto_rawDesc), len(file_locatedo_device_v1_device_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,

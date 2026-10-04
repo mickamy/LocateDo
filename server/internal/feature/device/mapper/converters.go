@@ -9,6 +9,7 @@ import (
 
 func init() {
 	mapper.Register(PlatformFromDevicev1)
+	mapper.Register(APNsEnvironmentFromDevicev1)
 }
 
 func PlatformFromDevicev1(p devicev1.Platform) model.Platform {
@@ -18,6 +19,19 @@ func PlatformFromDevicev1(p devicev1.Platform) model.Platform {
 	case devicev1.Platform_PLATFORM_ANDROID:
 		return model.PlatformAndroid
 	case devicev1.Platform_PLATFORM_UNSPECIFIED:
+		return ""
+	default:
+		return ""
+	}
+}
+
+func APNsEnvironmentFromDevicev1(e devicev1.ApnsEnvironment) model.APNsEnvironment {
+	switch e {
+	case devicev1.ApnsEnvironment_APNS_ENVIRONMENT_SANDBOX:
+		return model.APNsSandbox
+	case devicev1.ApnsEnvironment_APNS_ENVIRONMENT_PRODUCTION:
+		return model.APNsProduction
+	case devicev1.ApnsEnvironment_APNS_ENVIRONMENT_UNSPECIFIED:
 		return ""
 	default:
 		return ""
