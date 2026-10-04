@@ -6,33 +6,26 @@ import (
 	"uuid"
 
 	"github.com/mickamy/LocateDo/internal/di"
-	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
-	husecase "github.com/mickamy/LocateDo/internal/feature/household/usecase"
 	"github.com/mickamy/LocateDo/internal/feature/place/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
 
 type DeletePlaceInput struct {
-	UserID  uuid.UUID
-	PlaceID uuid.UUID
+	HouseholdID uuid.UUID
+	PlaceID     uuid.UUID
 }
 
 // DeletePlace removes the place from the caller's household. It succeeds
 // when the place is already gone, so a retried request is harmless.
 type DeletePlace struct {
-	_           di.Infra               `di:"embed"`
-	transactor  tx.Transactor          `di:""`
-	memberships hrepository.Membership `di:""`
-	places      repository.Place       `di:""`
+	_          di.Infra         `di:"embed"`
+	transactor tx.Transactor    `di:""`
+	places     repository.Place `di:""`
 }
 
 func (uc DeletePlace) Do(ctx context.Context, in DeletePlaceInput) error {
 	if err := uc.transactor.WithTx(ctx, func(tx tx.Tx) error {
-		householdID, err := husecase.CallerHousehold(ctx, uc.memberships.Bind(tx), in.UserID)
-		if err != nil {
-			return fmt.Errorf("caller household: %w", err)
-		}
-		if err := uc.places.Bind(tx).Delete(ctx, in.PlaceID, householdID); err != nil {
+		if err := uc.places.Bind(tx).Delete(ctx, in.PlaceID, in.HouseholdID); err != nil {
 			return fmt.Errorf("delete place: %w", err)
 		}
 		return nil

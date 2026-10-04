@@ -9,44 +9,39 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
-	husecase "github.com/mickamy/LocateDo/internal/feature/household/usecase"
 	"github.com/mickamy/LocateDo/internal/feature/place/model"
 	"github.com/mickamy/LocateDo/internal/feature/place/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
 
+// PutPlaceInput carries the caller's household and the place to write; the
+// two must agree.
 type PutPlaceInput struct {
-	UserID uuid.UUID
-	Place  model.Place
+	HouseholdID uuid.UUID
+	Place       model.Place
 }
 
 // PutPlace creates or overwrites a place. A free household keeps every place
 // it already has but cannot add one beyond the limit; the limit is checked
 // after the write so the transaction, not a pre-check, enforces it.
 type PutPlace struct {
-	_           di.Infra               `di:"embed"`
-	transactor  tx.Transactor          `di:""`
-	households  hrepository.Household  `di:""`
-	memberships hrepository.Membership `di:""`
-	places      repository.Place       `di:""`
+	_          di.Infra              `di:"embed"`
+	transactor tx.Transactor         `di:""`
+	households hrepository.Household `di:""`
+	places     repository.Place      `di:""`
 }
 
 func (uc PutPlace) Do(ctx context.Context, in PutPlaceInput) error {
+	if in.Place.HouseholdID != in.HouseholdID {
+		return aerrors.PermissionDenied("not a member of this household")
+	}
 	if err := uc.transactor.WithTx(ctx, func(tx tx.Tx) error {
-		householdID, err := husecase.CallerHousehold(ctx, uc.memberships.Bind(tx), in.UserID)
-		if err != nil {
-			return fmt.Errorf("caller household: %w", err)
-		}
-		if householdID != in.Place.HouseholdID {
-			return aerrors.PermissionDenied("not a member of this household")
-		}
-
-		h, err := uc.households.Bind(tx).FindForUpdate(ctx, householdID)
+		h, err := uc.households.Bind(tx).FindForUpdate(ctx, in.HouseholdID)
 		if err != nil {
 			return fmt.Errorf("lock household: %w", err)
 		}
 		places := uc.places.Bind(tx)
-		exists, err := places.Exists(ctx, in.Place.ID, householdID)
+		exists, err := places.Exists(ctx, in.Place.ID, in.HouseholdID)
 		if err != nil {
 			return fmt.Errorf("check place: %w", err)
 		}
@@ -56,7 +51,7 @@ func (uc PutPlace) Do(ctx context.Context, in PutPlaceInput) error {
 		if exists {
 			return nil
 		}
-		n, err := places.Count(ctx, householdID)
+		n, err := places.Count(ctx, in.HouseholdID)
 		if err != nil {
 			return fmt.Errorf("count places: %w", err)
 		}

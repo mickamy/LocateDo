@@ -28,11 +28,11 @@ func (h *Place) PutPlace(
 	ctx context.Context,
 	req *connect.Request[placev1.PutPlaceRequest],
 ) (*connect.Response[placev1.PutPlaceResponse], error) {
-	userID, err := caller.UserID(ctx)
+	householdID, err := caller.HouseholdID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	householdID, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
+	target, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -40,9 +40,9 @@ func (h *Place) PutPlace(
 	if err != nil {
 		return nil, cerrors.Map(aerrors.InvalidArgument(err.Error()))
 	}
-	p.HouseholdID = householdID
+	p.HouseholdID = target
 
-	if err := h.putPlace.Do(ctx, usecase.PutPlaceInput{UserID: userID, Place: p}); err != nil {
+	if err := h.putPlace.Do(ctx, usecase.PutPlaceInput{HouseholdID: householdID, Place: p}); err != nil {
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&placev1.PutPlaceResponse{}), nil
@@ -52,7 +52,7 @@ func (h *Place) DeletePlace(
 	ctx context.Context,
 	req *connect.Request[placev1.DeletePlaceRequest],
 ) (*connect.Response[placev1.DeletePlaceResponse], error) {
-	userID, err := caller.UserID(ctx)
+	householdID, err := caller.HouseholdID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -61,7 +61,7 @@ func (h *Place) DeletePlace(
 		return nil, cerrors.Map(err)
 	}
 
-	if err := h.deletePlace.Do(ctx, usecase.DeletePlaceInput{UserID: userID, PlaceID: id}); err != nil {
+	if err := h.deletePlace.Do(ctx, usecase.DeletePlaceInput{HouseholdID: householdID, PlaceID: id}); err != nil {
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&placev1.DeletePlaceResponse{}), nil

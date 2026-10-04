@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/todo/usecase"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -19,12 +18,11 @@ func TestDeleteTodo(t *testing.T) {
 	d := tdb.New(t)
 	deleteTodo := usecase.NewDeleteTodo(d.Infra())
 	h := d.Seeder.Household(t, hmodel.PlanFree)
-	memberID := d.Seeder.Member(t, h.ID)
 	id := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
 
 	// act
-	err := deleteTodo.Do(t.Context(), usecase.DeleteTodoInput{UserID: memberID, TodoID: id})
-	again := deleteTodo.Do(t.Context(), usecase.DeleteTodoInput{UserID: memberID, TodoID: id})
+	err := deleteTodo.Do(t.Context(), usecase.DeleteTodoInput{HouseholdID: h.ID, TodoID: id})
+	again := deleteTodo.Do(t.Context(), usecase.DeleteTodoInput{HouseholdID: h.ID, TodoID: id})
 
 	// assert
 	require.NoError(t, err)
@@ -42,25 +40,9 @@ func TestDeleteTodo_anotherHousehold(t *testing.T) {
 	id := d.Seeder.Todo(t, other.ID, d.Seeder.Place(t, other.ID))
 
 	// act
-	err := usecase.NewDeleteTodo(d.Infra()).Do(t.Context(), usecase.DeleteTodoInput{UserID: h.OwnerID, TodoID: id})
+	err := usecase.NewDeleteTodo(d.Infra()).Do(t.Context(), usecase.DeleteTodoInput{HouseholdID: h.ID, TodoID: id})
 
 	// assert
 	require.NoError(t, err)
 	assert.Equal(t, 1, d.Seeder.Count(t, "todos", other.ID))
-}
-
-func TestDeleteTodo_outsider(t *testing.T) {
-	t.Parallel()
-
-	// arrange
-	d := tdb.New(t)
-	h := d.Seeder.Household(t, hmodel.PlanFree)
-	id := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
-
-	// act
-	err := usecase.NewDeleteTodo(d.Infra()).Do(t.Context(), usecase.DeleteTodoInput{UserID: d.Seeder.User(t), TodoID: id})
-
-	// assert
-	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
-	assert.Equal(t, 1, d.Seeder.Count(t, "todos", h.ID))
 }

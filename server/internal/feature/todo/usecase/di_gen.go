@@ -4,21 +4,19 @@ package usecase
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
-	"github.com/mickamy/LocateDo/internal/feature/household/repository"
-	repository2 "github.com/mickamy/LocateDo/internal/feature/todo/repository"
+	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
+	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
 )
 
 // NewDeleteTodo initializes dependencies and constructs DeleteTodo.
 func NewDeleteTodo(infra di.Infra) *DeleteTodo {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	memberships := repository.NewMembership(reader)
-	todos := repository2.NewTodo(reader)
+	todos := repository.NewTodo(reader)
 
 	return &DeleteTodo{
-		transactor:  transactor,
-		memberships: memberships,
-		todos:       todos,
+		transactor: transactor,
+		todos:      todos,
 	}
 }
 
@@ -26,15 +24,13 @@ func NewDeleteTodo(infra di.Infra) *DeleteTodo {
 func NewPutTodo(infra di.Infra) *PutTodo {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	households := repository.NewHousehold(reader)
-	memberships := repository.NewMembership(reader)
-	todos := repository2.NewTodo(reader)
+	households := repository2.NewHousehold(reader)
+	todos := repository.NewTodo(reader)
 
 	return &PutTodo{
-		transactor:  transactor,
-		households:  households,
-		memberships: memberships,
-		todos:       todos,
+		transactor: transactor,
+		households: households,
+		todos:      todos,
 	}
 }
 
@@ -42,14 +38,12 @@ func NewPutTodo(infra di.Infra) *PutTodo {
 func NewSetTodoCompletion(infra di.Infra) *SetTodoCompletion {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	households := repository.NewHousehold(reader)
-	memberships := repository.NewMembership(reader)
-	todos := repository2.NewTodo(reader)
+	households := repository2.NewHousehold(reader)
+	todos := repository.NewTodo(reader)
 
 	return &SetTodoCompletion{
-		transactor:  transactor,
-		households:  households,
-		memberships: memberships,
-		todos:       todos,
+		transactor: transactor,
+		households: households,
+		todos:      todos,
 	}
 }

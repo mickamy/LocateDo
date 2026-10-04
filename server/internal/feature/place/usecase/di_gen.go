@@ -4,21 +4,19 @@ package usecase
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
-	"github.com/mickamy/LocateDo/internal/feature/household/repository"
-	repository2 "github.com/mickamy/LocateDo/internal/feature/place/repository"
+	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
+	"github.com/mickamy/LocateDo/internal/feature/place/repository"
 )
 
 // NewDeletePlace initializes dependencies and constructs DeletePlace.
 func NewDeletePlace(infra di.Infra) *DeletePlace {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	memberships := repository.NewMembership(reader)
-	places := repository2.NewPlace(reader)
+	places := repository.NewPlace(reader)
 
 	return &DeletePlace{
-		transactor:  transactor,
-		memberships: memberships,
-		places:      places,
+		transactor: transactor,
+		places:     places,
 	}
 }
 
@@ -26,14 +24,12 @@ func NewDeletePlace(infra di.Infra) *DeletePlace {
 func NewPutPlace(infra di.Infra) *PutPlace {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	households := repository.NewHousehold(reader)
-	memberships := repository.NewMembership(reader)
-	places := repository2.NewPlace(reader)
+	households := repository2.NewHousehold(reader)
+	places := repository.NewPlace(reader)
 
 	return &PutPlace{
-		transactor:  transactor,
-		households:  households,
-		memberships: memberships,
-		places:      places,
+		transactor: transactor,
+		households: households,
+		places:     places,
 	}
 }

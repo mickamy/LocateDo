@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/feature/category/usecase"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -20,13 +19,12 @@ func TestDeleteCategory(t *testing.T) {
 	d := tdb.New(t)
 	deleteCategory := usecase.NewDeleteCategory(d.Infra())
 	h := d.Seeder.Household(t, hmodel.PlanFree)
-	memberID := d.Seeder.Member(t, h.ID)
 	categoryID := d.Seeder.Category(t, h.ID)
 	placeID := d.Seeder.CategorizedPlace(t, h.ID, categoryID)
 
 	// act
-	err := deleteCategory.Do(t.Context(), usecase.DeleteCategoryInput{UserID: memberID, CategoryID: categoryID})
-	again := deleteCategory.Do(t.Context(), usecase.DeleteCategoryInput{UserID: memberID, CategoryID: categoryID})
+	err := deleteCategory.Do(t.Context(), usecase.DeleteCategoryInput{HouseholdID: h.ID, CategoryID: categoryID})
+	again := deleteCategory.Do(t.Context(), usecase.DeleteCategoryInput{HouseholdID: h.ID, CategoryID: categoryID})
 
 	// assert
 	require.NoError(t, err)
@@ -49,28 +47,10 @@ func TestDeleteCategory_anotherHousehold(t *testing.T) {
 
 	// act
 	err := usecase.NewDeleteCategory(d.Infra()).Do(t.Context(), usecase.DeleteCategoryInput{
-		UserID: h.OwnerID, CategoryID: categoryID,
+		HouseholdID: h.ID, CategoryID: categoryID,
 	})
 
 	// assert
 	require.NoError(t, err)
 	assert.Equal(t, 1, d.Seeder.Count(t, "categories", other.ID))
-}
-
-func TestDeleteCategory_outsider(t *testing.T) {
-	t.Parallel()
-
-	// arrange
-	d := tdb.New(t)
-	h := d.Seeder.Household(t, hmodel.PlanFree)
-	categoryID := d.Seeder.Category(t, h.ID)
-
-	// act
-	err := usecase.NewDeleteCategory(d.Infra()).Do(t.Context(), usecase.DeleteCategoryInput{
-		UserID: d.Seeder.User(t), CategoryID: categoryID,
-	})
-
-	// assert
-	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
-	assert.Equal(t, 1, d.Seeder.Count(t, "categories", h.ID))
 }

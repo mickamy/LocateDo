@@ -10,15 +10,16 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
-	husecase "github.com/mickamy/LocateDo/internal/feature/household/usecase"
 	"github.com/mickamy/LocateDo/internal/feature/todo/model"
 	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
 
+// PutTodoInput carries the caller's household and the todo to write; the two
+// must agree.
 type PutTodoInput struct {
-	UserID uuid.UUID
-	Todo   model.Todo
+	HouseholdID uuid.UUID
+	Todo        model.Todo
 }
 
 // PutTodo creates or overwrites a todo's content, never its completion. A
@@ -27,23 +28,18 @@ type PutTodoInput struct {
 // pre-check, enforces it. A todo for a place that is gone is dropped and
 // reported as success.
 type PutTodo struct {
-	_           di.Infra               `di:"embed"`
-	transactor  tx.Transactor          `di:""`
-	households  hrepository.Household  `di:""`
-	memberships hrepository.Membership `di:""`
-	todos       repository.Todo        `di:""`
+	_          di.Infra              `di:"embed"`
+	transactor tx.Transactor         `di:""`
+	households hrepository.Household `di:""`
+	todos      repository.Todo       `di:""`
 }
 
 func (uc PutTodo) Do(ctx context.Context, in PutTodoInput) error {
+	if in.Todo.HouseholdID != in.HouseholdID {
+		return aerrors.PermissionDenied("not a member of this household")
+	}
 	if err := uc.transactor.WithTx(ctx, func(tx tx.Tx) error {
-		householdID, err := husecase.CallerHousehold(ctx, uc.memberships.Bind(tx), in.UserID)
-		if err != nil {
-			return fmt.Errorf("caller household: %w", err)
-		}
-		if householdID != in.Todo.HouseholdID {
-			return aerrors.PermissionDenied("not a member of this household")
-		}
-
+		householdID := in.HouseholdID
 		h, err := uc.households.Bind(tx).FindForUpdate(ctx, householdID)
 		if err != nil {
 			return fmt.Errorf("lock household: %w", err)

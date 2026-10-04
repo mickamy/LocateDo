@@ -91,6 +91,14 @@ func TestCategory_PutCategory_rejects(t *testing.T) {
 			want: connect.CodePermissionDenied,
 		},
 		{
+			name: "no household",
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID, *categoryv1.CategoryInput) {
+				h := d.Seeder.Household(t, hmodel.PlanFree)
+				return token(t, d.Seeder.User(t)), h.ID, builtinInput(categoryv1.BuiltinCategory_BUILTIN_CATEGORY_WORK)
+			},
+			want: connect.CodePermissionDenied,
+		},
+		{
 			name: "no token",
 			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID, *categoryv1.CategoryInput) {
 				h := d.Seeder.Household(t, hmodel.PlanFree)

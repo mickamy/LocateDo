@@ -28,11 +28,11 @@ func (h *Category) PutCategory(
 	ctx context.Context,
 	req *connect.Request[categoryv1.PutCategoryRequest],
 ) (*connect.Response[categoryv1.PutCategoryResponse], error) {
-	userID, err := caller.UserID(ctx)
+	householdID, err := caller.HouseholdID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	householdID, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
+	target, err := ids.Parse("household_id", req.Msg.GetHouseholdId())
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -40,9 +40,9 @@ func (h *Category) PutCategory(
 	if err != nil {
 		return nil, cerrors.Map(aerrors.InvalidArgument(err.Error()))
 	}
-	c.HouseholdID = householdID
+	c.HouseholdID = target
 
-	if err := h.putCategory.Do(ctx, usecase.PutCategoryInput{UserID: userID, Category: c}); err != nil {
+	if err := h.putCategory.Do(ctx, usecase.PutCategoryInput{HouseholdID: householdID, Category: c}); err != nil {
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&categoryv1.PutCategoryResponse{}), nil
@@ -52,7 +52,7 @@ func (h *Category) DeleteCategory(
 	ctx context.Context,
 	req *connect.Request[categoryv1.DeleteCategoryRequest],
 ) (*connect.Response[categoryv1.DeleteCategoryResponse], error) {
-	userID, err := caller.UserID(ctx)
+	householdID, err := caller.HouseholdID(ctx)
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
@@ -61,7 +61,7 @@ func (h *Category) DeleteCategory(
 		return nil, cerrors.Map(err)
 	}
 
-	if err := h.deleteCategory.Do(ctx, usecase.DeleteCategoryInput{UserID: userID, CategoryID: id}); err != nil {
+	if err := h.deleteCategory.Do(ctx, usecase.DeleteCategoryInput{HouseholdID: householdID, CategoryID: id}); err != nil {
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&categoryv1.DeleteCategoryResponse{}), nil

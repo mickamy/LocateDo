@@ -11,69 +11,39 @@ import (
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/todo/usecase"
 	"github.com/mickamy/LocateDo/test/tdb"
-	"github.com/mickamy/LocateDo/test/tseed"
 )
 
-func TestPutTodo_access(t *testing.T) {
+func TestPutTodo(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		// arrange returns the caller and the household to write to.
-		arrange func(t *testing.T, d tdb.DB, h tseed.Household, memberID uuid.UUID) (uuid.UUID, uuid.UUID)
-		want    error
-	}{
-		{
-			name: "owner",
-			arrange: func(_ *testing.T, _ tdb.DB, h tseed.Household, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return h.OwnerID, h.ID
-			},
-		},
-		{
-			name: "member",
-			arrange: func(_ *testing.T, _ tdb.DB, h tseed.Household, memberID uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return memberID, h.ID
-			},
-		},
-		{
-			name: "another household",
-			arrange: func(t *testing.T, d tdb.DB, h tseed.Household, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return h.OwnerID, d.Seeder.Household(t, hmodel.PlanPro).ID
-			},
-			want: aerrors.ErrPermissionDenied,
-		},
-		{
-			name: "outsider",
-			arrange: func(t *testing.T, d tdb.DB, h tseed.Household, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return d.Seeder.User(t), h.ID
-			},
-			want: aerrors.ErrPermissionDenied,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	td := todoAt(h.ID, d.Seeder.Place(t, h.ID))
 
-			// arrange
-			d := tdb.New(t)
-			h := d.Seeder.Household(t, hmodel.PlanPro)
-			memberID := d.Seeder.Member(t, h.ID)
-			callerID, target := tt.arrange(t, d, h, memberID)
-			td := todoAt(target, d.Seeder.Place(t, target))
+	// act
+	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td})
 
-			// act
-			err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{UserID: callerID, Todo: td})
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, 1, d.Seeder.Count(t, "todos", h.ID))
+}
 
-			// assert
-			if tt.want != nil {
-				require.ErrorIs(t, err, tt.want)
-				assert.Zero(t, d.Seeder.Count(t, "todos", target))
-				return
-			}
-			require.NoError(t, err)
-			assert.Equal(t, 1, d.Seeder.Count(t, "todos", target))
-		})
-	}
+func TestPutTodo_anotherHousehold(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	other := d.Seeder.Household(t, hmodel.PlanPro)
+	td := todoAt(other.ID, d.Seeder.Place(t, other.ID))
+
+	// act
+	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td})
+
+	// assert
+	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
+	assert.Zero(t, d.Seeder.Count(t, "todos", other.ID))
 }
 
 func TestPutTodo_freeLimit(t *testing.T) {
@@ -126,7 +96,7 @@ func TestPutTodo_freeLimit(t *testing.T) {
 
 			// act
 			err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{
-				UserID: h.OwnerID, Todo: todoAt(h.ID, placeID),
+				HouseholdID: h.ID, Todo: todoAt(h.ID, placeID),
 			})
 
 			// assert
@@ -150,14 +120,14 @@ func TestPutTodo_freeHouseholdOverTheLimitKeepsEditing(t *testing.T) {
 	h := d.Seeder.Household(t, hmodel.PlanFree)
 	placeID := d.Seeder.Place(t, h.ID)
 	td := todoAt(h.ID, placeID)
-	require.NoError(t, putTodo.Do(t.Context(), usecase.PutTodoInput{UserID: h.OwnerID, Todo: td}))
+	require.NoError(t, putTodo.Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td}))
 	for range hmodel.MaxFreeOpenTodos {
 		d.Seeder.Todo(t, h.ID, placeID)
 	}
 	td.Title = "Oat milk"
 
 	// act
-	err := putTodo.Do(t.Context(), usecase.PutTodoInput{UserID: h.OwnerID, Todo: td})
+	err := putTodo.Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td})
 
 	// assert
 	require.NoError(t, err)
@@ -179,7 +149,7 @@ func TestPutTodo_placeGoneIsANoOp(t *testing.T) {
 
 	// act
 	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{
-		UserID: h.OwnerID, Todo: todoAt(h.ID, uuid.NewV7()),
+		HouseholdID: h.ID, Todo: todoAt(h.ID, uuid.NewV7()),
 	})
 
 	// assert

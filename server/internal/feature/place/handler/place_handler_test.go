@@ -83,6 +83,13 @@ func TestPlace_PutPlace_rejects(t *testing.T) {
 			want: connect.CodePermissionDenied,
 		},
 		{
+			name: "no household",
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID) {
+				return token(t, d.Seeder.User(t)), d.Seeder.Household(t, hmodel.PlanPro).ID
+			},
+			want: connect.CodePermissionDenied,
+		},
+		{
 			name: "no token",
 			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID) {
 				return "", d.Seeder.Household(t, hmodel.PlanPro).ID

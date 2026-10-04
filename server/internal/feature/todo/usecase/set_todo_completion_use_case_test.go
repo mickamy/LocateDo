@@ -20,18 +20,17 @@ func TestSetTodoCompletion_completeThenReopen(t *testing.T) {
 	d := tdb.New(t)
 	setCompletion := usecase.NewSetTodoCompletion(d.Infra())
 	h := d.Seeder.Household(t, hmodel.PlanFree)
-	memberID := d.Seeder.Member(t, h.ID)
 	id := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
 
 	// act & assert
 	require.NoError(t, setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
-		UserID: memberID, TodoID: id, CompletedAt: &now,
+		HouseholdID: h.ID, TodoID: id, CompletedAt: &now,
 	}))
 	got := completedAt(t, d, id, h.ID)
 	require.NotNil(t, got)
 	assert.True(t, now.Equal(*got))
 
-	require.NoError(t, setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{UserID: memberID, TodoID: id}))
+	require.NoError(t, setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{HouseholdID: h.ID, TodoID: id}))
 	assert.Nil(t, completedAt(t, d, id, h.ID))
 }
 
@@ -61,7 +60,7 @@ func TestSetTodoCompletion_freeLimitOnReopen(t *testing.T) {
 
 			// act
 			err := usecase.NewSetTodoCompletion(d.Infra()).Do(t.Context(), usecase.SetTodoCompletionInput{
-				UserID: h.OwnerID, TodoID: done,
+				HouseholdID: h.ID, TodoID: done,
 			})
 
 			// assert
@@ -90,7 +89,7 @@ func TestSetTodoCompletion_completingIsAlwaysAllowed(t *testing.T) {
 
 	// act
 	err := usecase.NewSetTodoCompletion(d.Infra()).Do(t.Context(), usecase.SetTodoCompletionInput{
-		UserID: h.OwnerID, TodoID: last, CompletedAt: &now,
+		HouseholdID: h.ID, TodoID: last, CompletedAt: &now,
 	})
 
 	// assert
@@ -98,54 +97,26 @@ func TestSetTodoCompletion_completingIsAlwaysAllowed(t *testing.T) {
 	assert.NotNil(t, completedAt(t, d, last, h.ID))
 }
 
-func TestSetTodoCompletion_rejectsOrIgnores(t *testing.T) {
+func TestSetTodoCompletion_missingOrForeignIsANoOp(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name    string
-		arrange func(t *testing.T, d tdb.DB) usecase.SetTodoCompletionInput
-		want    error
-	}{
-		{
-			name: "missing todo is a no-op",
-			arrange: func(t *testing.T, d tdb.DB) usecase.SetTodoCompletionInput {
-				h := d.Seeder.Household(t, hmodel.PlanFree)
-				return usecase.SetTodoCompletionInput{UserID: h.OwnerID, TodoID: uuid.NewV7(), CompletedAt: &now}
-			},
-		},
-		{
-			name: "another household's todo is a no-op",
-			arrange: func(t *testing.T, d tdb.DB) usecase.SetTodoCompletionInput {
-				h := d.Seeder.Household(t, hmodel.PlanFree)
-				other := d.Seeder.Household(t, hmodel.PlanFree)
-				id := d.Seeder.Todo(t, other.ID, d.Seeder.Place(t, other.ID))
-				return usecase.SetTodoCompletionInput{UserID: h.OwnerID, TodoID: id, CompletedAt: &now}
-			},
-		},
-		{
-			name: "outsider",
-			arrange: func(t *testing.T, d tdb.DB) usecase.SetTodoCompletionInput {
-				h := d.Seeder.Household(t, hmodel.PlanFree)
-				id := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
-				return usecase.SetTodoCompletionInput{UserID: d.Seeder.User(t), TodoID: id, CompletedAt: &now}
-			},
-			want: aerrors.ErrPermissionDenied,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	other := d.Seeder.Household(t, hmodel.PlanFree)
+	foreign := d.Seeder.Todo(t, other.ID, d.Seeder.Place(t, other.ID))
+	setCompletion := usecase.NewSetTodoCompletion(d.Infra())
 
-			d := tdb.New(t)
-			in := tt.arrange(t, d)
+	// act
+	missingErr := setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
+		HouseholdID: h.ID, TodoID: uuid.NewV7(), CompletedAt: &now,
+	})
+	foreignErr := setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
+		HouseholdID: h.ID, TodoID: foreign, CompletedAt: &now,
+	})
 
-			err := usecase.NewSetTodoCompletion(d.Infra()).Do(t.Context(), in)
-
-			if tt.want != nil {
-				require.ErrorIs(t, err, tt.want)
-				return
-			}
-			require.NoError(t, err)
-		})
-	}
+	// assert
+	require.NoError(t, missingErr)
+	require.NoError(t, foreignErr)
+	assert.Nil(t, completedAt(t, d, foreign, other.ID), "another household's todo is left alone")
 }

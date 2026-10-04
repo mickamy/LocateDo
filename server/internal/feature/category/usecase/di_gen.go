@@ -4,21 +4,18 @@ package usecase
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
-	repository2 "github.com/mickamy/LocateDo/internal/feature/category/repository"
-	"github.com/mickamy/LocateDo/internal/feature/household/repository"
+	"github.com/mickamy/LocateDo/internal/feature/category/repository"
 )
 
 // NewDeleteCategory initializes dependencies and constructs DeleteCategory.
 func NewDeleteCategory(infra di.Infra) *DeleteCategory {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	memberships := repository.NewMembership(reader)
-	categories := repository2.NewCategory(reader)
+	categories := repository.NewCategory(reader)
 
 	return &DeleteCategory{
-		transactor:  transactor,
-		memberships: memberships,
-		categories:  categories,
+		transactor: transactor,
+		categories: categories,
 	}
 }
 
@@ -26,12 +23,10 @@ func NewDeleteCategory(infra di.Infra) *DeleteCategory {
 func NewPutCategory(infra di.Infra) *PutCategory {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	memberships := repository.NewMembership(reader)
-	categories := repository2.NewCategory(reader)
+	categories := repository.NewCategory(reader)
 
 	return &PutCategory{
-		transactor:  transactor,
-		memberships: memberships,
-		categories:  categories,
+		transactor: transactor,
+		categories: categories,
 	}
 }
