@@ -12,9 +12,15 @@ enum AppTab: Hashable {
 final class AppRouter {
     var selectedTab: AppTab = .home
     var pendingPlaceID: UUID?
+    var isAddPlaceRequested = false
 
     func open(placeID: UUID) {
         selectedTab = .home
         pendingPlaceID = placeID
+    }
+
+    func requestAddPlace() {
+        selectedTab = .home
+        isAddPlaceRequested = true
     }
 }

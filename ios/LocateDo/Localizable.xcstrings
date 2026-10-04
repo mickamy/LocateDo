@@ -307,7 +307,7 @@
         }
       }
     },
-    "home.nearby_summary" : {
+    "home.open_summary" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -316,13 +316,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld to-do near you"
+                  "value" : "%lld open to-do"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld to-dos near you"
+                  "value" : "%lld open to-dos"
                 }
               }
             }
@@ -334,7 +334,7 @@
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "現在地の近くに %lld 件の TODO があります"
+                  "value" : "未完了の TODO が %lld 件あります"
                 }
               }
             }
@@ -359,6 +359,23 @@
         }
       }
     },
+    "home.permission_banner.location_denied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow location access in Settings to get reminders."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お知らせを受け取るには、設定で位置情報を許可してください。"
+          }
+        }
+      }
+    },
     "home.permission_banner.notifications" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -372,6 +389,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "お知らせを受け取るには、通知を許可してください。"
+          }
+        }
+      }
+    },
+    "map.empty.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places you add appear here."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加した場所がここに表示されます。"
           }
         }
       }
@@ -1488,13 +1522,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To-dos belong to places. Add one from the Home tab."
+            "value" : "To-dos belong to places."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TODO は場所に紐づきます。ホームタブから場所を追加できます。"
+            "value" : "TODO は場所に紐づきます。"
           }
         }
       }

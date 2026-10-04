@@ -50,16 +50,20 @@ settings:
     title: "このアプリについて"
     version: "バージョン"
 home:
-  nearby_summary:
+  open_summary:
     plural:
-      other: "現在地の近くに {count} 件の TODO があります"
+      other: "未完了の TODO が {count} 件あります"
   permission_banner:
     location: "アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。"
+    location_denied: "お知らせを受け取るには、設定で位置情報を許可してください。"
     notifications: "お知らせを受け取るには、通知を許可してください。"
   empty:
     title: "場所がまだありません"
     message: "場所を追加すると、着いたときにお知らせします。"
   add_place: "場所を追加"
+map:
+  empty:
+    message: "追加した場所がここに表示されます。"
 place:
   editor:
     title_new: "場所を追加"
@@ -96,7 +100,7 @@ todo:
     empty_title: "TODO がまだありません"
     empty_message: "場所に TODO を追加すると、着いたときにお知らせします。"
     no_places_title: "先に場所を追加してください"
-    no_places_message: "TODO は場所に紐づきます。ホームタブから場所を追加できます。"
+    no_places_message: "TODO は場所に紐づきます。"
     filter_empty: "この条件の TODO はありません"
   filter:
     all: "すべて"

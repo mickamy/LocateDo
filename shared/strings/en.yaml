@@ -50,17 +50,21 @@ settings:
     title: "About"
     version: "Version"
 home:
-  nearby_summary:
+  open_summary:
     plural:
-      one: "{count:int} to-do near you"
-      other: "{count:int} to-dos near you"
+      one: "{count:int} open to-do"
+      other: "{count:int} open to-dos"
   permission_banner:
     location: "Allow “Always” location to get reminders while the app is closed."
+    location_denied: "Allow location access in Settings to get reminders."
     notifications: "Allow notifications to get reminders."
   empty:
     title: "No places yet"
     message: "Add a place to get reminded when you arrive."
   add_place: "Add a place"
+map:
+  empty:
+    message: "Places you add appear here."
 place:
   editor:
     title_new: "Add a place"
@@ -97,7 +101,7 @@ todo:
     empty_title: "No to-dos yet"
     empty_message: "Add a to-do to a place and we’ll remind you when you arrive."
     no_places_title: "Add a place first"
-    no_places_message: "To-dos belong to places. Add one from the Home tab."
+    no_places_message: "To-dos belong to places."
     filter_empty: "No to-dos match this filter"
   filter:
     all: "All"

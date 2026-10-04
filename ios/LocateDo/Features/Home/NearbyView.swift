@@ -57,7 +57,18 @@ struct NearbyView: View {
             .onChange(of: places.count) {
                 openPendingPlace()
             }
+            .onChange(of: router.isAddPlaceRequested, initial: true) {
+                openRequestedAddPlace()
+            }
         }
+    }
+
+    private func openRequestedAddPlace() {
+        guard router.isAddPlaceRequested else {
+            return
+        }
+        router.isAddPlaceRequested = false
+        isAddingPlace = true
     }
 
     private func offerAlwaysLocationIfNeeded() {
@@ -98,8 +109,10 @@ struct NearbyView: View {
 
     private var permissionIssue: LocalizedStringResource? {
         switch locationProvider.authorizationStatus {
-        case .authorizedWhenInUse, .denied, .restricted:
+        case .authorizedWhenInUse:
             return .homePermissionBannerLocation
+        case .denied, .restricted:
+            return .homePermissionBannerLocationDenied
         default:
             break
         }
@@ -137,7 +150,7 @@ struct NearbyView: View {
             } footer: {
                 let count = Nearby.openTodoCount(nearbyPlaces)
                 if count > 0 {
-                    Text(.homeNearbySummary(count))
+                    Text(.homeOpenSummary(count))
                 }
             }
             Section {

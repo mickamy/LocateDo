@@ -3,6 +3,7 @@ import SwiftUI
 
 struct TodoListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppRouter.self) private var router
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
     @State private var filter: TodoFilter = .all
@@ -49,6 +50,12 @@ struct TodoListView: View {
             Label(.todoListNoPlacesTitle, systemImage: "mappin.and.ellipse")
         } description: {
             Text(.todoListNoPlacesMessage)
+        } actions: {
+            Button(.homeAddPlace) {
+                router.requestAddPlace()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
     }
 
