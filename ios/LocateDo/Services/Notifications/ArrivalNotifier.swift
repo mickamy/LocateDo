@@ -31,6 +31,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         content.title = String(localized: .notificationArrivedTitle(place.name))
         content.body = NotificationPolicy.body(todoTitles: todoTitles)
         content.sound = .default
+        content.interruptionLevel = .timeSensitive
         content.threadIdentifier = place.id.uuidString
         content.userInfo = [Self.placeIDKey: place.id.uuidString]
         var trigger: UNNotificationTrigger?
