@@ -17,6 +17,8 @@ func Category(setters ...func(m *model.Category)) model.Category {
 		Icon:        gofakeit.Word(),
 		Color:       gofakeit.Word(),
 		SortOrder:   gofakeit.Int32(),
+		UpdatedAt:   gofakeit.Date(),
+		Version:     gofakeit.Int64(),
 	}
 	for _, s := range setters {
 		s(&m)

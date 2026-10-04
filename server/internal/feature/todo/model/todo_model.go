@@ -12,4 +12,6 @@ type Todo struct {
 	Title       string
 	AssigneeID  *uuid.UUID
 	CompletedAt *time.Time
+	UpdatedAt   time.Time
+	Version     int64
 }

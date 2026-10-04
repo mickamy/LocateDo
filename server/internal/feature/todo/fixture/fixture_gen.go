@@ -16,6 +16,8 @@ func Todo(setters ...func(m *model.Todo)) model.Todo {
 		HouseholdID: uuid.MustParse(gofakeit.UUID()),
 		PlaceID:     uuid.MustParse(gofakeit.UUID()),
 		Title:       gofakeit.Word(),
+		UpdatedAt:   gofakeit.Date(),
+		Version:     gofakeit.Int64(),
 	}
 	for _, s := range setters {
 		s(&m)

@@ -42,13 +42,23 @@ message PullRequest {
   string household_id = 1 [(buf.validate.field).string.uuid = true];
   // 0 for a first sync.
   int64 cursor = 2 [(buf.validate.field).int64.gte = 0];
+  // Maximum number of changes in the response. 0 means the server default.
+  int32 limit = 3 [(buf.validate.field).int32 = {
+    gte: 0
+    lte: 1000
+  }];
 }
 
 message PullResponse {
   repeated Change changes = 1;
-  // The household version the changes were read at. Send it as the next cursor.
+  // Send it as the next cursor: the last change's version while has_more is
+  // set, otherwise the household version the changes were read at.
   int64 cursor = 2;
   // The given cursor is older than the retained tombstones. changes holds the
   // full current state; drop local data for the household before applying it.
   bool reset = 3;
+  // More changes follow; call again with cursor.
+  bool has_more = 4;
+  // The household as of this read. Plan changes do not appear in changes.
+  locatedo.household.v1.Household household = 5;
 }

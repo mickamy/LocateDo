@@ -24,9 +24,10 @@ INSERT INTO memberships (household_id, user_id, role)
 VALUES ($1, $2, $3);
 
 -- name: GetMembershipByUser :one
-SELECT household_id, user_id, role, joined_at
-FROM memberships
-WHERE user_id = $1;
+SELECT m.household_id, m.user_id, m.role, u.display_name, m.joined_at, m.updated_at, m.version
+FROM memberships m
+         JOIN users u ON u.id = m.user_id
+WHERE m.user_id = $1;
 
 -- name: CountMemberships :one
 SELECT count(*)

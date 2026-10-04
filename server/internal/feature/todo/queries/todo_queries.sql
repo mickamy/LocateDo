@@ -1,5 +1,5 @@
 -- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, completed_at
+SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2;

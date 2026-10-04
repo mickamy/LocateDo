@@ -44,7 +44,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
 }
 
 const getTodo = `-- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, completed_at
+SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2
@@ -55,18 +55,9 @@ type GetTodoParams struct {
 	HouseholdID uuid.UUID
 }
 
-type GetTodoRow struct {
-	ID          uuid.UUID
-	HouseholdID uuid.UUID
-	PlaceID     uuid.UUID
-	Title       string
-	AssigneeID  *uuid.UUID
-	CompletedAt *time.Time
-}
-
-func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (GetTodoRow, error) {
+func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (Todo, error) {
 	row := q.db.QueryRow(ctx, getTodo, arg.ID, arg.HouseholdID)
-	var i GetTodoRow
+	var i Todo
 	err := row.Scan(
 		&i.ID,
 		&i.HouseholdID,
@@ -74,6 +65,8 @@ func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (GetTodoRow, e
 		&i.Title,
 		&i.AssigneeID,
 		&i.CompletedAt,
+		&i.UpdatedAt,
+		&i.Version,
 	)
 	return i, err
 }

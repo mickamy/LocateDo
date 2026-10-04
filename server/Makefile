@@ -103,14 +103,14 @@ gen-mapper:
 		-types='$(PKG)/feature/household/model.InitialTodo<-*$(PKG)/gen/locatedo/household/v1.InitialTodo' \
 		-types='$(PKG)/feature/household/model.ImportTodo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput' \
 		-types='$(PKG)/feature/household/model.Household->*$(PKG)/gen/locatedo/household/v1.Household'
-	$(MAPPER) -destination=internal/feature/place/mapper -package=mapper -exclude='$(PKG)/feature/place/model.Place.HouseholdID' \
+	$(MAPPER) -destination=internal/feature/place/mapper -package=mapper -exclude='$(PKG)/feature/place/model.Place.HouseholdID,$(PKG)/feature/place/model.Place.UpdatedAt,$(PKG)/feature/place/model.Place.Version' \
 		-types='$(PKG)/feature/place/model.Place<-*$(PKG)/gen/locatedo/place/v1.PlaceInput'
 	$(MAPPER) -converters=./internal/feature/category/mapper \
 		-destination=internal/feature/category/mapper -package=mapper \
-		-exclude='$(PKG)/feature/category/model.Category.HouseholdID' \
+		-exclude='$(PKG)/feature/category/model.Category.HouseholdID,$(PKG)/feature/category/model.Category.UpdatedAt,$(PKG)/feature/category/model.Category.Version' \
 		-types='$(PKG)/feature/category/model.Category<-*$(PKG)/gen/locatedo/category/v1.CategoryInput'
 	$(MAPPER) -destination=internal/feature/todo/mapper -package=mapper \
-		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt' \
+		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt,$(PKG)/feature/todo/model.Todo.UpdatedAt,$(PKG)/feature/todo/model.Todo.Version' \
 		-types='$(PKG)/feature/todo/model.Todo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput'
 
 gen-sqlc:

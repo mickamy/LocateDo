@@ -67,7 +67,10 @@ func (r membership) FindByUser(ctx context.Context, userID uuid.UUID) (model.Mem
 		HouseholdID: row.HouseholdID,
 		UserID:      row.UserID,
 		Role:        model.Role(row.Role),
+		DisplayName: row.DisplayName,
 		JoinedAt:    row.JoinedAt,
+		UpdatedAt:   row.UpdatedAt,
+		Version:     row.Version,
 	}, nil
 }
 

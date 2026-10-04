@@ -58,6 +58,8 @@ func (r todo) Find(ctx context.Context, id, householdID uuid.UUID) (model.Todo, 
 		Title:       row.Title,
 		AssigneeID:  row.AssigneeID,
 		CompletedAt: row.CompletedAt,
+		UpdatedAt:   row.UpdatedAt,
+		Version:     row.Version,
 	}, nil
 }
 

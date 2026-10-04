@@ -19,6 +19,8 @@ func Place(setters ...func(m *model.Place)) model.Place {
 		Lng:         gofakeit.Float64Range(-180, 180),
 		RadiusM:     int32(gofakeit.Number(50, 500)),
 		SortOrder:   gofakeit.Int32(),
+		UpdatedAt:   gofakeit.Date(),
+		Version:     gofakeit.Int64(),
 	}
 	for _, s := range setters {
 		s(&m)

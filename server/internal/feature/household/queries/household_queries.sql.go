@@ -222,16 +222,20 @@ func (q *Queries) GetHouseholdForUpdate(ctx context.Context, id uuid.UUID) (GetH
 }
 
 const getMembershipByUser = `-- name: GetMembershipByUser :one
-SELECT household_id, user_id, role, joined_at
-FROM memberships
-WHERE user_id = $1
+SELECT m.household_id, m.user_id, m.role, u.display_name, m.joined_at, m.updated_at, m.version
+FROM memberships m
+         JOIN users u ON u.id = m.user_id
+WHERE m.user_id = $1
 `
 
 type GetMembershipByUserRow struct {
 	HouseholdID uuid.UUID
 	UserID      uuid.UUID
 	Role        string
+	DisplayName string
 	JoinedAt    time.Time
+	UpdatedAt   time.Time
+	Version     int64
 }
 
 func (q *Queries) GetMembershipByUser(ctx context.Context, userID uuid.UUID) (GetMembershipByUserRow, error) {
@@ -241,7 +245,10 @@ func (q *Queries) GetMembershipByUser(ctx context.Context, userID uuid.UUID) (Ge
 		&i.HouseholdID,
 		&i.UserID,
 		&i.Role,
+		&i.DisplayName,
 		&i.JoinedAt,
+		&i.UpdatedAt,
+		&i.Version,
 	)
 	return i, err
 }

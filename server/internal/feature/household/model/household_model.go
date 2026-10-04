@@ -44,7 +44,10 @@ type Membership struct {
 	HouseholdID uuid.UUID
 	UserID      uuid.UUID
 	Role        Role
+	DisplayName string
 	JoinedAt    time.Time
+	UpdatedAt   time.Time
+	Version     int64
 }
 
 type Invite struct {

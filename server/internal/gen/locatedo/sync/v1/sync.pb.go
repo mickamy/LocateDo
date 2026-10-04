@@ -276,7 +276,9 @@ type PullRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	HouseholdId string                 `protobuf:"bytes,1,opt,name=household_id,json=householdId,proto3" json:"household_id,omitempty"`
 	// 0 for a first sync.
-	Cursor        int64 `protobuf:"varint,2,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	Cursor int64 `protobuf:"varint,2,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	// Maximum number of changes in the response. 0 means the server default.
+	Limit         int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -325,14 +327,26 @@ func (x *PullRequest) GetCursor() int64 {
 	return 0
 }
 
+func (x *PullRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
 type PullResponse struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	Changes []*Change              `protobuf:"bytes,1,rep,name=changes,proto3" json:"changes,omitempty"`
-	// The household version the changes were read at. Send it as the next cursor.
+	// Send it as the next cursor: the last change's version while has_more is
+	// set, otherwise the household version the changes were read at.
 	Cursor int64 `protobuf:"varint,2,opt,name=cursor,proto3" json:"cursor,omitempty"`
 	// The given cursor is older than the retained tombstones. changes holds the
 	// full current state; drop local data for the household before applying it.
-	Reset_        bool `protobuf:"varint,3,opt,name=reset,proto3" json:"reset,omitempty"`
+	Reset_ bool `protobuf:"varint,3,opt,name=reset,proto3" json:"reset,omitempty"`
+	// More changes follow; call again with cursor.
+	HasMore bool `protobuf:"varint,4,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
+	// The household as of this read. Plan changes do not appear in changes.
+	Household     *v1.Household `protobuf:"bytes,5,opt,name=household,proto3" json:"household,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -388,6 +402,20 @@ func (x *PullResponse) GetReset_() bool {
 	return false
 }
 
+func (x *PullResponse) GetHasMore() bool {
+	if x != nil {
+		return x.HasMore
+	}
+	return false
+}
+
+func (x *PullResponse) GetHousehold() *v1.Household {
+	if x != nil {
+		return x.Household
+	}
+	return nil
+}
+
 var File_locatedo_sync_v1_sync_proto protoreflect.FileDescriptor
 
 const file_locatedo_sync_v1_sync_proto_rawDesc = "" +
@@ -405,14 +433,18 @@ const file_locatedo_sync_v1_sync_proto_rawDesc = "" +
 	"\x05place\x18\x03 \x01(\v2\x18.locatedo.place.v1.PlaceH\x00R\x05place\x12,\n" +
 	"\x04todo\x18\x04 \x01(\v2\x16.locatedo.todo.v1.TodoH\x00R\x04todo\x128\n" +
 	"\bdeletion\x18\x05 \x01(\v2\x1a.locatedo.sync.v1.DeletionH\x00R\bdeletionB\x06\n" +
-	"\x04kind\"[\n" +
+	"\x04kind\"}\n" +
 	"\vPullRequest\x12+\n" +
 	"\fhousehold_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vhouseholdId\x12\x1f\n" +
-	"\x06cursor\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x06cursor\"p\n" +
+	"\x06cursor\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x06cursor\x12 \n" +
+	"\x05limit\x18\x03 \x01(\x05B\n" +
+	"\xbaH\a\x1a\x05\x18\xe8\a(\x00R\x05limit\"\xcb\x01\n" +
 	"\fPullResponse\x122\n" +
 	"\achanges\x18\x01 \x03(\v2\x18.locatedo.sync.v1.ChangeR\achanges\x12\x16\n" +
 	"\x06cursor\x18\x02 \x01(\x03R\x06cursor\x12\x14\n" +
-	"\x05reset\x18\x03 \x01(\bR\x05reset*\x8c\x01\n" +
+	"\x05reset\x18\x03 \x01(\bR\x05reset\x12\x19\n" +
+	"\bhas_more\x18\x04 \x01(\bR\ahasMore\x12>\n" +
+	"\thousehold\x18\x05 \x01(\v2 .locatedo.household.v1.HouseholdR\thousehold*\x8c\x01\n" +
 	"\n" +
 	"EntityKind\x12\x1b\n" +
 	"\x17ENTITY_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
@@ -448,6 +480,7 @@ var file_locatedo_sync_v1_sync_proto_goTypes = []any{
 	(*v11.Category)(nil),  // 6: locatedo.category.v1.Category
 	(*v12.Place)(nil),     // 7: locatedo.place.v1.Place
 	(*v13.Todo)(nil),      // 8: locatedo.todo.v1.Todo
+	(*v1.Household)(nil),  // 9: locatedo.household.v1.Household
 }
 var file_locatedo_sync_v1_sync_proto_depIdxs = []int32{
 	0, // 0: locatedo.sync.v1.Deletion.kind:type_name -> locatedo.sync.v1.EntityKind
@@ -457,13 +490,14 @@ var file_locatedo_sync_v1_sync_proto_depIdxs = []int32{
 	8, // 4: locatedo.sync.v1.Change.todo:type_name -> locatedo.todo.v1.Todo
 	1, // 5: locatedo.sync.v1.Change.deletion:type_name -> locatedo.sync.v1.Deletion
 	2, // 6: locatedo.sync.v1.PullResponse.changes:type_name -> locatedo.sync.v1.Change
-	3, // 7: locatedo.sync.v1.SyncService.Pull:input_type -> locatedo.sync.v1.PullRequest
-	4, // 8: locatedo.sync.v1.SyncService.Pull:output_type -> locatedo.sync.v1.PullResponse
-	8, // [8:9] is the sub-list for method output_type
-	7, // [7:8] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	9, // 7: locatedo.sync.v1.PullResponse.household:type_name -> locatedo.household.v1.Household
+	3, // 8: locatedo.sync.v1.SyncService.Pull:input_type -> locatedo.sync.v1.PullRequest
+	4, // 9: locatedo.sync.v1.SyncService.Pull:output_type -> locatedo.sync.v1.PullResponse
+	9, // [9:10] is the sub-list for method output_type
+	8, // [8:9] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_locatedo_sync_v1_sync_proto_init() }

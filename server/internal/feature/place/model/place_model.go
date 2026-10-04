@@ -1,6 +1,9 @@
 package model
 
-import "uuid"
+import (
+	"time"
+	"uuid"
+)
 
 type Place struct {
 	ID          uuid.UUID
@@ -11,4 +14,6 @@ type Place struct {
 	RadiusM     int32   `fake:"{number:50,500}"`
 	CategoryID  *uuid.UUID
 	SortOrder   int32
+	UpdatedAt   time.Time
+	Version     int64
 }

@@ -1,6 +1,9 @@
 package model
 
-import "uuid"
+import (
+	"time"
+	"uuid"
+)
 
 type Category struct {
 	ID          uuid.UUID
@@ -10,4 +13,6 @@ type Category struct {
 	Icon        string
 	Color       string
 	SortOrder   int32
+	UpdatedAt   time.Time
+	Version     int64
 }
