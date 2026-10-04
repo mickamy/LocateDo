@@ -78,8 +78,15 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 		}
 		session.NewUser = newUser
 
-		householdID, err = uc.householdOf(ctx, tx, user.ID)
-		return err
+		m, err := uc.memberships.Bind(tx).FindByUser(ctx, user.ID)
+		if errors.Is(err, aerrors.ErrNotFound) {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("find membership: %w", err)
+		}
+		householdID = &m.HouseholdID
+		return nil
 	}); err != nil {
 		return SignInWithAppleOutput{}, fmt.Errorf("sign in with apple: %w", err)
 	}
@@ -109,15 +116,4 @@ func (uc SignInWithApple) findOrCreate(
 		return model.User{}, false, fmt.Errorf("add identity: %w", err)
 	}
 	return user, true, nil
-}
-
-func (uc SignInWithApple) householdOf(ctx context.Context, tx tx.Tx, userID uuid.UUID) (*uuid.UUID, error) {
-	m, err := uc.memberships.Bind(tx).FindByUser(ctx, userID)
-	if errors.Is(err, aerrors.ErrNotFound) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("find membership: %w", err)
-	}
-	return &m.HouseholdID, nil
 }

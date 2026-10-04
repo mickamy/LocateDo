@@ -65,8 +65,15 @@ func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTok
 		if err != nil {
 			return err
 		}
-		householdID, err = uc.householdOf(ctx, tx, current.UserID)
-		return err
+		m, err := uc.memberships.Bind(tx).FindByUser(ctx, current.UserID)
+		if errors.Is(err, aerrors.ErrNotFound) {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("find membership: %w", err)
+		}
+		householdID = &m.HouseholdID
+		return nil
 	}); err != nil {
 		return RefreshTokenOutput{}, fmt.Errorf("refresh token: %w", err)
 	}
@@ -74,17 +81,6 @@ func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTok
 		return RefreshTokenOutput{}, rejected
 	}
 	return RefreshTokenOutput{Session: session, HouseholdID: householdID}, nil
-}
-
-func (uc RefreshToken) householdOf(ctx context.Context, tx tx.Tx, userID uuid.UUID) (*uuid.UUID, error) {
-	m, err := uc.memberships.Bind(tx).FindByUser(ctx, userID)
-	if errors.Is(err, aerrors.ErrNotFound) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("find membership: %w", err)
-	}
-	return &m.HouseholdID, nil
 }
 
 // reject explains why an unusable token was refused, revoking its family when
