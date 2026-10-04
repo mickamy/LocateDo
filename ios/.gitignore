@@ -67,4 +67,4 @@ fastlane/.env*
 build/
 
 # Firebase (per-configuration GoogleService-Info.plist; CI writes these from Secrets)
-LocateDo/Firebase/
+Firebase/

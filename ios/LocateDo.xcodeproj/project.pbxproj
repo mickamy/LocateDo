@@ -110,6 +110,7 @@
 				3BB55BEC3070E8CE008A116A /* Sources */,
 				3BB55BED3070E8CE008A116A /* Frameworks */,
 				3BB55BEE3070E8CE008A116A /* Resources */,
+				3BF1AEBA3071100000D47174 /* Copy GoogleService-Info.plist */,
 			);
 			buildRules = (
 			);
@@ -173,6 +174,31 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3BF1AEBA3071100000D47174 /* Copy GoogleService-Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/copy-google-service-info.sh",
+				"$(SRCROOT)/Firebase/GoogleService-Info-$(CONFIGURATION).plist",
+			);
+			name = "Copy GoogleService-Info.plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Scripts/copy-google-service-info.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3B34EEAB3071027900D47174 /* Sources */ = {
