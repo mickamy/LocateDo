@@ -36,10 +36,16 @@ final class GeofenceMonitor {
 
         var current: [String: GeofenceRegion] = [:]
         for identifier in await monitor.identifiers {
-            if let record = await monitor.record(for: identifier),
-               let region = GeofenceRegion(identifier: identifier, condition: record.condition) {
+            guard let record = await monitor.record(for: identifier) else {
+                logger.notice("Missing record for \(identifier, privacy: .public); removing")
+                await monitor.remove(identifier)
+                continue
+            }
+            if let region = GeofenceRegion(identifier: identifier, condition: record.condition) {
                 current[identifier] = region
             } else {
+                let type = String(describing: Swift.type(of: record.condition))
+                logger.notice("Unreadable record \(identifier, privacy: .public) (\(type, privacy: .public)); removing")
                 await monitor.remove(identifier)
             }
         }
@@ -55,17 +61,24 @@ final class GeofenceMonitor {
             let condition = CLMonitor.CircularGeographicCondition(center: region.center, radius: region.radiusMeters)
             await monitor.add(condition, identifier: region.identifier, assuming: .unsatisfied)
         }
-        logger.info("Synced \(desired.count) regions (+\(changes.add.count) -\(changes.remove.count))")
+        logger.notice("Synced \(desired.count) regions (+\(changes.add.count) -\(changes.remove.count))")
+        if !changes.add.isEmpty || !changes.remove.isEmpty {
+            let added = changes.add.map(\.identifier).joined(separator: ",")
+            let removed = changes.remove.joined(separator: ",")
+            logger.notice("Added [\(added, privacy: .public)] removed [\(removed, privacy: .public)]")
+        }
     }
 
     private func run() async {
         let monitor = await CLMonitor("LocateDoPlaces")
         self.monitor = monitor
+        let monitored = await monitor.identifiers.count
+        logger.notice("Monitor started with \(monitored) regions")
         if ProcessInfo.processInfo.arguments.contains("-resetGeofences") {
             for identifier in await monitor.identifiers {
                 await monitor.remove(identifier)
             }
-            logger.info("Removed all regions (-resetGeofences)")
+            logger.notice("Removed all regions (-resetGeofences)")
         }
         await sync()
         do {
@@ -78,10 +91,10 @@ final class GeofenceMonitor {
     }
 
     private func handle(_ event: CLMonitor.Event) async {
-        logger.info("Event \(event.identifier, privacy: .public) \(Self.describe(event.state), privacy: .public)")
-        if event.state == .unmonitored {
-            logger.error("Unmonitored: \(Self.diagnostics(event), privacy: .public)")
-        }
+        let id = event.identifier
+        let state = Self.describe(event.state)
+        let flags = Self.diagnostics(event)
+        logger.notice("Event \(id, privacy: .public) \(state, privacy: .public) [\(flags, privacy: .public)]")
         guard event.state == .satisfied, let placeID = UUID(uuidString: event.identifier) else {
             return
         }
@@ -100,6 +113,7 @@ final class GeofenceMonitor {
         var descriptor = FetchDescriptor<Place>(predicate: #Predicate { $0.id == placeID })
         descriptor.fetchLimit = 1
         guard let place = try? context.fetch(descriptor).first else {
+            logger.notice("No place for \(placeID.uuidString, privacy: .public)")
             return
         }
         let openTodos = place.openTodos
@@ -110,13 +124,13 @@ final class GeofenceMonitor {
             now: now
         )
         guard shouldNotify else {
-            logger.info("Skipped notification for \(place.name, privacy: .public)")
+            logger.notice("Skipped notification for \(place.name, privacy: .public): \(openTodos.count) open todos")
             return
         }
         await notifier.notifyArrival(at: place, todoTitles: openTodos.map(\.title))
         place.lastNotifiedAt = now
         try? context.save()
-        logger.info("Notified arrival at \(place.name, privacy: .public)")
+        logger.notice("Notified arrival at \(place.name, privacy: .public)")
     }
 
     private static func diagnostics(_ event: CLMonitor.Event) -> String {
@@ -133,7 +147,7 @@ final class GeofenceMonitor {
             ("serviceSessionRequired", event.serviceSessionRequired)
         ]
         let active = flags.filter(\.1).map(\.0)
-        return active.isEmpty ? "no diagnostic flags" : active.joined(separator: ", ")
+        return active.isEmpty ? "none" : active.joined(separator: ", ")
     }
 
     private static func describe(_ state: CLMonitor.Event.State) -> String {

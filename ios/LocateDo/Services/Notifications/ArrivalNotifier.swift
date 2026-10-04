@@ -1,4 +1,5 @@
 import Observation
+import OSLog
 import UserNotifications
 
 @Observable
@@ -7,6 +8,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     private let router: AppRouter
     private let center = UNUserNotificationCenter.current()
+    private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "notifications")
     private nonisolated static let placeIDKey = "placeID"
 
     init(router: AppRouter) {
@@ -36,7 +38,11 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             content: content,
             trigger: nil
         )
-        try? await center.add(request)
+        do {
+            try await center.add(request)
+        } catch {
+            logger.error("Could not schedule the arrival notification: \(error, privacy: .public)")
+        }
     }
 
     nonisolated func userNotificationCenter(
