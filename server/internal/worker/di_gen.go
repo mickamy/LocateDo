@@ -13,8 +13,9 @@ func NewWorker(infra di.Infra, lib di.Lib) *Worker {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	repository := outbox.NewRepository(reader)
+	pushHousehold := job.NewPushHousehold(infra)
 	revokeAppleToken := job.NewRevokeAppleToken(infra, lib)
-	handlers := NewHandlers(revokeAppleToken)
+	handlers := NewHandlers(pushHousehold, revokeAppleToken)
 	consumer := NewConsumer(transactor, repository, handlers)
 	sweepTombstones := job.NewSweepTombstones(infra)
 	sweepRefreshTokens := job.NewSweepRefreshTokens(infra)

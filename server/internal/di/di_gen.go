@@ -13,12 +13,14 @@ func NewConfig() Config {
 	database := config.ParseDatabase()
 	auth := config.ParseAuth()
 	apple := config.ParseApple()
+	apNs := config.ParseAPNs()
 
 	return Config{
 		App:      app,
 		Database: database,
 		Auth:     auth,
 		Apple:    apple,
+		APNs:     apNs,
 	}
 }
 
@@ -40,6 +42,11 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 	if err != nil {
 		return *new(Infra), err
 	}
+	apNs := config2.APNs
+	apNs2, err := provideAPNs(apNs, apple)
+	if err != nil {
+		return *new(Infra), err
+	}
 
 	return Infra{
 		Writer:         writer,
@@ -47,6 +54,7 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 		Transactor:     transactor,
 		ReadTransactor: readTransactor,
 		Apple:          apple2,
+		APNs:           apNs2,
 	}, nil
 }
 

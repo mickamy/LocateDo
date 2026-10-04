@@ -12,6 +12,57 @@ import (
 	"uuid"
 )
 
+const deleteDeviceByToken = `-- name: DeleteDeviceByToken :exec
+DELETE
+FROM devices
+WHERE platform = $1
+  AND push_token = $2
+`
+
+type DeleteDeviceByTokenParams struct {
+	Platform  string
+	PushToken string
+}
+
+func (q *Queries) DeleteDeviceByToken(ctx context.Context, arg DeleteDeviceByTokenParams) error {
+	_, err := q.db.Exec(ctx, deleteDeviceByToken, arg.Platform, arg.PushToken)
+	return err
+}
+
+const listHouseholdPushTokens = `-- name: ListHouseholdPushTokens :many
+SELECT d.push_token
+FROM devices d
+         JOIN memberships m ON m.user_id = d.user_id
+WHERE m.household_id = $1
+  AND d.platform = $2
+ORDER BY d.last_seen_at DESC
+`
+
+type ListHouseholdPushTokensParams struct {
+	HouseholdID uuid.UUID
+	Platform    string
+}
+
+func (q *Queries) ListHouseholdPushTokens(ctx context.Context, arg ListHouseholdPushTokensParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, listHouseholdPushTokens, arg.HouseholdID, arg.Platform)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var push_token string
+		if err := rows.Scan(&push_token); err != nil {
+			return nil, err
+		}
+		items = append(items, push_token)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertDevice = `-- name: UpsertDevice :exec
 INSERT INTO devices (user_id, platform, push_token, last_seen_at)
 VALUES ($1, $2, $3, $4)

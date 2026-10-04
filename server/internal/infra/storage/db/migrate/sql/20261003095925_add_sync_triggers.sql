@@ -1,4 +1,16 @@
 -- +goose Up
+-- One pending push per household: writes that land before the worker picks it
+-- up ride along with it.
+-- +goose StatementBegin
+CREATE FUNCTION enqueue_household_push(household uuid) RETURNS void
+    LANGUAGE sql AS
+$$
+INSERT INTO outbox_messages (kind, payload, dedupe_key)
+VALUES ('push_household', jsonb_build_object('household_id', household), 'push:' || household)
+ON CONFLICT (dedupe_key) WHERE status = 'pending' DO NOTHING;
+$$;
+-- +goose StatementEnd
+
 -- +goose StatementBegin
 CREATE FUNCTION stamp_sync_columns() RETURNS trigger
     LANGUAGE plpgsql AS
@@ -12,6 +24,8 @@ BEGIN
     IF NOT FOUND THEN
         RAISE foreign_key_violation USING MESSAGE = format('household %s does not exist', NEW.household_id);
     END IF;
+
+    PERFORM enqueue_household_push(NEW.household_id);
 
     NEW.updated_at := now();
     RETURN NEW;
@@ -36,6 +50,7 @@ BEGIN
     IF FOUND THEN
         INSERT INTO deletions (household_id, table_name, row_id, version)
         VALUES (OLD.household_id, TG_TABLE_NAME, (to_jsonb(OLD) ->> TG_ARGV[0])::uuid, next_version);
+        PERFORM enqueue_household_push(OLD.household_id);
     END IF;
 
     RETURN NULL;
@@ -102,3 +117,4 @@ DROP TRIGGER memberships_record_deletion ON memberships;
 DROP TRIGGER memberships_stamp_sync_columns ON memberships;
 DROP FUNCTION record_deletion();
 DROP FUNCTION stamp_sync_columns();
+DROP FUNCTION enqueue_household_push(uuid);

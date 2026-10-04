@@ -8,4 +8,5 @@ type Config struct {
 	Database config.Database `di:""`
 	Auth     config.Auth     `di:""`
 	Apple    config.Apple    `di:""`
+	APNs     config.APNs     `di:""`
 }

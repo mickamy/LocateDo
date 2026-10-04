@@ -1,0 +1,180 @@
+package apns_test
+
+import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/mickamy/LocateDo/internal/infra/apns"
+)
+
+const (
+	teamID = "TEAM123456"
+	keyID  = "KEY1234567"
+	topic  = "com.locatedo.LocateDo.dev"
+)
+
+var now = time.Date(2026, 10, 4, 12, 0, 0, 0, time.UTC)
+
+type request struct {
+	path, authorization, topic, pushType, priority, body string
+}
+
+type fakeAPNs struct {
+	srv    *httptest.Server
+	key    *ecdsa.PrivateKey
+	status int
+	reason string
+
+	mu       sync.Mutex
+	requests []request
+}
+
+func newFakeAPNs(t *testing.T) *fakeAPNs {
+	t.Helper()
+
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	f := &fakeAPNs{key: key, status: http.StatusOK}
+	f.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		f.mu.Lock()
+		f.requests = append(f.requests, request{
+			path:          r.URL.Path,
+			authorization: r.Header.Get("Authorization"),
+			topic:         r.Header.Get("Apns-Topic"),
+			pushType:      r.Header.Get("Apns-Push-Type"),
+			priority:      r.Header.Get("Apns-Priority"),
+			body:          string(body),
+		})
+		f.mu.Unlock()
+		w.WriteHeader(f.status)
+		if f.reason != "" {
+			_, _ = w.Write([]byte(`{"reason":"` + f.reason + `"}`))
+		}
+	}))
+	t.Cleanup(f.srv.Close)
+	return f
+}
+
+func (f *fakeAPNs) client(key *ecdsa.PrivateKey) apns.Client {
+	return apns.NewClient(apns.Config{
+		BaseURL: f.srv.URL, Topic: topic, TeamID: teamID, KeyID: keyID, PrivateKey: key,
+	}, f.srv.Client())
+}
+
+func TestClient_Wake(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+
+	// act
+	err := f.client(f.key).Wake(t.Context(), "abc123", now)
+
+	// assert
+	require.NoError(t, err)
+	require.Len(t, f.requests, 1)
+	r := f.requests[0]
+	assert.Equal(t, "/3/device/abc123", r.path)
+	assert.Equal(t, topic, r.topic)
+	assert.Equal(t, "background", r.pushType)
+	assert.Equal(t, "5", r.priority)
+	assert.JSONEq(t, `{"aps":{"content-available":1}}`, r.body)
+
+	raw, ok := cutBearer(r.authorization)
+	require.True(t, ok)
+	parsed, err := jwt.ParseWithClaims(raw, &jwt.RegisteredClaims{}, func(*jwt.Token) (any, error) {
+		return &f.key.PublicKey, nil
+	}, jwt.WithValidMethods([]string{"ES256"}), jwt.WithoutClaimsValidation())
+	require.NoError(t, err)
+	assert.Equal(t, keyID, parsed.Header["kid"])
+	issuer, err := parsed.Claims.GetIssuer()
+	require.NoError(t, err)
+	assert.Equal(t, teamID, issuer)
+}
+
+func TestClient_Wake_reusesTheProviderTokenWithinItsLifetime(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+	c := f.client(f.key)
+
+	// act
+	require.NoError(t, c.Wake(t.Context(), "a", now))
+	require.NoError(t, c.Wake(t.Context(), "b", now.Add(30*time.Minute)))
+	require.NoError(t, c.Wake(t.Context(), "c", now.Add(55*time.Minute)))
+
+	// assert
+	assert.Equal(t, f.requests[0].authorization, f.requests[1].authorization)
+	assert.NotEqual(t, f.requests[1].authorization, f.requests[2].authorization, "renewed before Apple's one-hour limit")
+}
+
+func TestClient_Wake_errors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		status       int
+		reason       string
+		unregistered bool
+	}{
+		{name: "unregistered", status: http.StatusGone, reason: "Unregistered", unregistered: true},
+		{name: "bad device token", status: http.StatusBadRequest, reason: "BadDeviceToken", unregistered: true},
+		{name: "server trouble", status: http.StatusServiceUnavailable, reason: "ServiceUnavailable"},
+		{name: "wrong topic", status: http.StatusBadRequest, reason: "DeviceTokenNotForTopic"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			f := newFakeAPNs(t)
+			f.status = tt.status
+			f.reason = tt.reason
+
+			// act
+			err := f.client(f.key).Wake(t.Context(), "abc123", now)
+
+			// assert
+			require.Error(t, err)
+			assert.Equal(t, tt.unregistered, errorIsUnregistered(err))
+			assert.Contains(t, err.Error(), tt.reason)
+		})
+	}
+}
+
+func TestClient_Wake_notConfigured(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+
+	// act
+	err := f.client(nil).Wake(t.Context(), "abc123", now)
+
+	// assert
+	require.NoError(t, err)
+	assert.Empty(t, f.requests, "nothing is sent without a key")
+}
+
+func cutBearer(header string) (string, bool) {
+	return strings.CutPrefix(header, "bearer ")
+}
+
+func errorIsUnregistered(err error) bool {
+	return errors.Is(err, apns.ErrUnregistered)
+}

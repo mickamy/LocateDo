@@ -42,7 +42,9 @@ func TestRevokeAppleToken_deliversThroughTheConsumer(t *testing.T) {
 			Kind: outbox.KindRevokeAppleToken, Payload: payload, RunAt: time.Now(),
 		}))
 	})
-	consumer := worker.NewConsumer(d.Transactor, messages, worker.NewHandlers(job.NewRevokeAppleToken(infra, lib)))
+	consumer := worker.NewConsumer(d.Transactor, messages, worker.Handlers{
+		outbox.KindRevokeAppleToken: job.NewRevokeAppleToken(infra, lib),
+	})
 
 	// act
 	delivered, err := consumer.Step(t.Context())

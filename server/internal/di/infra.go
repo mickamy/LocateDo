@@ -7,12 +7,16 @@ import (
 	"time"
 
 	"github.com/mickamy/LocateDo/config"
+	"github.com/mickamy/LocateDo/internal/infra/apns"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
 
-const appleHTTPTimeout = 10 * time.Second
+const (
+	appleHTTPTimeout = 10 * time.Second
+	apnsHTTPTimeout  = 10 * time.Second
+)
 
 //kanna:container must returns=Infra
 type Infra struct {
@@ -23,6 +27,7 @@ type Infra struct {
 	Transactor     tx.Transactor     `di:"with=provideTransactor"`
 	ReadTransactor tx.ReadTransactor `di:"with=provideReadTransactor"`
 	Apple          apple.Auth        `di:"with=provideApple"`
+	APNs           apns.Pusher       `di:"with=provideAPNs"`
 }
 
 func (infra *Infra) Close() error {
@@ -71,4 +76,25 @@ func provideApple(cfg config.Apple) (apple.Auth, error) {
 		appleCfg.PrivateKey = key
 	}
 	return apple.NewClient(appleCfg, &http.Client{Timeout: appleHTTPTimeout}), nil
+}
+
+func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
+	baseURL := apns.ProductionURL
+	if cfg.Environment == "sandbox" {
+		baseURL = apns.SandboxURL
+	}
+	apnsCfg := apns.Config{
+		BaseURL: baseURL,
+		Topic:   cfg.Topic,
+		TeamID:  appleCfg.TeamID,
+		KeyID:   cfg.KeyID,
+	}
+	if cfg.PrivateKey != "" {
+		key, err := apple.ParsePrivateKey([]byte(cfg.PrivateKey))
+		if err != nil {
+			return nil, fmt.Errorf("parse APNS_PRIVATE_KEY: %w", err)
+		}
+		apnsCfg.PrivateKey = key
+	}
+	return apns.NewClient(apnsCfg, &http.Client{Timeout: apnsHTTPTimeout}), nil
 }
