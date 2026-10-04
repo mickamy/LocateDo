@@ -22,6 +22,7 @@ nonisolated struct CategoryStyle {
         case "cart": "cart"
         case "briefcase": "briefcase"
         case "house": "house"
+        case nil: "tag.slash"
         default: "mappin"
         }
     }

@@ -54,6 +54,6 @@ struct PlaceCategoryTests {
 
         let none = CategoryStyle(nil)
         #expect(none.name == String(localized: .categoryNone))
-        #expect(none.systemImage == "mappin")
+        #expect(none.systemImage == "tag.slash")
     }
 }
