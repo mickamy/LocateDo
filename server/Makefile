@@ -120,6 +120,10 @@ gen-mapper:
 		-types='$(PKG)/feature/place/model.Place->*$(PKG)/gen/locatedo/place/v1.Place' \
 		-types='$(PKG)/feature/todo/model.Todo->*$(PKG)/gen/locatedo/todo/v1.Todo' \
 		-types='$(PKG)/feature/sync/model.Deletion->*$(PKG)/gen/locatedo/sync/v1.Deletion'
+	$(MAPPER) -converters=./internal/feature/device/mapper \
+		-destination=internal/feature/device/mapper -package=mapper \
+		-exclude='$(PKG)/feature/device/model.Device.ID,$(PKG)/feature/device/model.Device.UserID,$(PKG)/feature/device/model.Device.LastSeenAt' \
+		-types='$(PKG)/feature/device/model.Device<-*$(PKG)/gen/locatedo/device/v1.RegisterDeviceRequest'
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate
@@ -131,6 +135,8 @@ gen-fixture:
 		-source=./internal/feature/category/model -destination=internal/feature/category/fixture
 	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \
 		-source=./internal/feature/todo/model -destination=internal/feature/todo/fixture
+	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \
+		-source=./internal/feature/device/model -destination=internal/feature/device/fixture
 
 new-migration:
 	@if [ -z "$(name)" ]; then \

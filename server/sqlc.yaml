@@ -80,3 +80,12 @@ sql:
         out: "internal/feature/sync/queries"
         sql_package: "pgx/v5"
         omit_unused_structs: true
+  - engine: "postgresql"
+    schema: "internal/infra/storage/db/migrate/sql"
+    queries: "internal/feature/device/queries/device_queries.sql"
+    gen:
+      go:
+        package: "queries"
+        out: "internal/feature/device/queries"
+        sql_package: "pgx/v5"
+        omit_unused_structs: true
