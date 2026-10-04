@@ -26,6 +26,7 @@ DB_NAME = locatedo
 		gen-di \
 		gen-mapper \
 		gen-sqlc \
+		gen-fixture \
 		new-migration \
 
 .env:
@@ -105,6 +106,10 @@ gen-mapper:
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate
+
+gen-fixture:
+	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \
+		-source=./internal/feature/place/model -destination=internal/feature/place/fixture
 
 new-migration:
 	@if [ -z "$(name)" ]; then \

@@ -6,6 +6,7 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
 	connectrpc.com/connect v1.21.0
 	connectrpc.com/validate v0.7.0
+	github.com/brianvoe/gofakeit/v7 v7.17.1
 	github.com/caarlos0/env/v11 v11.4.1
 	github.com/go-kanna/kanna v0.1.3
 	github.com/go-playground/validator/v10 v10.30.5

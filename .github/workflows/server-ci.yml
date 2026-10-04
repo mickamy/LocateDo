@@ -71,7 +71,7 @@ jobs:
             server/go.sum
             server/tools/go.sum
       - run: make .env
-      - run: make gen-sqlc gen-mapper gen-di
+      - run: make gen-sqlc gen-mapper gen-di gen-fixture
       - name: Check for changes
         run: |
           git add -N .
