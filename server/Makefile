@@ -3,6 +3,8 @@ export ENV MODULE_ROOT DATABASE_URL DATABASE_WRITER_URL DATABASE_READER_URL JWT_
 
 BUILD_DIR = bin
 GOOSE = go tool -modfile=tools/go.mod goose -dir internal/infra/storage/db/migrate/sql
+MAPPER = go tool -modfile=tools/go.mod kanna-mapper -converters=./internal/lib/converters
+PKG = github.com/mickamy/LocateDo/internal
 DB_USER = admin
 DB_NAME = locatedo
 
@@ -90,9 +92,16 @@ gen-di:
 	go tool -modfile=tools/go.mod kanna-di ./config ./internal/...
 
 gen-mapper:
-	go tool -modfile=tools/go.mod kanna-mapper -converters=./internal/lib/converters -direction=to \
-		-types=github.com/mickamy/LocateDo/internal/feature/account/model.Session:*github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1.Session \
-		-destination=internal/feature/account/mapper -package=mapper
+	$(MAPPER) -destination=internal/feature/account/mapper -package=mapper \
+		-types='$(PKG)/feature/account/model.Session->*$(PKG)/gen/locatedo/account/v1.Session'
+	$(MAPPER) -converters=./internal/feature/household/mapper \
+		-destination=internal/feature/household/mapper -package=mapper \
+		-types='$(PKG)/feature/household/model.Contents<-*$(PKG)/gen/locatedo/household/v1.CreateHouseholdRequest' \
+		-types='$(PKG)/feature/household/model.ImportCategory<-*$(PKG)/gen/locatedo/category/v1.CategoryInput' \
+		-types='$(PKG)/feature/household/model.ImportPlace<-*$(PKG)/gen/locatedo/place/v1.PlaceInput' \
+		-types='$(PKG)/feature/household/model.InitialTodo<-*$(PKG)/gen/locatedo/household/v1.InitialTodo' \
+		-types='$(PKG)/feature/household/model.ImportTodo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput' \
+		-types='$(PKG)/feature/household/model.Household->*$(PKG)/gen/locatedo/household/v1.Household'
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate

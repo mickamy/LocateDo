@@ -151,15 +151,15 @@ func (r household) Import(ctx context.Context, householdID uuid.UUID, c model.Co
 	}
 	for _, t := range c.Todos {
 		err := r.q.ImportTodo(ctx, queries.ImportTodoParams{
-			ID:          t.ID,
+			ID:          t.Todo.ID,
 			HouseholdID: householdID,
-			PlaceID:     t.PlaceID,
-			Title:       t.Title,
-			AssigneeID:  t.AssigneeID,
+			PlaceID:     t.Todo.PlaceID,
+			Title:       t.Todo.Title,
+			AssigneeID:  t.Todo.AssigneeID,
 			CompletedAt: t.CompletedAt,
 		})
 		if err != nil {
-			return importError("todo", t.ID, err)
+			return importError("todo", t.Todo.ID, err)
 		}
 	}
 	return nil

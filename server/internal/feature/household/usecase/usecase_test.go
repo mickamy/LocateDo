@@ -447,9 +447,9 @@ func contents() model.Contents {
 		Places: []model.ImportPlace{
 			{ID: placeID, Name: "Supermarket", Lat: 35.0, Lng: 139.0, RadiusM: 100, CategoryID: &categoryID},
 		},
-		Todos: []model.ImportTodo{
-			{ID: newID(), PlaceID: placeID, Title: "Milk"},
-			{ID: newID(), PlaceID: placeID, Title: "Detergent", CompletedAt: &completedAt},
+		Todos: []model.InitialTodo{
+			{Todo: model.ImportTodo{ID: newID(), PlaceID: placeID, Title: "Milk"}},
+			{Todo: model.ImportTodo{ID: newID(), PlaceID: placeID, Title: "Detergent"}, CompletedAt: &completedAt},
 		},
 	}
 }

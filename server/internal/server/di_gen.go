@@ -20,7 +20,7 @@ func NewHandlers(infra di.Infra, lib di.Lib) *Handlers {
 	reader := infra.Reader
 	health2 := health.NewHealth(writer, reader)
 	account := handler.NewAccount(infra, lib)
-	household := handler2.NewHousehold()
+	household := handler2.NewHousehold(infra)
 	category := handler3.NewCategory()
 	place := handler4.NewPlace()
 	todo := handler5.NewTodo()

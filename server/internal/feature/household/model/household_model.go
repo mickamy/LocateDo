@@ -49,12 +49,12 @@ const InviteTTL = 72 * time.Hour
 type Contents struct {
 	Categories []ImportCategory
 	Places     []ImportPlace
-	Todos      []ImportTodo
+	Todos      []InitialTodo
 }
 
 type ImportCategory struct {
 	ID         uuid.UUID
-	BuiltinKey *string
+	BuiltinKey *string `map:"Builtin"`
 	Name       *string
 	Icon       string
 	Color      string
@@ -71,10 +71,14 @@ type ImportPlace struct {
 	SortOrder  int32
 }
 
-type ImportTodo struct {
-	ID          uuid.UUID
-	PlaceID     uuid.UUID
-	Title       string
-	AssigneeID  *uuid.UUID
+type InitialTodo struct {
+	Todo        ImportTodo
 	CompletedAt *time.Time
+}
+
+type ImportTodo struct {
+	ID         uuid.UUID
+	PlaceID    uuid.UUID
+	Title      string
+	AssigneeID *uuid.UUID
 }
