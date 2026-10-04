@@ -42,6 +42,8 @@ const (
 	// AccountServiceRefreshTokenProcedure is the fully-qualified name of the AccountService's
 	// RefreshToken RPC.
 	AccountServiceRefreshTokenProcedure = "/locatedo.account.v1.AccountService/RefreshToken"
+	// AccountServiceSignOutProcedure is the fully-qualified name of the AccountService's SignOut RPC.
+	AccountServiceSignOutProcedure = "/locatedo.account.v1.AccountService/SignOut"
 	// AccountServiceDeleteAccountProcedure is the fully-qualified name of the AccountService's
 	// DeleteAccount RPC.
 	AccountServiceDeleteAccountProcedure = "/locatedo.account.v1.AccountService/DeleteAccount"
@@ -52,6 +54,8 @@ type AccountServiceClient interface {
 	SignInWithApple(context.Context, *connect.Request[v1.SignInWithAppleRequest]) (*connect.Response[v1.SignInWithAppleResponse], error)
 	SignInWithGoogle(context.Context, *connect.Request[v1.SignInWithGoogleRequest]) (*connect.Response[v1.SignInWithGoogleResponse], error)
 	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
+	// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
+	SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
 }
 
@@ -84,6 +88,12 @@ func NewAccountServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(accountServiceMethods.ByName("RefreshToken")),
 			connect.WithClientOptions(opts...),
 		),
+		signOut: connect.NewClient[v1.SignOutRequest, v1.SignOutResponse](
+			httpClient,
+			baseURL+AccountServiceSignOutProcedure,
+			connect.WithSchema(accountServiceMethods.ByName("SignOut")),
+			connect.WithClientOptions(opts...),
+		),
 		deleteAccount: connect.NewClient[v1.DeleteAccountRequest, v1.DeleteAccountResponse](
 			httpClient,
 			baseURL+AccountServiceDeleteAccountProcedure,
@@ -98,6 +108,7 @@ type accountServiceClient struct {
 	signInWithApple  *connect.Client[v1.SignInWithAppleRequest, v1.SignInWithAppleResponse]
 	signInWithGoogle *connect.Client[v1.SignInWithGoogleRequest, v1.SignInWithGoogleResponse]
 	refreshToken     *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
+	signOut          *connect.Client[v1.SignOutRequest, v1.SignOutResponse]
 	deleteAccount    *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
 }
 
@@ -116,6 +127,11 @@ func (c *accountServiceClient) RefreshToken(ctx context.Context, req *connect.Re
 	return c.refreshToken.CallUnary(ctx, req)
 }
 
+// SignOut calls locatedo.account.v1.AccountService.SignOut.
+func (c *accountServiceClient) SignOut(ctx context.Context, req *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error) {
+	return c.signOut.CallUnary(ctx, req)
+}
+
 // DeleteAccount calls locatedo.account.v1.AccountService.DeleteAccount.
 func (c *accountServiceClient) DeleteAccount(ctx context.Context, req *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error) {
 	return c.deleteAccount.CallUnary(ctx, req)
@@ -126,6 +142,8 @@ type AccountServiceHandler interface {
 	SignInWithApple(context.Context, *connect.Request[v1.SignInWithAppleRequest]) (*connect.Response[v1.SignInWithAppleResponse], error)
 	SignInWithGoogle(context.Context, *connect.Request[v1.SignInWithGoogleRequest]) (*connect.Response[v1.SignInWithGoogleResponse], error)
 	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
+	// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
+	SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
 }
 
@@ -154,6 +172,12 @@ func NewAccountServiceHandler(svc AccountServiceHandler, opts ...connect.Handler
 		connect.WithSchema(accountServiceMethods.ByName("RefreshToken")),
 		connect.WithHandlerOptions(opts...),
 	)
+	accountServiceSignOutHandler := connect.NewUnaryHandler(
+		AccountServiceSignOutProcedure,
+		svc.SignOut,
+		connect.WithSchema(accountServiceMethods.ByName("SignOut")),
+		connect.WithHandlerOptions(opts...),
+	)
 	accountServiceDeleteAccountHandler := connect.NewUnaryHandler(
 		AccountServiceDeleteAccountProcedure,
 		svc.DeleteAccount,
@@ -168,6 +192,8 @@ func NewAccountServiceHandler(svc AccountServiceHandler, opts ...connect.Handler
 			accountServiceSignInWithGoogleHandler.ServeHTTP(w, r)
 		case AccountServiceRefreshTokenProcedure:
 			accountServiceRefreshTokenHandler.ServeHTTP(w, r)
+		case AccountServiceSignOutProcedure:
+			accountServiceSignOutHandler.ServeHTTP(w, r)
 		case AccountServiceDeleteAccountProcedure:
 			accountServiceDeleteAccountHandler.ServeHTTP(w, r)
 		default:
@@ -189,6 +215,10 @@ func (UnimplementedAccountServiceHandler) SignInWithGoogle(context.Context, *con
 
 func (UnimplementedAccountServiceHandler) RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.RefreshToken is not implemented"))
+}
+
+func (UnimplementedAccountServiceHandler) SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.SignOut is not implemented"))
 }
 
 func (UnimplementedAccountServiceHandler) DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error) {

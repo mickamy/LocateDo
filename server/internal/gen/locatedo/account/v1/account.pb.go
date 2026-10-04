@@ -8,6 +8,7 @@ package accountv1
 
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	v1 "github.com/mickamy/LocateDo/internal/gen/locatedo/device/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -404,6 +405,95 @@ func (x *RefreshTokenResponse) GetHouseholdId() string {
 	return ""
 }
 
+type SignOutRequest struct {
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	// Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+	Device        *SignOutRequest_Device `protobuf:"bytes,2,opt,name=device,proto3" json:"device,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignOutRequest) Reset() {
+	*x = SignOutRequest{}
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignOutRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignOutRequest) ProtoMessage() {}
+
+func (x *SignOutRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignOutRequest.ProtoReflect.Descriptor instead.
+func (*SignOutRequest) Descriptor() ([]byte, []int) {
+	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SignOutRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *SignOutRequest) GetDevice() *SignOutRequest_Device {
+	if x != nil {
+		return x.Device
+	}
+	return nil
+}
+
+type SignOutResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignOutResponse) Reset() {
+	*x = SignOutResponse{}
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignOutResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignOutResponse) ProtoMessage() {}
+
+func (x *SignOutResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignOutResponse.ProtoReflect.Descriptor instead.
+func (*SignOutResponse) Descriptor() ([]byte, []int) {
+	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{8}
+}
+
 type DeleteAccountRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -412,7 +502,7 @@ type DeleteAccountRequest struct {
 
 func (x *DeleteAccountRequest) Reset() {
 	*x = DeleteAccountRequest{}
-	mi := &file_locatedo_account_v1_account_proto_msgTypes[7]
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -424,7 +514,7 @@ func (x *DeleteAccountRequest) String() string {
 func (*DeleteAccountRequest) ProtoMessage() {}
 
 func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_account_v1_account_proto_msgTypes[7]
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -437,7 +527,7 @@ func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAccountRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAccountRequest) Descriptor() ([]byte, []int) {
-	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{7}
+	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{9}
 }
 
 type DeleteAccountResponse struct {
@@ -448,7 +538,7 @@ type DeleteAccountResponse struct {
 
 func (x *DeleteAccountResponse) Reset() {
 	*x = DeleteAccountResponse{}
-	mi := &file_locatedo_account_v1_account_proto_msgTypes[8]
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -460,7 +550,7 @@ func (x *DeleteAccountResponse) String() string {
 func (*DeleteAccountResponse) ProtoMessage() {}
 
 func (x *DeleteAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_account_v1_account_proto_msgTypes[8]
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -473,14 +563,66 @@ func (x *DeleteAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAccountResponse.ProtoReflect.Descriptor instead.
 func (*DeleteAccountResponse) Descriptor() ([]byte, []int) {
-	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{8}
+	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{10}
+}
+
+type SignOutRequest_Device struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Platform      v1.Platform            `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
+	PushToken     string                 `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignOutRequest_Device) Reset() {
+	*x = SignOutRequest_Device{}
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignOutRequest_Device) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignOutRequest_Device) ProtoMessage() {}
+
+func (x *SignOutRequest_Device) ProtoReflect() protoreflect.Message {
+	mi := &file_locatedo_account_v1_account_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignOutRequest_Device.ProtoReflect.Descriptor instead.
+func (*SignOutRequest_Device) Descriptor() ([]byte, []int) {
+	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{7, 0}
+}
+
+func (x *SignOutRequest_Device) GetPlatform() v1.Platform {
+	if x != nil {
+		return x.Platform
+	}
+	return v1.Platform(0)
+}
+
+func (x *SignOutRequest_Device) GetPushToken() string {
+	if x != nil {
+		return x.PushToken
+	}
+	return ""
 }
 
 var File_locatedo_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_locatedo_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"!locatedo/account/v1/account.proto\x12\x13locatedo.account.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd8\x01\n" +
+	"!locatedo/account/v1/account.proto\x12\x13locatedo.account.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1flocatedo/device/v1/device.proto\"\xd8\x01\n" +
 	"\aSession\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12Q\n" +
@@ -507,13 +649,24 @@ const file_locatedo_account_v1_account_proto_rawDesc = "" +
 	"\x14RefreshTokenResponse\x126\n" +
 	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\x12&\n" +
 	"\fhousehold_id\x18\x02 \x01(\tH\x00R\vhouseholdId\x88\x01\x01B\x0f\n" +
-	"\r_household_id\"\x16\n" +
+	"\r_household_id\"\xfd\x01\n" +
+	"\x0eSignOutRequest\x12,\n" +
+	"\rrefresh_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\frefreshToken\x12B\n" +
+	"\x06device\x18\x02 \x01(\v2*.locatedo.account.v1.SignOutRequest.DeviceR\x06device\x1ay\n" +
+	"\x06Device\x12D\n" +
+	"\bplatform\x18\x01 \x01(\x0e2\x1c.locatedo.device.v1.PlatformB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\bplatform\x12)\n" +
+	"\n" +
+	"push_token\x18\x02 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x01\x18\x80 R\tpushToken\"\x11\n" +
+	"\x0fSignOutResponse\"\x16\n" +
 	"\x14DeleteAccountRequest\"\x17\n" +
-	"\x15DeleteAccountResponse2\xbc\x03\n" +
+	"\x15DeleteAccountResponse2\x92\x04\n" +
 	"\x0eAccountService\x12l\n" +
 	"\x0fSignInWithApple\x12+.locatedo.account.v1.SignInWithAppleRequest\x1a,.locatedo.account.v1.SignInWithAppleResponse\x12o\n" +
 	"\x10SignInWithGoogle\x12,.locatedo.account.v1.SignInWithGoogleRequest\x1a-.locatedo.account.v1.SignInWithGoogleResponse\x12c\n" +
-	"\fRefreshToken\x12(.locatedo.account.v1.RefreshTokenRequest\x1a).locatedo.account.v1.RefreshTokenResponse\x12f\n" +
+	"\fRefreshToken\x12(.locatedo.account.v1.RefreshTokenRequest\x1a).locatedo.account.v1.RefreshTokenResponse\x12T\n" +
+	"\aSignOut\x12#.locatedo.account.v1.SignOutRequest\x1a$.locatedo.account.v1.SignOutResponse\x12f\n" +
 	"\rDeleteAccount\x12).locatedo.account.v1.DeleteAccountRequest\x1a*.locatedo.account.v1.DeleteAccountResponseB\xdd\x01\n" +
 	"\x17com.locatedo.account.v1B\fAccountProtoP\x01ZFgithub.com/mickamy/LocateDo/internal/gen/locatedo/account/v1;accountv1\xa2\x02\x03LAX\xaa\x02\x13Locatedo.Account.V1\xca\x02\x13Locatedo\\Account\\V1\xe2\x02\x1fLocatedo\\Account\\V1\\GPBMetadata\xea\x02\x15Locatedo::Account::V1b\x06proto3"
 
@@ -529,7 +682,7 @@ func file_locatedo_account_v1_account_proto_rawDescGZIP() []byte {
 	return file_locatedo_account_v1_account_proto_rawDescData
 }
 
-var file_locatedo_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_locatedo_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_locatedo_account_v1_account_proto_goTypes = []any{
 	(*Session)(nil),                  // 0: locatedo.account.v1.Session
 	(*SignInWithAppleRequest)(nil),   // 1: locatedo.account.v1.SignInWithAppleRequest
@@ -538,28 +691,36 @@ var file_locatedo_account_v1_account_proto_goTypes = []any{
 	(*SignInWithGoogleResponse)(nil), // 4: locatedo.account.v1.SignInWithGoogleResponse
 	(*RefreshTokenRequest)(nil),      // 5: locatedo.account.v1.RefreshTokenRequest
 	(*RefreshTokenResponse)(nil),     // 6: locatedo.account.v1.RefreshTokenResponse
-	(*DeleteAccountRequest)(nil),     // 7: locatedo.account.v1.DeleteAccountRequest
-	(*DeleteAccountResponse)(nil),    // 8: locatedo.account.v1.DeleteAccountResponse
-	(*timestamppb.Timestamp)(nil),    // 9: google.protobuf.Timestamp
+	(*SignOutRequest)(nil),           // 7: locatedo.account.v1.SignOutRequest
+	(*SignOutResponse)(nil),          // 8: locatedo.account.v1.SignOutResponse
+	(*DeleteAccountRequest)(nil),     // 9: locatedo.account.v1.DeleteAccountRequest
+	(*DeleteAccountResponse)(nil),    // 10: locatedo.account.v1.DeleteAccountResponse
+	(*SignOutRequest_Device)(nil),    // 11: locatedo.account.v1.SignOutRequest.Device
+	(*timestamppb.Timestamp)(nil),    // 12: google.protobuf.Timestamp
+	(v1.Platform)(0),                 // 13: locatedo.device.v1.Platform
 }
 var file_locatedo_account_v1_account_proto_depIdxs = []int32{
-	9, // 0: locatedo.account.v1.Session.access_token_expires_at:type_name -> google.protobuf.Timestamp
-	0, // 1: locatedo.account.v1.SignInWithAppleResponse.session:type_name -> locatedo.account.v1.Session
-	0, // 2: locatedo.account.v1.SignInWithGoogleResponse.session:type_name -> locatedo.account.v1.Session
-	0, // 3: locatedo.account.v1.RefreshTokenResponse.session:type_name -> locatedo.account.v1.Session
-	1, // 4: locatedo.account.v1.AccountService.SignInWithApple:input_type -> locatedo.account.v1.SignInWithAppleRequest
-	3, // 5: locatedo.account.v1.AccountService.SignInWithGoogle:input_type -> locatedo.account.v1.SignInWithGoogleRequest
-	5, // 6: locatedo.account.v1.AccountService.RefreshToken:input_type -> locatedo.account.v1.RefreshTokenRequest
-	7, // 7: locatedo.account.v1.AccountService.DeleteAccount:input_type -> locatedo.account.v1.DeleteAccountRequest
-	2, // 8: locatedo.account.v1.AccountService.SignInWithApple:output_type -> locatedo.account.v1.SignInWithAppleResponse
-	4, // 9: locatedo.account.v1.AccountService.SignInWithGoogle:output_type -> locatedo.account.v1.SignInWithGoogleResponse
-	6, // 10: locatedo.account.v1.AccountService.RefreshToken:output_type -> locatedo.account.v1.RefreshTokenResponse
-	8, // 11: locatedo.account.v1.AccountService.DeleteAccount:output_type -> locatedo.account.v1.DeleteAccountResponse
-	8, // [8:12] is the sub-list for method output_type
-	4, // [4:8] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	12, // 0: locatedo.account.v1.Session.access_token_expires_at:type_name -> google.protobuf.Timestamp
+	0,  // 1: locatedo.account.v1.SignInWithAppleResponse.session:type_name -> locatedo.account.v1.Session
+	0,  // 2: locatedo.account.v1.SignInWithGoogleResponse.session:type_name -> locatedo.account.v1.Session
+	0,  // 3: locatedo.account.v1.RefreshTokenResponse.session:type_name -> locatedo.account.v1.Session
+	11, // 4: locatedo.account.v1.SignOutRequest.device:type_name -> locatedo.account.v1.SignOutRequest.Device
+	13, // 5: locatedo.account.v1.SignOutRequest.Device.platform:type_name -> locatedo.device.v1.Platform
+	1,  // 6: locatedo.account.v1.AccountService.SignInWithApple:input_type -> locatedo.account.v1.SignInWithAppleRequest
+	3,  // 7: locatedo.account.v1.AccountService.SignInWithGoogle:input_type -> locatedo.account.v1.SignInWithGoogleRequest
+	5,  // 8: locatedo.account.v1.AccountService.RefreshToken:input_type -> locatedo.account.v1.RefreshTokenRequest
+	7,  // 9: locatedo.account.v1.AccountService.SignOut:input_type -> locatedo.account.v1.SignOutRequest
+	9,  // 10: locatedo.account.v1.AccountService.DeleteAccount:input_type -> locatedo.account.v1.DeleteAccountRequest
+	2,  // 11: locatedo.account.v1.AccountService.SignInWithApple:output_type -> locatedo.account.v1.SignInWithAppleResponse
+	4,  // 12: locatedo.account.v1.AccountService.SignInWithGoogle:output_type -> locatedo.account.v1.SignInWithGoogleResponse
+	6,  // 13: locatedo.account.v1.AccountService.RefreshToken:output_type -> locatedo.account.v1.RefreshTokenResponse
+	8,  // 14: locatedo.account.v1.AccountService.SignOut:output_type -> locatedo.account.v1.SignOutResponse
+	10, // 15: locatedo.account.v1.AccountService.DeleteAccount:output_type -> locatedo.account.v1.DeleteAccountResponse
+	11, // [11:16] is the sub-list for method output_type
+	6,  // [6:11] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_locatedo_account_v1_account_proto_init() }
@@ -576,7 +737,7 @@ func file_locatedo_account_v1_account_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_locatedo_account_v1_account_proto_rawDesc), len(file_locatedo_account_v1_account_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

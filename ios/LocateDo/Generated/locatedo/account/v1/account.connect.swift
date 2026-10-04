@@ -20,6 +20,10 @@ internal protocol Locatedo_Account_V1_AccountServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `refreshToken`(request: Locatedo_Account_V1_RefreshTokenRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_RefreshTokenResponse>
 
+    /// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
+    @available(iOS 13, *)
+    func `signOut`(request: Locatedo_Account_V1_SignOutRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_SignOutResponse>
+
     @available(iOS 13, *)
     func `deleteAccount`(request: Locatedo_Account_V1_DeleteAccountRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse>
 }
@@ -48,6 +52,11 @@ internal final class Locatedo_Account_V1_AccountServiceClient: Locatedo_Account_
     }
 
     @available(iOS 13, *)
+    internal func `signOut`(request: Locatedo_Account_V1_SignOutRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Locatedo_Account_V1_SignOutResponse> {
+        return await self.client.unary(path: "/locatedo.account.v1.AccountService/SignOut", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
+    @available(iOS 13, *)
     internal func `deleteAccount`(request: Locatedo_Account_V1_DeleteAccountRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse> {
         return await self.client.unary(path: "/locatedo.account.v1.AccountService/DeleteAccount", idempotencyLevel: .unknown, request: request, headers: headers)
     }
@@ -57,6 +66,7 @@ internal final class Locatedo_Account_V1_AccountServiceClient: Locatedo_Account_
             internal static let signInWithApple = Connect.MethodSpec(name: "SignInWithApple", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let signInWithGoogle = Connect.MethodSpec(name: "SignInWithGoogle", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let refreshToken = Connect.MethodSpec(name: "RefreshToken", service: "locatedo.account.v1.AccountService", type: .unary)
+            internal static let signOut = Connect.MethodSpec(name: "SignOut", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let deleteAccount = Connect.MethodSpec(name: "DeleteAccount", service: "locatedo.account.v1.AccountService", type: .unary)
         }
     }

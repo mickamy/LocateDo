@@ -4,11 +4,14 @@ package locatedo.account.v1;
 
 import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
+import "locatedo/device/v1/device.proto";
 
 service AccountService {
   rpc SignInWithApple(SignInWithAppleRequest) returns (SignInWithAppleResponse);
   rpc SignInWithGoogle(SignInWithGoogleRequest) returns (SignInWithGoogleResponse);
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  // Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
+  rpc SignOut(SignOutRequest) returns (SignOutResponse);
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
 }
 
@@ -52,6 +55,25 @@ message RefreshTokenResponse {
   Session session = 1;
   optional string household_id = 2;
 }
+
+message SignOutRequest {
+  message Device {
+    locatedo.device.v1.Platform platform = 1 [(buf.validate.field).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+    string push_token = 2 [(buf.validate.field).string = {
+      min_len: 1
+      max_len: 4096
+    }];
+  }
+
+  string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
+  // Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+  Device device = 2;
+}
+
+message SignOutResponse {}
 
 message DeleteAccountRequest {}
 
