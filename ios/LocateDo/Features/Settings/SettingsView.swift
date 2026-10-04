@@ -9,6 +9,9 @@ struct SettingsView: View {
     @Environment(AppPreferences.self) private var preferences
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
+    #if DEBUG
+    @State private var serverStatus: String?
+    #endif
 
     var body: some View {
         @Bindable var preferences = preferences
@@ -71,6 +74,9 @@ struct SettingsView: View {
                 } header: {
                     Text(.settingsAboutTitle)
                 }
+                #if DEBUG
+                debugSection
+                #endif
             }
             .navigationTitle(Text(.tabSettings))
             .task {
@@ -143,6 +149,40 @@ struct SettingsView: View {
             openURL(url)
         }
     }
+
+    #if DEBUG
+    private var debugSection: some View {
+        Section {
+            LabeledContent {
+                Text(verbatim: APIEnvironment.current.baseURL.absoluteString)
+            } label: {
+                Text(verbatim: "Server")
+            }
+            Button {
+                Task {
+                    await checkServer()
+                }
+            } label: {
+                Text(verbatim: "Check connection")
+            }
+            if let serverStatus {
+                Text(verbatim: serverStatus)
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text(verbatim: "Debug")
+        }
+    }
+
+    private func checkServer() async {
+        do {
+            let code = try await HealthClient(environment: .current).statusCode()
+            serverStatus = "HTTP \(code)"
+        } catch {
+            serverStatus = error.localizedDescription
+        }
+    }
+    #endif
 
     private static var privacyPolicyURL: URL {
         if Bundle.main.preferredLocalizations.first == "ja" {
