@@ -3,13 +3,22 @@ import OSLog
 import SwiftUI
 
 struct AccountView: View {
+    private enum Action {
+        case signOut
+        case delete
+    }
+
     @Environment(AccountManager.self) private var account
+    @Environment(SyncEngine.self) private var sync
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var nonce: String?
     @State private var failure: LocalizedStringResource?
     @State private var isConfirmingDelete = false
     @State private var isConfirmingReplace = false
+    @State private var isConfirmingSignOut = false
+    @State private var hasUnsyncedWrites = false
+    @State private var runningAction: Action?
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "account")
 
@@ -25,7 +34,24 @@ struct AccountView: View {
         }
         .navigationTitle(Text(.settingsAccountTitle))
         .navigationBarTitleDisplayMode(.inline)
-        .disabled(account.isWorking)
+        .disabled(account.isWorking || runningAction != nil)
+        .confirmationDialog(
+            Text(.settingsAccountSignOutConfirmTitle),
+            isPresented: $isConfirmingSignOut,
+            titleVisibility: .visible
+        ) {
+            Button(.settingsAccountSignOut, role: .destructive) {
+                Task {
+                    await signOut()
+                }
+            }
+        } message: {
+            if hasUnsyncedWrites {
+                Text(.settingsAccountSignOutUnsyncedMessage)
+            } else {
+                Text(.settingsAccountSignOutConfirmMessage)
+            }
+        }
         .confirmationDialog(
             Text(.settingsAccountDeleteConfirmTitle),
             isPresented: $isConfirmingDelete,
@@ -59,16 +85,19 @@ struct AccountView: View {
             Label(.settingsAccountSignedIn, systemImage: "person.crop.circle.badge.checkmark")
         }
         Section {
+            Button {
+                Task {
+                    await prepareSignOut()
+                }
+            } label: {
+                actionLabel(.settingsAccountSignOut, action: .signOut)
+            }
+        }
+        Section {
             Button(role: .destructive) {
                 isConfirmingDelete = true
             } label: {
-                HStack {
-                    Text(.settingsAccountDelete)
-                    Spacer()
-                    if account.isWorking {
-                        ProgressView()
-                    }
-                }
+                actionLabel(.settingsAccountDelete, action: .delete)
             }
         } footer: {
             failureText
@@ -77,37 +106,7 @@ struct AccountView: View {
 
     private var signedOut: some View {
         ScrollView {
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Image(systemName: "person.crop.circle")
-                        .font(.system(size: 64))
-                        .foregroundStyle(.tint)
-                        .accessibilityHidden(true)
-                    Text(.settingsAccountDescription)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                VStack(alignment: .leading, spacing: 24) {
-                    benefit(
-                        systemImage: "iphone.and.arrow.forward",
-                        title: .settingsAccountBenefitsSyncTitle,
-                        message: .settingsAccountBenefitsSyncMessage
-                    )
-                    benefit(
-                        systemImage: "person.2",
-                        title: .settingsAccountBenefitsShareTitle,
-                        message: .settingsAccountBenefitsShareMessage
-                    )
-                    benefit(
-                        systemImage: "lock.shield",
-                        title: .settingsAccountBenefitsPrivacyTitle,
-                        message: .settingsAccountBenefitsPrivacyMessage
-                    )
-                }
-            }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 40)
-            .frame(maxWidth: .infinity)
+            AccountBenefitsView()
         }
         .background(Color(.systemGroupedBackground))
         .safeAreaInset(edge: .bottom) {
@@ -118,7 +117,7 @@ struct AccountView: View {
                 signInButton
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 16)
+            .padding(.bottom, 28)
         }
     }
 
@@ -136,28 +135,6 @@ struct AccountView: View {
         }
         .frame(height: 50)
         .clipShape(.capsule)
-    }
-
-    private func benefit(
-        systemImage: String,
-        title: LocalizedStringResource,
-        message: LocalizedStringResource
-    ) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: systemImage)
-                .font(.title2)
-                .foregroundStyle(.tint)
-                .frame(width: 32)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder
@@ -219,8 +196,47 @@ struct AccountView: View {
         }
     }
 
+    private func actionLabel(_ title: LocalizedStringResource, action: Action) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            if runningAction == action {
+                ProgressView()
+            }
+        }
+    }
+
+    private func prepareSignOut() async {
+        failure = nil
+        runningAction = .signOut
+        defer { runningAction = nil }
+
+        await sync.drain()
+        do {
+            hasUnsyncedWrites = try account.hasUnsyncedWrites()
+        } catch {
+            logger.error("Could not count unsynced writes: \(error, privacy: .public)")
+            hasUnsyncedWrites = true
+        }
+        isConfirmingSignOut = true
+    }
+
+    private func signOut() async {
+        runningAction = .signOut
+        defer { runningAction = nil }
+
+        do {
+            try await account.signOut()
+        } catch {
+            logger.error("Sign out failed: \(error, privacy: .public)")
+        }
+    }
+
     private func deleteAccount() async {
         failure = nil
+        runningAction = .delete
+        defer { runningAction = nil }
+
         do {
             try await account.deleteAccount()
         } catch {

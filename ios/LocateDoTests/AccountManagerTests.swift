@@ -143,6 +143,29 @@ struct AccountManagerTests {
         #expect(fixture.resets.value == 0)
     }
 
+    @Test func signingOutRevokesTheSessionAndClearsLocalData() async throws {
+        let fixture = try Fixture()
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: nil)))
+        try await Self.signIn(fixture)
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.context.insert(place)
+        try PendingWrite.enqueue(.put(place), in: fixture.context)
+        try fixture.context.save()
+        #expect(try fixture.manager.hasUnsyncedWrites())
+
+        try await fixture.manager.signOut()
+
+        #expect(fixture.account.signOutTokens == ["refresh"])
+        #expect(!fixture.manager.isSignedIn)
+        #expect(try !fixture.manager.hasUnsyncedWrites())
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<SyncState>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<PlaceCategory>()) == BuiltinCategory.allCases.count)
+        #expect(fixture.signedOut.value == 1)
+        #expect(fixture.ended.value == 0)
+        #expect(fixture.resets.value == 0)
+    }
+
     private static func signIn(_ fixture: Fixture) async throws {
         try await fixture.manager.signInWithApple(
             identityToken: "identity",
@@ -222,6 +245,7 @@ struct AccountManagerTests {
         let resets = ResetCounter()
         let ready = ResetCounter()
         let ended = ResetCounter()
+        let signedOut = ResetCounter()
         let manager: AccountManager
 
         init() throws {
@@ -232,6 +256,7 @@ struct AccountManagerTests {
             let resets = resets
             let ready = ready
             let ended = ended
+            let signedOut = signedOut
             manager = AccountManager(
                 account: account,
                 household: household,
@@ -243,6 +268,8 @@ struct AccountManagerTests {
                 ready.increment()
             } onSessionEnded: {
                 ended.increment()
+            } onSignedOut: {
+                signedOut.increment()
             }
         }
     }

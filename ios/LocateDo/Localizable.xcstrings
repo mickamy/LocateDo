@@ -1346,6 +1346,74 @@
         }
       }
     },
+    "settings.account.sign_out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign Out"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サインアウト"
+          }
+        }
+      }
+    },
+    "settings.account.sign_out_confirm_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos on this iPhone will be removed. They come back when you sign in again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この iPhone の場所と TODO は消えます。もう一度サインインすると戻ります。"
+          }
+        }
+      }
+    },
+    "settings.account.sign_out_confirm_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サインアウトしますか？"
+          }
+        }
+      }
+    },
+    "settings.account.sign_out_unsynced_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ同期されていない変更があり、サインアウトすると失われます。この iPhone の場所と TODO は消えます。"
+          }
+        }
+      }
+    },
     "settings.account.signed_in" : {
       "extractionState" : "manual",
       "localizations" : {

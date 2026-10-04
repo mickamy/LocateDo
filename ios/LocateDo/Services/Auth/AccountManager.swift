@@ -21,6 +21,7 @@ final class AccountManager {
     private let onLocalDataReset: () async -> Void
     private let onHouseholdReady: () async -> Void
     private let onSessionEnded: () async -> Void
+    private let onSignedOut: () async -> Void
     private var pendingHouseholdID: UUID?
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "account")
 
@@ -31,7 +32,8 @@ final class AccountManager {
         context: ModelContext,
         onLocalDataReset: @escaping () async -> Void = {},
         onHouseholdReady: @escaping () async -> Void = {},
-        onSessionEnded: @escaping () async -> Void = {}
+        onSessionEnded: @escaping () async -> Void = {},
+        onSignedOut: @escaping () async -> Void = {}
     ) {
         self.account = account
         self.household = household
@@ -40,6 +42,7 @@ final class AccountManager {
         self.onLocalDataReset = onLocalDataReset
         self.onHouseholdReady = onHouseholdReady
         self.onSessionEnded = onSessionEnded
+        self.onSignedOut = onSignedOut
     }
 
     var isSignedIn: Bool {
@@ -137,6 +140,27 @@ final class AccountManager {
         try authenticator.signOut()
         try resetLocalData()
         await onLocalDataReset()
+    }
+
+    func hasUnsyncedWrites() throws -> Bool {
+        try context.fetchCount(FetchDescriptor<PendingWrite>()) > 0
+    }
+
+    func signOut() async throws {
+        isWorking = true
+        defer { isWorking = false }
+
+        if let refreshToken = authenticator.session?.refreshToken {
+            var request = Locatedo_Account_V1_SignOutRequest()
+            request.refreshToken = refreshToken
+            if case .failure(let error) = await account.signOut(request: request, headers: [:]).result {
+                logger.notice("Server sign-out failed; signing out locally: \(error, privacy: .public)")
+            }
+        }
+        try authenticator.signOut()
+        pendingAdoption = nil
+        try resetLocalData()
+        await onSignedOut()
     }
 
     func endSession() async {

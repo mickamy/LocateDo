@@ -48,6 +48,8 @@ struct LocateDoApp: App {
         } onSessionEnded: { [preferences, geofence] in
             preferences.hasPendingSessionEndedNotice = true
             await geofence.sync()
+        } onSignedOut: { [geofence] in
+            await geofence.sync()
         }
         writes = LocalWrites(context: container.mainContext) { [authenticator] in
             authenticator.isSignedIn
