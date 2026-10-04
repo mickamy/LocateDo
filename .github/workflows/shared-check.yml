@@ -9,6 +9,16 @@ on:
       - "ios/LocateDo/Localizable.xcstrings"
       - "ios/LocateDo/InfoPlist.xcstrings"
       - ".github/workflows/shared-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "shared/**"
+      - "tools/l10n/**"
+      - "server/internal/gen/**"
+      - "ios/LocateDo/Localizable.xcstrings"
+      - "ios/LocateDo/InfoPlist.xcstrings"
+      - ".github/workflows/shared-check.yml"
+  workflow_dispatch:
 
 jobs:
   proto:

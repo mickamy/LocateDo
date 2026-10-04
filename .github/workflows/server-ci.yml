@@ -5,10 +5,16 @@ on:
     paths:
       - "server/**"
       - ".github/workflows/server-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - ".github/workflows/server-ci.yml"
+  workflow_dispatch:
 
 concurrency:
   group: server-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
