@@ -10,13 +10,39 @@ struct DeviceRegistrationTests {
 
     @Test func registersTheHexTokenWhenSignedIn() async {
         let devices = FakeDeviceService()
-        let registration = DeviceRegistration(devices: devices, authenticator: Self.authenticator(signedIn: true))
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: true),
+            apnsEnvironment: .sandbox
+        )
 
         await registration.received(deviceToken: Self.token)
 
         #expect(registration.pushToken == "0abcff01")
         #expect(devices.registered.map(\.pushToken) == ["0abcff01"])
         #expect(devices.registered.map(\.platform) == [.ios])
+        #expect(devices.registered.map(\.apnsEnvironment) == [.sandbox])
+    }
+
+    @Test func sendsTheEnvironmentItWasGiven() async {
+        let devices = FakeDeviceService()
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: true),
+            apnsEnvironment: .production
+        )
+
+        await registration.received(deviceToken: Self.token)
+
+        #expect(devices.registered.map(\.apnsEnvironment) == [.production])
+    }
+
+    @Test func onlyAProductionDeviceBuildUsesProduction() {
+        typealias Environment = Locatedo_Device_V1_ApnsEnvironment
+        #expect(Environment.resolve(apsEnvironment: "production", isSimulator: false) == .production)
+        #expect(Environment.resolve(apsEnvironment: "development", isSimulator: false) == .sandbox)
+        #expect(Environment.resolve(apsEnvironment: nil, isSimulator: false) == .sandbox)
+        #expect(Environment.resolve(apsEnvironment: "production", isSimulator: true) == .sandbox)
     }
 
     @Test func keepsTheTokenUntilSignIn() async throws {

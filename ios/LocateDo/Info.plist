@@ -4,6 +4,8 @@
 <dict>
 	<key>LocateDoAPIBaseURL</key>
 	<string>$(LOCATEDO_API_BASE_URL)</string>
+	<key>LocateDoAPSEnvironment</key>
+	<string>$(APS_ENVIRONMENT)</string>
 	<key>LocateDoConfiguration</key>
 	<string>$(CONFIGURATION)</string>
 	<key>NSAppTransportSecurity</key>
