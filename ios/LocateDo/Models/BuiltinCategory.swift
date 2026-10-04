@@ -1,6 +1,6 @@
-import SwiftUI
+import Foundation
 
-nonisolated enum PlaceCategory: String, Codable, CaseIterable, Identifiable {
+nonisolated enum BuiltinCategory: String, Codable, CaseIterable, Identifiable {
     case shopping
     case work
     case life
@@ -17,7 +17,7 @@ nonisolated enum PlaceCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var systemImage: String {
+    var icon: String {
         switch self {
         case .shopping: "cart"
         case .work: "briefcase"
@@ -26,12 +26,12 @@ nonisolated enum PlaceCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var tint: Color {
+    var color: String {
         switch self {
-        case .shopping: .green
-        case .work: .blue
-        case .life: .orange
-        case .other: .gray
+        case .shopping: "green"
+        case .work: "blue"
+        case .life: "orange"
+        case .other: "gray"
         }
     }
 }

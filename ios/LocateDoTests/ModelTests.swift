@@ -10,7 +10,7 @@ struct ModelTests {
         let now = Date(timeIntervalSince1970: 1_000)
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0, now: now)
         #expect(place.radiusMeters == 100)
-        #expect(place.category == .other)
+        #expect(place.category == nil)
         #expect(place.createdAt == now)
         #expect(place.updatedAt == now)
         #expect(place.todos.isEmpty)

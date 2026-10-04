@@ -7,13 +7,14 @@ struct PlaceEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(GeofenceMonitor.self) private var geofence
+    @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
 
     let place: Place?
     var onSave: (() -> Void)?
     @State private var name: String
     @State private var coordinate: CLLocationCoordinate2D?
     @State private var radiusMeters: Double
-    @State private var category: PlaceCategory
+    @State private var category: PlaceCategory?
     @State private var isPickingLocation = false
     @FocusState private var isNameFocused: Bool
 
@@ -23,7 +24,7 @@ struct PlaceEditorView: View {
         _name = State(initialValue: place?.name ?? "")
         _coordinate = State(initialValue: place?.coordinate)
         _radiusMeters = State(initialValue: place?.radiusMeters ?? defaultRadiusMeters)
-        _category = State(initialValue: place?.category ?? .other)
+        _category = State(initialValue: place?.category)
     }
 
     private var canSave: Bool {
@@ -68,10 +69,12 @@ struct PlaceEditorView: View {
                 }
                 Section {
                     Picker(selection: $category) {
-                        ForEach(PlaceCategory.allCases) { category in
-                            Label(category.title, systemImage: category.systemImage)
-                                .tag(category)
+                        ForEach(categories) { candidate in
+                            categoryLabel(candidate)
+                                .tag(Optional(candidate))
                         }
+                        categoryLabel(nil)
+                            .tag(PlaceCategory?.none)
                     } label: {
                         Text(.placeEditorCategoryLabel)
                     }
@@ -106,10 +109,16 @@ struct PlaceEditorView: View {
             }
             .onAppear {
                 if place == nil {
+                    category = categories.first { $0.builtin == .other }
                     isNameFocused = true
                 }
             }
         }
+    }
+
+    private func categoryLabel(_ category: PlaceCategory?) -> some View {
+        let style = CategoryStyle(category)
+        return Label(style.name, systemImage: style.systemImage)
     }
 
     private func saveIfPossible() {

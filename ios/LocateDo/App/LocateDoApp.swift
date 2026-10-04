@@ -14,7 +14,7 @@ struct LocateDoApp: App {
 
     init() {
         do {
-            container = try AppModelContainer.make()
+            container = try AppModelContainer.make(inMemory: Self.isRunningTests)
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

@@ -13,8 +13,8 @@ struct MapTabView: View {
             Map(position: $position, selection: $selectedPlace) {
                 UserAnnotation()
                 ForEach(places) { place in
-                    Marker(place.name, systemImage: place.category.systemImage, coordinate: place.coordinate)
-                        .tint(place.category.tint)
+                    Marker(place.name, systemImage: place.categoryStyle.systemImage, coordinate: place.coordinate)
+                        .tint(place.categoryStyle.tint)
                         .tag(place)
                 }
             }

@@ -16,12 +16,12 @@ struct PlaceRow: View {
 
     var body: some View {
         layout {
-            Image(systemName: place.category.systemImage)
+            Image(systemName: place.categoryStyle.systemImage)
                 .font(.title3)
                 .foregroundStyle(.white)
                 .frame(width: 36, height: 36)
-                .background(place.category.tint, in: RoundedRectangle(cornerRadius: 8))
-                .accessibilityLabel(Text(place.category.title))
+                .background(place.categoryStyle.tint, in: RoundedRectangle(cornerRadius: 8))
+                .accessibilityLabel(Text(place.categoryStyle.name))
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(.headline)

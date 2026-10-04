@@ -12,7 +12,7 @@ final class Place {
     var latitude: Double
     var longitude: Double
     var radiusMeters: Double
-    var category: PlaceCategory
+    var category: PlaceCategory?
     var sortOrder: Int
     var lastNotifiedAt: Date?
     var createdAt: Date
@@ -27,7 +27,7 @@ final class Place {
         latitude: Double,
         longitude: Double,
         radiusMeters: Double = Place.defaultRadiusMeters,
-        category: PlaceCategory = .other,
+        category: PlaceCategory? = nil,
         sortOrder: Int = 0,
         now: Date = .now
     ) {

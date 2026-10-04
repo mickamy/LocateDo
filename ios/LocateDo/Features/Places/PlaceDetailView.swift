@@ -34,8 +34,8 @@ struct PlaceDetailView: View {
                 map
                     .listRowInsets(EdgeInsets())
                 VStack(alignment: .leading, spacing: 4) {
-                    Label(place.category.title, systemImage: place.category.systemImage)
-                        .foregroundStyle(place.category.tint)
+                    Label(place.categoryStyle.name, systemImage: place.categoryStyle.systemImage)
+                        .foregroundStyle(place.categoryStyle.tint)
                     Group {
                         addressText
                         distanceText
@@ -158,8 +158,8 @@ struct PlaceDetailView: View {
             longitudinalMeters: place.radiusMeters * 4
         )
         return Map(position: .constant(.region(region))) {
-            Marker(place.name, systemImage: place.category.systemImage, coordinate: place.coordinate)
-                .tint(place.category.tint)
+            Marker(place.name, systemImage: place.categoryStyle.systemImage, coordinate: place.coordinate)
+                .tint(place.categoryStyle.tint)
             MapCircle(center: place.coordinate, radius: place.radiusMeters)
                 .foregroundStyle(.blue.opacity(0.15))
                 .stroke(.blue, lineWidth: 1)

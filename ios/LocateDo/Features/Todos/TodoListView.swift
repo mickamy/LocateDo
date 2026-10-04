@@ -89,7 +89,7 @@ struct TodoListView: View {
                     }
                 } header: {
                     NavigationLink(value: group.place) {
-                        Label(group.place.name, systemImage: group.place.category.systemImage)
+                        Label(group.place.name, systemImage: group.place.categoryStyle.systemImage)
                     }
                 }
             }

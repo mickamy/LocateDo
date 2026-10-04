@@ -1,10 +1,12 @@
 import SwiftData
 
 enum AppModelContainer {
-    static let schema = Schema([Place.self, Todo.self])
+    static let schema = Schema([Place.self, Todo.self, PlaceCategory.self])
 
     static func make(inMemory: Bool = false) throws -> ModelContainer {
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
-        return try ModelContainer(for: schema, configurations: [configuration])
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        try PlaceCategory.insertBuiltinsIfEmpty(into: ModelContext(container))
+        return container
     }
 }

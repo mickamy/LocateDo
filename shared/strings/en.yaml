@@ -124,6 +124,7 @@ category:
   work: "Work"
   life: "Life"
   other: "Other"
+  none: "Uncategorized"
 permission:
   when_in_use: "LocateDo uses your location to show the places near you and the distance to them."
   always: "LocateDo needs your location in the background to remind you when you arrive at a place."

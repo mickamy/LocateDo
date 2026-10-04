@@ -6,6 +6,7 @@ final class Todo {
     @Attribute(.unique) var id: UUID
     var title: String
     var place: Place?
+    var assigneeID: UUID?
     var completedAt: Date?
     var createdAt: Date
     var updatedAt: Date
