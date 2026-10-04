@@ -64,6 +64,9 @@ settings:
     delete_confirm_title: "アカウントを削除しますか？"
     delete_confirm_message: "アカウントとサーバーに保存されたデータを削除します。この端末の場所と TODO も消えます。"
     delete_failed: "アカウントを削除できませんでした。もう一度お試しください。"
+    replace_confirm_title: "この iPhone のデータを置き換えますか？"
+    replace_confirm_message: "このアカウントにはすでに場所と TODO があります。この iPhone の場所と TODO はアカウントのデータに置き換わります。"
+    replace: "置き換える"
   open_settings: "設定を開く"
   default_radius:
     title: "新しい場所"

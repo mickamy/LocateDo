@@ -17,11 +17,7 @@ struct LocateDoApp: App {
     private let network: NetworkMonitor
 
     init() {
-        do {
-            container = try AppModelContainer.make(inMemory: Self.isRunningTests)
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
+        container = Self.makeContainer()
         notifier = ArrivalNotifier(router: router)
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         let tokens = AccessTokenStore()
@@ -46,8 +42,9 @@ struct LocateDoApp: App {
         ) { [preferences, geofence] in
             preferences.reset()
             await geofence.sync()
-        } onHouseholdReady: {
+        } onHouseholdReady: { [geofence] in
             await sync.sync()
+            await geofence.sync()
         }
         writes = LocalWrites(context: container.mainContext) { [authenticator] in
             authenticator.isSignedIn
@@ -87,6 +84,14 @@ struct LocateDoApp: App {
         .environment(sync)
         .environment(account)
         .environment(writes)
+    }
+
+    private static func makeContainer() -> ModelContainer {
+        do {
+            return try AppModelContainer.make(inMemory: isRunningTests)
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
     }
 
     // The unit test host must not trigger location prompts or start location updates.

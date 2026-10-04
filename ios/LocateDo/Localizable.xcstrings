@@ -1244,6 +1244,57 @@
         }
       }
     },
+    "settings.account.replace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "置き換える"
+          }
+        }
+      }
+    },
+    "settings.account.replace_confirm_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このアカウントにはすでに場所と TODO があります。この iPhone の場所と TODO はアカウントのデータに置き換わります。"
+          }
+        }
+      }
+    },
+    "settings.account.replace_confirm_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace data on this iPhone?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この iPhone のデータを置き換えますか？"
+          }
+        }
+      }
+    },
     "settings.account.sign_in_failed" : {
       "extractionState" : "manual",
       "localizations" : {

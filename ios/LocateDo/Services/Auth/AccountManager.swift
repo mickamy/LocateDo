@@ -5,7 +5,13 @@ import SwiftData
 
 @Observable
 final class AccountManager {
+    private struct PendingAdoption {
+        let session: Session
+        let householdID: UUID
+    }
+
     private(set) var isWorking = false
+    private var pendingAdoption: PendingAdoption?
 
     private let account: any Locatedo_Account_V1_AccountServiceClientInterface
     private let household: any Locatedo_Household_V1_HouseholdServiceClientInterface
@@ -35,6 +41,10 @@ final class AccountManager {
         authenticator.isSignedIn
     }
 
+    var needsReplaceConfirmation: Bool {
+        pendingAdoption != nil
+    }
+
     func signInWithApple(
         identityToken: String,
         authorizationCode: String,
@@ -55,16 +65,33 @@ final class AccountManager {
         guard let session = Session(response.session) else {
             throw AuthError.invalidSession
         }
-        try authenticator.signIn(session)
 
         if response.hasHouseholdID, let householdID = UUID(uuidString: response.householdID) {
-            let state = try SyncState.current(in: context)
-            state.householdID = householdID
-            try context.save()
-            await onHouseholdReady()
+            let adoption = PendingAdoption(session: session, householdID: householdID)
+            if try hasUserData() {
+                pendingAdoption = adoption
+                return
+            }
+            try await adopt(adoption)
             return
         }
+        try authenticator.signIn(session)
         try await uploadLocalDataIfNeeded()
+    }
+
+    func confirmReplacingLocalData() async throws {
+        guard let adoption = pendingAdoption else {
+            return
+        }
+        isWorking = true
+        defer { isWorking = false }
+
+        pendingAdoption = nil
+        try await adopt(adoption)
+    }
+
+    func cancelReplacingLocalData() {
+        pendingAdoption = nil
     }
 
     func uploadLocalDataIfNeeded() async throws {
@@ -107,7 +134,35 @@ final class AccountManager {
         await onLocalDataReset()
     }
 
+    private func hasUserData() throws -> Bool {
+        if try context.fetchCount(FetchDescriptor<Place>()) > 0 {
+            return true
+        }
+        return try context.fetch(FetchDescriptor<PlaceCategory>()).contains { $0.builtin == nil }
+    }
+
+    private func adopt(_ adoption: PendingAdoption) async throws {
+        try authenticator.signIn(adoption.session)
+        try deleteSyncedData()
+        let state = try SyncState.current(in: context)
+        state.householdID = adoption.householdID
+        state.cursor = 0
+        state.plan = .free
+        try context.save()
+        await onHouseholdReady()
+    }
+
     private func resetLocalData() throws {
+        try deleteSyncedData()
+        for state in try context.fetch(FetchDescriptor<SyncState>()) {
+            context.delete(state)
+        }
+        try context.save()
+        try PlaceCategory.insertBuiltinsIfEmpty(into: context)
+        pendingHouseholdID = nil
+    }
+
+    private func deleteSyncedData() throws {
         for place in try context.fetch(FetchDescriptor<Place>()) {
             context.delete(place)
         }
@@ -117,14 +172,11 @@ final class AccountManager {
         for category in try context.fetch(FetchDescriptor<PlaceCategory>()) {
             context.delete(category)
         }
-        for state in try context.fetch(FetchDescriptor<SyncState>()) {
-            context.delete(state)
+        for membership in try context.fetch(FetchDescriptor<Membership>()) {
+            context.delete(membership)
         }
         for write in try context.fetch(FetchDescriptor<PendingWrite>()) {
             context.delete(write)
         }
-        try context.save()
-        try PlaceCategory.insertBuiltinsIfEmpty(into: context)
-        pendingHouseholdID = nil
     }
 }

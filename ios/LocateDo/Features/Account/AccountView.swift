@@ -9,6 +9,7 @@ struct AccountView: View {
     @State private var nonce: String?
     @State private var failure: LocalizedStringResource?
     @State private var isConfirmingDelete = false
+    @State private var isConfirmingReplace = false
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "account")
 
@@ -37,6 +38,18 @@ struct AccountView: View {
             }
         } message: {
             Text(.settingsAccountDeleteConfirmMessage)
+        }
+        .alert(Text(.settingsAccountReplaceConfirmTitle), isPresented: $isConfirmingReplace) {
+            Button(.settingsAccountReplace, role: .destructive) {
+                Task {
+                    await replaceLocalData()
+                }
+            }
+            Button(.commonCancel, role: .cancel) {
+                account.cancelReplacingLocalData()
+            }
+        } message: {
+            Text(.settingsAccountReplaceConfirmMessage)
         }
     }
 
@@ -182,6 +195,7 @@ struct AccountView: View {
                         nonce: nonce,
                         displayName: displayName
                     )
+                    isConfirmingReplace = account.needsReplaceConfirmation
                 } catch {
                     logger.error("Sign in with Apple failed: \(error, privacy: .public)")
                     failure = .settingsAccountSignInFailed
@@ -192,6 +206,15 @@ struct AccountView: View {
                 return
             }
             logger.error("Apple authorization failed: \(error, privacy: .public)")
+            failure = .settingsAccountSignInFailed
+        }
+    }
+
+    private func replaceLocalData() async {
+        do {
+            try await account.confirmReplacingLocalData()
+        } catch {
+            logger.error("Replacing local data failed: \(error, privacy: .public)")
             failure = .settingsAccountSignInFailed
         }
     }

@@ -9,6 +9,7 @@ import Testing
 
 struct AccountManagerTests {
     private static let userID = "0199bd00-0000-7000-8000-000000000001"
+    private static let householdID = "0199bd00-0000-7000-8000-0000000000aa"
 
     @Test func newUserUploadsLocalDataAndStoresTheHousehold() async throws {
         let fixture = try Fixture()
@@ -58,7 +59,76 @@ struct AccountManagerTests {
         #expect(fixture.household.createCalls == 0)
         #expect(fixture.account.lastSignIn?.hasDisplayName == false)
         #expect(try SyncState.current(in: fixture.context).householdID == UUID(uuidString: householdID))
+        #expect(fixture.manager.isSignedIn)
+        #expect(!fixture.manager.needsReplaceConfirmation)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<PlaceCategory>()) == 0)
         #expect(fixture.ready.value == 1)
+    }
+
+    @Test func localPlacesAreReplacedOnlyAfterConfirmation() async throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.context.insert(place)
+        fixture.context.insert(Todo(title: "Milk", place: place))
+        try fixture.context.save()
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: Self.householdID)))
+
+        try await Self.signIn(fixture)
+
+        #expect(fixture.manager.needsReplaceConfirmation)
+        #expect(!fixture.manager.isSignedIn)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 1)
+        #expect(fixture.ready.value == 0)
+
+        try await fixture.manager.confirmReplacingLocalData()
+
+        #expect(!fixture.manager.needsReplaceConfirmation)
+        #expect(fixture.manager.isSignedIn)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Todo>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<PlaceCategory>()) == 0)
+        let state = try SyncState.current(in: fixture.context)
+        #expect(state.householdID == UUID(uuidString: Self.householdID))
+        #expect(state.cursor == 0)
+        #expect(fixture.household.createCalls == 0)
+        #expect(fixture.ready.value == 1)
+    }
+
+    @Test func customCategoriesAlsoNeedConfirmation() async throws {
+        let fixture = try Fixture()
+        fixture.context.insert(PlaceCategory(name: "Gym", icon: "dumbbell", color: "teal", sortOrder: 4))
+        try fixture.context.save()
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: Self.householdID)))
+
+        try await Self.signIn(fixture)
+
+        #expect(fixture.manager.needsReplaceConfirmation)
+    }
+
+    @Test func cancelingTheReplacementKeepsLocalDataAndStaysSignedOut() async throws {
+        let fixture = try Fixture()
+        fixture.context.insert(Place(name: "Store", latitude: 35.0, longitude: 139.0))
+        try fixture.context.save()
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: Self.householdID)))
+        try await Self.signIn(fixture)
+
+        fixture.manager.cancelReplacingLocalData()
+        try await fixture.manager.confirmReplacingLocalData()
+
+        #expect(!fixture.manager.needsReplaceConfirmation)
+        #expect(!fixture.manager.isSignedIn)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 1)
+        #expect(try SyncState.current(in: fixture.context).householdID == nil)
+        #expect(fixture.ready.value == 0)
+    }
+
+    private static func signIn(_ fixture: Fixture) async throws {
+        try await fixture.manager.signInWithApple(
+            identityToken: "identity",
+            authorizationCode: "code",
+            nonce: "nonce-0123456789abcdef",
+            displayName: nil
+        )
     }
 
     @Test func failedUploadRetriesWithTheSameHouseholdID() async throws {
