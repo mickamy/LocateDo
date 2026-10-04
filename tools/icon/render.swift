@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreText
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -117,6 +118,28 @@ func draw(_ appearance: Appearance, in context: CGContext) {
     context.restoreGState()
 }
 
+func drawDevBadge(in context: CGContext) {
+    let pill = CGRect(x: (size - 300) / 2, y: 868, width: 300, height: 84)
+    context.saveGState()
+    context.setFillColor(color(0x1C1C1E, alpha: 0.78))
+    context.addPath(CGPath(roundedRect: pill, cornerWidth: pill.height / 2, cornerHeight: pill.height / 2, transform: nil))
+    context.fillPath()
+
+    let kern: CGFloat = 8
+    let attributes: [NSAttributedString.Key: Any] = [
+        kCTFontAttributeName as NSAttributedString.Key: CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 56, nil),
+        kCTForegroundColorAttributeName as NSAttributedString.Key: color(0xFFFFFF),
+        kCTKernAttributeName as NSAttributedString.Key: kern,
+    ]
+    let line = CTLineCreateWithAttributedString(NSAttributedString(string: "DEV", attributes: attributes))
+    var ascent: CGFloat = 0
+    var descent: CGFloat = 0
+    let width = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, nil)) - kern
+    context.textPosition = CGPoint(x: pill.midX - width / 2, y: pill.midY - (ascent - descent) / 2)
+    CTLineDraw(line, context)
+    context.restoreGState()
+}
+
 func preview(of image: CGImage) -> CGImage {
     let context = makeContext(opaque: false)
     let rect = CGRect(x: 0, y: 0, width: size, height: size)
@@ -138,22 +161,31 @@ func write(_ image: CGImage, to url: URL) {
 }
 
 let arguments = Array(CommandLine.arguments.dropFirst())
-guard let outputPath = arguments.first else {
-    FileHandle.standardError.write(Data("usage: swift render.swift <output-dir> [--preview]\n".utf8))
+let flags = Set(arguments.filter { $0.hasPrefix("--") })
+guard let outputPath = arguments.first(where: { !$0.hasPrefix("--") }) else {
+    FileHandle.standardError.write(Data("usage: swift render.swift <output-dir> [--preview] [--dev]\n".utf8))
     exit(2)
 }
 let outputDirectory = URL(fileURLWithPath: outputPath)
-let writesPreview = arguments.contains("--preview")
+let writesPreview = flags.contains("--preview")
+let isDev = flags.contains("--dev")
 try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
 
 for appearance in appearances {
     let context = makeContext(opaque: true)
     draw(appearance, in: context)
-    let image = context.makeImage()!
-    if writesPreview {
-        write(preview(of: image), to: outputDirectory.appendingPathComponent("\(appearance.fileName)-preview.png"))
-    } else {
-        write(image, to: outputDirectory.appendingPathComponent("\(appearance.fileName).png"))
+    if isDev {
+        drawDevBadge(in: context)
     }
-    print("wrote \(appearance.fileName)")
+    let image = context.makeImage()!
+    var fileName = appearance.fileName
+    if isDev {
+        fileName = fileName.replacingOccurrences(of: "AppIcon", with: "AppIcon-Dev")
+    }
+    if writesPreview {
+        write(preview(of: image), to: outputDirectory.appendingPathComponent("\(fileName)-preview.png"))
+    } else {
+        write(image, to: outputDirectory.appendingPathComponent("\(fileName).png"))
+    }
+    print("wrote \(fileName)")
 }
