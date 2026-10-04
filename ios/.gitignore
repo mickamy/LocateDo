@@ -65,3 +65,6 @@ fastlane/.env*
 
 # gym output
 build/
+
+# Firebase (per-configuration GoogleService-Info.plist; CI writes these from Secrets)
+LocateDo/Firebase/
