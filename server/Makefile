@@ -103,6 +103,8 @@ gen-mapper:
 		-types='$(PKG)/feature/household/model.InitialTodo<-*$(PKG)/gen/locatedo/household/v1.InitialTodo' \
 		-types='$(PKG)/feature/household/model.ImportTodo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput' \
 		-types='$(PKG)/feature/household/model.Household->*$(PKG)/gen/locatedo/household/v1.Household'
+	$(MAPPER) -destination=internal/feature/place/mapper -package=mapper -exclude='$(PKG)/feature/place/model.Place.HouseholdID' \
+		-types='$(PKG)/feature/place/model.Place<-*$(PKG)/gen/locatedo/place/v1.PlaceInput'
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate

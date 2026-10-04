@@ -52,7 +52,8 @@ func TestHandler_auth(t *testing.T) {
 		authorization string
 		want          connect.Code
 	}{
-		{name: "valid token reaches the handler", authorization: "Bearer " + valid, want: connect.CodeUnimplemented},
+		// The token's user belongs to no household, so the handler itself answers.
+		{name: "valid token reaches the handler", authorization: "Bearer " + valid, want: connect.CodePermissionDenied},
 		{name: "no header", authorization: "", want: connect.CodeUnauthenticated},
 		{name: "not bearer", authorization: "Basic " + valid, want: connect.CodeUnauthenticated},
 		{name: "expired", authorization: "Bearer " + expired, want: connect.CodeUnauthenticated},

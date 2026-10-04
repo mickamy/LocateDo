@@ -22,7 +22,7 @@ func NewHandlers(infra di.Infra, lib di.Lib) *Handlers {
 	account := handler.NewAccount(infra, lib)
 	household := handler2.NewHousehold(infra)
 	category := handler3.NewCategory()
-	place := handler4.NewPlace()
+	place := handler4.NewPlace(infra)
 	todo := handler5.NewTodo()
 	device := handler6.NewDevice()
 	sync := handler7.NewSync()
