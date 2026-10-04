@@ -1,18 +1,37 @@
+import Observation
 import SwiftUI
 
+@Observable
+private final class ScrollInteraction {
+    var isInteracting = false
+
+    func released() async {
+        while isInteracting && !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+}
+
 private struct SyncRefreshable: ViewModifier {
-    private static let minimumSpin: Duration = .seconds(1)
+    private static let spinAfterRelease: Duration = .seconds(1)
 
     @Environment(Authenticator.self) private var authenticator
     @Environment(SyncEngine.self) private var sync
+    @State private var interaction = ScrollInteraction()
 
     func body(content: Content) -> some View {
         if authenticator.isSignedIn {
-            content.refreshable {
-                async let synced: Void = sync.sync()
-                try? await Task.sleep(for: Self.minimumSpin)
-                await synced
-            }
+            content
+                .onScrollPhaseChange { _, phase in
+                    interaction.isInteracting = phase == .interacting
+                }
+                .refreshable {
+                    async let synced: Void = sync.sync()
+                    // The refresh starts while the finger is still pulling; keep spinning for a moment after release.
+                    await interaction.released()
+                    try? await Task.sleep(for: Self.spinAfterRelease)
+                    await synced
+                }
         } else {
             content
         }
@@ -24,10 +43,13 @@ extension View {
         modifier(SyncRefreshable())
     }
 
+    // Sized from outside the scroll view: containerRelativeFrame follows the refresh inset and leaves the offset stuck.
     func syncRefreshableEmptyState() -> some View {
-        ScrollView {
-            containerRelativeFrame([.horizontal, .vertical])
+        GeometryReader { proxy in
+            ScrollView {
+                frame(width: proxy.size.width, height: proxy.size.height)
+            }
+            .syncRefreshable()
         }
-        .syncRefreshable()
     }
 }
