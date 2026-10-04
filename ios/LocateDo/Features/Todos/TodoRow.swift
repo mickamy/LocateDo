@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TodoRow: View {
+    @Environment(LocalWrites.self) private var writes
     let todo: Todo
 
     var body: some View {
@@ -35,11 +36,7 @@ struct TodoRow: View {
 
     private func toggle() {
         withAnimation {
-            if todo.isCompleted {
-                todo.reopen()
-            } else {
-                todo.complete()
-            }
+            writes.toggleCompletion(todo)
         }
     }
 }

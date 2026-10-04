@@ -69,4 +69,5 @@ struct RootView: View {
             authenticator: authenticator,
             context: container.mainContext
         ))
+        .environment(LocalWrites(context: container.mainContext) { authenticator.isSignedIn })
 }

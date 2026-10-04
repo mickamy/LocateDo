@@ -3,7 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct PlaceDetailView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(GeofenceMonitor.self) private var geofence
@@ -170,15 +170,12 @@ struct PlaceDetailView: View {
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(todos[index])
-        }
+        writes.delete(offsets.map { todos[$0] })
     }
 
     private func deletePlace() {
         dismiss()
-        modelContext.delete(place)
-        try? modelContext.save()
+        writes.delete(place)
         Task {
             await geofence.sync()
         }

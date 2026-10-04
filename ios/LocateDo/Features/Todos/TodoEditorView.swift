@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct TodoEditorView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Place.sortOrder) private var places: [Place]
 
@@ -74,9 +74,7 @@ struct TodoEditorView: View {
         guard let place else {
             return
         }
-        let todo = Todo(title: title.trimmingCharacters(in: .whitespaces), place: place)
-        modelContext.insert(todo)
-        place.todos.append(todo)
+        writes.add(Todo(title: title.trimmingCharacters(in: .whitespaces), place: place))
         dismiss()
     }
 }

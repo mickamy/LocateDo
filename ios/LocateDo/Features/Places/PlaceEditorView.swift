@@ -4,7 +4,7 @@ import SwiftData
 import SwiftUI
 
 struct PlaceEditorView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Environment(GeofenceMonitor.self) private var geofence
     @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
@@ -158,9 +158,9 @@ struct PlaceEditorView: View {
             place.longitude = coordinate.longitude
             place.radiusMeters = radiusMeters
             place.category = category
-            place.updatedAt = .now
+            writes.update(place)
         } else {
-            modelContext.insert(Place(
+            writes.add(Place(
                 name: trimmedName,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
@@ -168,7 +168,6 @@ struct PlaceEditorView: View {
                 category: category
             ))
         }
-        try? modelContext.save()
         onSave?()
         dismiss()
         Task {

@@ -12,6 +12,7 @@ struct LocateDoApp: App {
     private let api: APIClient
     private let authenticator: Authenticator
     private let account: AccountManager
+    private let writes: LocalWrites
 
     init() {
         do {
@@ -32,6 +33,9 @@ struct LocateDoApp: App {
         ) { [preferences, geofence] in
             preferences.reset()
             await geofence.sync()
+        }
+        writes = LocalWrites(context: container.mainContext) { [authenticator] in
+            authenticator.isSignedIn
         }
         if !Self.isRunningTests {
             Analytics.configure()
@@ -55,6 +59,7 @@ struct LocateDoApp: App {
         .environment(geofence)
         .environment(authenticator)
         .environment(account)
+        .environment(writes)
     }
 
     // The unit test host must not trigger location prompts or start location updates.

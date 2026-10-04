@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct TodoListView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(LocalWrites.self) private var writes
     @Environment(AppRouter.self) private var router
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
@@ -111,8 +111,6 @@ struct TodoListView: View {
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(todos[index])
-        }
+        writes.delete(offsets.map { todos[$0] })
     }
 }
