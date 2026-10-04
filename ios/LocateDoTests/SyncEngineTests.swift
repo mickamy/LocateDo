@@ -2,7 +2,6 @@ import Connect
 import Foundation
 import SwiftData
 import SwiftProtobuf
-import Synchronization
 import Testing
 
 @testable import LocateDo
@@ -113,9 +112,142 @@ struct SyncEngineTests {
         #expect(try fixture.queueCount() == 0)
     }
 
+    @Test func syncSendsTheQueueThenPullsEveryPage() async throws {
+        let fixture = try Fixture()
+        let state = try SyncState.current(in: fixture.context)
+        state.cursor = 10
+        try fixture.context.save()
+        try fixture.enqueue([.put(Place(name: "Local", latitude: 35.0, longitude: 139.0))])
+        let placeID = UUID.v7()
+        fixture.pulls.respond(with: [
+            Self.page([.with { $0.place = Self.place(placeID, version: 11) }], cursor: 11, hasMore: true),
+            Self.page([.with { $0.todo = Self.todo(UUID.v7(), placeID: placeID, version: 12) }], cursor: 12, plan: .pro)
+        ])
+
+        await fixture.engine.sync()
+
+        #expect(fixture.services.sent == ["putPlace"])
+        #expect(fixture.pulls.cursors == [10, 11])
+        #expect(fixture.pulls.householdIDs.allSatisfy { $0 == ProtoInput.id(Self.householdID) })
+        #expect(state.cursor == 12)
+        #expect(state.plan == .pro)
+        let pulled = try #require(try fixture.context.fetch(FetchDescriptor<Place>()).first { $0.id == placeID })
+        #expect(pulled.todos.count == 1)
+        #expect(fixture.placeChanges.value == 1)
+    }
+
+    @Test func resetOnAnyPageReplacesLocalData() async throws {
+        let fixture = try Fixture()
+        fixture.context.insert(Place(name: "Local", latitude: 35.0, longitude: 139.0))
+        try fixture.context.save()
+        fixture.pulls.respond(with: [Self.page([], cursor: 30, reset: true)])
+
+        await fixture.engine.sync()
+
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 0)
+        #expect(try SyncState.current(in: fixture.context).cursor == 30)
+        #expect(fixture.placeChanges.value == 1)
+    }
+
+    @Test func failedPullKeepsTheCursorAndAppliesNothing() async throws {
+        let fixture = try Fixture()
+        fixture.pulls.respond(with: [
+            Self.page([.with { $0.place = Self.place(UUID.v7(), version: 1) }], cursor: 1, hasMore: true)
+        ])
+        fixture.pulls.fail(afterPages: 1)
+
+        await fixture.engine.sync()
+
+        #expect(fixture.pulls.cursors == [0, 1])
+        #expect(try SyncState.current(in: fixture.context).cursor == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 0)
+        #expect(fixture.placeChanges.value == 0)
+    }
+
+    @Test func todoOnlyPullsLeaveTheGeofencesAlone() async throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.context.insert(place)
+        try fixture.context.save()
+        fixture.pulls.respond(with: [
+            Self.page([.with { $0.todo = Self.todo(UUID.v7(), placeID: place.id, version: 1) }], cursor: 1)
+        ])
+
+        await fixture.engine.sync()
+
+        #expect(place.todos.count == 1)
+        #expect(fixture.placeChanges.value == 0)
+    }
+
+    @Test func drainAloneDoesNotPull() async throws {
+        let fixture = try Fixture()
+
+        await fixture.engine.drain()
+
+        #expect(fixture.pulls.cursors.isEmpty)
+    }
+
+    @Test func pullWaitsForTheHousehold() async throws {
+        let fixture = try Fixture(householdID: nil)
+
+        await fixture.engine.sync()
+
+        #expect(fixture.pulls.cursors.isEmpty)
+    }
+
+    @Test func aSyncRequestedDuringADrainStillPulls() async throws {
+        let fixture = try Fixture()
+        try fixture.enqueue([.put(Place(name: "Store", latitude: 35.0, longitude: 139.0))])
+
+        async let drained: Void = fixture.engine.drain()
+        async let synced: Void = fixture.engine.sync()
+        _ = await (drained, synced)
+
+        #expect(fixture.services.sent == ["putPlace"])
+        #expect(fixture.pulls.cursors == [0])
+    }
+
+    private static func page(
+        _ changes: [Locatedo_Sync_V1_Change],
+        cursor: Int64,
+        hasMore: Bool = false,
+        reset: Bool = false,
+        plan: Locatedo_Household_V1_Plan = .free
+    ) -> Locatedo_Sync_V1_PullResponse {
+        var response = Locatedo_Sync_V1_PullResponse()
+        response.changes = changes
+        response.cursor = cursor
+        response.hasMore_p = hasMore
+        response.reset = reset
+        response.household.plan = plan
+        return response
+    }
+
+    private static func place(_ id: UUID, version: Int64) -> Locatedo_Place_V1_Place {
+        var place = Locatedo_Place_V1_Place()
+        place.id = ProtoInput.id(id)
+        place.name = "Store"
+        place.lat = 35.0
+        place.lng = 139.0
+        place.radiusM = 100
+        place.version = version
+        return place
+    }
+
+    private static func todo(_ id: UUID, placeID: UUID, version: Int64) -> Locatedo_Todo_V1_Todo {
+        var todo = Locatedo_Todo_V1_Todo()
+        todo.id = ProtoInput.id(id)
+        todo.placeID = ProtoInput.id(placeID)
+        todo.title = "Milk"
+        todo.version = version
+        return todo
+    }
+
     private struct Fixture {
         let context: ModelContext
         let services = FakeWriteServices()
+        let pulls = FakeSyncService()
+        let placeChanges = ResetCounter()
         let engine: SyncEngine
 
         init(signedIn: Bool = true, householdID: UUID? = SyncEngineTests.householdID) throws {
@@ -138,13 +270,17 @@ struct SyncEngineTests {
                 account: FakeAccountService(),
                 tokens: AccessTokenStore()
             )
+            let placeChanges = placeChanges
             engine = SyncEngine(
                 places: services,
                 todos: services,
                 categories: services,
+                syncService: pulls,
                 authenticator: authenticator,
                 context: context
-            )
+            ) {
+                placeChanges.increment()
+            }
         }
 
         func enqueue(_ writes: [Write]) throws {
@@ -157,98 +293,5 @@ struct SyncEngineTests {
         func queueCount() throws -> Int {
             try context.fetchCount(FetchDescriptor<PendingWrite>())
         }
-    }
-}
-
-nonisolated final class FakeWriteServices: Locatedo_Place_V1_PlaceServiceClientInterface,
-    Locatedo_Todo_V1_TodoServiceClientInterface,
-    Locatedo_Category_V1_CategoryServiceClientInterface {
-    private struct State {
-        var sent: [String] = []
-        var householdIDs: [String] = []
-        var failures: [Code] = []
-    }
-
-    private let state = Mutex(State())
-
-    var sent: [String] {
-        state.withLock { $0.sent }
-    }
-
-    var householdIDs: [String] {
-        state.withLock { $0.householdIDs }
-    }
-
-    func fail(with codes: [Code]) {
-        state.withLock { $0.failures = codes }
-    }
-
-    func putPlace(
-        request: Locatedo_Place_V1_PutPlaceRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Place_V1_PutPlaceResponse> {
-        respond("putPlace", householdID: request.householdID)
-    }
-
-    func deletePlace(
-        request: Locatedo_Place_V1_DeletePlaceRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Place_V1_DeletePlaceResponse> {
-        respond("deletePlace")
-    }
-
-    func putTodo(
-        request: Locatedo_Todo_V1_PutTodoRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Todo_V1_PutTodoResponse> {
-        respond("putTodo", householdID: request.householdID)
-    }
-
-    func setTodoCompletion(
-        request: Locatedo_Todo_V1_SetTodoCompletionRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Todo_V1_SetTodoCompletionResponse> {
-        respond("setTodoCompletion")
-    }
-
-    func deleteTodo(
-        request: Locatedo_Todo_V1_DeleteTodoRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Todo_V1_DeleteTodoResponse> {
-        respond("deleteTodo")
-    }
-
-    func putCategory(
-        request: Locatedo_Category_V1_PutCategoryRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Category_V1_PutCategoryResponse> {
-        respond("putCategory", householdID: request.householdID)
-    }
-
-    func deleteCategory(
-        request: Locatedo_Category_V1_DeleteCategoryRequest,
-        headers: Connect.Headers
-    ) async -> ResponseMessage<Locatedo_Category_V1_DeleteCategoryResponse> {
-        respond("deleteCategory")
-    }
-
-    private func respond<Output: ProtobufMessage>(
-        _ name: String,
-        householdID: String? = nil
-    ) -> ResponseMessage<Output> {
-        let failure = state.withLock { state -> Code? in
-            state.sent.append(name)
-            if let householdID {
-                state.householdIDs.append(householdID)
-            }
-            if state.failures.isEmpty {
-                return nil
-            }
-            return state.failures.removeFirst()
-        }
-        if let failure {
-            return ResponseMessage(result: .failure(ConnectError(code: failure, message: nil)))
-        }
-        return ResponseMessage(result: .success(Output()))
     }
 }

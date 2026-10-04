@@ -73,6 +73,7 @@ struct RootView: View {
             places: api.place,
             todos: api.todo,
             categories: api.category,
+            syncService: api.sync,
             authenticator: authenticator,
             context: container.mainContext
         ))

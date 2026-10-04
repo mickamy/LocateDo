@@ -30,9 +30,12 @@ struct LocateDoApp: App {
             places: api.place,
             todos: api.todo,
             categories: api.category,
+            syncService: api.sync,
             authenticator: authenticator,
             context: container.mainContext
-        )
+        ) { [geofence] in
+            await geofence.sync()
+        }
         self.sync = sync
         account = AccountManager(
             account: api.account,

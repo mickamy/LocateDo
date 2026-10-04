@@ -12,28 +12,42 @@ final class SyncEngine {
         case drop
     }
 
+    private struct Pulled {
+        var changes: [Locatedo_Sync_V1_Change] = []
+        var cursor: Int64
+        var reset = false
+        var plan = Plan.free
+    }
+
     private let places: any Locatedo_Place_V1_PlaceServiceClientInterface
     private let todos: any Locatedo_Todo_V1_TodoServiceClientInterface
     private let categories: any Locatedo_Category_V1_CategoryServiceClientInterface
+    private let syncService: any Locatedo_Sync_V1_SyncServiceClientInterface
     private let authenticator: Authenticator
     private let context: ModelContext
+    private let onPlacesChanged: () async -> Void
     @ObservationIgnored private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
     @ObservationIgnored private var inFlight: Task<Void, Never>?
     @ObservationIgnored private var rerunRequested = false
+    @ObservationIgnored private var pullRequested = false
     @ObservationIgnored private var scheduled: Task<Void, Never>?
 
     init(
         places: any Locatedo_Place_V1_PlaceServiceClientInterface,
         todos: any Locatedo_Todo_V1_TodoServiceClientInterface,
         categories: any Locatedo_Category_V1_CategoryServiceClientInterface,
+        syncService: any Locatedo_Sync_V1_SyncServiceClientInterface,
         authenticator: Authenticator,
-        context: ModelContext
+        context: ModelContext,
+        onPlacesChanged: @escaping () async -> Void = {}
     ) {
         self.places = places
         self.todos = todos
         self.categories = categories
+        self.syncService = syncService
         self.authenticator = authenticator
         self.context = context
+        self.onPlacesChanged = onPlacesChanged
     }
 
     @discardableResult
@@ -52,20 +66,90 @@ final class SyncEngine {
     }
 
     func drain() async {
+        await run(pulling: false)
+    }
+
+    func sync() async {
+        await run(pulling: true)
+    }
+
+    private func run(pulling: Bool) async {
+        rerunRequested = true
+        if pulling {
+            pullRequested = true
+        }
         if let inFlight {
-            rerunRequested = true
             await inFlight.value
             return
         }
         let task = Task {
-            repeat {
+            while rerunRequested {
                 rerunRequested = false
+                let pulls = pullRequested
+                pullRequested = false
                 await sendQueuedWrites()
-            } while rerunRequested
+                if pulls {
+                    await pullChanges()
+                }
+            }
+            inFlight = nil
         }
         inFlight = task
         await task.value
-        inFlight = nil
+    }
+
+    private func pullChanges() async {
+        guard authenticator.isSignedIn else {
+            return
+        }
+        do {
+            let state = try SyncState.current(in: context)
+            guard let householdID = state.householdID else {
+                return
+            }
+            let pulled = try await fetchChanges(householdID: householdID, after: state.cursor)
+            let current = try SyncState.current(in: context)
+            guard current.householdID == householdID else {
+                return
+            }
+            let outcome = try ChangeApplier.apply(pulled.changes, reset: pulled.reset, to: context)
+            current.cursor = pulled.cursor
+            current.plan = pulled.plan
+            try context.save()
+            if outcome.placesChanged {
+                await onPlacesChanged()
+            }
+        } catch {
+            logger.notice("Pull failed: \(error, privacy: .public)")
+        }
+    }
+
+    private func fetchChanges(
+        householdID: UUID,
+        after cursor: Int64
+    ) async throws -> Pulled {
+        var pulled = Pulled(cursor: cursor)
+        var hasMore = true
+        let client = syncService
+        while hasMore {
+            let request = Locatedo_Sync_V1_PullRequest.with { [cursor = pulled.cursor] in
+                $0.householdID = ProtoInput.id(householdID)
+                $0.cursor = cursor
+            }
+            let response = try await authenticator.authorized { await client.pull(request: request, headers: [:]) }
+            pulled.changes.append(contentsOf: response.changes)
+            pulled.cursor = response.cursor
+            if response.reset {
+                pulled.reset = true
+            }
+            if response.household.plan == .pro {
+                pulled.plan = .pro
+            } else {
+                pulled.plan = .free
+            }
+            hasMore = response.hasMore_p
+        }
+        return pulled
     }
 
     private func sendQueuedWrites() async {
