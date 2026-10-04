@@ -24,6 +24,15 @@ struct ReinstallGuardTests {
         #expect(defaults.bool(forKey: ReinstallGuard.launchedKey))
     }
 
+    @Test func aFailedClearIsRetriedOnTheNextLaunch() throws {
+        let defaults = try makeDefaults()
+        let store = FailingSessionStore()
+
+        ReinstallGuard.clearStaleSession(defaults: defaults, store: store, hasCompletedOnboarding: false)
+
+        #expect(!defaults.bool(forKey: ReinstallGuard.launchedKey))
+    }
+
     @Test func laterLaunchesLeaveTheSessionAlone() throws {
         let defaults = try makeDefaults()
         defaults.set(true, forKey: ReinstallGuard.launchedKey)
@@ -46,5 +55,19 @@ struct ReinstallGuardTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
         return defaults
+    }
+}
+
+private nonisolated struct FailingSessionStore: SessionStoring {
+    struct Failure: Error {}
+
+    func load() throws -> Session? {
+        nil
+    }
+
+    func save(_ session: Session) throws {}
+
+    func clear() throws {
+        throw Failure()
     }
 }

@@ -9,15 +9,15 @@ nonisolated enum ReinstallGuard {
         if defaults.bool(forKey: launchedKey) {
             return
         }
+        if !hasCompletedOnboarding {
+            do {
+                try store.clear()
+            } catch {
+                Logger(subsystem: "com.locatedo.LocateDo", category: "auth")
+                    .error("Could not clear the session left by a previous install: \(error, privacy: .public)")
+                return
+            }
+        }
         defaults.set(true, forKey: launchedKey)
-        if hasCompletedOnboarding {
-            return
-        }
-        do {
-            try store.clear()
-        } catch {
-            Logger(subsystem: "com.locatedo.LocateDo", category: "auth")
-                .error("Could not clear the session left by a previous install: \(error, privacy: .public)")
-        }
     }
 }
