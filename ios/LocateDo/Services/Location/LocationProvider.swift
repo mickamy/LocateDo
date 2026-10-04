@@ -13,15 +13,6 @@ final class LocationProvider {
         authorizationStatus = manager.authorizationStatus
     }
 
-    var isAwaitingLocation: Bool {
-        switch authorizationStatus {
-        case .authorizedAlways, .authorizedWhenInUse:
-            return location == nil
-        default:
-            return false
-        }
-    }
-
     func start() {
         if updates != nil {
             return

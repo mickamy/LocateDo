@@ -135,13 +135,11 @@ struct PlaceDetailView: View {
     private var addressText: some View {
         switch address {
         case .loading:
-            Text(coordinateString)
-                .redacted(reason: .placeholder)
-                .accessibilityHidden(true)
+            EmptyView()
         case .found(let found):
             Text(found)
         case .unavailable:
-            Text(coordinateString)
+            Text(CoordinateFormatting.string(place.coordinate))
         }
     }
 
@@ -150,15 +148,7 @@ struct PlaceDetailView: View {
         if let location = locationProvider.location {
             let distance = DistanceFormatting.string(meters: location.distance(from: place.location))
             Text(.placeDetailDistance(distance))
-        } else if locationProvider.isAwaitingLocation {
-            Text(.placeDetailDistance(DistanceFormatting.placeholder()))
-                .redacted(reason: .placeholder)
-                .accessibilityHidden(true)
         }
-    }
-
-    private var coordinateString: String {
-        CoordinateFormatting.string(place.coordinate)
     }
 
     private var map: some View {
