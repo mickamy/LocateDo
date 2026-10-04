@@ -1,4 +1,4 @@
-name: server-deploy-dev
+name: server-deploy-stg
 
 on:
   push:
@@ -15,8 +15,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          cd server
-          envsubst < .env.example > .env
+          make -C server .env
 
       - name: Deploy Docker Compose
         run: |
