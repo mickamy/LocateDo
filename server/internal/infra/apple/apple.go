@@ -5,11 +5,9 @@ import (
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -67,22 +65,6 @@ type Client struct {
 
 func NewClient(cfg Config, httpClient *http.Client) Client {
 	return Client{cfg: cfg, http: httpClient, keys: &keySet{}}
-}
-
-func ParsePrivateKey(p8 []byte) (*ecdsa.PrivateKey, error) {
-	block, _ := pem.Decode(p8)
-	if block == nil {
-		return nil, errors.New("decode p8: no PEM block")
-	}
-	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("parse p8: %w", err)
-	}
-	ecKey, ok := key.(*ecdsa.PrivateKey)
-	if !ok {
-		return nil, fmt.Errorf("parse p8: want ECDSA key, got %T", key)
-	}
-	return ecKey, nil
 }
 
 type identityClaims struct {

@@ -8,12 +8,26 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
+    environment: stg
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Create .env file
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          SEAL_KEY: ${{ secrets.SEAL_KEY }}
+          APPLE_BUNDLE_ID: com.locatedo.LocateDo.stg
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+          APPLE_PRIVATE_KEY: ${{ secrets.APPLE_PRIVATE_KEY }}
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+          APNS_PRIVATE_KEY: ${{ secrets.APNS_PRIVATE_KEY }}
+          APNS_TOPIC: com.locatedo.LocateDo.stg
+          APNS_ENVIRONMENT: production
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
+          REVENUECAT_WEBHOOK_AUTH: ${{ secrets.REVENUECAT_WEBHOOK_AUTH }}
         run: |
           make -C server .env
 

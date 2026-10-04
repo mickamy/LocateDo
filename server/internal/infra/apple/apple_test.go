@@ -6,11 +6,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -185,27 +183,6 @@ func TestClient_Revoke(t *testing.T) {
 	assert.Equal(t, "apple-refresh-token", req.Get("token"))
 	assert.Equal(t, "refresh_token", req.Get("token_type_hint"))
 	fake.assertClientSecret(t, req.Get("client_secret"))
-}
-
-func TestParsePrivateKey(t *testing.T) {
-	t.Parallel()
-
-	// arrange
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	require.NoError(t, err)
-	der, err := x509.MarshalPKCS8PrivateKey(key)
-	require.NoError(t, err)
-	p8 := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der})
-
-	// act
-	got, err := apple.ParsePrivateKey(p8)
-
-	// assert
-	require.NoError(t, err)
-	assert.True(t, key.Equal(got))
-
-	_, err = apple.ParsePrivateKey([]byte("not a pem"))
-	require.Error(t, err)
 }
 
 type testClaims struct {

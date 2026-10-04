@@ -12,6 +12,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/infra/revenuecat"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
+	"github.com/mickamy/LocateDo/internal/lib/p8"
 )
 
 const (
@@ -72,7 +73,7 @@ func provideApple(cfg config.Apple) (apple.Auth, error) {
 		KeyID:    cfg.KeyID,
 	}
 	if cfg.PrivateKey != "" {
-		key, err := apple.ParsePrivateKey([]byte(cfg.PrivateKey))
+		key, err := p8.Parse(cfg.PrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("parse APPLE_PRIVATE_KEY: %w", err)
 		}
@@ -93,7 +94,7 @@ func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
 		KeyID:   cfg.KeyID,
 	}
 	if cfg.PrivateKey != "" {
-		key, err := apple.ParsePrivateKey([]byte(cfg.PrivateKey))
+		key, err := p8.Parse(cfg.PrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("parse APNS_PRIVATE_KEY: %w", err)
 		}

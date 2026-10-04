@@ -26,3 +26,5 @@ bin/
 
 # air
 tmp/
+
+credentials/
