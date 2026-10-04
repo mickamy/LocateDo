@@ -12,8 +12,21 @@ struct RootView: View {
     var body: some View {
         if preferences.hasCompletedOnboarding {
             tabs
+                .alert(Text(.sessionEndedTitle), isPresented: sessionEndedNotice) {
+                    Button(.commonOk) {}
+                } message: {
+                    Text(.sessionEndedMessage)
+                }
         } else {
             OnboardingView()
+        }
+    }
+
+    private var sessionEndedNotice: Binding<Bool> {
+        Binding {
+            preferences.hasPendingSessionEndedNotice
+        } set: { isPresented in
+            preferences.hasPendingSessionEndedNotice = isPresented
         }
     }
 

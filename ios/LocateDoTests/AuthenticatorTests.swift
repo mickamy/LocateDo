@@ -104,6 +104,34 @@ struct AuthenticatorTests {
         #expect(tokens.current == nil)
     }
 
+    @Test func onlyARejectedRefreshEndsTheSession() async throws {
+        let account = FakeAccountService()
+        account.enqueue(.failure(ConnectError(code: .unavailable, message: nil)))
+        account.enqueue(.failure(ConnectError(code: .unauthenticated, message: nil)))
+        let authenticator = Authenticator(
+            store: InMemorySessionStore(Self.session(expiresIn: 10)),
+            account: account,
+            tokens: AccessTokenStore()
+        )
+        let ended = ResetCounter()
+        authenticator.onSessionEnded = { ended.increment() }
+
+        await #expect(throws: ConnectError.self) {
+            try await authenticator.refreshIfNeeded()
+        }
+        #expect(ended.value == 0)
+        #expect(authenticator.isSignedIn)
+
+        await #expect(throws: ConnectError.self) {
+            try await authenticator.refreshIfNeeded()
+        }
+        #expect(ended.value == 1)
+
+        try authenticator.signIn(Self.session(expiresIn: 3_600))
+        try authenticator.signOut()
+        #expect(ended.value == 1)
+    }
+
     @Test func concurrentRefreshesShareOneRequest() async throws {
         let account = FakeAccountService()
         account.enqueue(.success(Self.response(accessToken: "access-2", refreshToken: "refresh-2")))
@@ -176,6 +204,7 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
             .failure(ConnectError(code: .unimplemented, message: nil))
         var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest?
         var deleteCalls = 0
+        var signOutTokens: [String] = []
     }
 
     private let state = Mutex(State())
@@ -194,6 +223,10 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
 
     var deleteCalls: Int {
         state.withLock { $0.deleteCalls }
+    }
+
+    var signOutTokens: [String] {
+        state.withLock { $0.signOutTokens }
     }
 
     func enqueue(_ result: Result<Locatedo_Account_V1_RefreshTokenResponse, ConnectError>) {
@@ -244,5 +277,13 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
     ) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse> {
         state.withLock { $0.deleteCalls += 1 }
         return ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountResponse()))
+    }
+
+    func signOut(
+        request: Locatedo_Account_V1_SignOutRequest,
+        headers: Connect.Headers
+    ) async -> ResponseMessage<Locatedo_Account_V1_SignOutResponse> {
+        state.withLock { $0.signOutTokens.append(request.refreshToken) }
+        return ResponseMessage(result: .success(Locatedo_Account_V1_SignOutResponse()))
     }
 }

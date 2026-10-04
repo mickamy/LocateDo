@@ -1,6 +1,7 @@
 import Connect
 import Foundation
 import Observation
+import OSLog
 import SwiftData
 
 @Observable
@@ -19,7 +20,9 @@ final class AccountManager {
     private let context: ModelContext
     private let onLocalDataReset: () async -> Void
     private let onHouseholdReady: () async -> Void
+    private let onSessionEnded: () async -> Void
     private var pendingHouseholdID: UUID?
+    private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "account")
 
     init(
         account: any Locatedo_Account_V1_AccountServiceClientInterface,
@@ -27,7 +30,8 @@ final class AccountManager {
         authenticator: Authenticator,
         context: ModelContext,
         onLocalDataReset: @escaping () async -> Void = {},
-        onHouseholdReady: @escaping () async -> Void = {}
+        onHouseholdReady: @escaping () async -> Void = {},
+        onSessionEnded: @escaping () async -> Void = {}
     ) {
         self.account = account
         self.household = household
@@ -35,6 +39,7 @@ final class AccountManager {
         self.context = context
         self.onLocalDataReset = onLocalDataReset
         self.onHouseholdReady = onHouseholdReady
+        self.onSessionEnded = onSessionEnded
     }
 
     var isSignedIn: Bool {
@@ -132,6 +137,16 @@ final class AccountManager {
         try authenticator.signOut()
         try resetLocalData()
         await onLocalDataReset()
+    }
+
+    func endSession() async {
+        pendingAdoption = nil
+        do {
+            try resetLocalData()
+        } catch {
+            logger.error("Could not clear local data after the session ended: \(error, privacy: .public)")
+        }
+        await onSessionEnded()
     }
 
     private func hasUserData() throws -> Bool {

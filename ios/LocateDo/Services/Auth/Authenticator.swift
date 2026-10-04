@@ -19,6 +19,7 @@ final class Authenticator {
     private let tokens: AccessTokenStore
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "auth")
     private var inFlightRefresh: Task<Void, any Error>?
+    @ObservationIgnored var onSessionEnded: () -> Void = {}
 
     init(
         store: any SessionStoring,
@@ -108,6 +109,7 @@ final class Authenticator {
             if error.code == .unauthenticated || error.code == .permissionDenied {
                 logger.notice("Refresh rejected (\(error.code.name, privacy: .public)); signing out")
                 try signOut()
+                onSessionEnded()
             }
             throw error
         }

@@ -17,11 +17,13 @@ struct AppPreferencesTests {
         preferences.hasCompletedOnboarding = true
         preferences.hasPromptedAlwaysLocation = true
         preferences.defaultRadiusMeters = 250
+        preferences.hasPendingSessionEndedNotice = true
 
         let reloaded = AppPreferences(defaults: defaults)
         #expect(reloaded.hasCompletedOnboarding)
         #expect(reloaded.hasPromptedAlwaysLocation)
         #expect(reloaded.defaultRadiusMeters == 250)
+        #expect(reloaded.hasPendingSessionEndedNotice)
     }
 
     @Test func ignoresAnOutOfRangeStoredRadius() throws {

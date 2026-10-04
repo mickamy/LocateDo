@@ -45,6 +45,9 @@ struct LocateDoApp: App {
         } onHouseholdReady: { [geofence] in
             await sync.sync()
             await geofence.sync()
+        } onSessionEnded: { [preferences, geofence] in
+            preferences.hasPendingSessionEndedNotice = true
+            await geofence.sync()
         }
         writes = LocalWrites(context: container.mainContext) { [authenticator] in
             authenticator.isSignedIn
@@ -56,8 +59,17 @@ struct LocateDoApp: App {
                 await sync.sync()
             }
         }
-        geofence.onArrival = {
+        connectServices()
+    }
+
+    private func connectServices() {
+        geofence.onArrival = { [sync] in
             await sync.sync()
+        }
+        authenticator.onSessionEnded = { [account] in
+            Task {
+                await account.endSession()
+            }
         }
         if !Self.isRunningTests {
             Analytics.configure()

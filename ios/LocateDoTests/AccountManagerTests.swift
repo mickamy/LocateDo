@@ -122,6 +122,27 @@ struct AccountManagerTests {
         #expect(fixture.ready.value == 0)
     }
 
+    @Test func anEndedSessionClearsLocalDataButKeepsPreferences() async throws {
+        let fixture = try Fixture()
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: nil)))
+        try await Self.signIn(fixture)
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.context.insert(place)
+        fixture.context.insert(Todo(title: "Milk", place: place))
+        try PendingWrite.enqueue(.put(place), in: fixture.context)
+        try fixture.context.save()
+
+        await fixture.manager.endSession()
+
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Todo>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<PendingWrite>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<SyncState>()) == 0)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<PlaceCategory>()) == BuiltinCategory.allCases.count)
+        #expect(fixture.ended.value == 1)
+        #expect(fixture.resets.value == 0)
+    }
+
     private static func signIn(_ fixture: Fixture) async throws {
         try await fixture.manager.signInWithApple(
             identityToken: "identity",
@@ -200,6 +221,7 @@ struct AccountManagerTests {
         let household = FakeHouseholdService()
         let resets = ResetCounter()
         let ready = ResetCounter()
+        let ended = ResetCounter()
         let manager: AccountManager
 
         init() throws {
@@ -209,6 +231,7 @@ struct AccountManagerTests {
             let authenticator = Authenticator(store: InMemorySessionStore(), account: account, tokens: tokens)
             let resets = resets
             let ready = ready
+            let ended = ended
             manager = AccountManager(
                 account: account,
                 household: household,
@@ -218,6 +241,8 @@ struct AccountManagerTests {
                 resets.increment()
             } onHouseholdReady: {
                 ready.increment()
+            } onSessionEnded: {
+                ended.increment()
             }
         }
     }

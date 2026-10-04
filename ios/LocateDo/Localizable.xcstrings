@@ -989,6 +989,40 @@
         }
       }
     },
+    "session_ended.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。"
+          }
+        }
+      }
+    },
+    "session_ended.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signed Out"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サインアウトしました"
+          }
+        }
+      }
+    },
     "settings.about.privacy_policy" : {
       "extractionState" : "manual",
       "localizations" : {
