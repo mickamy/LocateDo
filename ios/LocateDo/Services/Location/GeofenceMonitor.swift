@@ -12,6 +12,7 @@ final class GeofenceMonitor {
     private var monitor: CLMonitor?
     private var serviceSession: CLServiceSession?
     private var eventLoop: Task<Void, Never>?
+    private var authorizationWatch: Task<Void, Never>?
     @ObservationIgnored var onArrival: () async -> Void = {}
 
     init(container: ModelContainer, notifier: ArrivalNotifier, locationProvider: LocationProvider) {
@@ -72,7 +73,12 @@ final class GeofenceMonitor {
     }
 
     private func run() async {
-        serviceSession = CLServiceSession(authorization: .always)
+        updateServiceSession(for: locationProvider.authorizationStatus)
+        authorizationWatch = Task { [locationProvider] in
+            for await status in Observations({ locationProvider.authorizationStatus }) {
+                updateServiceSession(for: status)
+            }
+        }
         let monitor = await CLMonitor("LocateDoPlaces")
         self.monitor = monitor
         let monitored = await monitor.identifiers.count
@@ -90,6 +96,19 @@ final class GeofenceMonitor {
             }
         } catch {
             logger.error("Event stream ended: \(error, privacy: .public)")
+        }
+    }
+
+    // Creating a session that requires Always prompts when the status is undetermined, which would preempt onboarding.
+    private func updateServiceSession(for status: CLAuthorizationStatus) {
+        guard status == .authorizedAlways else {
+            serviceSession?.invalidate()
+            serviceSession = nil
+            return
+        }
+        if serviceSession == nil {
+            serviceSession = CLServiceSession(authorization: .always)
+            logger.notice("Service session started")
         }
     }
 
