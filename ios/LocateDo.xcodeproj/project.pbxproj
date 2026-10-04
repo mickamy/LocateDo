@@ -188,7 +188,7 @@
 			);
 			name = "Copy GoogleService-Info.plist";
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
 			);
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Scripts/copy-google-service-info.sh\"";
