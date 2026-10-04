@@ -5,7 +5,10 @@ import (
 	"uuid"
 )
 
-const MaxMembers = 6
+const (
+	MaxMembers    = 6
+	MaxFreePlaces = 3
+)
 
 type Plan string
 

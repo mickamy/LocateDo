@@ -8,6 +8,12 @@ SELECT id, owner_id, plan, created_at
 FROM households
 WHERE id = $1;
 
+-- name: GetHouseholdForUpdate :one
+SELECT id, owner_id, plan, created_at
+FROM households
+WHERE id = $1
+FOR UPDATE;
+
 -- name: DeleteHousehold :execrows
 DELETE
 FROM households

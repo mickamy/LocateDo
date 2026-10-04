@@ -195,6 +195,32 @@ func (q *Queries) GetHousehold(ctx context.Context, id uuid.UUID) (GetHouseholdR
 	return i, err
 }
 
+const getHouseholdForUpdate = `-- name: GetHouseholdForUpdate :one
+SELECT id, owner_id, plan, created_at
+FROM households
+WHERE id = $1
+FOR UPDATE
+`
+
+type GetHouseholdForUpdateRow struct {
+	ID        uuid.UUID
+	OwnerID   uuid.UUID
+	Plan      string
+	CreatedAt time.Time
+}
+
+func (q *Queries) GetHouseholdForUpdate(ctx context.Context, id uuid.UUID) (GetHouseholdForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getHouseholdForUpdate, id)
+	var i GetHouseholdForUpdateRow
+	err := row.Scan(
+		&i.ID,
+		&i.OwnerID,
+		&i.Plan,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getMembershipByUser = `-- name: GetMembershipByUser :one
 SELECT household_id, user_id, role, joined_at
 FROM memberships

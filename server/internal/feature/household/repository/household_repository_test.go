@@ -201,3 +201,28 @@ func householdVersion(t *testing.T, d tdb.DB, id uuid.UUID) int64 {
 		"SELECT version FROM households WHERE id = $1", id).Scan(&v))
 	return v
 }
+
+func TestHousehold_FindForUpdate(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	households := repository.NewHousehold(d.Reader)
+	id := createHousehold(t, d, households, createUser(t, d))
+
+	// act
+	var locked model.Household
+	inTx(t, d, func(tx tx.Tx) {
+		var err error
+		locked, err = households.Bind(tx).FindForUpdate(t.Context(), id)
+		require.NoError(t, err)
+
+		_, err = households.Bind(tx).FindForUpdate(t.Context(), uuid.NewV7())
+		require.ErrorIs(t, err, aerrors.ErrNotFound)
+	})
+	found, err := households.Find(t.Context(), id)
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, found, locked)
+}

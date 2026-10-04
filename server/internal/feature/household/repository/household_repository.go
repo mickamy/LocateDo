@@ -18,6 +18,9 @@ import (
 type Household interface {
 	Create(ctx context.Context, id, ownerID uuid.UUID) (model.Household, error)
 	Find(ctx context.Context, id uuid.UUID) (model.Household, error)
+	// FindForUpdate locks the household row until the transaction ends, so a
+	// plan limit can be checked against a count that no other member changes.
+	FindForUpdate(ctx context.Context, id uuid.UUID) (model.Household, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	// MoveContents moves places, todos, and custom categories from one
 	// household to another; places in a built-in category switch to the
@@ -68,6 +71,22 @@ func (r household) Find(ctx context.Context, id uuid.UUID) (model.Household, err
 	}
 	if err != nil {
 		return model.Household{}, fmt.Errorf("get household: %w", err)
+	}
+	return model.Household{
+		ID:        row.ID,
+		OwnerID:   row.OwnerID,
+		Plan:      model.Plan(row.Plan),
+		CreatedAt: row.CreatedAt,
+	}, nil
+}
+
+func (r household) FindForUpdate(ctx context.Context, id uuid.UUID) (model.Household, error) {
+	row, err := r.q.GetHouseholdForUpdate(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Household{}, aerrors.NotFound("household")
+	}
+	if err != nil {
+		return model.Household{}, fmt.Errorf("get household for update: %w", err)
 	}
 	return model.Household{
 		ID:        row.ID,
