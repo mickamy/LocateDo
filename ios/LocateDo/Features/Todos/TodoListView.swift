@@ -18,10 +18,13 @@ struct TodoListView: View {
             Group {
                 if places.isEmpty {
                     noPlaces
+                        .syncRefreshableEmptyState()
                 } else if todos.isEmpty {
                     empty
+                        .syncRefreshableEmptyState()
                 } else {
                     list
+                        .syncRefreshable()
                 }
             }
             .navigationTitle(Text(.tabTodos))

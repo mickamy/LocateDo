@@ -22,8 +22,10 @@ struct NearbyView: View {
             Group {
                 if places.isEmpty {
                     emptyState
+                        .syncRefreshableEmptyState()
                 } else {
                     list
+                        .syncRefreshable()
                 }
             }
             .navigationTitle(Text(.tabHome))

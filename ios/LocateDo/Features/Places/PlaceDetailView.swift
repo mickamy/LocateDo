@@ -74,6 +74,7 @@ struct PlaceDetailView: View {
                 }
             }
         }
+        .syncRefreshable()
         .navigationTitle(place.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
