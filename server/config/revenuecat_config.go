@@ -1,12 +1,15 @@
 package config
 
 // RevenueCat is optional in development: without a webhook secret the
-// webhook refuses every call, and without an API key plans stay as they are.
+// webhook refuses every call, and without API access plans stay as they are.
+// The API key is a v2 secret key with read access to customer information;
+// the entitlement is its id (entl…), since v2 does not return lookup keys.
 type RevenueCat struct {
-	BaseURL     string `env:"REVENUECAT_BASE_URL"     envDefault:"https://api.revenuecat.com"`
-	APIKey      string `env:"REVENUECAT_API_KEY"`
-	WebhookAuth string `env:"REVENUECAT_WEBHOOK_AUTH"`
-	Entitlement string `env:"REVENUECAT_ENTITLEMENT"  envDefault:"pro"`
+	BaseURL       string `env:"REVENUECAT_BASE_URL"       envDefault:"https://api.revenuecat.com"`
+	APIKey        string `env:"REVENUECAT_API_KEY"`
+	ProjectID     string `env:"REVENUECAT_PROJECT_ID"`
+	EntitlementID string `env:"REVENUECAT_ENTITLEMENT_ID"`
+	WebhookAuth   string `env:"REVENUECAT_WEBHOOK_AUTH"`
 }
 
 func ParseRevenueCat() RevenueCat {

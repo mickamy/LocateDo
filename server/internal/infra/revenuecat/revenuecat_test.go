@@ -3,6 +3,7 @@ package revenuecat_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -14,19 +15,42 @@ import (
 
 var now = time.Date(2026, 10, 4, 12, 0, 0, 0, time.UTC)
 
+const (
+	projectID     = "proj1234"
+	entitlementID = "entl5678"
+)
+
+func millis(t time.Time) string {
+	return strconv.FormatInt(t.UnixMilli(), 10)
+}
+
 func TestClient_Active(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
-		body string
-		want bool
+		name   string
+		status int
+		body   string
+		want   bool
 	}{
-		{name: "active", body: `{"subscriber":{"entitlements":{"pro":{"expires_date":"2026-11-01T00:00:00Z"}}}}`, want: true},
-		{name: "lifetime", body: `{"subscriber":{"entitlements":{"pro":{"expires_date":null}}}}`, want: true},
-		{name: "expired", body: `{"subscriber":{"entitlements":{"pro":{"expires_date":"2026-10-01T00:00:00Z"}}}}`},
-		{name: "never bought", body: `{"subscriber":{"entitlements":{}}}`},
-		{name: "another entitlement", body: `{"subscriber":{"entitlements":{"plus":{"expires_date":null}}}}`},
+		{
+			name: "active", status: http.StatusOK, want: true,
+			body: `{"items":[{"entitlement_id":"entl5678","expires_at":` + millis(now.Add(time.Hour)) + `}]}`,
+		},
+		{
+			name: "lifetime", status: http.StatusOK, want: true,
+			body: `{"items":[{"entitlement_id":"entl5678","expires_at":null}]}`,
+		},
+		{
+			name: "expired", status: http.StatusOK,
+			body: `{"items":[{"entitlement_id":"entl5678","expires_at":` + millis(now.Add(-time.Hour)) + `}]}`,
+		},
+		{
+			name: "another entitlement", status: http.StatusOK,
+			body: `{"items":[{"entitlement_id":"entl0000","expires_at":null}]}`,
+		},
+		{name: "nothing active", status: http.StatusOK, body: `{"items":[]}`},
+		{name: "unknown customer", status: http.StatusNotFound, body: `{}`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -35,22 +59,20 @@ func TestClient_Active(t *testing.T) {
 			// arrange
 			var path, authorization string
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				path = r.URL.Path
+				path = r.URL.EscapedPath()
 				authorization = r.Header.Get("Authorization")
+				w.WriteHeader(tt.status)
 				_, _ = w.Write([]byte(tt.body))
 			}))
 			t.Cleanup(srv.Close)
-			client := revenuecat.NewClient(revenuecat.Config{
-				BaseURL: srv.URL, APIKey: "sk_test", Entitlement: "pro",
-			}, srv.Client())
 
 			// act
-			got, err := client.Active(t.Context(), "user-1", now)
+			got, err := client(srv).Active(t.Context(), "user-1", now)
 
 			// assert
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
-			assert.Equal(t, "/v1/subscribers/user-1", path)
+			assert.Equal(t, "/v2/projects/proj1234/customers/user-1/active_entitlements", path)
 			assert.Equal(t, "Bearer sk_test", authorization)
 		})
 	}
@@ -61,17 +83,22 @@ func TestClient_Active_failures(t *testing.T) {
 
 	// arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusForbidden)
 	}))
 	t.Cleanup(srv.Close)
 
 	// act
-	_, failed := revenuecat.NewClient(revenuecat.Config{BaseURL: srv.URL, APIKey: "sk_test", Entitlement: "pro"},
-		srv.Client()).Active(t.Context(), "user-1", now)
-	_, unconfigured := revenuecat.NewClient(revenuecat.Config{BaseURL: srv.URL}, srv.Client()).
+	_, failed := client(srv).Active(t.Context(), "user-1", now)
+	_, unconfigured := revenuecat.NewClient(revenuecat.Config{BaseURL: srv.URL, APIKey: "sk_test"}, srv.Client()).
 		Active(t.Context(), "user-1", now)
 
 	// assert
-	require.ErrorContains(t, failed, "500")
+	require.ErrorContains(t, failed, "403", "a key without the read permission")
 	require.ErrorIs(t, unconfigured, revenuecat.ErrNotConfigured)
+}
+
+func client(srv *httptest.Server) revenuecat.Client {
+	return revenuecat.NewClient(revenuecat.Config{
+		BaseURL: srv.URL, APIKey: "sk_test", ProjectID: projectID, EntitlementID: entitlementID,
+	}, srv.Client())
 }

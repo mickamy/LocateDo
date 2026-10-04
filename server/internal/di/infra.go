@@ -105,8 +105,9 @@ func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
 
 func provideRevenueCat(cfg config.RevenueCat) revenuecat.Entitlements {
 	return revenuecat.NewClient(revenuecat.Config{
-		BaseURL:     cfg.BaseURL,
-		APIKey:      cfg.APIKey,
-		Entitlement: cfg.Entitlement,
+		BaseURL:       cfg.BaseURL,
+		APIKey:        cfg.APIKey,
+		ProjectID:     cfg.ProjectID,
+		EntitlementID: cfg.EntitlementID,
 	}, &http.Client{Timeout: revenueCatTimeout})
 }
