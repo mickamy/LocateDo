@@ -27,11 +27,11 @@ func TestPushHousehold_wakesEveryMembersIOSDevice(t *testing.T) {
 	d := tdb.New(t)
 	h := d.Seeder.Household(t, hmodel.PlanPro)
 	memberID := d.Seeder.Member(t, h.ID)
-	device(t, d, h.OwnerID, "ios", "owner-phone")
-	device(t, d, memberID, "ios", "member-phone")
-	device(t, d, memberID, "android", "member-android")
+	device(t, d, h.OwnerID, "ios", "production", "owner-phone")
+	device(t, d, memberID, "ios", "sandbox", "member-phone")
+	device(t, d, memberID, "android", "", "member-android")
 	outsider := d.Seeder.Household(t, hmodel.PlanPro)
-	device(t, d, outsider.OwnerID, "ios", "stranger-phone")
+	device(t, d, outsider.OwnerID, "ios", "production", "stranger-phone")
 	pusher := &fakePusher{}
 
 	// act
@@ -40,6 +40,8 @@ func TestPushHousehold_wakesEveryMembersIOSDevice(t *testing.T) {
 	// assert
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"owner-phone", "member-phone"}, pusher.woken())
+	assert.Equal(t, apns.Production, pusher.environment("owner-phone"))
+	assert.Equal(t, apns.Sandbox, pusher.environment("member-phone"))
 }
 
 func TestPushHousehold_forgetsUnregisteredTokens(t *testing.T) {
@@ -48,8 +50,8 @@ func TestPushHousehold_forgetsUnregisteredTokens(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	h := d.Seeder.Household(t, hmodel.PlanFree)
-	device(t, d, h.OwnerID, "ios", "stale")
-	device(t, d, h.OwnerID, "ios", "fresh")
+	device(t, d, h.OwnerID, "ios", "production", "stale")
+	device(t, d, h.OwnerID, "ios", "production", "fresh")
 	pusher := &fakePusher{fail: map[string]error{"stale": apns.ErrUnregistered}}
 
 	// act
@@ -66,8 +68,8 @@ func TestPushHousehold_retriesOtherFailures(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	h := d.Seeder.Household(t, hmodel.PlanFree)
-	device(t, d, h.OwnerID, "ios", "flaky")
-	device(t, d, h.OwnerID, "ios", "fine")
+	device(t, d, h.OwnerID, "ios", "production", "flaky")
+	device(t, d, h.OwnerID, "ios", "production", "fine")
 	pusher := &fakePusher{fail: map[string]error{"flaky": errors.New("status 503")}}
 
 	// act
@@ -110,17 +112,22 @@ type fakePusher struct {
 
 	mu   sync.Mutex
 	woke []string
+	envs map[string]apns.Environment
 }
 
 var _ apns.Pusher = (*fakePusher)(nil)
 
-func (f *fakePusher) Wake(_ context.Context, token string, _ time.Time) error {
+func (f *fakePusher) Wake(_ context.Context, env apns.Environment, token string, _ time.Time) error {
 	if err := f.fail[token]; err != nil {
 		return err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.woke = append(f.woke, token)
+	if f.envs == nil {
+		f.envs = map[string]apns.Environment{}
+	}
+	f.envs[token] = env
 	return nil
 }
 
@@ -128,6 +135,12 @@ func (f *fakePusher) woken() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return slices.Clone(f.woke)
+}
+
+func (f *fakePusher) environment(token string) apns.Environment {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.envs[token]
 }
 
 func pushJob(d tdb.DB, pusher apns.Pusher) *job.PushHousehold {
@@ -144,11 +157,12 @@ func pushMessage(t *testing.T, householdID uuid.UUID) outbox.Message {
 	return outbox.Message{Kind: outbox.KindPushHousehold, Payload: payload}
 }
 
-func device(t *testing.T, d tdb.DB, userID uuid.UUID, platform, token string) {
+func device(t *testing.T, d tdb.DB, userID uuid.UUID, platform, env, token string) {
 	t.Helper()
 
 	_, err := d.Writer.Exec(t.Context(),
-		"INSERT INTO devices (user_id, platform, push_token) VALUES ($1, $2, $3)", userID, platform, token)
+		"INSERT INTO devices (user_id, platform, apns_environment, push_token) VALUES ($1, $2, NULLIF($3, ''), $4)",
+		userID, platform, env, token)
 	require.NoError(t, err)
 }
 

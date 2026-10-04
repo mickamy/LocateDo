@@ -34,7 +34,6 @@ DB_NAME = locatedo
 	SEAL_KEY="$${SEAL_KEY:-$$(openssl rand -base64 32)}" \
 	APPLE_BUNDLE_ID="$${APPLE_BUNDLE_ID:-com.locatedo.LocateDo.dev}" \
 	APNS_TOPIC="$${APNS_TOPIC:-com.locatedo.LocateDo.dev}" \
-	APNS_ENVIRONMENT="$${APNS_ENVIRONMENT:-sandbox}" \
 	envsubst < .env.example > $@
 
 build:

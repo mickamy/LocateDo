@@ -83,15 +83,12 @@ func provideApple(cfg config.Apple) (apple.Auth, error) {
 }
 
 func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
-	baseURL := apns.ProductionURL
-	if cfg.Environment == "sandbox" {
-		baseURL = apns.SandboxURL
-	}
 	apnsCfg := apns.Config{
-		BaseURL: baseURL,
-		Topic:   cfg.Topic,
-		TeamID:  appleCfg.TeamID,
-		KeyID:   cfg.KeyID,
+		ProductionURL: apns.ProductionURL,
+		SandboxURL:    apns.SandboxURL,
+		Topic:         cfg.Topic,
+		TeamID:        appleCfg.TeamID,
+		KeyID:         cfg.KeyID,
 	}
 	if cfg.PrivateKey != "" {
 		key, err := p8.Parse(cfg.PrivateKey)

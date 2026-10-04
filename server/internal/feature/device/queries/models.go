@@ -3,3 +3,18 @@
 //   sqlc v1.31.1
 
 package queries
+
+import (
+	"time"
+
+	"uuid"
+)
+
+type Device struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	Platform        string
+	PushToken       string
+	ApnsEnvironment *string
+	LastSeenAt      time.Time
+}

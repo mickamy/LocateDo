@@ -16,8 +16,8 @@ type Device interface {
 	// Upsert registers the token for the device's user, taking it over from
 	// whoever held it before.
 	Upsert(ctx context.Context, d model.Device) error
-	// PushTokens lists the tokens of every member's devices on the platform.
-	PushTokens(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]string, error)
+	// ListByHousehold lists every member's devices on the platform.
+	ListByHousehold(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]model.Device, error)
 	DeleteByToken(ctx context.Context, platform model.Platform, token string) error
 	DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error
 	Bind(tx tx.Tx) Device
@@ -59,15 +59,34 @@ func (r device) Upsert(ctx context.Context, d model.Device) error {
 	return nil
 }
 
-func (r device) PushTokens(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]string, error) {
-	tokens, err := r.q.ListHouseholdPushTokens(ctx, queries.ListHouseholdPushTokensParams{
+func (r device) ListByHousehold(
+	ctx context.Context,
+	householdID uuid.UUID,
+	platform model.Platform,
+) ([]model.Device, error) {
+	rows, err := r.q.ListHouseholdDevices(ctx, queries.ListHouseholdDevicesParams{
 		HouseholdID: householdID,
 		Platform:    string(platform),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("list push tokens: %w", err)
+		return nil, fmt.Errorf("list devices: %w", err)
 	}
-	return tokens, nil
+	devices := make([]model.Device, 0, len(rows))
+	for _, row := range rows {
+		var env model.APNsEnvironment
+		if row.ApnsEnvironment != nil {
+			env = model.APNsEnvironment(*row.ApnsEnvironment)
+		}
+		devices = append(devices, model.Device{
+			ID:              row.ID,
+			UserID:          row.UserID,
+			Platform:        model.Platform(row.Platform),
+			PushToken:       row.PushToken,
+			APNsEnvironment: env,
+			LastSeenAt:      row.LastSeenAt,
+		})
+	}
+	return devices, nil
 }
 
 func (r device) DeleteByToken(ctx context.Context, platform model.Platform, token string) error {

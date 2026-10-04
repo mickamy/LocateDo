@@ -71,7 +71,7 @@ func newFakeAPNs(t *testing.T) *fakeAPNs {
 
 func (f *fakeAPNs) client(key *ecdsa.PrivateKey) apns.Client {
 	return apns.NewClient(apns.Config{
-		BaseURL: f.srv.URL, Topic: topic, TeamID: teamID, KeyID: keyID, PrivateKey: key,
+		ProductionURL: f.srv.URL, SandboxURL: f.srv.URL, Topic: topic, TeamID: teamID, KeyID: keyID, PrivateKey: key,
 	}, f.srv.Client())
 }
 
@@ -82,7 +82,7 @@ func TestClient_Wake(t *testing.T) {
 	f := newFakeAPNs(t)
 
 	// act
-	err := f.client(f.key).Wake(t.Context(), "abc123", now)
+	err := f.client(f.key).Wake(t.Context(), apns.Production, "abc123", now)
 
 	// assert
 	require.NoError(t, err)
@@ -106,6 +106,42 @@ func TestClient_Wake(t *testing.T) {
 	assert.Equal(t, teamID, issuer)
 }
 
+func TestClient_Wake_picksTheHostByEnvironment(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	production := newFakeAPNs(t)
+	sandbox := newFakeAPNs(t)
+	c := apns.NewClient(apns.Config{
+		ProductionURL: production.srv.URL, SandboxURL: sandbox.srv.URL,
+		Topic: topic, TeamID: teamID, KeyID: keyID, PrivateKey: production.key,
+	}, production.srv.Client())
+
+	// act
+	require.NoError(t, c.Wake(t.Context(), apns.Production, "release-build", now))
+	require.NoError(t, c.Wake(t.Context(), apns.Sandbox, "xcode-build", now))
+
+	// assert
+	require.Len(t, production.requests, 1)
+	require.Len(t, sandbox.requests, 1)
+	assert.Equal(t, "/3/device/release-build", production.requests[0].path)
+	assert.Equal(t, "/3/device/xcode-build", sandbox.requests[0].path)
+}
+
+func TestClient_Wake_unknownEnvironment(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+
+	// act
+	err := f.client(f.key).Wake(t.Context(), "", "abc123", now)
+
+	// assert
+	require.ErrorContains(t, err, "unknown APNs environment")
+	assert.Empty(t, f.requests)
+}
+
 func TestClient_Wake_reusesTheProviderTokenWithinItsLifetime(t *testing.T) {
 	t.Parallel()
 
@@ -114,9 +150,9 @@ func TestClient_Wake_reusesTheProviderTokenWithinItsLifetime(t *testing.T) {
 	c := f.client(f.key)
 
 	// act
-	require.NoError(t, c.Wake(t.Context(), "a", now))
-	require.NoError(t, c.Wake(t.Context(), "b", now.Add(30*time.Minute)))
-	require.NoError(t, c.Wake(t.Context(), "c", now.Add(55*time.Minute)))
+	require.NoError(t, c.Wake(t.Context(), apns.Production, "a", now))
+	require.NoError(t, c.Wake(t.Context(), apns.Production, "b", now.Add(30*time.Minute)))
+	require.NoError(t, c.Wake(t.Context(), apns.Production, "c", now.Add(55*time.Minute)))
 
 	// assert
 	assert.Equal(t, f.requests[0].authorization, f.requests[1].authorization)
@@ -147,7 +183,7 @@ func TestClient_Wake_errors(t *testing.T) {
 			f.reason = tt.reason
 
 			// act
-			err := f.client(f.key).Wake(t.Context(), "abc123", now)
+			err := f.client(f.key).Wake(t.Context(), apns.Production, "abc123", now)
 
 			// assert
 			require.Error(t, err)
@@ -164,7 +200,7 @@ func TestClient_Wake_notConfigured(t *testing.T) {
 	f := newFakeAPNs(t)
 
 	// act
-	err := f.client(nil).Wake(t.Context(), "abc123", now)
+	err := f.client(nil).Wake(t.Context(), apns.Production, "abc123", now)
 
 	// assert
 	require.NoError(t, err)

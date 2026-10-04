@@ -36,17 +36,17 @@ func (j PushHousehold) Handle(ctx context.Context, m outbox.Message) error {
 	if err := json.Unmarshal(m.Payload, &payload); err != nil {
 		return fmt.Errorf("decode push: %w", err)
 	}
-	tokens, err := j.devices.PushTokens(ctx, payload.HouseholdID, model.PlatformIOS)
+	devices, err := j.devices.ListByHousehold(ctx, payload.HouseholdID, model.PlatformIOS)
 	if err != nil {
 		return fmt.Errorf("list devices: %w", err)
 	}
 
 	var failed []error
-	for _, token := range tokens {
-		err := j.pusher.Wake(ctx, token, clock.Now(ctx))
+	for _, d := range devices {
+		err := j.pusher.Wake(ctx, apns.Environment(d.APNsEnvironment), d.PushToken, clock.Now(ctx))
 		switch {
 		case errors.Is(err, apns.ErrUnregistered):
-			if err := j.forget(ctx, token); err != nil {
+			if err := j.forget(ctx, d.PushToken); err != nil {
 				failed = append(failed, err)
 			}
 		case err != nil:

@@ -31,19 +31,29 @@ const (
 // the caller should forget it.
 var ErrUnregistered = errors.New("apns: device token is no longer valid")
 
+// Environment is the APNs environment a device token was issued for: Xcode
+// builds get sandbox tokens, TestFlight and App Store builds production ones.
+type Environment string
+
+const (
+	Sandbox    Environment = "sandbox"
+	Production Environment = "production"
+)
+
 type Pusher interface {
 	// Wake sends a silent push that lets the app run in the background.
-	Wake(ctx context.Context, deviceToken string, now time.Time) error
+	Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error
 }
 
 var _ Pusher = Client{}
 
 type Config struct {
-	BaseURL    string
-	Topic      string
-	TeamID     string
-	KeyID      string
-	PrivateKey *ecdsa.PrivateKey
+	ProductionURL string
+	SandboxURL    string
+	Topic         string
+	TeamID        string
+	KeyID         string
+	PrivateKey    *ecdsa.PrivateKey
 }
 
 // Client sends background pushes over APNs with token-based authentication.
@@ -59,10 +69,19 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 
 var background = []byte(`{"aps":{"content-available":1}}`)
 
-func (c Client) Wake(ctx context.Context, deviceToken string, now time.Time) error {
+func (c Client) Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error {
 	if c.cfg.PrivateKey == nil {
 		logger.Debug(ctx, "apns is not configured; dropping push", "token", deviceToken)
 		return nil
+	}
+	var baseURL string
+	switch env {
+	case Sandbox:
+		baseURL = c.cfg.SandboxURL
+	case Production:
+		baseURL = c.cfg.ProductionURL
+	default:
+		return fmt.Errorf("unknown APNs environment %q", env)
 	}
 	bearer, err := c.token.get(c.cfg, now)
 	if err != nil {
@@ -70,7 +89,7 @@ func (c Client) Wake(ctx context.Context, deviceToken string, now time.Time) err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.cfg.BaseURL+"/3/device/"+deviceToken, bytes.NewReader(background))
+		baseURL+"/3/device/"+deviceToken, bytes.NewReader(background))
 	if err != nil {
 		return fmt.Errorf("new request: %w", err)
 	}
