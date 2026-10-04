@@ -22,6 +22,9 @@ const (
 	KindRevokeAppleToken Kind = "revoke_apple_token"
 )
 
+// DeadRetention is how long a dead message is kept for inspection.
+const DeadRetention = 7 * 24 * time.Hour
+
 type Message struct {
 	ID        uuid.UUID
 	Kind      Kind
@@ -51,6 +54,8 @@ type Repository interface {
 	Complete(ctx context.Context, id uuid.UUID) error
 	Retry(ctx context.Context, id uuid.UUID, runAt time.Time, lastError string) error
 	Kill(ctx context.Context, id uuid.UUID, lastError string) error
+	// SweepDead removes dead messages created before the cutoff and reports how many.
+	SweepDead(ctx context.Context, before time.Time) (int, error)
 	Bind(tx tx.Tx) Repository
 }
 
@@ -121,4 +126,12 @@ func (r repository) Kill(ctx context.Context, id uuid.UUID, lastError string) er
 		return fmt.Errorf("kill message: %w", err)
 	}
 	return nil
+}
+
+func (r repository) SweepDead(ctx context.Context, before time.Time) (int, error) {
+	n, err := r.q.SweepDeadMessages(ctx, before)
+	if err != nil {
+		return 0, fmt.Errorf("sweep dead messages: %w", err)
+	}
+	return int(n), nil
 }

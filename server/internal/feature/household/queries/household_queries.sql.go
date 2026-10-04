@@ -62,7 +62,7 @@ func (q *Queries) CountMemberships(ctx context.Context, householdID uuid.UUID) (
 const createHousehold = `-- name: CreateHousehold :one
 INSERT INTO households (id, owner_id)
 VALUES ($1, $2)
-RETURNING id, owner_id, plan, version, created_at
+RETURNING id, owner_id, plan, version, swept_version, created_at
 `
 
 type CreateHouseholdParams struct {
@@ -78,6 +78,7 @@ func (q *Queries) CreateHousehold(ctx context.Context, arg CreateHouseholdParams
 		&i.OwnerID,
 		&i.Plan,
 		&i.Version,
+		&i.SweptVersion,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -165,7 +166,7 @@ func (q *Queries) DeleteMembership(ctx context.Context, arg DeleteMembershipPara
 }
 
 const getHousehold = `-- name: GetHousehold :one
-SELECT id, owner_id, plan, version, created_at
+SELECT id, owner_id, plan, version, swept_version, created_at
 FROM households
 WHERE id = $1
 `
@@ -178,13 +179,14 @@ func (q *Queries) GetHousehold(ctx context.Context, id uuid.UUID) (Household, er
 		&i.OwnerID,
 		&i.Plan,
 		&i.Version,
+		&i.SweptVersion,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getHouseholdForUpdate = `-- name: GetHouseholdForUpdate :one
-SELECT id, owner_id, plan, version, created_at
+SELECT id, owner_id, plan, version, swept_version, created_at
 FROM households
 WHERE id = $1
 FOR UPDATE
@@ -198,6 +200,7 @@ func (q *Queries) GetHouseholdForUpdate(ctx context.Context, id uuid.UUID) (Hous
 		&i.OwnerID,
 		&i.Plan,
 		&i.Version,
+		&i.SweptVersion,
 		&i.CreatedAt,
 	)
 	return i, err

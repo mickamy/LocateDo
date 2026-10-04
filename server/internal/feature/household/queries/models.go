@@ -11,9 +11,10 @@ import (
 )
 
 type Household struct {
-	ID        uuid.UUID
-	OwnerID   uuid.UUID
-	Plan      string
-	Version   int64
-	CreatedAt time.Time
+	ID           uuid.UUID
+	OwnerID      uuid.UUID
+	Plan         string
+	Version      int64
+	SweptVersion int64
+	CreatedAt    time.Time
 }

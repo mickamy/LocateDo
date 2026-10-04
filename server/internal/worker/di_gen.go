@@ -16,7 +16,10 @@ func NewWorker(infra di.Infra, lib di.Lib) *Worker {
 	revokeAppleToken := job.NewRevokeAppleToken(infra, lib)
 	handlers := NewHandlers(revokeAppleToken)
 	consumer := NewConsumer(transactor, repository, handlers)
-	tasks := NewTasks()
+	sweepTombstones := job.NewSweepTombstones(infra)
+	sweepRefreshTokens := job.NewSweepRefreshTokens(infra)
+	sweepDeadMessages := job.NewSweepDeadMessages(infra)
+	tasks := NewTasks(sweepTombstones, sweepRefreshTokens, sweepDeadMessages)
 	scheduler := NewScheduler(tasks)
 
 	return &Worker{

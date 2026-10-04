@@ -55,6 +55,7 @@ func (h *Sync) Pull(
 		Changes:   changes,
 		Cursor:    out.Cursor,
 		HasMore:   out.HasMore,
+		Reset_:    out.Reset,
 		Household: hmapper.HouseholdToHouseholdv1(out.Household),
 	}), nil
 }

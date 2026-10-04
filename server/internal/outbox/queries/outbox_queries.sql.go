@@ -116,3 +116,18 @@ func (q *Queries) RetryMessage(ctx context.Context, arg RetryMessageParams) erro
 	_, err := q.db.Exec(ctx, retryMessage, arg.ID, arg.RunAt, arg.LastError)
 	return err
 }
+
+const sweepDeadMessages = `-- name: SweepDeadMessages :execrows
+DELETE
+FROM outbox_messages
+WHERE status = 'dead'
+  AND created_at < $1
+`
+
+func (q *Queries) SweepDeadMessages(ctx context.Context, createdAt time.Time) (int64, error) {
+	result, err := q.db.Exec(ctx, sweepDeadMessages, createdAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}

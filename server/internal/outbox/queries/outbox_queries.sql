@@ -25,6 +25,12 @@ SET attempts   = attempts + 1,
     last_error = $3
 WHERE id = $1;
 
+-- name: SweepDeadMessages :execrows
+DELETE
+FROM outbox_messages
+WHERE status = 'dead'
+  AND created_at < $1;
+
 -- name: KillMessage :exec
 UPDATE outbox_messages
 SET attempts   = attempts + 1,

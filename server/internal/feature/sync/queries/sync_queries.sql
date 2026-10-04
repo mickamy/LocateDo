@@ -31,6 +31,17 @@ WHERE household_id = $1
 ORDER BY version
 LIMIT $3;
 
+-- name: SweepDeletions :many
+DELETE
+FROM deletions
+WHERE deleted_at < $1
+RETURNING household_id, version;
+
+-- name: RaiseSweptVersion :exec
+UPDATE households
+SET swept_version = GREATEST(swept_version, sqlc.arg(version))
+WHERE id = sqlc.arg(id);
+
 -- name: ListDeletions :many
 SELECT table_name, row_id, version
 FROM deletions

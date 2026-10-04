@@ -40,6 +40,11 @@ DELETE
 FROM refresh_tokens
 WHERE family_id = $1;
 
+-- name: DeleteExpiredRefreshTokens :execrows
+DELETE
+FROM refresh_tokens
+WHERE expires_at < $1;
+
 -- name: UpsertAppleToken :exec
 INSERT INTO apple_tokens (user_id, refresh_token_ciphertext)
 VALUES ($1, $2)

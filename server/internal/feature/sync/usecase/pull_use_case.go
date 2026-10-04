@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"math"
 	"slices"
 	"uuid"
 
@@ -28,11 +29,14 @@ type PullInput struct {
 
 // PullOutput is one page of the household's version-ordered stream. Cursor is
 // what the device sends next: the last change's version while HasMore is
-// set, otherwise the household version the page was read at.
+// set, otherwise the household version the page was read at. Reset means the
+// cursor predated swept tombstones; the page then holds the whole household
+// and the device drops its local copy before applying it.
 type PullOutput struct {
 	Changes   []model.Change
 	Cursor    int64
 	HasMore   bool
+	Reset     bool
 	Household hmodel.Household
 }
 
@@ -59,28 +63,36 @@ func (uc Pull) Do(ctx context.Context, in PullInput) (PullOutput, error) {
 			return fmt.Errorf("find household: %w", err)
 		}
 		changes := uc.changes.Bind(tx)
+		// A cursor older than the swept tombstones may have missed deletions,
+		// so the device gets the whole household in one unpaged response.
+		reset := in.Cursor > 0 && in.Cursor < h.SweptVersion
+		cursor := in.Cursor
 		// One row past the page from every table tells whether more follow.
 		fetch := limit + 1
+		if reset {
+			cursor = 0
+			fetch = math.MaxInt32
+		}
 
-		memberships, err := changes.Memberships(ctx, in.HouseholdID, in.Cursor, fetch)
+		memberships, err := changes.Memberships(ctx, in.HouseholdID, cursor, fetch)
 		if err != nil {
 			return fmt.Errorf("list memberships: %w", err)
 		}
-		categories, err := changes.Categories(ctx, in.HouseholdID, in.Cursor, fetch)
+		categories, err := changes.Categories(ctx, in.HouseholdID, cursor, fetch)
 		if err != nil {
 			return fmt.Errorf("list categories: %w", err)
 		}
-		places, err := changes.Places(ctx, in.HouseholdID, in.Cursor, fetch)
+		places, err := changes.Places(ctx, in.HouseholdID, cursor, fetch)
 		if err != nil {
 			return fmt.Errorf("list places: %w", err)
 		}
-		todos, err := changes.Todos(ctx, in.HouseholdID, in.Cursor, fetch)
+		todos, err := changes.Todos(ctx, in.HouseholdID, cursor, fetch)
 		if err != nil {
 			return fmt.Errorf("list todos: %w", err)
 		}
 		var deletions []model.Deletion
-		if in.Cursor > 0 {
-			if deletions, err = changes.Deletions(ctx, in.HouseholdID, in.Cursor, fetch); err != nil {
+		if cursor > 0 {
+			if deletions, err = changes.Deletions(ctx, in.HouseholdID, cursor, fetch); err != nil {
 				return fmt.Errorf("list deletions: %w", err)
 			}
 		}
@@ -103,15 +115,15 @@ func (uc Pull) Do(ctx context.Context, in PullInput) (PullOutput, error) {
 		}
 		slices.SortFunc(all, func(a, b model.Change) int { return cmp.Compare(a.Version, b.Version) })
 
-		hasMore := len(all) > int(limit)
+		hasMore := !reset && len(all) > int(limit)
 		if hasMore {
 			all = all[:limit]
 		}
-		cursor := h.Version
+		next := h.Version
 		if hasMore {
-			cursor = all[len(all)-1].Version
+			next = all[len(all)-1].Version
 		}
-		out = PullOutput{Changes: all, Cursor: cursor, HasMore: hasMore, Household: h}
+		out = PullOutput{Changes: all, Cursor: next, HasMore: hasMore, Reset: reset, Household: h}
 		return nil
 	}); err != nil {
 		return PullOutput{}, fmt.Errorf("pull: %w", err)

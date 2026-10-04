@@ -4,6 +4,9 @@ package job
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
+	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository2 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
+	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
 // NewRevokeAppleToken initializes dependencies and constructs RevokeAppleToken.
@@ -14,5 +17,41 @@ func NewRevokeAppleToken(infra di.Infra, lib di.Lib) *RevokeAppleToken {
 	return &RevokeAppleToken{
 		apple: apple,
 		box:   box,
+	}
+}
+
+// NewSweepDeadMessages initializes dependencies and constructs SweepDeadMessages.
+func NewSweepDeadMessages(infra di.Infra) *SweepDeadMessages {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	messages := outbox.NewRepository(reader)
+
+	return &SweepDeadMessages{
+		transactor: transactor,
+		messages:   messages,
+	}
+}
+
+// NewSweepRefreshTokens initializes dependencies and constructs SweepRefreshTokens.
+func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	refreshTokens := repository.NewRefreshToken(reader)
+
+	return &SweepRefreshTokens{
+		transactor:    transactor,
+		refreshTokens: refreshTokens,
+	}
+}
+
+// NewSweepTombstones initializes dependencies and constructs SweepTombstones.
+func NewSweepTombstones(infra di.Infra) *SweepTombstones {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	tombstones := repository2.NewTombstones(reader)
+
+	return &SweepTombstones{
+		transactor: transactor,
+		tombstones: tombstones,
 	}
 }

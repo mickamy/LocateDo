@@ -241,3 +241,51 @@ func (q *Queries) ListTodoChanges(ctx context.Context, arg ListTodoChangesParams
 	}
 	return items, nil
 }
+
+const raiseSweptVersion = `-- name: RaiseSweptVersion :exec
+UPDATE households
+SET swept_version = GREATEST(swept_version, $1)
+WHERE id = $2
+`
+
+type RaiseSweptVersionParams struct {
+	Version int64
+	ID      uuid.UUID
+}
+
+func (q *Queries) RaiseSweptVersion(ctx context.Context, arg RaiseSweptVersionParams) error {
+	_, err := q.db.Exec(ctx, raiseSweptVersion, arg.Version, arg.ID)
+	return err
+}
+
+const sweepDeletions = `-- name: SweepDeletions :many
+DELETE
+FROM deletions
+WHERE deleted_at < $1
+RETURNING household_id, version
+`
+
+type SweepDeletionsRow struct {
+	HouseholdID uuid.UUID
+	Version     int64
+}
+
+func (q *Queries) SweepDeletions(ctx context.Context, deletedAt time.Time) ([]SweepDeletionsRow, error) {
+	rows, err := q.db.Query(ctx, sweepDeletions, deletedAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SweepDeletionsRow
+	for rows.Next() {
+		var i SweepDeletionsRow
+		if err := rows.Scan(&i.HouseholdID, &i.Version); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

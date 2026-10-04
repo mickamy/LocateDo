@@ -57,11 +57,12 @@ func (r household) Create(ctx context.Context, id, ownerID uuid.UUID) (model.Hou
 		return model.Household{}, fmt.Errorf("create household: %w", err)
 	}
 	return model.Household{
-		ID:        row.ID,
-		OwnerID:   row.OwnerID,
-		Plan:      model.Plan(row.Plan),
-		Version:   row.Version,
-		CreatedAt: row.CreatedAt,
+		ID:           row.ID,
+		OwnerID:      row.OwnerID,
+		Plan:         model.Plan(row.Plan),
+		Version:      row.Version,
+		SweptVersion: row.SweptVersion,
+		CreatedAt:    row.CreatedAt,
 	}, nil
 }
 
@@ -74,11 +75,12 @@ func (r household) Find(ctx context.Context, id uuid.UUID) (model.Household, err
 		return model.Household{}, fmt.Errorf("get household: %w", err)
 	}
 	return model.Household{
-		ID:        row.ID,
-		OwnerID:   row.OwnerID,
-		Plan:      model.Plan(row.Plan),
-		Version:   row.Version,
-		CreatedAt: row.CreatedAt,
+		ID:           row.ID,
+		OwnerID:      row.OwnerID,
+		Plan:         model.Plan(row.Plan),
+		Version:      row.Version,
+		SweptVersion: row.SweptVersion,
+		CreatedAt:    row.CreatedAt,
 	}, nil
 }
 
@@ -91,11 +93,12 @@ func (r household) FindForUpdate(ctx context.Context, id uuid.UUID) (model.House
 		return model.Household{}, fmt.Errorf("get household for update: %w", err)
 	}
 	return model.Household{
-		ID:        row.ID,
-		OwnerID:   row.OwnerID,
-		Plan:      model.Plan(row.Plan),
-		Version:   row.Version,
-		CreatedAt: row.CreatedAt,
+		ID:           row.ID,
+		OwnerID:      row.OwnerID,
+		Plan:         model.Plan(row.Plan),
+		Version:      row.Version,
+		SweptVersion: row.SweptVersion,
+		CreatedAt:    row.CreatedAt,
 	}, nil
 }
 

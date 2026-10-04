@@ -34,11 +34,14 @@ const (
 )
 
 type Household struct {
-	ID        uuid.UUID
-	OwnerID   uuid.UUID
-	Plan      Plan
-	Version   int64
-	CreatedAt time.Time
+	ID      uuid.UUID
+	OwnerID uuid.UUID
+	Plan    Plan
+	Version int64
+	// SweptVersion is the newest tombstone version the worker has swept;
+	// a device whose cursor is older must resync from scratch.
+	SweptVersion int64
+	CreatedAt    time.Time
 }
 
 type Membership struct {

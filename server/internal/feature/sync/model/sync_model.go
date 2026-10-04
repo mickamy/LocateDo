@@ -1,6 +1,7 @@
 package model
 
 import (
+	"time"
 	"uuid"
 
 	cmodel "github.com/mickamy/LocateDo/internal/feature/category/model"
@@ -13,6 +14,10 @@ const (
 	DefaultPageSize int32 = 500
 	MaxPageSize     int32 = 1000
 )
+
+// TombstoneRetention is how long a deletion stays visible to Pull before the
+// worker sweeps it.
+const TombstoneRetention = 30 * 24 * time.Hour
 
 // Kind names the table a tombstone came from.
 type Kind string

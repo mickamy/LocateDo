@@ -55,6 +55,7 @@ CREATE TABLE households
     owner_id      uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     plan          text        NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro')),
     version       bigint      NOT NULL DEFAULT 0,
+    swept_version bigint      NOT NULL DEFAULT 0,
     created_at    timestamptz NOT NULL DEFAULT now()
 );
 

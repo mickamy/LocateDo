@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mickamy/LocateDo/internal/lib/logger"
+	"github.com/mickamy/LocateDo/internal/worker/job"
 )
 
 // Task is time-driven maintenance: it runs once at start-up and then on its
@@ -18,8 +19,18 @@ type Task struct {
 
 type Tasks []Task
 
-func NewTasks() Tasks {
-	return Tasks{}
+const sweepInterval = time.Hour
+
+func NewTasks(
+	tombstones *job.SweepTombstones,
+	refreshTokens *job.SweepRefreshTokens,
+	deadMessages *job.SweepDeadMessages,
+) Tasks {
+	return Tasks{
+		{Name: "sweep tombstones", Interval: sweepInterval, Run: tombstones.Run},
+		{Name: "sweep refresh tokens", Interval: sweepInterval, Run: refreshTokens.Run},
+		{Name: "sweep dead messages", Interval: sweepInterval, Run: deadMessages.Run},
+	}
 }
 
 type Scheduler struct {

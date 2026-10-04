@@ -23,6 +23,8 @@ type RefreshToken interface {
 	Use(ctx context.Context, hash []byte, now time.Time) (model.RefreshToken, error)
 	FindByHash(ctx context.Context, hash []byte) (model.RefreshToken, error)
 	RevokeFamily(ctx context.Context, familyID uuid.UUID) error
+	// DeleteExpired removes tokens past their expiry, used or not, and reports how many.
+	DeleteExpired(ctx context.Context, now time.Time) (int, error)
 	Bind(tx tx.Tx) RefreshToken
 }
 
@@ -95,4 +97,12 @@ func (r refreshToken) RevokeFamily(ctx context.Context, familyID uuid.UUID) erro
 		return fmt.Errorf("delete refresh token family: %w", err)
 	}
 	return nil
+}
+
+func (r refreshToken) DeleteExpired(ctx context.Context, now time.Time) (int, error) {
+	n, err := r.q.DeleteExpiredRefreshTokens(ctx, now)
+	if err != nil {
+		return 0, fmt.Errorf("delete expired refresh tokens: %w", err)
+	}
+	return int(n), nil
 }

@@ -63,6 +63,20 @@ func (q *Queries) CreateUserIdentity(ctx context.Context, arg CreateUserIdentity
 	return err
 }
 
+const deleteExpiredRefreshTokens = `-- name: DeleteExpiredRefreshTokens :execrows
+DELETE
+FROM refresh_tokens
+WHERE expires_at < $1
+`
+
+func (q *Queries) DeleteExpiredRefreshTokens(ctx context.Context, expiresAt time.Time) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteExpiredRefreshTokens, expiresAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const deleteRefreshTokenFamily = `-- name: DeleteRefreshTokenFamily :exec
 DELETE
 FROM refresh_tokens

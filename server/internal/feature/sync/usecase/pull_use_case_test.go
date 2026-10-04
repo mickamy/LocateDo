@@ -157,3 +157,42 @@ func TestPull_anotherHousehold(t *testing.T) {
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
 }
+
+func TestPull_resetAfterSweep(t *testing.T) {
+	t.Parallel()
+
+	// arrange: a device synced, then a deletion it never saw was swept
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	placeID := d.Seeder.Place(t, h.ID)
+	pull := usecase.NewPull(d.Infra())
+	synced, err := pull.Do(t.Context(), usecase.PullInput{HouseholdID: h.ID, RequestedHouseholdID: h.ID})
+	require.NoError(t, err)
+	gone := d.Seeder.Todo(t, h.ID, placeID)
+	_, err = d.Writer.Exec(t.Context(), "DELETE FROM todos WHERE id = $1", gone)
+	require.NoError(t, err)
+	_, err = d.Writer.Exec(t.Context(), "DELETE FROM deletions RETURNING version")
+	require.NoError(t, err)
+	_, err = d.Writer.Exec(t.Context(), "UPDATE households SET swept_version = version WHERE id = $1", h.ID)
+	require.NoError(t, err)
+	kept := d.Seeder.Todo(t, h.ID, placeID)
+
+	// act
+	out, err := pull.Do(t.Context(), usecase.PullInput{
+		HouseholdID: h.ID, RequestedHouseholdID: h.ID, Cursor: synced.Cursor, Limit: 1,
+	})
+	again, err2 := pull.Do(t.Context(), usecase.PullInput{
+		HouseholdID: h.ID, RequestedHouseholdID: h.ID, Cursor: out.Cursor,
+	})
+
+	// assert
+	require.NoError(t, err)
+	assert.True(t, out.Reset)
+	assert.False(t, out.HasMore, "a reset page is never paged")
+	require.Len(t, out.Changes, 3, "membership, place, and the surviving todo, despite limit 1")
+	assert.Equal(t, kept, out.Changes[2].Todo.ID)
+	assert.Equal(t, d.Seeder.Version(t, h.ID), out.Cursor)
+	require.NoError(t, err2)
+	assert.False(t, again.Reset, "the new cursor is current")
+	assert.Empty(t, again.Changes)
+}
