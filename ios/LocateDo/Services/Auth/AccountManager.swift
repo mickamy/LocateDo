@@ -115,6 +115,9 @@ final class AccountManager {
         for state in try context.fetch(FetchDescriptor<SyncState>()) {
             context.delete(state)
         }
+        for write in try context.fetch(FetchDescriptor<PendingWrite>()) {
+            context.delete(write)
+        }
         try context.save()
         try PlaceCategory.insertBuiltinsIfEmpty(into: context)
         pendingHouseholdID = nil

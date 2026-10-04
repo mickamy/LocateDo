@@ -94,6 +94,7 @@ struct AccountManagerTests {
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         fixture.context.insert(place)
         fixture.context.insert(Todo(title: "Milk", place: place))
+        try PendingWrite.enqueue(.put(place), in: fixture.context)
         try fixture.context.save()
 
         try await fixture.manager.deleteAccount()
@@ -103,6 +104,7 @@ struct AccountManagerTests {
         #expect(try fixture.context.fetch(FetchDescriptor<Place>()).isEmpty)
         #expect(try fixture.context.fetch(FetchDescriptor<Todo>()).isEmpty)
         #expect(try fixture.context.fetch(FetchDescriptor<SyncState>()).isEmpty)
+        #expect(try fixture.context.fetch(FetchDescriptor<PendingWrite>()).isEmpty)
         #expect(try fixture.context.fetchCount(FetchDescriptor<PlaceCategory>()) == BuiltinCategory.allCases.count)
         #expect(fixture.resets.value == 1)
     }
