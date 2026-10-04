@@ -15,6 +15,7 @@ struct PlaceEditorView: View {
     @State private var radiusMeters: Double
     @State private var category: PlaceCategory
     @State private var isPickingLocation = false
+    @FocusState private var isNameFocused: Bool
 
     init(place: Place? = nil, defaultRadiusMeters: Double = Place.defaultRadiusMeters, onSave: (() -> Void)? = nil) {
         self.place = place
@@ -36,6 +37,9 @@ struct PlaceEditorView: View {
                     TextField(text: $name, prompt: Text(.placeEditorNamePlaceholder)) {
                         Text(.placeEditorNameLabel)
                     }
+                    .focused($isNameFocused)
+                    .submitLabel(.done)
+                    .onSubmit(saveIfPossible)
                 }
                 Section {
                     if let coordinate {
@@ -100,6 +104,17 @@ struct PlaceEditorView: View {
                     }
                 }
             }
+            .onAppear {
+                if place == nil {
+                    isNameFocused = true
+                }
+            }
+        }
+    }
+
+    private func saveIfPossible() {
+        if canSave {
+            save()
         }
     }
 

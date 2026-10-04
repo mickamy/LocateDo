@@ -8,6 +8,7 @@ struct TodoEditorView: View {
 
     @State private var title = ""
     @State private var place: Place?
+    @FocusState private var isTitleFocused: Bool
 
     init(place: Place? = nil) {
         _place = State(initialValue: place)
@@ -24,6 +25,9 @@ struct TodoEditorView: View {
                     TextField(text: $title, prompt: Text(.todoEditorTitlePlaceholder)) {
                         Text(.todoEditorTitleLabel)
                     }
+                    .focused($isTitleFocused)
+                    .submitLabel(.done)
+                    .onSubmit(saveIfPossible)
                 }
                 Section {
                     Picker(selection: $place) {
@@ -51,6 +55,18 @@ struct TodoEditorView: View {
                     .disabled(!canSave)
                 }
             }
+            .onAppear {
+                if place == nil {
+                    place = places.first
+                }
+                isTitleFocused = true
+            }
+        }
+    }
+
+    private func saveIfPossible() {
+        if canSave {
+            save()
         }
     }
 
