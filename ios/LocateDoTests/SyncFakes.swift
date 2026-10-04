@@ -102,6 +102,7 @@ nonisolated final class FakeSyncService: Locatedo_Sync_V1_SyncServiceClientInter
     private struct State {
         var pages: [Locatedo_Sync_V1_PullResponse] = []
         var failAfter: Int?
+        var failureCode = Code.unavailable
         var cursors: [Int64] = []
         var householdIDs: [String] = []
     }
@@ -120,8 +121,11 @@ nonisolated final class FakeSyncService: Locatedo_Sync_V1_SyncServiceClientInter
         state.withLock { $0.pages = pages }
     }
 
-    func fail(afterPages count: Int) {
-        state.withLock { $0.failAfter = count }
+    func fail(afterPages count: Int, with code: Code = .unavailable) {
+        state.withLock { state in
+            state.failAfter = count
+            state.failureCode = code
+        }
     }
 
     func pull(
@@ -132,7 +136,7 @@ nonisolated final class FakeSyncService: Locatedo_Sync_V1_SyncServiceClientInter
             state.cursors.append(request.cursor)
             state.householdIDs.append(request.householdID)
             if let failAfter = state.failAfter, state.cursors.count > failAfter {
-                return ResponseMessage(result: .failure(ConnectError(code: .unavailable, message: nil)))
+                return ResponseMessage(result: .failure(ConnectError(code: state.failureCode, message: nil)))
             }
             if state.pages.isEmpty {
                 var empty = Locatedo_Sync_V1_PullResponse()

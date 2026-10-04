@@ -7,10 +7,10 @@ import Testing
 @testable import LocateDo
 
 struct SyncEngineTests {
-    private static let householdID = UUID(uuidString: "0199bd00-0000-7000-8000-0000000000aa")!
+    static let householdID = UUID(uuidString: "0199bd00-0000-7000-8000-0000000000aa")!
 
     @Test func sendsTheQueueInOrderWithTheHouseholdID() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         let todo = Todo(title: "Milk", place: place)
         let category = PlaceCategory(name: "Gym", icon: "dumbbell", color: "teal", sortOrder: 4)
@@ -30,7 +30,7 @@ struct SyncEngineTests {
     }
 
     @Test func doesNothingWhenSignedOut() async throws {
-        let fixture = try Fixture(signedIn: false)
+        let fixture = try SyncEngineFixture(signedIn: false)
         try fixture.enqueue([.put(Place(name: "Store", latitude: 35.0, longitude: 139.0))])
 
         await fixture.engine.drain()
@@ -40,7 +40,7 @@ struct SyncEngineTests {
     }
 
     @Test func waitsForTheHousehold() async throws {
-        let fixture = try Fixture(householdID: nil)
+        let fixture = try SyncEngineFixture(householdID: nil)
         try fixture.enqueue([.put(Place(name: "Store", latitude: 35.0, longitude: 139.0))])
 
         await fixture.engine.drain()
@@ -51,7 +51,7 @@ struct SyncEngineTests {
 
     @Test(arguments: [Code.unavailable, .failedPrecondition, .permissionDenied, .internalError])
     func keepsTheHeadAndStops(code: Code) async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         try fixture.enqueue([.put(place), .delete(place)])
         fixture.services.fail(with: [code])
@@ -72,7 +72,7 @@ struct SyncEngineTests {
 
     @Test(arguments: [Code.alreadyExists, .invalidArgument, .notFound])
     func dropsARejectedHeadAndContinues(code: Code) async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         try fixture.enqueue([.put(place), .delete(place)])
         fixture.services.fail(with: [code])
@@ -84,7 +84,7 @@ struct SyncEngineTests {
     }
 
     @Test func overlappingDrainsSendEachWriteOnce() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         try fixture.enqueue([.put(place), .delete(place)])
 
@@ -97,7 +97,7 @@ struct SyncEngineTests {
     }
 
     @Test func rescheduledDrainReplacesThePendingOne() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         try fixture.enqueue([.put(place)])
 
@@ -113,7 +113,7 @@ struct SyncEngineTests {
     }
 
     @Test func syncSendsTheQueueThenPullsEveryPage() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let state = try SyncState.current(in: fixture.context)
         state.cursor = 10
         try fixture.context.save()
@@ -137,7 +137,7 @@ struct SyncEngineTests {
     }
 
     @Test func resetOnAnyPageReplacesLocalData() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         fixture.context.insert(Place(name: "Local", latitude: 35.0, longitude: 139.0))
         try fixture.context.save()
         fixture.pulls.respond(with: [Self.page([], cursor: 30, reset: true)])
@@ -150,7 +150,7 @@ struct SyncEngineTests {
     }
 
     @Test func failedPullKeepsTheCursorAndAppliesNothing() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         fixture.pulls.respond(with: [
             Self.page([.with { $0.place = Self.place(UUID.v7(), version: 1) }], cursor: 1, hasMore: true)
         ])
@@ -165,7 +165,7 @@ struct SyncEngineTests {
     }
 
     @Test func todoOnlyPullsLeaveTheGeofencesAlone() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         fixture.context.insert(place)
         try fixture.context.save()
@@ -180,7 +180,7 @@ struct SyncEngineTests {
     }
 
     @Test func drainAloneDoesNotPull() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
 
         await fixture.engine.drain()
 
@@ -188,7 +188,7 @@ struct SyncEngineTests {
     }
 
     @Test func pullWaitsForTheHousehold() async throws {
-        let fixture = try Fixture(householdID: nil)
+        let fixture = try SyncEngineFixture(householdID: nil)
 
         await fixture.engine.sync()
 
@@ -196,7 +196,7 @@ struct SyncEngineTests {
     }
 
     @Test func aSyncRequestedDuringADrainStillPulls() async throws {
-        let fixture = try Fixture()
+        let fixture = try SyncEngineFixture()
         try fixture.enqueue([.put(Place(name: "Store", latitude: 35.0, longitude: 139.0))])
 
         async let drained: Void = fixture.engine.drain()
@@ -205,6 +205,43 @@ struct SyncEngineTests {
 
         #expect(fixture.services.sent == ["putPlace"])
         #expect(fixture.pulls.cursors == [0])
+    }
+
+    @Test func aDeniedWriteWithARejectedRefreshEndsTheSession() async throws {
+        let fixture = try SyncEngineFixture()
+        try fixture.enqueue([.put(Place(name: "Store", latitude: 35.0, longitude: 139.0))])
+        fixture.services.fail(with: [.permissionDenied])
+        fixture.account.enqueue(.failure(ConnectError(code: .unauthenticated, message: nil)))
+
+        await fixture.engine.drain()
+
+        #expect(fixture.account.refreshCalls == 1)
+        #expect(fixture.sessionEnded.value == 1)
+    }
+
+    @Test func aDeniedPullWithAValidSessionKeepsItAndRefreshesOnce() async throws {
+        let fixture = try SyncEngineFixture()
+        fixture.pulls.fail(afterPages: 0, with: .permissionDenied)
+        var refreshed = Locatedo_Account_V1_RefreshTokenResponse()
+        refreshed.session.userID = "0199bd00-0000-7000-8000-000000000001"
+        refreshed.session.accessToken = "access-2"
+        refreshed.session.accessTokenExpiresAt = Google_Protobuf_Timestamp(date: Date(timeIntervalSinceNow: 3_600))
+        refreshed.session.refreshToken = "refresh-2"
+        fixture.account.enqueue(.success(refreshed))
+
+        await fixture.engine.sync()
+
+        #expect(fixture.account.refreshCalls == 1)
+        #expect(fixture.sessionEnded.value == 0)
+    }
+
+    @Test func otherFailuresDoNotTouchTheSession() async throws {
+        let fixture = try SyncEngineFixture()
+        fixture.pulls.fail(afterPages: 0)
+
+        await fixture.engine.sync()
+
+        #expect(fixture.account.refreshCalls == 0)
     }
 
     private static func page(
@@ -242,58 +279,62 @@ struct SyncEngineTests {
         todo.version = version
         return todo
     }
+}
 
-    private struct Fixture {
-        let container: ModelContainer
-        let context: ModelContext
-        let services = FakeWriteServices()
-        let pulls = FakeSyncService()
-        let placeChanges = ResetCounter()
-        let engine: SyncEngine
+struct SyncEngineFixture {
+    let container: ModelContainer
+    let context: ModelContext
+    let services = FakeWriteServices()
+    let pulls = FakeSyncService()
+    let account = FakeAccountService()
+    let sessionEnded = ResetCounter()
+    let placeChanges = ResetCounter()
+    let engine: SyncEngine
 
-        init(signedIn: Bool = true, householdID: UUID? = SyncEngineTests.householdID) throws {
-            container = try AppModelContainer.make(inMemory: true)
-            context = container.mainContext
-            let state = try SyncState.current(in: context)
-            state.householdID = householdID
-            try context.save()
+    init(signedIn: Bool = true, householdID: UUID? = SyncEngineTests.householdID) throws {
+        container = try AppModelContainer.make(inMemory: true)
+        context = container.mainContext
+        let state = try SyncState.current(in: context)
+        state.householdID = householdID
+        try context.save()
 
-            var session: Session?
-            if signedIn {
-                session = Session(
-                    userID: UUID(uuidString: "0199bd00-0000-7000-8000-000000000001")!,
-                    accessToken: "access",
-                    accessTokenExpiresAt: Date(timeIntervalSinceNow: 3_600),
-                    refreshToken: "refresh"
-                )
-            }
-            let authenticator = Authenticator(
-                store: InMemorySessionStore(session),
-                account: FakeAccountService(),
-                tokens: AccessTokenStore()
+        var session: Session?
+        if signedIn {
+            session = Session(
+                userID: UUID(uuidString: "0199bd00-0000-7000-8000-000000000001")!,
+                accessToken: "access",
+                accessTokenExpiresAt: Date(timeIntervalSinceNow: 3_600),
+                refreshToken: "refresh"
             )
-            let placeChanges = placeChanges
-            engine = SyncEngine(
-                places: services,
-                todos: services,
-                categories: services,
-                syncService: pulls,
-                authenticator: authenticator,
-                context: context
-            ) {
-                placeChanges.increment()
-            }
         }
+        let authenticator = Authenticator(
+            store: InMemorySessionStore(session),
+            account: account,
+            tokens: AccessTokenStore()
+        )
+        let sessionEnded = sessionEnded
+        authenticator.onSessionEnded = { sessionEnded.increment() }
+        let placeChanges = placeChanges
+        engine = SyncEngine(
+            places: services,
+            todos: services,
+            categories: services,
+            syncService: pulls,
+            authenticator: authenticator,
+            context: context
+        ) {
+            placeChanges.increment()
+        }
+    }
 
-        func enqueue(_ writes: [Write]) throws {
-            for write in writes {
-                try PendingWrite.enqueue(write, in: context)
-            }
-            try context.save()
+    func enqueue(_ writes: [Write]) throws {
+        for write in writes {
+            try PendingWrite.enqueue(write, in: context)
         }
+        try context.save()
+    }
 
-        func queueCount() throws -> Int {
-            try context.fetchCount(FetchDescriptor<PendingWrite>())
-        }
+    func queueCount() throws -> Int {
+        try context.fetchCount(FetchDescriptor<PendingWrite>())
     }
 }

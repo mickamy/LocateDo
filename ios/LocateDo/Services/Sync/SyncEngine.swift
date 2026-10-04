@@ -19,9 +19,7 @@ final class SyncEngine {
         var plan = Plan.free
     }
 
-    private let places: any Locatedo_Place_V1_PlaceServiceClientInterface
-    private let todos: any Locatedo_Todo_V1_TodoServiceClientInterface
-    private let categories: any Locatedo_Category_V1_CategoryServiceClientInterface
+    private let sender: WriteSender
     private let syncService: any Locatedo_Sync_V1_SyncServiceClientInterface
     private let authenticator: Authenticator
     private let context: ModelContext
@@ -31,6 +29,7 @@ final class SyncEngine {
     @ObservationIgnored private var inFlight: Task<Void, Never>?
     @ObservationIgnored private var rerunRequested = false
     @ObservationIgnored private var pullRequested = false
+    @ObservationIgnored private var permissionDenied = false
     @ObservationIgnored private var scheduled: Task<Void, Never>?
 
     init(
@@ -42,9 +41,7 @@ final class SyncEngine {
         context: ModelContext,
         onPlacesChanged: @escaping () async -> Void = {}
     ) {
-        self.places = places
-        self.todos = todos
-        self.categories = categories
+        sender = WriteSender(places: places, todos: todos, categories: categories, authenticator: authenticator)
         self.syncService = syncService
         self.authenticator = authenticator
         self.context = context
@@ -92,6 +89,10 @@ final class SyncEngine {
                 if pulls {
                     await pullChanges()
                 }
+                if permissionDenied {
+                    permissionDenied = false
+                    await confirmSession()
+                }
             }
             inFlight = nil
         }
@@ -128,8 +129,25 @@ final class SyncEngine {
                 await onPlacesChanged()
             }
         } catch {
+            noteIfPermissionDenied(error)
             lastPullSummary = "failed: \(error)"
             logger.notice("Pull failed: \(error, privacy: .public)")
+        }
+    }
+
+    // PermissionDenied means either the session ended or the member was removed; a refresh tells them apart.
+    private func confirmSession() async {
+        do {
+            try await authenticator.refresh()
+            logger.notice("Permission denied with a valid session; treating it as a removal from the household")
+        } catch {
+            logger.notice("Permission denied and the refresh failed: \(error, privacy: .public)")
+        }
+    }
+
+    private func noteIfPermissionDenied(_ error: any Error) {
+        if (error as? ConnectError)?.code == .permissionDenied {
+            permissionDenied = true
         }
     }
 
@@ -200,7 +218,7 @@ final class SyncEngine {
             return true
         }
         do {
-            try await send(write, householdID: householdID)
+            try await sender.send(write, householdID: householdID)
             return true
         } catch {
             switch Self.failure(for: error) {
@@ -208,6 +226,7 @@ final class SyncEngine {
                 logger.error("Dropping a rejected \(kind, privacy: .public) write: \(error, privacy: .public)")
                 return true
             case .keep:
+                noteIfPermissionDenied(error)
                 head.attempts += 1
                 logger.notice("Keeping the \(kind, privacy: .public) write at the head: \(error, privacy: .public)")
                 return false
@@ -224,44 +243,6 @@ final class SyncEngine {
             return .drop
         default:
             return .keep
-        }
-    }
-
-    private func send(_ write: Write, householdID: String) async throws {
-        switch write {
-        case .putPlace(let input):
-            let request = Locatedo_Place_V1_PutPlaceRequest.with {
-                $0.householdID = householdID
-                $0.place = input
-            }
-            let client = places
-            _ = try await authenticator.authorized { await client.putPlace(request: request, headers: [:]) }
-        case .deletePlace(let request):
-            let client = places
-            _ = try await authenticator.authorized { await client.deletePlace(request: request, headers: [:]) }
-        case .putTodo(let input):
-            let request = Locatedo_Todo_V1_PutTodoRequest.with {
-                $0.householdID = householdID
-                $0.todo = input
-            }
-            let client = todos
-            _ = try await authenticator.authorized { await client.putTodo(request: request, headers: [:]) }
-        case .setTodoCompletion(let request):
-            let client = todos
-            _ = try await authenticator.authorized { await client.setTodoCompletion(request: request, headers: [:]) }
-        case .deleteTodo(let request):
-            let client = todos
-            _ = try await authenticator.authorized { await client.deleteTodo(request: request, headers: [:]) }
-        case .putCategory(let input):
-            let request = Locatedo_Category_V1_PutCategoryRequest.with {
-                $0.householdID = householdID
-                $0.category = input
-            }
-            let client = categories
-            _ = try await authenticator.authorized { await client.putCategory(request: request, headers: [:]) }
-        case .deleteCategory(let request):
-            let client = categories
-            _ = try await authenticator.authorized { await client.deleteCategory(request: request, headers: [:]) }
         }
     }
 }
