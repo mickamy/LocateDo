@@ -109,6 +109,9 @@ gen-mapper:
 		-destination=internal/feature/category/mapper -package=mapper \
 		-exclude='$(PKG)/feature/category/model.Category.HouseholdID' \
 		-types='$(PKG)/feature/category/model.Category<-*$(PKG)/gen/locatedo/category/v1.CategoryInput'
+	$(MAPPER) -destination=internal/feature/todo/mapper -package=mapper \
+		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt' \
+		-types='$(PKG)/feature/todo/model.Todo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput'
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate
