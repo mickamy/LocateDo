@@ -10,7 +10,7 @@ nonisolated enum Plan: String, Codable {
 final class SyncState {
     var householdID: UUID?
     var cursor: Int64
-    var plan: Plan
+    var plan: Plan = Plan.free
 
     init(householdID: UUID? = nil, cursor: Int64 = 0, plan: Plan = .free) {
         self.householdID = householdID

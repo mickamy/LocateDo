@@ -26,6 +26,7 @@ final class SyncEngine {
     private let authenticator: Authenticator
     private let context: ModelContext
     private let onPlacesChanged: () async -> Void
+    private(set) var lastPullSummary: String?
     @ObservationIgnored private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
     @ObservationIgnored private var inFlight: Task<Void, Never>?
     @ObservationIgnored private var rerunRequested = false
@@ -113,13 +114,21 @@ final class SyncEngine {
                 return
             }
             let outcome = try ChangeApplier.apply(pulled.changes, reset: pulled.reset, to: context)
+            let previousCursor = current.cursor
             current.cursor = pulled.cursor
             current.plan = pulled.plan
             try context.save()
+            var summary = "\(pulled.changes.count) changes, cursor \(previousCursor) → \(pulled.cursor)"
+            if pulled.reset {
+                summary += ", reset"
+            }
+            lastPullSummary = summary
+            logger.notice("Pulled \(summary, privacy: .public)")
             if outcome.placesChanged {
                 await onPlacesChanged()
             }
         } catch {
+            lastPullSummary = "failed: \(error)"
             logger.notice("Pull failed: \(error, privacy: .public)")
         }
     }
@@ -160,6 +169,12 @@ final class SyncEngine {
             guard let householdID = try SyncState.current(in: context).householdID else {
                 return
             }
+            var sent = 0
+            defer {
+                if sent > 0 {
+                    logger.notice("Sent \(sent) queued writes")
+                }
+            }
             while let head = try PendingWrite.head(in: context) {
                 let delivered = await deliver(head, householdID: ProtoInput.id(householdID))
                 if !delivered {
@@ -168,6 +183,7 @@ final class SyncEngine {
                 }
                 context.delete(head)
                 try context.save()
+                sent += 1
             }
         } catch {
             logger.error("Could not read the write queue: \(error, privacy: .public)")

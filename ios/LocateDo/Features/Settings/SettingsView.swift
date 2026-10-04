@@ -1,4 +1,5 @@
 import CoreLocation
+import SwiftData
 import SwiftUI
 import UIKit
 import UserNotifications
@@ -10,7 +11,11 @@ struct SettingsView: View {
     @Environment(AccountManager.self) private var account
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
-    #if DEBUG
+    #if DEBUG || STAGING
+    @Environment(Authenticator.self) private var authenticator
+    @Environment(SyncEngine.self) private var sync
+    @Query private var syncStates: [SyncState]
+    @Query private var pendingWrites: [PendingWrite]
     @State private var serverStatus: String?
     #endif
 
@@ -86,7 +91,7 @@ struct SettingsView: View {
                 } header: {
                     Text(.settingsAboutTitle)
                 }
-                #if DEBUG
+                #if DEBUG || STAGING
                 debugSection
                 #endif
             }
@@ -162,13 +167,21 @@ struct SettingsView: View {
         }
     }
 
-    #if DEBUG
+    #if DEBUG || STAGING
     private var debugSection: some View {
         Section {
-            LabeledContent {
-                Text(verbatim: APIEnvironment.current.baseURL.absoluteString)
+            debugRow("Server", APIEnvironment.current.baseURL.absoluteString)
+            debugRow("User", authenticator.session?.userID.uuidString.lowercased() ?? "-")
+            debugRow("Household", syncStates.first?.householdID?.uuidString.lowercased() ?? "-")
+            debugRow("Cursor", "\(syncStates.first?.cursor ?? 0)")
+            debugRow("Queued writes", "\(pendingWrites.count)")
+            debugRow("Last pull", sync.lastPullSummary ?? "-")
+            Button {
+                Task {
+                    await sync.sync()
+                }
             } label: {
-                Text(verbatim: "Server")
+                Text(verbatim: "Sync now")
             }
             Button {
                 Task {
@@ -183,6 +196,16 @@ struct SettingsView: View {
             }
         } header: {
             Text(verbatim: "Debug")
+        }
+    }
+
+    private func debugRow(_ label: String, _ value: String) -> some View {
+        LabeledContent {
+            Text(verbatim: value)
+                .font(.footnote.monospaced())
+                .textSelection(.enabled)
+        } label: {
+            Text(verbatim: label)
         }
     }
 
