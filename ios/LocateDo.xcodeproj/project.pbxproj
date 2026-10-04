@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
+		3BF1AEC43071100000D47174 /* Connect in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC23071100000D47174 /* Connect */; };
+		3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC33071100000D47174 /* SwiftProtobuf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +63,8 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */,
+				3BF1AEC43071100000D47174 /* Connect in Frameworks */,
+				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -124,6 +128,8 @@
 			name = LocateDo;
 			packageProductDependencies = (
 				3BF1AEBE3071100000D47174 /* FirebaseAnalytics */,
+				3BF1AEC23071100000D47174 /* Connect */,
+				3BF1AEC33071100000D47174 /* SwiftProtobuf */,
 			);
 			productName = LocateDo;
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
@@ -160,6 +166,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				3BF1AEC03071100000D47174 /* XCRemoteSwiftPackageReference "connect-swift" */,
+				3BF1AEC13071100000D47174 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3BB55BF13070E8CE008A116A /* Products */;
@@ -634,6 +642,22 @@
 				minimumVersion = 12.19.2;
 			};
 		};
+		3BF1AEC03071100000D47174 /* XCRemoteSwiftPackageReference "connect-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/connectrpc/connect-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.3;
+			};
+		};
+		3BF1AEC13071100000D47174 /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.38.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -641,6 +665,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		3BF1AEC23071100000D47174 /* Connect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BF1AEC03071100000D47174 /* XCRemoteSwiftPackageReference "connect-swift" */;
+			productName = Connect;
+		};
+		3BF1AEC33071100000D47174 /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BF1AEC13071100000D47174 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

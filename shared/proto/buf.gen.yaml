@@ -17,3 +17,13 @@ plugins:
   - remote: buf.build/connectrpc/go:v1.21.0
     out: ../../server/internal/gen
     opt: paths=source_relative
+  - remote: buf.build/apple/swift:v1.38.1
+    out: ../../ios/LocateDo/Generated
+    opt:
+      - Visibility=Internal
+  - remote: buf.build/connectrpc/swift:v1.2.3
+    out: ../../ios/LocateDo/Generated
+    opt:
+      - Visibility=Internal
+      - GenerateAsyncMethods=true
+      - GenerateCallbackMethods=false
