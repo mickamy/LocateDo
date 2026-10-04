@@ -49,7 +49,7 @@ func TestRemoveMember(t *testing.T) {
 		{
 			name: "outsider",
 			arrange: func(t *testing.T, e *env, _, memberID uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return e.user(t), memberID
+				return e.seed.User(t), memberID
 			},
 			want: aerrors.ErrPermissionDenied,
 		},
@@ -60,13 +60,13 @@ func TestRemoveMember(t *testing.T) {
 
 			// arrange
 			e := newEnv(t)
-			ownerID, householdID := e.household(t, model.PlanPro)
-			memberID := e.member(t, householdID)
-			callerID, userID := tt.arrange(t, e, ownerID, memberID)
+			h := e.seed.Household(t, model.PlanPro)
+			memberID := e.seed.Member(t, h.ID)
+			callerID, userID := tt.arrange(t, e, h.OwnerID, memberID)
 
 			// act
 			err := e.removeMember.Do(e.ctx, usecase.RemoveMemberInput{
-				CallerID: callerID, HouseholdID: householdID, UserID: userID,
+				CallerID: callerID, HouseholdID: h.ID, UserID: userID,
 			})
 
 			// assert

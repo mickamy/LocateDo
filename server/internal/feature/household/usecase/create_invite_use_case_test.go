@@ -16,10 +16,10 @@ func TestCreateInvite(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	ownerID, householdID := e.household(t, model.PlanPro)
+	h := e.seed.Household(t, model.PlanPro)
 
 	// act
-	out, err := e.createInvite.Do(e.ctx, usecase.CreateInviteInput{UserID: ownerID, HouseholdID: householdID})
+	out, err := e.createInvite.Do(e.ctx, usecase.CreateInviteInput{UserID: h.OwnerID, HouseholdID: h.ID})
 
 	// assert
 	require.NoError(t, err)
@@ -38,16 +38,16 @@ func TestCreateInvite_rejects(t *testing.T) {
 		{
 			name: "free plan",
 			arrange: func(t *testing.T, e *env) usecase.CreateInviteInput {
-				ownerID, householdID := e.household(t, model.PlanFree)
-				return usecase.CreateInviteInput{UserID: ownerID, HouseholdID: householdID}
+				h := e.seed.Household(t, model.PlanFree)
+				return usecase.CreateInviteInput{UserID: h.OwnerID, HouseholdID: h.ID}
 			},
 			want: aerrors.ErrPrecondition,
 		},
 		{
 			name: "not the owner",
 			arrange: func(t *testing.T, e *env) usecase.CreateInviteInput {
-				_, householdID := e.household(t, model.PlanPro)
-				memberID := e.member(t, householdID)
+				householdID := e.seed.Household(t, model.PlanPro).ID
+				memberID := e.seed.Member(t, householdID)
 				return usecase.CreateInviteInput{UserID: memberID, HouseholdID: householdID}
 			},
 			want: aerrors.ErrPermissionDenied,
@@ -55,11 +55,11 @@ func TestCreateInvite_rejects(t *testing.T) {
 		{
 			name: "household is full",
 			arrange: func(t *testing.T, e *env) usecase.CreateInviteInput {
-				ownerID, householdID := e.household(t, model.PlanPro)
+				h := e.seed.Household(t, model.PlanPro)
 				for range model.MaxMembers - 1 {
-					e.member(t, householdID)
+					e.seed.Member(t, h.ID)
 				}
-				return usecase.CreateInviteInput{UserID: ownerID, HouseholdID: householdID}
+				return usecase.CreateInviteInput{UserID: h.OwnerID, HouseholdID: h.ID}
 			},
 			want: aerrors.ErrPrecondition,
 		},

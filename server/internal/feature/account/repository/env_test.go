@@ -18,22 +18,13 @@ func createUser(t *testing.T, d tdb.DB, users repository.User, subject string) m
 	t.Helper()
 
 	var u model.User
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		var err error
 		u, err = users.Bind(tx).Create(t.Context(), "")
 		require.NoError(t, err)
 		require.NoError(t, users.Bind(tx).AddIdentity(t.Context(), u.ID, model.ProviderApple, subject))
 	})
 	return u
-}
-
-func inTx(t *testing.T, d tdb.DB, fn func(tx tx.Tx)) {
-	t.Helper()
-
-	require.NoError(t, d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
-		fn(tx)
-		return nil
-	}))
 }
 
 func inTxErr(t *testing.T, d tdb.DB, fn func(tx tx.Tx) error) {

@@ -16,7 +16,7 @@ func TestCreateHousehold_imports(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	userID := e.user(t)
+	userID := e.seed.User(t)
 	householdID := newID()
 
 	// act
@@ -34,9 +34,9 @@ func TestCreateHousehold_imports(t *testing.T) {
 	m, err := e.memberships.FindByUser(t.Context(), userID)
 	require.NoError(t, err)
 	assert.Equal(t, model.RoleOwner, m.Role)
-	assert.Equal(t, 1, e.count(t, "categories", householdID))
-	assert.Equal(t, 1, e.count(t, "places", householdID))
-	assert.Equal(t, 2, e.count(t, "todos", householdID))
+	assert.Equal(t, 1, e.seed.Count(t, "categories", householdID))
+	assert.Equal(t, 1, e.seed.Count(t, "places", householdID))
+	assert.Equal(t, 2, e.seed.Count(t, "todos", householdID))
 }
 
 func TestCreateHousehold_retryIsIdempotent(t *testing.T) {
@@ -44,7 +44,7 @@ func TestCreateHousehold_retryIsIdempotent(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	in := usecase.CreateHouseholdInput{UserID: e.user(t), HouseholdID: newID(), Contents: contents()}
+	in := usecase.CreateHouseholdInput{UserID: e.seed.User(t), HouseholdID: newID(), Contents: contents()}
 	first, err := e.createHousehold.Do(e.ctx, in)
 	require.NoError(t, err)
 
@@ -54,7 +54,7 @@ func TestCreateHousehold_retryIsIdempotent(t *testing.T) {
 	// assert
 	require.NoError(t, err)
 	assert.Equal(t, first.Household, second.Household)
-	assert.Equal(t, 1, e.count(t, "places", in.HouseholdID))
+	assert.Equal(t, 1, e.seed.Count(t, "places", in.HouseholdID))
 }
 
 func TestCreateHousehold_alreadyInAnother(t *testing.T) {
@@ -62,7 +62,7 @@ func TestCreateHousehold_alreadyInAnother(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	userID := e.user(t)
+	userID := e.seed.User(t)
 	_, err := e.createHousehold.Do(e.ctx, usecase.CreateHouseholdInput{UserID: userID, HouseholdID: newID()})
 	require.NoError(t, err)
 
@@ -85,7 +85,7 @@ func TestCreateHousehold_unknownReference(t *testing.T) {
 
 	// act
 	_, err := e.createHousehold.Do(e.ctx, usecase.CreateHouseholdInput{
-		UserID: e.user(t), HouseholdID: householdID, Contents: c,
+		UserID: e.seed.User(t), HouseholdID: householdID, Contents: c,
 	})
 
 	// assert

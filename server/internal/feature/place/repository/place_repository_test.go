@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
+	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/place/model"
 	"github.com/mickamy/LocateDo/internal/feature/place/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
@@ -20,8 +21,8 @@ func TestPlace_Upsert_insertThenUpdate(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := createHousehold(t, d)
-	categoryID := createCategory(t, d, householdID)
+	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
+	categoryID := d.Seed.Category(t, householdID)
 	p := model.Place{
 		ID:          uuid.NewV7(),
 		HouseholdID: householdID,
@@ -34,7 +35,7 @@ func TestPlace_Upsert_insertThenUpdate(t *testing.T) {
 	}
 
 	// act
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, places.Bind(tx).Upsert(t.Context(), p))
 	})
 	inserted := readPlace(t, d, p.ID)
@@ -42,7 +43,7 @@ func TestPlace_Upsert_insertThenUpdate(t *testing.T) {
 	p.Name = "Grocery"
 	p.RadiusM = 200
 	p.CategoryID = nil
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, places.Bind(tx).Upsert(t.Context(), p))
 	})
 	updated := readPlace(t, d, p.ID)
@@ -63,8 +64,8 @@ func TestPlace_Upsert_unknownCategoryBecomesNull(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := createHousehold(t, d)
-	otherCategory := createCategory(t, d, createHousehold(t, d))
+	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
+	otherCategory := d.Seed.Category(t, d.Seed.Household(t, hmodel.PlanFree).ID)
 	missing := uuid.NewV7()
 
 	tests := map[string]*uuid.UUID{
@@ -86,7 +87,7 @@ func TestPlace_Upsert_unknownCategoryBecomesNull(t *testing.T) {
 			}
 
 			// act
-			inTx(t, d, func(tx tx.Tx) {
+			d.InTx(t, func(tx tx.Tx) {
 				require.NoError(t, places.Bind(tx).Upsert(t.Context(), p))
 			})
 
@@ -102,9 +103,9 @@ func TestPlace_Upsert_idInAnotherHousehold(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	otherHousehold := createHousehold(t, d)
-	taken := createPlace(t, d, otherHousehold)
-	householdID := createHousehold(t, d)
+	otherHousehold := d.Seed.Household(t, hmodel.PlanFree).ID
+	taken := d.Seed.Place(t, otherHousehold)
+	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
 
 	// act
 	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
@@ -152,11 +153,11 @@ func TestPlace_ExistsAndCount(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := createHousehold(t, d)
-	otherHousehold := createHousehold(t, d)
-	first := createPlace(t, d, householdID)
-	createPlace(t, d, householdID)
-	elsewhere := createPlace(t, d, otherHousehold)
+	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
+	otherHousehold := d.Seed.Household(t, hmodel.PlanFree).ID
+	first := d.Seed.Place(t, householdID)
+	d.Seed.Place(t, householdID)
+	elsewhere := d.Seed.Place(t, otherHousehold)
 
 	// act
 	n, err := places.Count(t.Context(), householdID)
@@ -178,13 +179,13 @@ func TestPlace_Delete(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	places := repository.NewPlace(d.Reader)
-	householdID := createHousehold(t, d)
-	otherHousehold := createHousehold(t, d)
-	id := createPlace(t, d, householdID)
-	elsewhere := createPlace(t, d, otherHousehold)
+	householdID := d.Seed.Household(t, hmodel.PlanFree).ID
+	otherHousehold := d.Seed.Household(t, hmodel.PlanFree).ID
+	id := d.Seed.Place(t, householdID)
+	elsewhere := d.Seed.Place(t, otherHousehold)
 
 	// act
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		bound := places.Bind(tx)
 		require.NoError(t, bound.Delete(t.Context(), id, householdID))
 		require.NoError(t, bound.Delete(t.Context(), id, householdID), "deleting again is a no-op")

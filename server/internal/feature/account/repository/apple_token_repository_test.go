@@ -22,7 +22,7 @@ func TestAppleToken_saveAndFind(t *testing.T) {
 	apple := repository.NewAppleToken(d.Reader)
 
 	// act
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, []byte("sealed-1")))
 		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, []byte("sealed-2")))
 	})

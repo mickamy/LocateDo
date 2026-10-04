@@ -18,9 +18,9 @@ func TestAcceptInvite_newcomer(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	_, householdID := e.household(t, model.PlanPro)
+	householdID := e.seed.Household(t, model.PlanPro).ID
 	tok := e.invite(t, householdID)
-	inviteeID := e.user(t)
+	inviteeID := e.seed.User(t)
 
 	// act
 	out, err := e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: inviteeID, Token: tok})
@@ -39,9 +39,9 @@ func TestAcceptInvite_bringsSoloHousehold(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	_, householdID := e.household(t, model.PlanPro)
+	householdID := e.seed.Household(t, model.PlanPro).ID
 	tok := e.invite(t, householdID)
-	inviteeID := e.user(t)
+	inviteeID := e.seed.User(t)
 	soloID := newID()
 	_, err := e.createHousehold.Do(e.ctx, usecase.CreateHouseholdInput{
 		UserID: inviteeID, HouseholdID: soloID, Contents: contents(),
@@ -53,8 +53,8 @@ func TestAcceptInvite_bringsSoloHousehold(t *testing.T) {
 
 	// assert
 	require.NoError(t, err)
-	assert.Equal(t, 1, e.count(t, "places", householdID))
-	assert.Equal(t, 2, e.count(t, "todos", householdID))
+	assert.Equal(t, 1, e.seed.Count(t, "places", householdID))
+	assert.Equal(t, 2, e.seed.Count(t, "todos", householdID))
 	_, err = e.households.Find(t.Context(), soloID)
 	require.ErrorIs(t, err, aerrors.ErrNotFound)
 }
@@ -64,17 +64,17 @@ func TestAcceptInvite_sharedHouseholdIsRefused(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	_, householdID := e.household(t, model.PlanPro)
+	householdID := e.seed.Household(t, model.PlanPro).ID
 	tok := e.invite(t, householdID)
-	inviteeID, inviteeHousehold := e.household(t, model.PlanFree)
-	e.member(t, inviteeHousehold)
+	invitee := e.seed.Household(t, model.PlanFree)
+	e.seed.Member(t, invitee.ID)
 
 	// act
-	_, err := e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: inviteeID, Token: tok})
+	_, err := e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: invitee.OwnerID, Token: tok})
 
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrPrecondition)
-	_, err = e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: e.user(t), Token: tok})
+	_, err = e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: e.seed.User(t), Token: tok})
 	require.NoError(t, err, "the refused invite stays unused")
 }
 
@@ -89,29 +89,29 @@ func TestAcceptInvite_rejects(t *testing.T) {
 		{
 			name: "expired",
 			arrange: func(t *testing.T, e *env) (context.Context, usecase.AcceptInviteInput) {
-				_, householdID := e.household(t, model.PlanPro)
+				householdID := e.seed.Household(t, model.PlanPro).ID
 				tok := e.invite(t, householdID)
 				later := clock.Set(t.Context(), clock.NewFixed(now.Add(model.InviteTTL)))
-				return later, usecase.AcceptInviteInput{UserID: e.user(t), Token: tok}
+				return later, usecase.AcceptInviteInput{UserID: e.seed.User(t), Token: tok}
 			},
 			want: aerrors.ErrPrecondition,
 		},
 		{
 			name: "already used",
 			arrange: func(t *testing.T, e *env) (context.Context, usecase.AcceptInviteInput) {
-				_, householdID := e.household(t, model.PlanPro)
+				householdID := e.seed.Household(t, model.PlanPro).ID
 				tok := e.invite(t, householdID)
-				_, err := e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: e.user(t), Token: tok})
+				_, err := e.acceptInvite.Do(e.ctx, usecase.AcceptInviteInput{UserID: e.seed.User(t), Token: tok})
 				require.NoError(t, err)
-				return e.ctx, usecase.AcceptInviteInput{UserID: e.user(t), Token: tok}
+				return e.ctx, usecase.AcceptInviteInput{UserID: e.seed.User(t), Token: tok}
 			},
 			want: aerrors.ErrNotFound,
 		},
 		{
 			name: "already a member",
 			arrange: func(t *testing.T, e *env) (context.Context, usecase.AcceptInviteInput) {
-				_, householdID := e.household(t, model.PlanPro)
-				memberID := e.member(t, householdID)
+				householdID := e.seed.Household(t, model.PlanPro).ID
+				memberID := e.seed.Member(t, householdID)
 				return e.ctx, usecase.AcceptInviteInput{UserID: memberID, Token: e.invite(t, householdID)}
 			},
 			want: aerrors.ErrConflict,

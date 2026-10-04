@@ -13,6 +13,7 @@ import (
 
 	"github.com/mickamy/LocateDo/config"
 	"github.com/mickamy/LocateDo/internal/di"
+	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	categoryv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/category/v1"
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1/householdv1connect"
@@ -20,6 +21,7 @@ import (
 	todov1 "github.com/mickamy/LocateDo/internal/gen/locatedo/todo/v1"
 	"github.com/mickamy/LocateDo/internal/server"
 	"github.com/mickamy/LocateDo/test/tinfra"
+	"github.com/mickamy/LocateDo/test/tseed"
 )
 
 func TestHousehold_createInviteAcceptRemove(t *testing.T) {
@@ -49,7 +51,7 @@ func TestHousehold_createInviteAcceptRemove(t *testing.T) {
 	// act & assert: inviting needs pro
 	_, err = e.client.CreateInvite(t.Context(), authed(owner, &householdv1.CreateInviteRequest{HouseholdId: householdID}))
 	require.Equal(t, connect.CodeFailedPrecondition, connect.CodeOf(err))
-	e.makePro(t, householdID)
+	e.seed.SetPlan(t, uuid.MustParse(householdID), model.PlanPro)
 	invite, err := e.client.CreateInvite(t.Context(), authed(owner, &householdv1.CreateInviteRequest{
 		HouseholdId: householdID,
 	}))
@@ -105,6 +107,7 @@ func TestHousehold_requiresToken(t *testing.T) {
 type env struct {
 	infra  di.Infra
 	lib    di.Lib
+	seed   tseed.Seeder
 	client householdv1connect.HouseholdServiceClient
 }
 
@@ -121,6 +124,7 @@ func newEnv(t *testing.T) *env {
 	return &env{
 		infra:  infra,
 		lib:    lib,
+		seed:   tseed.New(infra.Writer),
 		client: householdv1connect.NewHouseholdServiceClient(srv.Client(), srv.URL),
 	}
 }
@@ -129,18 +133,10 @@ func newEnv(t *testing.T) *env {
 func (e *env) user(t *testing.T) bearer {
 	t.Helper()
 
-	var id uuid.UUID
-	require.NoError(t, e.infra.Writer.QueryRow(t.Context(), "INSERT INTO users DEFAULT VALUES RETURNING id").Scan(&id))
+	id := e.seed.User(t)
 	raw, _, err := e.lib.Signer.IssueAccess(id, time.Now())
 	require.NoError(t, err)
 	return bearer{id: id, token: raw}
-}
-
-func (e *env) makePro(t *testing.T, householdID string) {
-	t.Helper()
-
-	_, err := e.infra.Writer.Exec(t.Context(), "UPDATE households SET plan = 'pro' WHERE id = $1", householdID)
-	require.NoError(t, err)
 }
 
 func (e *env) completedTodos(t *testing.T, householdID string) int {

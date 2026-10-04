@@ -22,7 +22,7 @@ func TestUser_createAndFindByIdentity(t *testing.T) {
 	d := tdb.New(t)
 	users := repository.NewUser(d.Reader)
 	var created model.User
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		var err error
 		created, err = users.Bind(tx).Create(t.Context(), "Tetsuro")
 		require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestUser_Delete(t *testing.T) {
 	u := createUser(t, d, users, "apple-sub")
 
 	// act & assert
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, users.Bind(tx).Delete(t.Context(), u.ID))
 		require.ErrorIs(t, users.Bind(tx).Delete(t.Context(), u.ID), aerrors.ErrNotFound)
 	})
@@ -91,7 +91,7 @@ func TestUser_Delete_cascadesTokens(t *testing.T) {
 	tokens := repository.NewRefreshToken(d.Reader)
 	apple := repository.NewAppleToken(d.Reader)
 	u := createUser(t, d, users, "apple-sub")
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, tokens.Bind(tx).Create(t.Context(), model.RefreshToken{
 			UserID:    u.ID,
 			FamilyID:  uuid.NewV7(),
@@ -101,7 +101,7 @@ func TestUser_Delete_cascadesTokens(t *testing.T) {
 	})
 
 	// act
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, users.Bind(tx).Delete(t.Context(), u.ID))
 	})
 

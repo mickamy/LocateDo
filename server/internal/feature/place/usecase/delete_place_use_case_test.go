@@ -16,10 +16,10 @@ func TestDeletePlace(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	_, householdID := e.household(t, hmodel.PlanFree)
-	memberID := e.member(t, householdID)
-	placeID := e.place(t, householdID)
-	e.todo(t, householdID, placeID)
+	h := e.seed.Household(t, hmodel.PlanFree)
+	memberID := e.seed.Member(t, h.ID)
+	placeID := e.seed.Place(t, h.ID)
+	e.seed.Todo(t, h.ID, placeID)
 
 	// act
 	err := e.deletePlace.Do(t.Context(), usecase.DeletePlaceInput{UserID: memberID, PlaceID: placeID})
@@ -28,8 +28,8 @@ func TestDeletePlace(t *testing.T) {
 	// assert
 	require.NoError(t, err)
 	require.NoError(t, again, "a retry after the place is gone succeeds")
-	assert.Zero(t, e.count(t, "places", householdID))
-	assert.Zero(t, e.count(t, "todos", householdID), "todos go with the place")
+	assert.Zero(t, e.seed.Count(t, "places", h.ID))
+	assert.Zero(t, e.seed.Count(t, "todos", h.ID), "todos go with the place")
 }
 
 func TestDeletePlace_anotherHousehold(t *testing.T) {
@@ -37,16 +37,16 @@ func TestDeletePlace_anotherHousehold(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	ownerID, _ := e.household(t, hmodel.PlanFree)
-	_, other := e.household(t, hmodel.PlanFree)
-	placeID := e.place(t, other)
+	h := e.seed.Household(t, hmodel.PlanFree)
+	other := e.seed.Household(t, hmodel.PlanFree)
+	placeID := e.seed.Place(t, other.ID)
 
 	// act
-	err := e.deletePlace.Do(t.Context(), usecase.DeletePlaceInput{UserID: ownerID, PlaceID: placeID})
+	err := e.deletePlace.Do(t.Context(), usecase.DeletePlaceInput{UserID: h.OwnerID, PlaceID: placeID})
 
 	// assert
 	require.NoError(t, err)
-	assert.Equal(t, 1, e.count(t, "places", other))
+	assert.Equal(t, 1, e.seed.Count(t, "places", other.ID))
 }
 
 func TestDeletePlace_outsider(t *testing.T) {
@@ -54,13 +54,13 @@ func TestDeletePlace_outsider(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	_, householdID := e.household(t, hmodel.PlanFree)
-	placeID := e.place(t, householdID)
+	h := e.seed.Household(t, hmodel.PlanFree)
+	placeID := e.seed.Place(t, h.ID)
 
 	// act
-	err := e.deletePlace.Do(t.Context(), usecase.DeletePlaceInput{UserID: e.user(t), PlaceID: placeID})
+	err := e.deletePlace.Do(t.Context(), usecase.DeletePlaceInput{UserID: e.seed.User(t), PlaceID: placeID})
 
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
-	assert.Equal(t, 1, e.count(t, "places", householdID))
+	assert.Equal(t, 1, e.seed.Count(t, "places", h.ID))
 }

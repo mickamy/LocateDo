@@ -10,7 +10,9 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/place/fixture"
+	"github.com/mickamy/LocateDo/internal/feature/place/model"
 	"github.com/mickamy/LocateDo/internal/feature/place/usecase"
+	"github.com/mickamy/LocateDo/test/tseed"
 )
 
 func TestPutPlace_access(t *testing.T) {
@@ -19,33 +21,32 @@ func TestPutPlace_access(t *testing.T) {
 	tests := []struct {
 		name string
 		// arrange returns the caller and the household to write to.
-		arrange func(t *testing.T, e *env, ownerID, memberID, householdID uuid.UUID) (uuid.UUID, uuid.UUID)
+		arrange func(t *testing.T, e *env, h tseed.Household, memberID uuid.UUID) (uuid.UUID, uuid.UUID)
 		want    error
 	}{
 		{
 			name: "owner",
-			arrange: func(_ *testing.T, _ *env, ownerID, _, householdID uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return ownerID, householdID
+			arrange: func(_ *testing.T, _ *env, h tseed.Household, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
+				return h.OwnerID, h.ID
 			},
 		},
 		{
 			name: "member",
-			arrange: func(_ *testing.T, _ *env, _, memberID, householdID uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return memberID, householdID
+			arrange: func(_ *testing.T, _ *env, h tseed.Household, memberID uuid.UUID) (uuid.UUID, uuid.UUID) {
+				return memberID, h.ID
 			},
 		},
 		{
 			name: "another household",
-			arrange: func(t *testing.T, e *env, ownerID, _, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
-				_, other := e.household(t, hmodel.PlanPro)
-				return ownerID, other
+			arrange: func(t *testing.T, e *env, h tseed.Household, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
+				return h.OwnerID, e.seed.Household(t, hmodel.PlanPro).ID
 			},
 			want: aerrors.ErrPermissionDenied,
 		},
 		{
 			name: "outsider",
-			arrange: func(t *testing.T, e *env, _, _, householdID uuid.UUID) (uuid.UUID, uuid.UUID) {
-				return e.user(t), householdID
+			arrange: func(t *testing.T, e *env, h tseed.Household, _ uuid.UUID) (uuid.UUID, uuid.UUID) {
+				return e.seed.User(t), h.ID
 			},
 			want: aerrors.ErrPermissionDenied,
 		},
@@ -56,10 +57,10 @@ func TestPutPlace_access(t *testing.T) {
 
 			// arrange
 			e := newEnv(t)
-			ownerID, householdID := e.household(t, hmodel.PlanPro)
-			memberID := e.member(t, householdID)
-			callerID, target := tt.arrange(t, e, ownerID, memberID, householdID)
-			p := fixture.Place(inHousehold(target))
+			h := e.seed.Household(t, hmodel.PlanPro)
+			memberID := e.seed.Member(t, h.ID)
+			callerID, target := tt.arrange(t, e, h, memberID)
+			p := fixture.Place(func(m *model.Place) { m.ID = uuid.NewV7(); m.HouseholdID = target })
 
 			// act
 			err := e.putPlace.Do(t.Context(), usecase.PutPlaceInput{UserID: callerID, Place: p})
@@ -67,7 +68,7 @@ func TestPutPlace_access(t *testing.T) {
 			// assert
 			if tt.want != nil {
 				require.ErrorIs(t, err, tt.want)
-				assert.Zero(t, e.count(t, "places", target))
+				assert.Zero(t, e.seed.Count(t, "places", target))
 				return
 			}
 			require.NoError(t, err)
@@ -110,24 +111,23 @@ func TestPutPlace_freeLimit(t *testing.T) {
 
 			// arrange
 			e := newEnv(t)
-			ownerID, householdID := e.household(t, tt.plan)
+			h := e.seed.Household(t, tt.plan)
 			for range tt.existing {
-				e.place(t, householdID)
+				e.seed.Place(t, h.ID)
 			}
+			p := fixture.Place(func(m *model.Place) { m.ID = uuid.NewV7(); m.HouseholdID = h.ID })
 
 			// act
-			err := e.putPlace.Do(t.Context(), usecase.PutPlaceInput{
-				UserID: ownerID, Place: fixture.Place(inHousehold(householdID)),
-			})
+			err := e.putPlace.Do(t.Context(), usecase.PutPlaceInput{UserID: h.OwnerID, Place: p})
 
 			// assert
 			if tt.want != nil {
 				require.ErrorIs(t, err, tt.want)
-				assert.Equal(t, tt.existing, e.count(t, "places", householdID))
+				assert.Equal(t, tt.existing, e.seed.Count(t, "places", h.ID))
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.existing+1, e.count(t, "places", householdID))
+			assert.Equal(t, tt.existing+1, e.seed.Count(t, "places", h.ID))
 		})
 	}
 }
@@ -137,21 +137,21 @@ func TestPutPlace_freeHouseholdOverTheLimitKeepsEditing(t *testing.T) {
 
 	// arrange
 	e := newEnv(t)
-	ownerID, householdID := e.household(t, hmodel.PlanFree)
-	p := fixture.Place(inHousehold(householdID))
-	require.NoError(t, e.putPlace.Do(t.Context(), usecase.PutPlaceInput{UserID: ownerID, Place: p}))
+	h := e.seed.Household(t, hmodel.PlanFree)
+	p := fixture.Place(func(m *model.Place) { m.ID = uuid.NewV7(); m.HouseholdID = h.ID })
+	require.NoError(t, e.putPlace.Do(t.Context(), usecase.PutPlaceInput{UserID: h.OwnerID, Place: p}))
 	for range hmodel.MaxFreePlaces {
-		e.place(t, householdID)
+		e.seed.Place(t, h.ID)
 	}
 	p.Name = "Grocery"
 
 	// act
-	err := e.putPlace.Do(t.Context(), usecase.PutPlaceInput{UserID: ownerID, Place: p})
+	err := e.putPlace.Do(t.Context(), usecase.PutPlaceInput{UserID: h.OwnerID, Place: p})
 
 	// assert
 	require.NoError(t, err)
 	var name string
 	require.NoError(t, e.infra.Writer.QueryRow(t.Context(), "SELECT name FROM places WHERE id = $1", p.ID).Scan(&name))
 	assert.Equal(t, "Grocery", name)
-	assert.Equal(t, hmodel.MaxFreePlaces+1, e.count(t, "places", householdID))
+	assert.Equal(t, hmodel.MaxFreePlaces+1, e.seed.Count(t, "places", h.ID))
 }

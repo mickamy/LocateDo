@@ -17,6 +17,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db/migrate"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
+	"github.com/mickamy/LocateDo/test/tseed"
 )
 
 // DB is a set of typed pools connected to a freshly migrated database.
@@ -24,6 +25,7 @@ type DB struct {
 	Writer     db.Writer
 	Reader     db.Reader
 	Transactor tx.Transactor
+	Seed       tseed.Seeder
 }
 
 // New provisions an isolated database and returns typed pools connected to
@@ -44,7 +46,16 @@ func New(t *testing.T) DB {
 	require.NoError(t, err)
 	t.Cleanup(reader.Close)
 
-	return DB{Writer: writer, Reader: reader, Transactor: tx.NewTransactor(writer)}
+	return DB{Writer: writer, Reader: reader, Transactor: tx.NewTransactor(writer), Seed: tseed.New(writer)}
+}
+
+func (d DB) InTx(t *testing.T, fn func(tx tx.Tx)) {
+	t.Helper()
+
+	require.NoError(t, d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
+		fn(tx)
+		return nil
+	}))
 }
 
 func requireDatabaseEnv(t *testing.T) {

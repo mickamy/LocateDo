@@ -24,7 +24,7 @@ func TestRefreshToken_useOnce(t *testing.T) {
 	tokens := repository.NewRefreshToken(d.Reader)
 	familyID := uuid.NewV7()
 	hash := []byte("hash-1")
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, tokens.Bind(tx).Create(t.Context(), model.RefreshToken{
 			UserID:    u.ID,
 			FamilyID:  familyID,
@@ -35,7 +35,7 @@ func TestRefreshToken_useOnce(t *testing.T) {
 	// act
 	var first, second error
 	var used model.RefreshToken
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		used, first = tokens.Bind(tx).Use(t.Context(), hash, now)
 		_, second = tokens.Bind(tx).Use(t.Context(), hash, now)
 	})
@@ -64,7 +64,7 @@ func TestRefreshToken_RevokeFamily(t *testing.T) {
 	tokens := repository.NewRefreshToken(d.Reader)
 	revoked := uuid.NewV7()
 	kept := uuid.NewV7()
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		for i, family := range []uuid.UUID{revoked, revoked, kept} {
 			require.NoError(t, tokens.Bind(tx).Create(t.Context(), model.RefreshToken{
 				UserID:    u.ID,
@@ -75,7 +75,7 @@ func TestRefreshToken_RevokeFamily(t *testing.T) {
 	})
 
 	// act
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, tokens.Bind(tx).RevokeFamily(t.Context(), revoked))
 	})
 

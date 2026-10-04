@@ -20,11 +20,11 @@ func TestInvite_acceptOnce(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	invites := repository.NewInvite(d.Reader)
-	ownerID := createUser(t, d)
+	ownerID := d.Seed.User(t)
 	householdID := createHousehold(t, d, repository.NewHousehold(d.Reader), ownerID)
-	inviteeID := createUser(t, d)
+	inviteeID := d.Seed.User(t)
 	hash := []byte("invite-hash")
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		require.NoError(t, invites.Bind(tx).Create(t.Context(), model.Invite{
 			HouseholdID: householdID,
 			CreatedBy:   ownerID,
@@ -35,9 +35,9 @@ func TestInvite_acceptOnce(t *testing.T) {
 	// act
 	var accepted model.Invite
 	var first, second, unknown error
-	inTx(t, d, func(tx tx.Tx) {
+	d.InTx(t, func(tx tx.Tx) {
 		accepted, first = invites.Bind(tx).Accept(t.Context(), hash, inviteeID, now)
-		_, second = invites.Bind(tx).Accept(t.Context(), hash, createUser(t, d), now)
+		_, second = invites.Bind(tx).Accept(t.Context(), hash, d.Seed.User(t), now)
 		_, unknown = invites.Bind(tx).Accept(t.Context(), []byte("unknown"), inviteeID, now)
 	})
 
