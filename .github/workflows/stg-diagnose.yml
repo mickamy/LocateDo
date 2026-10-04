@@ -1,0 +1,40 @@
+name: stg-diagnose
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: self-hosted
+    timeout-minutes: 5
+    steps:
+      - name: API from the host
+        run: |
+          code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" http://localhost:8080/healthz || true)
+          echo "host -> http://localhost:8080/healthz: ${code:-unreachable}"
+
+      - name: Containers
+        run: docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Networks}}'
+
+      - name: API from inside the cloudflared container's network
+        run: |
+          name=$(docker ps --format '{{.Names}}\t{{.Image}}' | awk -F'\t' '$2 ~ /cloudflared/ {print $1; exit}')
+          if [ -z "$name" ]; then
+            echo "no cloudflared container found"
+            exit 0
+          fi
+          echo "cloudflared container: $name"
+          for url in http://localhost:8080/healthz http://host.docker.internal:8080/healthz http://api:8080/healthz; do
+            code=$(docker run --rm --network "container:$name" curlimages/curl:8.16.0 -s -o /dev/null -m 5 -w "%{http_code}" "$url" || true)
+            echo "cloudflared -> $url: ${code:-unreachable}"
+          done
+
+      - name: cloudflared log (errors and ingress only)
+        run: |
+          name=$(docker ps --format '{{.Names}}\t{{.Image}}' | awk -F'\t' '$2 ~ /cloudflared/ {print $1; exit}')
+          if [ -n "$name" ]; then
+            docker logs --tail 200 "$name" 2>&1 | grep -i -E "ERR|error|ingress|originService|dial|refused" | tail -30 || true
+          fi
