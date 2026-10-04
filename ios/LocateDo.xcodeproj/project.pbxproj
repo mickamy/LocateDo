@@ -151,6 +151,9 @@
 			);
 			mainGroup = 3BB55BE73070E8CE008A116A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3BB55BF13070E8CE008A116A /* Products */;
 			projectDirPath = "";
@@ -179,24 +182,19 @@
 		3BF1AEBA3071100000D47174 /* Copy GoogleService-Info.plist */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
 				"$(SRCROOT)/Scripts/copy-google-service-info.sh",
 				"$(SRCROOT)/Firebase/GoogleService-Info-$(CONFIGURATION).plist",
 			);
 			name = "Copy GoogleService-Info.plist";
-			outputFileListPaths = (
-			);
 			outputPaths = (
 				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Scripts/copy-google-service-info.sh\"\n";
+			shellScript = (
+				"\"${SRCROOT}/Scripts/copy-google-service-info.sh\"",
+				"",
+			);
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -503,6 +501,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.19.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 3BB55BE83070E8CE008A116A /* Project object */;
 	validationLevel = 1;
