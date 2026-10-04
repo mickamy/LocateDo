@@ -21,6 +21,9 @@ type Household interface {
 	// FindForUpdate locks the household row until the transaction ends, so a
 	// plan limit can be checked against a count that no other member changes.
 	FindForUpdate(ctx context.Context, id uuid.UUID) (model.Household, error)
+	FindByOwner(ctx context.Context, ownerID uuid.UUID) (model.Household, error)
+	// SetPlan reports whether the plan changed.
+	SetPlan(ctx context.Context, id uuid.UUID, plan model.Plan) (bool, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	// MoveContents moves places, todos, and custom categories from one
 	// household to another; places in a built-in category switch to the
@@ -100,6 +103,32 @@ func (r household) FindForUpdate(ctx context.Context, id uuid.UUID) (model.House
 		SweptVersion: row.SweptVersion,
 		CreatedAt:    row.CreatedAt,
 	}, nil
+}
+
+func (r household) FindByOwner(ctx context.Context, ownerID uuid.UUID) (model.Household, error) {
+	row, err := r.q.GetHouseholdByOwner(ctx, ownerID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Household{}, aerrors.NotFound("household")
+	}
+	if err != nil {
+		return model.Household{}, fmt.Errorf("get household by owner: %w", err)
+	}
+	return model.Household{
+		ID:           row.ID,
+		OwnerID:      row.OwnerID,
+		Plan:         model.Plan(row.Plan),
+		Version:      row.Version,
+		SweptVersion: row.SweptVersion,
+		CreatedAt:    row.CreatedAt,
+	}, nil
+}
+
+func (r household) SetPlan(ctx context.Context, id uuid.UUID, plan model.Plan) (bool, error) {
+	n, err := r.q.SetHouseholdPlan(ctx, queries.SetHouseholdPlanParams{ID: id, Plan: string(plan)})
+	if err != nil {
+		return false, fmt.Errorf("set plan: %w", err)
+	}
+	return n > 0, nil
 }
 
 func (r household) Delete(ctx context.Context, id uuid.UUID) error {

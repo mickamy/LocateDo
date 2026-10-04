@@ -13,6 +13,7 @@ import (
 	handler5 "github.com/mickamy/LocateDo/internal/feature/todo/handler"
 	"github.com/mickamy/LocateDo/internal/server/health"
 	"github.com/mickamy/LocateDo/internal/server/interceptor"
+	"github.com/mickamy/LocateDo/internal/server/webhook"
 )
 
 // NewHandlers initializes dependencies and constructs Handlers.
@@ -21,6 +22,7 @@ func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
 	writer := infra.Writer
 	reader := infra.Reader
 	health2 := health.NewHealth(writer, reader)
+	revenueCat := webhook.NewRevenueCat(config, infra)
 	account := handler.NewAccount(infra, lib)
 	household := handler2.NewHousehold(infra)
 	category := handler3.NewCategory(infra)
@@ -32,6 +34,7 @@ func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
 	return &Handlers{
 		Interceptors: interceptors,
 		Health:       health2,
+		RevenueCat:   revenueCat,
 		Account:      account,
 		Household:    household,
 		Category:     category,

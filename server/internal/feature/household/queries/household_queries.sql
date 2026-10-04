@@ -14,6 +14,17 @@ FROM households
 WHERE id = $1
 FOR UPDATE;
 
+-- name: GetHouseholdByOwner :one
+SELECT id, owner_id, plan, version, swept_version, created_at
+FROM households
+WHERE owner_id = $1;
+
+-- name: SetHouseholdPlan :execrows
+UPDATE households
+SET plan = $2
+WHERE id = $1
+  AND plan <> $2;
+
 -- name: DeleteHousehold :execrows
 DELETE
 FROM households

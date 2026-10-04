@@ -19,6 +19,7 @@ func Handler(handlers Handlers) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /healthz", handlers.Health)
+	mux.Handle("POST /webhooks/revenuecat", handlers.RevenueCat)
 
 	mux.Handle(accountv1connect.NewAccountServiceHandler(handlers.Account, opt))
 	mux.Handle(householdv1connect.NewHouseholdServiceHandler(handlers.Household, opt))

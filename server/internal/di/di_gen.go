@@ -14,13 +14,15 @@ func NewConfig() Config {
 	auth := config.ParseAuth()
 	apple := config.ParseApple()
 	apNs := config.ParseAPNs()
+	revenueCat := config.ParseRevenueCat()
 
 	return Config{
-		App:      app,
-		Database: database,
-		Auth:     auth,
-		Apple:    apple,
-		APNs:     apNs,
+		App:        app,
+		Database:   database,
+		Auth:       auth,
+		Apple:      apple,
+		APNs:       apNs,
+		RevenueCat: revenueCat,
 	}
 }
 
@@ -47,6 +49,8 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 	if err != nil {
 		return *new(Infra), err
 	}
+	revenueCat := config2.RevenueCat
+	entitlements := provideRevenueCat(revenueCat)
 
 	return Infra{
 		Writer:         writer,
@@ -55,6 +59,7 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 		ReadTransactor: readTransactor,
 		Apple:          apple2,
 		APNs:           apNs2,
+		Entitlements:   entitlements,
 	}, nil
 }
 

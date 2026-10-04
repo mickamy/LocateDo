@@ -23,10 +23,15 @@ const (
 
 type Handlers map[outbox.Kind]outbox.Handler
 
-func NewHandlers(pushHousehold *job.PushHousehold, revokeAppleToken *job.RevokeAppleToken) Handlers {
+func NewHandlers(
+	pushHousehold *job.PushHousehold,
+	revokeAppleToken *job.RevokeAppleToken,
+	syncEntitlement *job.SyncEntitlement,
+) Handlers {
 	return Handlers{
 		outbox.KindPushHousehold:    pushHousehold,
 		outbox.KindRevokeAppleToken: revokeAppleToken,
+		outbox.KindSyncEntitlement:  syncEntitlement,
 	}
 }
 

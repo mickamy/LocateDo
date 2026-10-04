@@ -20,7 +20,32 @@ type Kind string
 const (
 	KindPushHousehold    Kind = "push_household"
 	KindRevokeAppleToken Kind = "revoke_apple_token"
+	KindSyncEntitlement  Kind = "sync_entitlement"
 )
+
+// PushHousehold matches what the sync triggers enqueue, for writes that
+// change what devices see without touching a synced row.
+func PushHousehold(householdID uuid.UUID, now time.Time) Message {
+	key := "push:" + householdID.String()
+	return Message{
+		Kind:      KindPushHousehold,
+		Payload:   []byte(`{"household_id":"` + householdID.String() + `"}`),
+		DedupeKey: &key,
+		RunAt:     now,
+	}
+}
+
+// SyncEntitlement asks the worker to set the plan of the user's household
+// from their current RevenueCat entitlement.
+func SyncEntitlement(userID uuid.UUID, now time.Time) Message {
+	key := "entitlement:" + userID.String()
+	return Message{
+		Kind:      KindSyncEntitlement,
+		Payload:   []byte(`{"user_id":"` + userID.String() + `"}`),
+		DedupeKey: &key,
+		RunAt:     now,
+	}
+}
 
 // DeadRetention is how long a dead message is kept for inspection.
 const DeadRetention = 7 * 24 * time.Hour

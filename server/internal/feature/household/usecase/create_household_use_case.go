@@ -11,6 +11,8 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
+	"github.com/mickamy/LocateDo/internal/lib/clock"
+	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
 type CreateHouseholdInput struct {
@@ -31,6 +33,7 @@ type CreateHousehold struct {
 	transactor  tx.Transactor         `di:""`
 	households  repository.Household  `di:""`
 	memberships repository.Membership `di:""`
+	messages    outbox.Repository     `di:""`
 }
 
 func (uc CreateHousehold) Do(ctx context.Context, in CreateHouseholdInput) (CreateHouseholdOutput, error) {
@@ -65,6 +68,10 @@ func (uc CreateHousehold) Do(ctx context.Context, in CreateHouseholdInput) (Crea
 		}
 		if err := households.Import(ctx, h.ID, in.Contents); err != nil {
 			return fmt.Errorf("import contents: %w", err)
+		}
+		// Someone who bought Pro before signing in may never trigger a webhook.
+		if err := uc.messages.Bind(tx).Enqueue(ctx, outbox.SyncEntitlement(in.UserID, clock.Now(ctx))); err != nil {
+			return fmt.Errorf("enqueue sync entitlement: %w", err)
 		}
 		// Re-read for the version the import left behind.
 		if h, err = households.Find(ctx, h.ID); err != nil {

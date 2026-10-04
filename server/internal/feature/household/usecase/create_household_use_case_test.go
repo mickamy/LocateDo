@@ -40,6 +40,11 @@ func TestCreateHousehold_imports(t *testing.T) {
 	assert.Equal(t, 1, d.Seeder.Count(t, "categories", householdID))
 	assert.Equal(t, 1, d.Seeder.Count(t, "places", householdID))
 	assert.Equal(t, 2, d.Seeder.Count(t, "todos", householdID))
+	var checks int
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT count(*) FROM outbox_messages WHERE kind = 'sync_entitlement' AND payload->>'user_id' = $1",
+		userID.String()).Scan(&checks))
+	assert.Equal(t, 1, checks, "a purchase made before signing in is picked up")
 }
 
 func TestCreateHousehold_retryIsIdempotent(t *testing.T) {

@@ -185,6 +185,26 @@ func (q *Queries) GetHousehold(ctx context.Context, id uuid.UUID) (Household, er
 	return i, err
 }
 
+const getHouseholdByOwner = `-- name: GetHouseholdByOwner :one
+SELECT id, owner_id, plan, version, swept_version, created_at
+FROM households
+WHERE owner_id = $1
+`
+
+func (q *Queries) GetHouseholdByOwner(ctx context.Context, ownerID uuid.UUID) (Household, error) {
+	row := q.db.QueryRow(ctx, getHouseholdByOwner, ownerID)
+	var i Household
+	err := row.Scan(
+		&i.ID,
+		&i.OwnerID,
+		&i.Plan,
+		&i.Version,
+		&i.SweptVersion,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getHouseholdForUpdate = `-- name: GetHouseholdForUpdate :one
 SELECT id, owner_id, plan, version, swept_version, created_at
 FROM households
@@ -408,4 +428,24 @@ type RemapBuiltinCategoriesParams struct {
 func (q *Queries) RemapBuiltinCategories(ctx context.Context, arg RemapBuiltinCategoriesParams) error {
 	_, err := q.db.Exec(ctx, remapBuiltinCategories, arg.FromHouseholdID, arg.ToHouseholdID)
 	return err
+}
+
+const setHouseholdPlan = `-- name: SetHouseholdPlan :execrows
+UPDATE households
+SET plan = $2
+WHERE id = $1
+  AND plan <> $2
+`
+
+type SetHouseholdPlanParams struct {
+	ID   uuid.UUID
+	Plan string
+}
+
+func (q *Queries) SetHouseholdPlan(ctx context.Context, arg SetHouseholdPlanParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setHouseholdPlan, arg.ID, arg.Plan)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/di"
 	repository2 "github.com/mickamy/LocateDo/internal/feature/account/repository"
 	"github.com/mickamy/LocateDo/internal/feature/device/repository"
+	repository4 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	repository3 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
@@ -68,5 +69,21 @@ func NewSweepTombstones(infra di.Infra) *SweepTombstones {
 	return &SweepTombstones{
 		transactor: transactor,
 		tombstones: tombstones,
+	}
+}
+
+// NewSyncEntitlement initializes dependencies and constructs SyncEntitlement.
+func NewSyncEntitlement(infra di.Infra) *SyncEntitlement {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	households := repository4.NewHousehold(reader)
+	messages := outbox.NewRepository(reader)
+	entitlements := infra.Entitlements
+
+	return &SyncEntitlement{
+		transactor:   transactor,
+		households:   households,
+		messages:     messages,
+		entitlements: entitlements,
 	}
 }

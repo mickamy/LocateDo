@@ -9,25 +9,28 @@ import (
 	"github.com/mickamy/LocateDo/config"
 	"github.com/mickamy/LocateDo/internal/infra/apns"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
+	"github.com/mickamy/LocateDo/internal/infra/revenuecat"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
 
 const (
-	appleHTTPTimeout = 10 * time.Second
-	apnsHTTPTimeout  = 10 * time.Second
+	appleHTTPTimeout  = 10 * time.Second
+	apnsHTTPTimeout   = 10 * time.Second
+	revenueCatTimeout = 10 * time.Second
 )
 
 //kanna:container must returns=Infra
 type Infra struct {
-	_              context.Context   `di:"arg"` //nolint:containedctx // required by kanna-di
-	_              Config            `di:"embed"`
-	Writer         db.Writer         `di:"with=provideWriter"`
-	Reader         db.Reader         `di:"with=provideReader"`
-	Transactor     tx.Transactor     `di:"with=provideTransactor"`
-	ReadTransactor tx.ReadTransactor `di:"with=provideReadTransactor"`
-	Apple          apple.Auth        `di:"with=provideApple"`
-	APNs           apns.Pusher       `di:"with=provideAPNs"`
+	_              context.Context         `di:"arg"` //nolint:containedctx // required by kanna-di
+	_              Config                  `di:"embed"`
+	Writer         db.Writer               `di:"with=provideWriter"`
+	Reader         db.Reader               `di:"with=provideReader"`
+	Transactor     tx.Transactor           `di:"with=provideTransactor"`
+	ReadTransactor tx.ReadTransactor       `di:"with=provideReadTransactor"`
+	Apple          apple.Auth              `di:"with=provideApple"`
+	APNs           apns.Pusher             `di:"with=provideAPNs"`
+	Entitlements   revenuecat.Entitlements `di:"with=provideRevenueCat"`
 }
 
 func (infra *Infra) Close() error {
@@ -97,4 +100,12 @@ func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
 		apnsCfg.PrivateKey = key
 	}
 	return apns.NewClient(apnsCfg, &http.Client{Timeout: apnsHTTPTimeout}), nil
+}
+
+func provideRevenueCat(cfg config.RevenueCat) revenuecat.Entitlements {
+	return revenuecat.NewClient(revenuecat.Config{
+		BaseURL:     cfg.BaseURL,
+		APIKey:      cfg.APIKey,
+		Entitlement: cfg.Entitlement,
+	}, &http.Client{Timeout: revenueCatTimeout})
 }

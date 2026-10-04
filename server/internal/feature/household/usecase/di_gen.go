@@ -5,6 +5,7 @@ package usecase
 import (
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/feature/household/repository"
+	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
 // NewAcceptInvite initializes dependencies and constructs AcceptInvite.
@@ -29,11 +30,13 @@ func NewCreateHousehold(infra di.Infra) *CreateHousehold {
 	reader := infra.Reader
 	households := repository.NewHousehold(reader)
 	memberships := repository.NewMembership(reader)
+	messages := outbox.NewRepository(reader)
 
 	return &CreateHousehold{
 		transactor:  transactor,
 		households:  households,
 		memberships: memberships,
+		messages:    messages,
 	}
 }
 
