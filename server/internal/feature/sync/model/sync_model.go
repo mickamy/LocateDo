@@ -9,6 +9,11 @@ import (
 	tmodel "github.com/mickamy/LocateDo/internal/feature/todo/model"
 )
 
+const (
+	DefaultPageSize int32 = 500
+	MaxPageSize     int32 = 1000
+)
+
 // Kind names the table a tombstone came from.
 type Kind string
 
