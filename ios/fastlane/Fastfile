@@ -3,6 +3,7 @@ skip_docs
 
 APP_IDENTIFIER = "com.locatedo.LocateDo"
 STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
+DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
 PROJECT = "LocateDo.xcodeproj"
 SCHEME = "LocateDo"
 
@@ -13,7 +14,11 @@ platform :ios do
     api_key
     connect_api
     push = Spaceship::ConnectAPI::BundleIdCapability::Type::PUSH_NOTIFICATIONS
-    { APP_IDENTIFIER => "LocateDo", STAGING_APP_IDENTIFIER => "LocateDo Staging" }.each do |identifier, name|
+    {
+      APP_IDENTIFIER => "LocateDo",
+      STAGING_APP_IDENTIFIER => "LocateDo Staging",
+      DEV_APP_IDENTIFIER => "LocateDo Dev"
+    }.each do |identifier, name|
       bundle = Spaceship::ConnectAPI::BundleId.find(identifier) ||
         Spaceship::ConnectAPI::BundleId.create(
           name: name,
@@ -83,7 +88,7 @@ platform :ios do
   lane :delete_bundle_ids do |options|
     api_key
     wanted = options.fetch(:identifiers).split(",").map(&:strip)
-    protected = [APP_IDENTIFIER, STAGING_APP_IDENTIFIER]
+    protected = [APP_IDENTIFIER, STAGING_APP_IDENTIFIER, DEV_APP_IDENTIFIER]
     UI.user_error!("Refusing to delete #{(wanted & protected).join(', ')}") unless (wanted & protected).empty?
     registered = bundle_identifiers
     targets = wanted.map do |identifier|
