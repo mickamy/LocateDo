@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct LocateDoApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let container: ModelContainer
     private let router = AppRouter()
     private let preferences = AppPreferences()
@@ -15,6 +16,7 @@ struct LocateDoApp: App {
     private let account: AccountManager
     private let writes: LocalWrites
     private let network: NetworkMonitor
+    private let devices: DeviceRegistration
 
     init() {
         container = Self.makeContainer()
@@ -34,6 +36,8 @@ struct LocateDoApp: App {
             await geofence.sync()
         }
         self.sync = sync
+        let devices = DeviceRegistration(devices: api.device, authenticator: authenticator)
+        self.devices = devices
         account = AccountManager(
             account: api.account,
             household: api.household,
@@ -43,6 +47,7 @@ struct LocateDoApp: App {
             preferences.reset()
             await geofence.sync()
         } onHouseholdReady: { [geofence] in
+            await devices.registerIfSignedIn()
             await sync.sync()
             await geofence.sync()
         } onSessionEnded: { [preferences, geofence] in
@@ -72,6 +77,15 @@ struct LocateDoApp: App {
             Task {
                 await account.endSession()
             }
+        }
+        account.pushToken = { [devices] in
+            devices.pushToken
+        }
+        AppDelegate.onDeviceToken = { [devices] token in
+            await devices.received(deviceToken: token)
+        }
+        AppDelegate.onRemoteNotification = { [sync] in
+            await sync.sync()
         }
         if !Self.isRunningTests {
             Analytics.configure()

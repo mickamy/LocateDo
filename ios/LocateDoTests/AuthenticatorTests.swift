@@ -205,6 +205,7 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest?
         var deleteCalls = 0
         var signOutTokens: [String] = []
+        var signOutPushTokens: [String] = []
     }
 
     private let state = Mutex(State())
@@ -227,6 +228,10 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
 
     var signOutTokens: [String] {
         state.withLock { $0.signOutTokens }
+    }
+
+    var signOutPushTokens: [String] {
+        state.withLock { $0.signOutPushTokens }
     }
 
     func enqueue(_ result: Result<Locatedo_Account_V1_RefreshTokenResponse, ConnectError>) {
@@ -283,7 +288,12 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         request: Locatedo_Account_V1_SignOutRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Account_V1_SignOutResponse> {
-        state.withLock { $0.signOutTokens.append(request.refreshToken) }
+        state.withLock { state in
+            state.signOutTokens.append(request.refreshToken)
+            if request.hasDevice {
+                state.signOutPushTokens.append(request.device.pushToken)
+            }
+        }
         return ResponseMessage(result: .success(Locatedo_Account_V1_SignOutResponse()))
     }
 }

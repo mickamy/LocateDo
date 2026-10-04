@@ -13,6 +13,7 @@ final class AccountManager {
 
     private(set) var isWorking = false
     private var pendingAdoption: PendingAdoption?
+    @ObservationIgnored var pushToken: () -> String? = { nil }
 
     private let account: any Locatedo_Account_V1_AccountServiceClientInterface
     private let household: any Locatedo_Household_V1_HouseholdServiceClientInterface
@@ -153,6 +154,10 @@ final class AccountManager {
         if let refreshToken = authenticator.session?.refreshToken {
             var request = Locatedo_Account_V1_SignOutRequest()
             request.refreshToken = refreshToken
+            if let pushToken = pushToken() {
+                request.device.platform = .ios
+                request.device.pushToken = pushToken
+            }
             if case .failure(let error) = await account.signOut(request: request, headers: [:]).result {
                 logger.notice("Server sign-out failed; signing out locally: \(error, privacy: .public)")
             }

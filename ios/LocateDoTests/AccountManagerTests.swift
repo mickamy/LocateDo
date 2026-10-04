@@ -153,9 +153,12 @@ struct AccountManagerTests {
         try fixture.context.save()
         #expect(try fixture.manager.hasUnsyncedWrites())
 
+        fixture.manager.pushToken = { "0abcff01" }
+
         try await fixture.manager.signOut()
 
         #expect(fixture.account.signOutTokens == ["refresh"])
+        #expect(fixture.account.signOutPushTokens == ["0abcff01"])
         #expect(!fixture.manager.isSignedIn)
         #expect(try !fixture.manager.hasUnsyncedWrites())
         #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 0)
