@@ -62,3 +62,12 @@ sql:
         out: "internal/feature/category/queries"
         sql_package: "pgx/v5"
         omit_unused_structs: true
+  - engine: "postgresql"
+    schema: "internal/infra/storage/db/migrate/sql"
+    queries: "internal/feature/todo/queries/todo_queries.sql"
+    gen:
+      go:
+        package: "queries"
+        out: "internal/feature/todo/queries"
+        sql_package: "pgx/v5"
+        omit_unused_structs: true

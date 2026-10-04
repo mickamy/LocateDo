@@ -137,6 +137,7 @@ CREATE TABLE todos
     completed_at     timestamptz,
     updated_at       timestamptz NOT NULL,
     version          bigint      NOT NULL,
+    UNIQUE (id, household_id),
     FOREIGN KEY (place_id, household_id)
         REFERENCES places (id, household_id) ON DELETE CASCADE
         DEFERRABLE INITIALLY IMMEDIATE
