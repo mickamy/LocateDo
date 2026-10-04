@@ -1,0 +1,53 @@
+services:
+  api:
+    build:
+      args:
+        BIN_NAME: api
+    env_file: .env
+    environment:
+      MODULE_ROOT: /src
+      DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
+      DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
+      DATABASE_READER_URL: postgres://locatedo_reader:password@db:5432/locatedo?sslmode=disable
+    restart: always
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      args:
+        BIN_NAME: worker
+    env_file: .env
+    environment:
+      MODULE_ROOT: /src
+      DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
+      DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
+      DATABASE_READER_URL: postgres://locatedo_reader:password@db:5432/locatedo?sslmode=disable
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: locatedo
+    restart: always
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d locatedo" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  go:
+  db-data:
