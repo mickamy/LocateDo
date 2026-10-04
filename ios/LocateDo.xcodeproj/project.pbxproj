@@ -191,10 +191,7 @@
 				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
 			);
 			shellPath = /bin/sh;
-			shellScript = (
-				"\"${SRCROOT}/Scripts/copy-google-service-info.sh\"",
-				"",
-			);
+			shellScript = "\"${SRCROOT}/Scripts/copy-google-service-info.sh\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
