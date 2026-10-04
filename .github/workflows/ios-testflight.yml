@@ -36,6 +36,7 @@ jobs:
         working-directory: ios
         env:
           CI: "true"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
