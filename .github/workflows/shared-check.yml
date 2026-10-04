@@ -32,7 +32,7 @@ jobs:
           input: shared/proto
           lint: true
           format: true
-          breaking: true
+          breaking: ${{ github.event_name == 'pull_request' }}
           breaking_against: ${{ github.event.repository.clone_url }}#format=git,commit=${{ github.event.pull_request.base.sha }},subdir=shared/proto
           push: false
           archive: false
