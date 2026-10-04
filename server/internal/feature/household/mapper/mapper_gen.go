@@ -7,6 +7,7 @@ import (
 	"time"
 	"uuid"
 
+	"github.com/mickamy/LocateDo/internal/feature/category/mapper"
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	categoryv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/category/v1"
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
@@ -71,7 +72,7 @@ func ImportCategoryFromCategoryInput(src *categoryv1.CategoryInput) (model.Impor
 	}
 	return model.ImportCategory{
 		ID:         v1,
-		BuiltinKey: BuiltinCategoryToKey(src.GetBuiltin()),
+		BuiltinKey: mapper.BuiltinCategoryToKey(src.GetBuiltin()),
 		Name:       src.Name,
 		Icon:       src.GetIcon(),
 		Color:      src.GetColor(),
