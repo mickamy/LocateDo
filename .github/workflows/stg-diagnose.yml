@@ -38,3 +38,21 @@ jobs:
           if [ -n "$name" ]; then
             docker logs --tail 200 "$name" 2>&1 | grep -i -E "ERR|error|ingress|originService|dial|refused" | tail -30 || true
           fi
+
+      - name: api internal errors (time, procedure, and error only)
+        run: |
+          name=$(docker ps --filter label=com.docker.compose.service=api --format '{{.Names}}' | head -n 1)
+          if [ -z "$name" ]; then
+            echo "no api container found"
+            exit 0
+          fi
+          docker logs --since 6h "$name" 2>&1 | python3 -c '
+          import json, sys
+          for line in sys.stdin:
+              try:
+                  entry = json.loads(line)
+              except ValueError:
+                  continue
+              if entry.get("msg") == "internal error":
+                  print(entry.get("time"), entry.get("procedure"), entry.get("error"))
+          ' | tail -20
