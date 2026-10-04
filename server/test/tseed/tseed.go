@@ -1,4 +1,3 @@
-// Package tseed writes the rows a test needs before it starts.
 package tseed
 
 import (

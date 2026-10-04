@@ -1,5 +1,3 @@
-// Package caller carries the authenticated user of a request and the
-// household they belong to.
 package caller
 
 import (

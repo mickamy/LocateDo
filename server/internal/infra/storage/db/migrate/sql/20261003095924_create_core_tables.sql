@@ -157,9 +157,26 @@ CREATE TABLE deletions
 );
 
 CREATE INDEX deletions_household_id_version_idx ON deletions (household_id, version);
+
+CREATE TABLE outbox_messages
+(
+    id         uuid PRIMARY KEY     DEFAULT uuidv7(),
+    kind       text        NOT NULL,
+    payload    jsonb       NOT NULL DEFAULT '{}'::jsonb,
+    dedupe_key text,
+    status     text        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'dead')),
+    run_at     timestamptz NOT NULL DEFAULT now(),
+    attempts   integer     NOT NULL DEFAULT 0,
+    last_error text,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX outbox_messages_pending_dedupe_key_idx ON outbox_messages (dedupe_key) WHERE status = 'pending';
+CREATE INDEX outbox_messages_pending_run_at_idx ON outbox_messages (run_at) WHERE status = 'pending';
 CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
 
 -- +goose Down
+DROP TABLE outbox_messages;
 DROP TABLE deletions;
 DROP TABLE household_invites;
 DROP TABLE todos;
