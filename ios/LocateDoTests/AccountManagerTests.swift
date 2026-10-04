@@ -40,6 +40,7 @@ struct AccountManagerTests {
         let state = try SyncState.current(in: fixture.context)
         #expect(state.householdID?.uuidString.lowercased() == created.id)
         #expect(state.cursor == 42)
+        #expect(fixture.ready.value == 1)
     }
 
     @Test func existingHouseholdIsAdoptedWithoutUploading() async throws {
@@ -57,6 +58,7 @@ struct AccountManagerTests {
         #expect(fixture.household.createCalls == 0)
         #expect(fixture.account.lastSignIn?.hasDisplayName == false)
         #expect(try SyncState.current(in: fixture.context).householdID == UUID(uuidString: householdID))
+        #expect(fixture.ready.value == 1)
     }
 
     @Test func failedUploadRetriesWithTheSameHouseholdID() async throws {
@@ -126,6 +128,7 @@ struct AccountManagerTests {
         let account = FakeAccountService()
         let household = FakeHouseholdService()
         let resets = ResetCounter()
+        let ready = ResetCounter()
         let manager: AccountManager
 
         init() throws {
@@ -134,6 +137,7 @@ struct AccountManagerTests {
             let tokens = AccessTokenStore()
             let authenticator = Authenticator(store: InMemorySessionStore(), account: account, tokens: tokens)
             let resets = resets
+            let ready = ready
             manager = AccountManager(
                 account: account,
                 household: household,
@@ -141,6 +145,8 @@ struct AccountManagerTests {
                 context: context
             ) {
                 resets.increment()
+            } onHouseholdReady: {
+                ready.increment()
             }
         }
     }

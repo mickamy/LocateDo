@@ -11,6 +11,7 @@ struct LocateDoApp: App {
     private let geofence: GeofenceMonitor
     private let api: APIClient
     private let authenticator: Authenticator
+    private let sync: SyncEngine
     private let account: AccountManager
     private let writes: LocalWrites
 
@@ -25,6 +26,14 @@ struct LocateDoApp: App {
         let tokens = AccessTokenStore()
         api = APIClient(environment: .current, tokens: tokens)
         authenticator = Authenticator(store: KeychainSessionStore(), account: api.account, tokens: tokens)
+        let sync = SyncEngine(
+            places: api.place,
+            todos: api.todo,
+            categories: api.category,
+            authenticator: authenticator,
+            context: container.mainContext
+        )
+        self.sync = sync
         account = AccountManager(
             account: api.account,
             household: api.household,
@@ -33,9 +42,13 @@ struct LocateDoApp: App {
         ) { [preferences, geofence] in
             preferences.reset()
             await geofence.sync()
+        } onHouseholdReady: {
+            await sync.drain()
         }
         writes = LocalWrites(context: container.mainContext) { [authenticator] in
             authenticator.isSignedIn
+        } onQueued: {
+            sync.scheduleDrain()
         }
         if !Self.isRunningTests {
             Analytics.configure()
@@ -58,6 +71,7 @@ struct LocateDoApp: App {
         .environment(notifier)
         .environment(geofence)
         .environment(authenticator)
+        .environment(sync)
         .environment(account)
         .environment(writes)
     }

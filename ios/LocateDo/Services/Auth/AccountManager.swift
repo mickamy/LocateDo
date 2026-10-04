@@ -12,6 +12,7 @@ final class AccountManager {
     private let authenticator: Authenticator
     private let context: ModelContext
     private let onLocalDataReset: () async -> Void
+    private let onHouseholdReady: () async -> Void
     private var pendingHouseholdID: UUID?
 
     init(
@@ -19,13 +20,15 @@ final class AccountManager {
         household: any Locatedo_Household_V1_HouseholdServiceClientInterface,
         authenticator: Authenticator,
         context: ModelContext,
-        onLocalDataReset: @escaping () async -> Void = {}
+        onLocalDataReset: @escaping () async -> Void = {},
+        onHouseholdReady: @escaping () async -> Void = {}
     ) {
         self.account = account
         self.household = household
         self.authenticator = authenticator
         self.context = context
         self.onLocalDataReset = onLocalDataReset
+        self.onHouseholdReady = onHouseholdReady
     }
 
     var isSignedIn: Bool {
@@ -58,6 +61,7 @@ final class AccountManager {
             let state = try SyncState.current(in: context)
             state.householdID = householdID
             try context.save()
+            await onHouseholdReady()
             return
         }
         try await uploadLocalDataIfNeeded()
@@ -87,6 +91,7 @@ final class AccountManager {
         state.cursor = response.cursor
         try context.save()
         pendingHouseholdID = nil
+        await onHouseholdReady()
     }
 
     func deleteAccount() async throws {

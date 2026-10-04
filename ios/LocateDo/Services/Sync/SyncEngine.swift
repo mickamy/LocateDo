@@ -1,9 +1,11 @@
 import Connect
 import Foundation
+import Observation
 import OSLog
 import SwiftData
 import SwiftProtobuf
 
+@Observable
 final class SyncEngine {
     private enum Failure {
         case keep
@@ -15,9 +17,10 @@ final class SyncEngine {
     private let categories: any Locatedo_Category_V1_CategoryServiceClientInterface
     private let authenticator: Authenticator
     private let context: ModelContext
-    private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
-    private var inFlight: Task<Void, Never>?
-    private var rerunRequested = false
+    @ObservationIgnored private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
+    @ObservationIgnored private var inFlight: Task<Void, Never>?
+    @ObservationIgnored private var rerunRequested = false
+    @ObservationIgnored private var scheduled: Task<Void, Never>?
 
     init(
         places: any Locatedo_Place_V1_PlaceServiceClientInterface,
@@ -31,6 +34,21 @@ final class SyncEngine {
         self.categories = categories
         self.authenticator = authenticator
         self.context = context
+    }
+
+    @discardableResult
+    func scheduleDrain(after delay: Duration = .seconds(2)) -> Task<Void, Never> {
+        scheduled?.cancel()
+        let task = Task {
+            do {
+                try await Task.sleep(for: delay)
+            } catch {
+                return
+            }
+            await drain()
+        }
+        scheduled = task
+        return task
     }
 
     func drain() async {

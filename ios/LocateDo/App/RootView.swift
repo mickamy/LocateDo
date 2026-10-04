@@ -6,6 +6,8 @@ struct RootView: View {
     @Environment(AppRouter.self) private var router
     @Environment(AppPreferences.self) private var preferences
     @Environment(AccountManager.self) private var account
+    @Environment(SyncEngine.self) private var sync
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         if preferences.hasCompletedOnboarding {
@@ -31,13 +33,17 @@ struct RootView: View {
                 SettingsView()
             }
         }
-        .task {
+        .task(id: scenePhase) {
+            guard scenePhase == .active else {
+                return
+            }
             do {
                 try await account.uploadLocalDataIfNeeded()
             } catch {
                 Logger(subsystem: "com.locatedo.LocateDo", category: "account")
                     .error("Initial upload failed: \(error, privacy: .public)")
             }
+            await sync.drain()
         }
     }
 }
@@ -63,6 +69,13 @@ struct RootView: View {
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))
         .environment(authenticator)
+        .environment(SyncEngine(
+            places: api.place,
+            todos: api.todo,
+            categories: api.category,
+            authenticator: authenticator,
+            context: container.mainContext
+        ))
         .environment(AccountManager(
             account: api.account,
             household: api.household,

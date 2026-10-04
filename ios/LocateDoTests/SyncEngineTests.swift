@@ -97,6 +97,22 @@ struct SyncEngineTests {
         #expect(try fixture.queueCount() == 0)
     }
 
+    @Test func rescheduledDrainReplacesThePendingOne() async throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        try fixture.enqueue([.put(place)])
+
+        let first = fixture.engine.scheduleDrain(after: .seconds(60))
+        try fixture.enqueue([.delete(place)])
+        let second = fixture.engine.scheduleDrain(after: .zero)
+        await first.value
+        await second.value
+
+        #expect(first.isCancelled)
+        #expect(fixture.services.sent == ["putPlace", "deletePlace"])
+        #expect(try fixture.queueCount() == 0)
+    }
+
     private struct Fixture {
         let context: ModelContext
         let services = FakeWriteServices()
