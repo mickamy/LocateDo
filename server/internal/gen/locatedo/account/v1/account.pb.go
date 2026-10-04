@@ -168,8 +168,10 @@ func (x *SignInWithAppleRequest) GetNonce() string {
 }
 
 type SignInWithAppleResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Session       *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Session *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
+	// Set when the user already belongs to a household; the device adopts it instead of creating one.
+	HouseholdId   *string `protobuf:"bytes,2,opt,name=household_id,json=householdId,proto3,oneof" json:"household_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,6 +211,13 @@ func (x *SignInWithAppleResponse) GetSession() *Session {
 		return x.Session
 	}
 	return nil
+}
+
+func (x *SignInWithAppleResponse) GetHouseholdId() string {
+	if x != nil && x.HouseholdId != nil {
+		return *x.HouseholdId
+	}
+	return ""
 }
 
 type SignInWithGoogleRequest struct {
@@ -346,6 +355,7 @@ func (x *RefreshTokenRequest) GetRefreshToken() string {
 type RefreshTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Session       *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
+	HouseholdId   *string                `protobuf:"bytes,2,opt,name=household_id,json=householdId,proto3,oneof" json:"household_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -385,6 +395,13 @@ func (x *RefreshTokenResponse) GetSession() *Session {
 		return x.Session
 	}
 	return nil
+}
+
+func (x *RefreshTokenResponse) GetHouseholdId() string {
+	if x != nil && x.HouseholdId != nil {
+		return *x.HouseholdId
+	}
+	return ""
 }
 
 type DeleteAccountRequest struct {
@@ -476,17 +493,21 @@ const file_locatedo_account_v1_account_proto_rawDesc = "" +
 	"\x12authorization_code\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x11authorizationCode\x12 \n" +
 	"\x05nonce\x18\x04 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x10\x18\x80\x01R\x05nonceB\x0f\n" +
-	"\r_display_name\"Q\n" +
+	"\r_display_name\"\x8a\x01\n" +
 	"\x17SignInWithAppleResponse\x126\n" +
-	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\"=\n" +
+	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\x12&\n" +
+	"\fhousehold_id\x18\x02 \x01(\tH\x00R\vhouseholdId\x88\x01\x01B\x0f\n" +
+	"\r_household_id\"=\n" +
 	"\x17SignInWithGoogleRequest\x12\"\n" +
 	"\bid_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\aidToken\"R\n" +
 	"\x18SignInWithGoogleResponse\x126\n" +
 	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\"C\n" +
 	"\x13RefreshTokenRequest\x12,\n" +
-	"\rrefresh_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\frefreshToken\"N\n" +
+	"\rrefresh_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\frefreshToken\"\x87\x01\n" +
 	"\x14RefreshTokenResponse\x126\n" +
-	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\"\x16\n" +
+	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\x12&\n" +
+	"\fhousehold_id\x18\x02 \x01(\tH\x00R\vhouseholdId\x88\x01\x01B\x0f\n" +
+	"\r_household_id\"\x16\n" +
 	"\x14DeleteAccountRequest\"\x17\n" +
 	"\x15DeleteAccountResponse2\xbc\x03\n" +
 	"\x0eAccountService\x12l\n" +
@@ -547,6 +568,8 @@ func file_locatedo_account_v1_account_proto_init() {
 		return
 	}
 	file_locatedo_account_v1_account_proto_msgTypes[1].OneofWrappers = []any{}
+	file_locatedo_account_v1_account_proto_msgTypes[2].OneofWrappers = []any{}
+	file_locatedo_account_v1_account_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

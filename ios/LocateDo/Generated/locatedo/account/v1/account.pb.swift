@@ -90,11 +90,22 @@ nonisolated struct Locatedo_Account_V1_SignInWithAppleResponse: Sendable {
   /// Clears the value of `session`. Subsequent reads from it will return its default value.
   mutating func clearSession() {self._session = nil}
 
+  /// Set when the user already belongs to a household; the device adopts it instead of creating one.
+  var householdID: String {
+    get {_householdID ?? String()}
+    set {_householdID = newValue}
+  }
+  /// Returns true if `householdID` has been explicitly set.
+  var hasHouseholdID: Bool {self._householdID != nil}
+  /// Clears the value of `householdID`. Subsequent reads from it will return its default value.
+  mutating func clearHouseholdID() {self._householdID = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _session: Locatedo_Account_V1_Session? = nil
+  fileprivate var _householdID: String? = nil
 }
 
 nonisolated struct Locatedo_Account_V1_SignInWithGoogleRequest: Sendable {
@@ -156,11 +167,21 @@ nonisolated struct Locatedo_Account_V1_RefreshTokenResponse: Sendable {
   /// Clears the value of `session`. Subsequent reads from it will return its default value.
   mutating func clearSession() {self._session = nil}
 
+  var householdID: String {
+    get {_householdID ?? String()}
+    set {_householdID = newValue}
+  }
+  /// Returns true if `householdID` has been explicitly set.
+  var hasHouseholdID: Bool {self._householdID != nil}
+  /// Clears the value of `householdID`. Subsequent reads from it will return its default value.
+  mutating func clearHouseholdID() {self._householdID = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _session: Locatedo_Account_V1_Session? = nil
+  fileprivate var _householdID: String? = nil
 }
 
 nonisolated struct Locatedo_Account_V1_DeleteAccountRequest: Sendable {
@@ -292,7 +313,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleRequest: SwiftProtobuf.
 
 nonisolated extension Locatedo_Account_V1_SignInWithAppleResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SignInWithAppleResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}session\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}session\0\u{3}household_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -301,6 +322,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleResponse: SwiftProtobuf
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._session) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._householdID) }()
       default: break
       }
     }
@@ -314,11 +336,15 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleResponse: SwiftProtobuf
     try { if let v = self._session {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
+    try { if let v = self._householdID {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Locatedo_Account_V1_SignInWithAppleResponse, rhs: Locatedo_Account_V1_SignInWithAppleResponse) -> Bool {
     if lhs._session != rhs._session {return false}
+    if lhs._householdID != rhs._householdID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -420,7 +446,7 @@ nonisolated extension Locatedo_Account_V1_RefreshTokenRequest: SwiftProtobuf.Mes
 
 nonisolated extension Locatedo_Account_V1_RefreshTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RefreshTokenResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}session\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}session\0\u{3}household_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -429,6 +455,7 @@ nonisolated extension Locatedo_Account_V1_RefreshTokenResponse: SwiftProtobuf.Me
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._session) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._householdID) }()
       default: break
       }
     }
@@ -442,11 +469,15 @@ nonisolated extension Locatedo_Account_V1_RefreshTokenResponse: SwiftProtobuf.Me
     try { if let v = self._session {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
+    try { if let v = self._householdID {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Locatedo_Account_V1_RefreshTokenResponse, rhs: Locatedo_Account_V1_RefreshTokenResponse) -> Bool {
     if lhs._session != rhs._session {return false}
+    if lhs._householdID != rhs._householdID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

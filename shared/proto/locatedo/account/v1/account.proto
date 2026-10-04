@@ -32,6 +32,8 @@ message SignInWithAppleRequest {
 
 message SignInWithAppleResponse {
   Session session = 1;
+  // Set when the user already belongs to a household; the device adopts it instead of creating one.
+  optional string household_id = 2;
 }
 
 message SignInWithGoogleRequest {
@@ -48,6 +50,7 @@ message RefreshTokenRequest {
 
 message RefreshTokenResponse {
   Session session = 1;
+  optional string household_id = 2;
 }
 
 message DeleteAccountRequest {}
