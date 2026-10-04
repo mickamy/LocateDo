@@ -26,17 +26,21 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         await refreshAuthorizationStatus()
     }
 
-    func notifyArrival(at place: Place, todoTitles: [String]) async {
+    func notifyArrival(at place: Place, todoTitles: [String], after delay: TimeInterval? = nil) async {
         let content = UNMutableNotificationContent()
         content.title = String(localized: .notificationArrivedTitle(place.name))
         content.body = NotificationPolicy.body(todoTitles: todoTitles)
         content.sound = .default
         content.threadIdentifier = place.id.uuidString
         content.userInfo = [Self.placeIDKey: place.id.uuidString]
+        var trigger: UNNotificationTrigger?
+        if let delay {
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
+        }
         let request = UNNotificationRequest(
             identifier: "arrival-\(place.id.uuidString)",
             content: content,
-            trigger: nil
+            trigger: trigger
         )
         do {
             try await center.add(request)

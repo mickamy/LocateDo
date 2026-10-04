@@ -86,7 +86,7 @@ struct PlaceDetailView: View {
                     Button(.placeDetailDelete, systemImage: "trash", role: .destructive) {
                         isConfirmingDelete = true
                     }
-                    #if DEBUG
+                    #if DEBUG || STAGING
                     Button {
                         Task {
                             await notifier.requestAuthorization()
@@ -97,6 +97,18 @@ struct PlaceDetailView: View {
                             Text(verbatim: "Simulate arrival (debug)")
                         } icon: {
                             Image(systemName: "location.fill.viewfinder")
+                        }
+                    }
+                    Button {
+                        Task {
+                            await notifier.requestAuthorization()
+                            await notifier.notifyArrival(at: place, todoTitles: place.openTodos.map(\.title), after: 10)
+                        }
+                    } label: {
+                        Label {
+                            Text(verbatim: "Simulate arrival in 10 s (debug)")
+                        } icon: {
+                            Image(systemName: "timer")
                         }
                     }
                     #endif

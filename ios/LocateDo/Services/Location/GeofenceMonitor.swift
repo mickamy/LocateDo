@@ -124,7 +124,7 @@ final class GeofenceMonitor {
         await onArrival()
     }
 
-    #if DEBUG
+    #if DEBUG || STAGING
     func simulateArrival(at place: Place) async {
         place.lastNotifiedAt = nil
         await arrived(at: place.id)
