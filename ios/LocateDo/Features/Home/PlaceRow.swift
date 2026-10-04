@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PlaceRow: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(LocationProvider.self) private var locationProvider
 
     let nearby: NearbyPlace
 
@@ -34,13 +35,22 @@ struct PlaceRow: View {
             if !dynamicTypeSize.isAccessibilitySize {
                 Spacer()
             }
-            if let distance = nearby.distanceMeters {
-                Text(DistanceFormatting.string(meters: distance))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            distance
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var distance: some View {
+        if let meters = nearby.distanceMeters {
+            Text(DistanceFormatting.string(meters: meters))
+        } else if locationProvider.isAwaitingLocation {
+            Text(DistanceFormatting.placeholder())
+                .redacted(reason: .placeholder)
+                .accessibilityHidden(true)
+        }
     }
 }

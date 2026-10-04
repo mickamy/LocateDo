@@ -9,9 +9,15 @@ struct PlaceDetailView: View {
     @Environment(GeofenceMonitor.self) private var geofence
     @Environment(ArrivalNotifier.self) private var notifier
 
+    private enum Address {
+        case loading
+        case found(String)
+        case unavailable
+    }
+
     let place: Place
     @Query private var todos: [Todo]
-    @State private var address: String?
+    @State private var address: Address = .loading
     @State private var isEditing = false
     @State private var isAddingTodo = false
     @State private var isConfirmingDelete = false
@@ -30,17 +36,12 @@ struct PlaceDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Label(place.category.title, systemImage: place.category.systemImage)
                         .foregroundStyle(place.category.tint)
-                    if let address {
-                        Text(address)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    Group {
+                        addressText
+                        distanceText
                     }
-                    if let location = locationProvider.location {
-                        let distance = DistanceFormatting.string(meters: location.distance(from: place.location))
-                        Text(.placeDetailDistance(distance))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
                 }
             }
             Section {
@@ -121,8 +122,43 @@ struct PlaceDetailView: View {
             TodoEditorView(place: place)
         }
         .task(id: "\(place.latitude),\(place.longitude)") {
-            address = await Geocoding.lookUp(place.coordinate)?.address
+            address = .loading
+            if let found = await Geocoding.lookUp(place.coordinate)?.address {
+                address = .found(found)
+            } else {
+                address = .unavailable
+            }
         }
+    }
+
+    @ViewBuilder
+    private var addressText: some View {
+        switch address {
+        case .loading:
+            Text(coordinateString)
+                .redacted(reason: .placeholder)
+                .accessibilityHidden(true)
+        case .found(let found):
+            Text(found)
+        case .unavailable:
+            Text(coordinateString)
+        }
+    }
+
+    @ViewBuilder
+    private var distanceText: some View {
+        if let location = locationProvider.location {
+            let distance = DistanceFormatting.string(meters: location.distance(from: place.location))
+            Text(.placeDetailDistance(distance))
+        } else if locationProvider.isAwaitingLocation {
+            Text(.placeDetailDistance(DistanceFormatting.placeholder()))
+                .redacted(reason: .placeholder)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var coordinateString: String {
+        CoordinateFormatting.string(place.coordinate)
     }
 
     private var map: some View {
