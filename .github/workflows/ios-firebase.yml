@@ -15,8 +15,6 @@ concurrency:
 jobs:
   firebase:
     name: fastlane firebase
-    # Enable with `gh variable set FIREBASE_ENABLED --body true` once Firebase and match are set up.
-    if: vars.FIREBASE_ENABLED == 'true'
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
