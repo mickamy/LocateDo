@@ -23,6 +23,8 @@ type Membership interface {
 	FindByUser(ctx context.Context, userID uuid.UUID) (model.Membership, error)
 	Count(ctx context.Context, householdID uuid.UUID) (int, error)
 	Delete(ctx context.Context, householdID, userID uuid.UUID) error
+	// ReleaseAssignments turns the user's todos in the household back to "anyone".
+	ReleaseAssignments(ctx context.Context, householdID, userID uuid.UUID) error
 	Bind(tx tx.Tx) Membership
 }
 
@@ -92,6 +94,16 @@ func (r membership) Delete(ctx context.Context, householdID, userID uuid.UUID) e
 	}
 	if n == 0 {
 		return aerrors.NotFound("membership")
+	}
+	return nil
+}
+
+func (r membership) ReleaseAssignments(ctx context.Context, householdID, userID uuid.UUID) error {
+	if err := r.q.ReleaseAssignments(ctx, queries.ReleaseAssignmentsParams{
+		HouseholdID: householdID,
+		UserID:      userID,
+	}); err != nil {
+		return fmt.Errorf("release assignments: %w", err)
 	}
 	return nil
 }

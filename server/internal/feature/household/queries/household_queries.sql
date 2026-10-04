@@ -34,6 +34,12 @@ SELECT count(*)
 FROM memberships
 WHERE household_id = $1;
 
+-- name: ReleaseAssignments :exec
+UPDATE todos
+SET assignee_id = NULL
+WHERE household_id = sqlc.arg(household_id)
+  AND assignee_id = sqlc.arg(user_id)::uuid;
+
 -- name: DeleteMembership :execrows
 DELETE
 FROM memberships

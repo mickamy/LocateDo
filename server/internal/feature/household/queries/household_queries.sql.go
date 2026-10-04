@@ -368,6 +368,23 @@ func (q *Queries) MoveTodos(ctx context.Context, arg MoveTodosParams) error {
 	return err
 }
 
+const releaseAssignments = `-- name: ReleaseAssignments :exec
+UPDATE todos
+SET assignee_id = NULL
+WHERE household_id = $1
+  AND assignee_id = $2::uuid
+`
+
+type ReleaseAssignmentsParams struct {
+	HouseholdID uuid.UUID
+	UserID      uuid.UUID
+}
+
+func (q *Queries) ReleaseAssignments(ctx context.Context, arg ReleaseAssignmentsParams) error {
+	_, err := q.db.Exec(ctx, releaseAssignments, arg.HouseholdID, arg.UserID)
+	return err
+}
+
 const remapBuiltinCategories = `-- name: RemapBuiltinCategories :exec
 UPDATE places p
 SET category_id = t.id

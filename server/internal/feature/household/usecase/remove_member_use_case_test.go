@@ -4,6 +4,7 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
@@ -81,4 +82,38 @@ func TestRemoveMember(t *testing.T) {
 			require.ErrorIs(t, err, aerrors.ErrNotFound)
 		})
 	}
+}
+
+func TestRemoveMember_releasesAssignments(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, model.PlanPro)
+	memberID := d.Seeder.Member(t, h.ID)
+	placeID := d.Seeder.Place(t, h.ID)
+	theirs := d.Seeder.Todo(t, h.ID, placeID)
+	ownersOwn := d.Seeder.Todo(t, h.ID, placeID)
+	_, err := d.Writer.Exec(t.Context(), "UPDATE todos SET assignee_id = $1 WHERE id = $2", memberID, theirs)
+	require.NoError(t, err)
+	_, err = d.Writer.Exec(t.Context(), "UPDATE todos SET assignee_id = $1 WHERE id = $2", h.OwnerID, ownersOwn)
+	require.NoError(t, err)
+
+	// act
+	err = usecase.NewRemoveMember(d.Infra()).Do(fixedClock(t), usecase.RemoveMemberInput{
+		CallerID: h.OwnerID, HouseholdID: h.ID, UserID: memberID,
+	})
+
+	// assert
+	require.NoError(t, err)
+	assert.Nil(t, assignee(t, d, theirs), "the removed member's todos go back to anyone")
+	assert.Equal(t, &h.OwnerID, assignee(t, d, ownersOwn), "other assignments stay")
+}
+
+func assignee(t *testing.T, d tdb.DB, todoID uuid.UUID) *uuid.UUID {
+	t.Helper()
+
+	var id *uuid.UUID
+	require.NoError(t, d.Writer.QueryRow(t.Context(), "SELECT assignee_id FROM todos WHERE id = $1", todoID).Scan(&id))
+	return id
 }
