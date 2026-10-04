@@ -1,7 +1,14 @@
 import SwiftData
 
 enum AppModelContainer {
-    static let schema = Schema([Place.self, Todo.self, PlaceCategory.self, SyncState.self, PendingWrite.self])
+    static let schema = Schema([
+        Place.self,
+        Todo.self,
+        PlaceCategory.self,
+        SyncState.self,
+        PendingWrite.self,
+        Membership.self
+    ])
 
     static func make(inMemory: Bool = false) throws -> ModelContainer {
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)

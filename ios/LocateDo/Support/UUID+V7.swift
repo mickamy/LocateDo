@@ -19,4 +19,14 @@ extension UUID {
             bytes[12], bytes[13], bytes[14], bytes[15]
         ))
     }
+
+    nonisolated var v7Date: Date? {
+        let bytes = uuid
+        guard bytes.6 >> 4 == 0x7 else {
+            return nil
+        }
+        let millis = [bytes.0, bytes.1, bytes.2, bytes.3, bytes.4, bytes.5]
+            .reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
+        return Date(timeIntervalSince1970: Double(millis) / 1000)
+    }
 }

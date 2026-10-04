@@ -17,6 +17,15 @@ struct UUIDV7Tests {
         #expect(millis == 1_700_000_000_123)
     }
 
+    @Test func readsBackTheTimestamp() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000.123)
+        #expect(UUID.v7(now: now).v7Date == now)
+    }
+
+    @Test func otherVersionsHaveNoTimestamp() {
+        #expect(UUID(uuidString: "0199bd00-0000-4000-8000-000000000001")!.v7Date == nil)
+    }
+
     @Test func sortsByTime() {
         let earlier = UUID.v7(now: Date(timeIntervalSince1970: 1_000))
         let later = UUID.v7(now: Date(timeIntervalSince1970: 1_001))
