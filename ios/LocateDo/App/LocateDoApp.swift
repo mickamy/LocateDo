@@ -22,7 +22,7 @@ struct LocateDoApp: App {
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         let tokens = AccessTokenStore()
         api = APIClient(environment: .current, tokens: tokens)
-        authenticator = Authenticator(store: KeychainSessionStore(), account: api.account, tokens: tokens)
+        authenticator = Self.makeAuthenticator(api: api, tokens: tokens, preferences: preferences)
         let sync = SyncEngine(
             places: api.place,
             todos: api.todo,
@@ -84,6 +84,20 @@ struct LocateDoApp: App {
         .environment(sync)
         .environment(account)
         .environment(writes)
+    }
+
+    private static func makeAuthenticator(
+        api: APIClient,
+        tokens: AccessTokenStore,
+        preferences: AppPreferences
+    ) -> Authenticator {
+        let store = KeychainSessionStore()
+        ReinstallGuard.clearStaleSession(
+            defaults: .standard,
+            store: store,
+            hasCompletedOnboarding: preferences.hasCompletedOnboarding
+        )
+        return Authenticator(store: store, account: api.account, tokens: tokens)
     }
 
     private static func makeContainer() -> ModelContainer {
