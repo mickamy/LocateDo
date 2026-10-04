@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	MaxMembers    = 6
-	MaxFreePlaces = 3
+	MaxMembers       = 6
+	MaxFreePlaces    = 3
+	MaxFreeOpenTodos = 15
 )
 
 type Plan string

@@ -91,6 +91,13 @@ func (s Seeder) Todo(t *testing.T, householdID, placeID uuid.UUID) uuid.UUID {
 		householdID, placeID)
 }
 
+func (s Seeder) CompletedTodo(t *testing.T, householdID, placeID uuid.UUID) uuid.UUID {
+	t.Helper()
+
+	return s.insert(t, `INSERT INTO todos (household_id, place_id, title, completed_at)
+		VALUES ($1, $2, 'milk', now()) RETURNING id`, householdID, placeID)
+}
+
 // Count returns how many rows of table belong to the household.
 func (s Seeder) Count(t *testing.T, table string, householdID uuid.UUID) int {
 	t.Helper()
