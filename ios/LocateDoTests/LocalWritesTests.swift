@@ -106,12 +106,14 @@ struct LocalWritesTests {
     }
 
     private struct Fixture {
+        let container: ModelContainer
         let context: ModelContext
         let probe = Probe()
         let writes: LocalWrites
 
         init(signedIn: Bool = true) throws {
-            context = try AppModelContainer.make(inMemory: true).mainContext
+            container = try AppModelContainer.make(inMemory: true)
+            context = container.mainContext
             let probe = probe
             probe.signedIn = signedIn
             writes = LocalWrites(context: context) {

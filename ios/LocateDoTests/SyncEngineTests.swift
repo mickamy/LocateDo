@@ -244,6 +244,7 @@ struct SyncEngineTests {
     }
 
     private struct Fixture {
+        let container: ModelContainer
         let context: ModelContext
         let services = FakeWriteServices()
         let pulls = FakeSyncService()
@@ -251,7 +252,8 @@ struct SyncEngineTests {
         let engine: SyncEngine
 
         init(signedIn: Bool = true, householdID: UUID? = SyncEngineTests.householdID) throws {
-            context = try AppModelContainer.make(inMemory: true).mainContext
+            container = try AppModelContainer.make(inMemory: true)
+            context = container.mainContext
             let state = try SyncState.current(in: context)
             state.householdID = householdID
             try context.save()

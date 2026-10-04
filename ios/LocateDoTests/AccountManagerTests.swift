@@ -194,6 +194,7 @@ struct AccountManagerTests {
     }
 
     private struct Fixture {
+        let container: ModelContainer
         let context: ModelContext
         let account = FakeAccountService()
         let household = FakeHouseholdService()
@@ -202,7 +203,7 @@ struct AccountManagerTests {
         let manager: AccountManager
 
         init() throws {
-            let container = try AppModelContainer.make(inMemory: true)
+            container = try AppModelContainer.make(inMemory: true)
             context = container.mainContext
             let tokens = AccessTokenStore()
             let authenticator = Authenticator(store: InMemorySessionStore(), account: account, tokens: tokens)
