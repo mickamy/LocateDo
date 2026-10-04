@@ -1,0 +1,28 @@
+name: legal-pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/legal/**"
+      - ".github/workflows/legal-pages.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: legal-pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: wrangler pages deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npx --yes wrangler@4.147.0 pages deploy docs/legal --project-name locatedo-legal --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
