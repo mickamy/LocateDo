@@ -1,3 +1,5 @@
+app.bundle_name:
+  infoplist: CFBundleName
 permission.when_in_use:
   infoplist: NSLocationWhenInUseUsageDescription
 permission.always:

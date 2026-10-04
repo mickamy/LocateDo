@@ -1,5 +1,6 @@
 app:
   name: "LocateDo"
+  bundle_name: "LocateDo"
 tab:
   home: "Home"
   map: "Map"
