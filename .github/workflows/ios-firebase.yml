@@ -33,10 +33,10 @@ jobs:
       - name: Write GoogleService-Info.plist
         run: |
           mkdir -p Firebase
-          printf '%s' "$GOOGLE_SERVICE_INFO" | base64 --decode > Firebase/GoogleService-Info-Release.plist
+          printf '%s' "$GOOGLE_SERVICE_INFO" | base64 --decode > Firebase/GoogleService-Info-Staging.plist
         working-directory: ios
         env:
-          GOOGLE_SERVICE_INFO: ${{ secrets.FIREBASE_GOOGLE_SERVICE_INFO_RELEASE }}
+          GOOGLE_SERVICE_INFO: ${{ secrets.FIREBASE_GOOGLE_SERVICE_INFO_STAGING }}
       - run: bundle exec fastlane firebase
         working-directory: ios
         env:

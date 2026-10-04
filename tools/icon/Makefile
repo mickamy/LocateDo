@@ -1,13 +1,14 @@
-APPICONSET := ../../ios/LocateDo/Assets.xcassets/AppIcon.appiconset
-DEV_APPICONSET := ../../ios/LocateDo/Assets.xcassets/AppIcon-Dev.appiconset
+ASSETS := ../../ios/LocateDo/Assets.xcassets
 PREVIEW_DIR := preview
 
 .PHONY: generate preview
 
 generate:
-	swift render.swift $(APPICONSET)
-	swift render.swift $(DEV_APPICONSET) --dev
+	swift render.swift $(ASSETS)/AppIcon.appiconset
+	swift render.swift $(ASSETS)/AppIcon-Dev.appiconset --variant Dev
+	swift render.swift $(ASSETS)/AppIcon-Stg.appiconset --variant Stg
 
 preview:
 	swift render.swift $(PREVIEW_DIR) --preview
-	swift render.swift $(PREVIEW_DIR) --preview --dev
+	swift render.swift $(PREVIEW_DIR) --preview --variant Dev
+	swift render.swift $(PREVIEW_DIR) --preview --variant Stg

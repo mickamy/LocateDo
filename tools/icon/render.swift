@@ -118,7 +118,7 @@ func draw(_ appearance: Appearance, in context: CGContext) {
     context.restoreGState()
 }
 
-func drawDevBadge(in context: CGContext) {
+func drawBadge(_ text: String, in context: CGContext) {
     let pill = CGRect(x: (size - 300) / 2, y: 868, width: 300, height: 84)
     context.saveGState()
     context.setFillColor(color(0x1C1C1E, alpha: 0.78))
@@ -131,7 +131,7 @@ func drawDevBadge(in context: CGContext) {
         kCTForegroundColorAttributeName as NSAttributedString.Key: color(0xFFFFFF),
         kCTKernAttributeName as NSAttributedString.Key: kern,
     ]
-    let line = CTLineCreateWithAttributedString(NSAttributedString(string: "DEV", attributes: attributes))
+    let line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
     var ascent: CGFloat = 0
     var descent: CGFloat = 0
     let width = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, nil)) - kern
@@ -161,27 +161,38 @@ func write(_ image: CGImage, to url: URL) {
 }
 
 let arguments = Array(CommandLine.arguments.dropFirst())
-let flags = Set(arguments.filter { $0.hasPrefix("--") })
-guard let outputPath = arguments.first(where: { !$0.hasPrefix("--") }) else {
-    FileHandle.standardError.write(Data("usage: swift render.swift <output-dir> [--preview] [--dev]\n".utf8))
+var outputPath: String?
+var variant: String?
+var writesPreview = false
+var index = 0
+while index < arguments.count {
+    switch arguments[index] {
+    case "--preview":
+        writesPreview = true
+    case "--variant":
+        index += 1
+        variant = index < arguments.count ? arguments[index] : nil
+    default:
+        outputPath = arguments[index]
+    }
+    index += 1
+}
+guard let outputPath else {
+    FileHandle.standardError.write(Data("usage: swift render.swift <output-dir> [--preview] [--variant Dev|Stg]\n".utf8))
     exit(2)
 }
 let outputDirectory = URL(fileURLWithPath: outputPath)
-let writesPreview = flags.contains("--preview")
-let isDev = flags.contains("--dev")
 try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
 
 for appearance in appearances {
     let context = makeContext(opaque: true)
     draw(appearance, in: context)
-    if isDev {
-        drawDevBadge(in: context)
+    var fileName = appearance.fileName
+    if let variant {
+        drawBadge(variant.uppercased(), in: context)
+        fileName = fileName.replacingOccurrences(of: "AppIcon", with: "AppIcon-\(variant)")
     }
     let image = context.makeImage()!
-    var fileName = appearance.fileName
-    if isDev {
-        fileName = fileName.replacingOccurrences(of: "AppIcon", with: "AppIcon-Dev")
-    }
     if writesPreview {
         write(preview(of: image), to: outputDirectory.appendingPathComponent("\(fileName)-preview.png"))
     } else {

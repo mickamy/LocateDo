@@ -2,27 +2,30 @@ default_platform(:ios)
 skip_docs
 
 APP_IDENTIFIER = "com.locatedo.LocateDo"
+STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
 PROJECT = "LocateDo.xcodeproj"
 SCHEME = "LocateDo"
 
 platform :ios do
   # produce still wants an Apple ID login, so this talks to the API directly.
-  desc "Create the App ID (with push notifications) and the App Store Connect record"
+  desc "Create the App IDs (with push notifications) and point at the App Store Connect record"
   lane :bootstrap do
     api_key
     connect_api
-    bundle = Spaceship::ConnectAPI::BundleId.find(APP_IDENTIFIER) ||
-      Spaceship::ConnectAPI::BundleId.create(
-        name: "LocateDo",
-        platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
-        identifier: APP_IDENTIFIER
-      )
     push = Spaceship::ConnectAPI::BundleIdCapability::Type::PUSH_NOTIFICATIONS
-    if bundle.get_capabilities.any? { |capability| capability.capability_type == push }
-      UI.message("Push notifications already enabled on #{APP_IDENTIFIER}")
-    else
-      bundle.create_capability(push)
-      UI.success("Enabled push notifications on #{APP_IDENTIFIER}")
+    { APP_IDENTIFIER => "LocateDo", STAGING_APP_IDENTIFIER => "LocateDo Staging" }.each do |identifier, name|
+      bundle = Spaceship::ConnectAPI::BundleId.find(identifier) ||
+        Spaceship::ConnectAPI::BundleId.create(
+          name: name,
+          platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
+          identifier: identifier
+        )
+      if bundle.get_capabilities.any? { |capability| capability.capability_type == push }
+        UI.message("Push notifications already enabled on #{identifier}")
+      else
+        bundle.create_capability(push)
+        UI.success("Enabled push notifications on #{identifier}")
+      end
     end
     if Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
       UI.message("App Store Connect app already exists")
@@ -33,18 +36,18 @@ platform :ios do
     end
   end
 
-  desc "Create or sync the distribution certificate and the App Store / Ad Hoc profiles through match"
+  desc "Create or sync the distribution certificate, the App Store profile, and the staging Ad Hoc profile"
   lane :certificates do
     api_key
-    match(type: "appstore")
-    match(type: "adhoc", force_for_new_devices: true)
+    match(type: "appstore", app_identifier: APP_IDENTIFIER)
+    match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, force_for_new_devices: true)
   end
 
-  desc "Register a device for Ad Hoc builds and refresh the Ad Hoc profile (name:, udid:)"
+  desc "Register a device for Ad Hoc builds and refresh the staging Ad Hoc profile (name:, udid:)"
   lane :add_device do |options|
     api_key
     register_device(name: options.fetch(:name), udid: options.fetch(:udid))
-    match(type: "adhoc", force_for_new_devices: true)
+    match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, force_for_new_devices: true)
   end
 
   desc "List the devices registered to the team"
@@ -76,11 +79,12 @@ platform :ios do
     end
   end
 
-  desc "Delete bundle identifiers (identifiers:com.example.a,com.example.b); the app's own identifier is refused"
+  desc "Delete bundle identifiers (identifiers:com.example.a,com.example.b); the app's own identifiers are refused"
   lane :delete_bundle_ids do |options|
     api_key
     wanted = options.fetch(:identifiers).split(",").map(&:strip)
-    UI.user_error!("Refusing to delete #{APP_IDENTIFIER}") if wanted.include?(APP_IDENTIFIER)
+    protected = [APP_IDENTIFIER, STAGING_APP_IDENTIFIER]
+    UI.user_error!("Refusing to delete #{(wanted & protected).join(', ')}") unless (wanted & protected).empty?
     registered = bundle_identifiers
     targets = wanted.map do |identifier|
       registered.find { |bundle| bundle.identifier == identifier } ||
@@ -91,22 +95,34 @@ platform :ios do
     targets.each { |bundle| delete_bundle_identifier(bundle: bundle) }
   end
 
-  desc "Build a signed archive and upload it to TestFlight"
+  desc "Build a signed Release archive and upload it to TestFlight"
   lane :beta do
     setup_ci if is_ci
     api_key
-    match(type: "appstore", readonly: true)
+    match(type: "appstore", app_identifier: APP_IDENTIFIER, readonly: true)
     build_number = latest_testflight_build_number(initial_build_number: 0) + 1
-    archive(export_method: "app-store", profile_type: "appstore", build_number: build_number)
+    archive(
+      app_identifier: APP_IDENTIFIER,
+      configuration: "Release",
+      export_method: "app-store",
+      profile_type: "appstore",
+      build_number: build_number
+    )
     upload_to_testflight(changelog: changelog)
   end
 
-  desc "Build an Ad Hoc archive and distribute it through Firebase App Distribution"
+  desc "Build a Staging Ad Hoc archive and distribute it through Firebase App Distribution"
   lane :firebase do
     setup_ci if is_ci
     api_key
-    match(type: "adhoc", readonly: true)
-    archive(export_method: "ad-hoc", profile_type: "adhoc", build_number: number_of_commits)
+    match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, readonly: true)
+    archive(
+      app_identifier: STAGING_APP_IDENTIFIER,
+      configuration: "Staging",
+      export_method: "ad-hoc",
+      profile_type: "adhoc",
+      build_number: number_of_commits
+    )
     # Without a service account the plugin falls back to the Firebase CLI login (local runs).
     credentials = ENV["FIREBASE_SERVICE_CREDENTIALS_CONTENT"].to_s
     firebase_app_distribution(
@@ -128,13 +144,14 @@ platform :ios do
 
   # Signing is overridden per build so the project keeps automatic signing for Xcode.
   private_lane :archive do |options|
-    profile_name = ENV.fetch("sigh_#{APP_IDENTIFIER}_#{options[:profile_type]}_profile-name")
+    app_identifier = options.fetch(:app_identifier)
+    profile_name = ENV.fetch("sigh_#{app_identifier}_#{options[:profile_type]}_profile-name")
     build_app(
       project: PROJECT,
       scheme: SCHEME,
-      configuration: "Release",
+      configuration: options.fetch(:configuration),
       export_method: options[:export_method],
-      export_options: { provisioningProfiles: { APP_IDENTIFIER => profile_name } },
+      export_options: { provisioningProfiles: { app_identifier => profile_name } },
       output_directory: "build",
       xcargs: [
         "CURRENT_PROJECT_VERSION=#{options[:build_number]}",
