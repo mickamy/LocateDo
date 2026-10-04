@@ -17,6 +17,10 @@ jobs:
         run: |
           make -C server .env
 
+      - name: Migrate database
+        run: |
+          make -C server db-migrate
+
       - name: Deploy Docker Compose
         run: |
           cd server
