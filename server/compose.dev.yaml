@@ -3,6 +3,7 @@ services:
     build:
       args:
         BIN_NAME: api
+        MAIN_GO_FILE: ./cmd/api/main.go
     env_file: .env
     environment:
       MODULE_ROOT: /src
@@ -20,6 +21,7 @@ services:
     build:
       args:
         BIN_NAME: worker
+        MAIN_GO_FILE: ./cmd/worker/main.go
     env_file: .env
     environment:
       MODULE_ROOT: /src
