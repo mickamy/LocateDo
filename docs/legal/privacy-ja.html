@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocateDo プライバシーポリシー</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.8 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 0 64px;
+  }
+  h1 { font-size: 28px; line-height: 1.3; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 36px 0 8px; }
+  p, li { margin: 0 0 12px; }
+  ul { padding-left: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  .meta { color: var(--muted); margin-bottom: 24px; }
+  .lang { font-size: 15px; margin-bottom: 32px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <p class="lang"><a href="privacy.html" hreflang="en">English</a></p>
+
+  <h1>LocateDo プライバシーポリシー</h1>
+  <p class="meta">2026 年 10 月 4 日 施行</p>
+
+  <p>LocateDo は、場所に着いたときにやることを思い出させ、そのリストを家族で共有できる TODO アプリです。このポリシーでは、アプリが扱う情報のうち、何が端末の中にとどまり、何が私たちのサーバーに送られ、何が他社と共有されるのかを説明します。</p>
+
+  <h2>現在地</h2>
+  <p>LocateDo は、登録した場所までの距離を表示するためと、場所に着いたことを検知するために位置情報を使います。到着の検知は Apple のジオフェンス機能を使って端末内の iOS が行います。アプリを閉じている間も動くように、位置情報の「常に許可」をお願いしています。</p>
+  <p>現在地が私たちや第三者に送られることはなく、移動の履歴として保存されることもありません。端末の外に出る可能性がある位置に関するデータは、「アカウントと同期」で説明する、ご自身が保存した場所の地図上の地点だけです。位置情報の許可は、設定 &gt; プライバシーとセキュリティ &gt; 位置情報サービス からいつでも変更・取り消しできます。</p>
+
+  <h2>端末内のデータ</h2>
+  <p>LocateDo で作成したものは端末の中に保存されます。</p>
+  <ul>
+    <li>登録した場所: 名前、地図上の座標、通知の半径、カテゴリ</li>
+    <li>TODO: 内容、どの場所に属するか、担当者、完了した日時</li>
+    <li>設定: 通知の半径の初期値など</li>
+  </ul>
+  <p>サインインするまで、これらのデータは端末の中にだけ存在し、アプリをアンインストールすると消えます。</p>
+
+  <h2>アカウントと同期</h2>
+  <p>LocateDo はアカウントなしで使えます。Apple でサインインすると、私たちはあなたのアカウントを作成し、場所、TODO、カテゴリを、私たちが運用するサーバー（現在は日本に設置）にアップロードして同期します。</p>
+  <table>
+    <tr><th>サーバーに保存するもの</th><th>目的</th></tr>
+    <tr><td>Apple が LocateDo 向けにあなたのアカウントに割り当てる識別子と、サインイン時に共有を選んだ場合の名前。メールアドレスは、Apple の中継アドレスを含めて保存しません</td><td>次回のサインイン時にあなたを識別するため</td></tr>
+    <tr><td>Apple から受け取るトークン（暗号化して保存）</td><td>アカウント削除時に Sign in with Apple のセッションを失効させるため</td></tr>
+    <tr><td>場所、TODO、カテゴリと、それらが属する世帯</td><td>複数の端末や家族の間で同期するため</td></tr>
+    <tr><td>各端末のセッショントークン</td><td>毎回サインインし直さなくて済むように</td></tr>
+    <tr><td>各端末のプッシュ通知トークン</td><td>変更があったことを他の端末に伝えるため（「通知」参照）</td></tr>
+  </table>
+
+  <h2>家族との共有</h2>
+  <p>世帯を作成または参加すると、その世帯の他のメンバーは、世帯内のすべての場所、TODO、カテゴリを見ることができます。これには、各 TODO を誰が追加・完了したかと、メンバーの表示名が含まれます。招待は 1 回限りのリンクで、72 時間で失効します。世帯のオーナーはメンバーを削除でき、メンバーは自分で退出できます。退出または削除された場合、共有データは世帯に残り、あなたの端末からは削除されます。</p>
+
+  <h2>通知</h2>
+  <p>到着のお知らせは、端末の中で作られるローカル通知です。サインインしている場合、私たちのサーバーが Apple を経由してあなたの端末にサイレントプッシュ通知を送ることがあります。これは内容を含まず、アプリに同期を促すだけのものです。</p>
+
+  <h2>サブスクリプション</h2>
+  <p>LocateDo Pro は App Store を通じて販売する任意のサブスクリプションです。決済は Apple が行い、私たちが支払い情報を見ることはありません。購入の検証とサブスクリプション状態の管理には RevenueCat, Inc. を利用しています。RevenueCat は App Store のレシート、あなたのアカウント識別子、端末情報を受け取り、<a href="https://www.revenuecat.com/privacy">RevenueCat のプライバシーポリシー</a>に基づいて処理します。</p>
+
+  <h2>利用状況の分析</h2>
+  <p>LocateDo が役に立っているかを知るために、アプリは少量の利用データを Google Firebase Analytics に送ります。</p>
+  <table>
+    <tr><th>送るもの</th><th>目的</th></tr>
+    <tr><td>到着のお知らせが表示・開封されたこと、そこに載った未完了 TODO の件数</td><td>お知らせが動いていて役に立っているかを測るため</td></tr>
+    <tr><td>共有ボタン、ペイウォール、招待が使われたこと、どの画面からか</td><td>何を改善するかを判断するため</td></tr>
+    <tr><td>アプリのインスタンス識別子（Apple のベンダー識別子）、端末の機種、iOS のバージョン、アプリのバージョン、言語、Google がネットワークアドレスから推定するおおよその国</td><td>利用者数とセッション数を数えるための Firebase Analytics の標準的なデータ</td></tr>
+  </table>
+  <p>場所の名前や座標、TODO の内容、表示名、正確な位置情報は、どの分析イベントにも含まれません。LocateDo は広告識別子（IDFA）を使わず、他のアプリやウェブサイトをまたいだ追跡も行いません。</p>
+  <p>Google は <a href="https://policies.google.com/privacy?hl=ja">Google プライバシーポリシー</a> に基づいて私たちに代わってこのデータを処理し、イベント単位のデータは Firebase のデータ保持設定（初期値は 2 か月）に従って保持します。集計された統計はより長く保持されることがあります。</p>
+
+  <h2>データを受け取るその他の事業者</h2>
+  <ul>
+    <li>Apple: Sign in with Apple、App Store での購入、プッシュ通知の配信</li>
+    <li>Google（Firebase Analytics）: 上で説明した利用状況の分析</li>
+    <li>RevenueCat: 上で説明したサブスクリプションの検証</li>
+    <li>Cloudflare: 私たちのサーバーへの通信の経路と、暗号化したデータベースのバックアップの保管</li>
+  </ul>
+  <p>データを販売せず、広告を表示せず、法律で求められる場合を除いて、上記以外の第三者とデータを共有しません。</p>
+
+  <h2>保持と削除</h2>
+  <ul>
+    <li>端末内のデータは、アプリをアンインストールすると消えます。</li>
+    <li>サーバー上のデータは、アカウントが存在する間保持されます。アカウントはアプリの設定から削除でき、アカウント、端末の情報、そしてあなたが世帯のオーナーであれば世帯とその中身のすべてが削除されます。バックアップのコピーは 30 日以内に削除されます。</li>
+    <li>分析データは上記のとおり Google が保持します。お使いのアプリインスタンスに紐づく分析データの削除を希望される場合は、下記の連絡先までご連絡ください。</li>
+  </ul>
+
+  <h2>ご自身でできること</h2>
+  <ul>
+    <li>位置情報: iOS の設定からいつでも許可を変更できます。「常に許可」でない場合、お知らせはアプリを開いている間だけ動きます。</li>
+    <li>通知: iOS の設定からオフにできます。</li>
+    <li>同期と共有: サインインせずに使うか、アカウントを削除することで同期を止められます。</li>
+    <li>サブスクリプション: Apple ID の設定から管理・解約できます。</li>
+  </ul>
+
+  <h2>お子さまの利用</h2>
+  <p>LocateDo は 13 歳未満のお子さまを対象としておらず、お子さまから意図的に情報を収集することはありません。</p>
+
+  <h2>変更について</h2>
+  <p>このポリシーを変更する場合は、新しい施行日とともにこのページに掲載します。重要な変更はアプリ内でもお知らせします。</p>
+
+  <h2>お問い合わせ</h2>
+  <p>このポリシーに関するご質問: <a href="mailto:contact@locatedo.com">contact@locatedo.com</a></p>
+</main>
+</body>
+</html>
