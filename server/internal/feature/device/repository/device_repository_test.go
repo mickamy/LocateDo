@@ -65,3 +65,55 @@ func TestDevice_Upsert_unknownUser(t *testing.T) {
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrInvalidArgument)
 }
+
+func TestDevice_DeleteOwnedByToken(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	devices := repository.NewDevice(d.Reader)
+	owner := d.Seeder.User(t)
+	dev := fixture.Device(func(m *model.Device) { m.UserID = owner; m.LastSeenAt = now })
+	d.InTx(t, func(tx tx.Tx) {
+		require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
+	})
+
+	// act
+	d.InTx(t, func(tx tx.Tx) {
+		require.NoError(t, devices.Bind(tx).DeleteOwnedByToken(t.Context(), owner, dev.Platform, dev.PushToken))
+	})
+
+	// assert
+	assert.Equal(t, 0, countDevices(t, d, dev.PushToken))
+}
+
+func TestDevice_DeleteOwnedByToken_anotherUsersToken(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	devices := repository.NewDevice(d.Reader)
+	owner := d.Seeder.User(t)
+	other := d.Seeder.User(t)
+	dev := fixture.Device(func(m *model.Device) { m.UserID = owner; m.LastSeenAt = now })
+	d.InTx(t, func(tx tx.Tx) {
+		require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
+	})
+
+	// act
+	d.InTx(t, func(tx tx.Tx) {
+		require.NoError(t, devices.Bind(tx).DeleteOwnedByToken(t.Context(), other, dev.Platform, dev.PushToken))
+	})
+
+	// assert
+	assert.Equal(t, 1, countDevices(t, d, dev.PushToken))
+}
+
+func countDevices(t *testing.T, d tdb.DB, pushToken string) int {
+	t.Helper()
+
+	var n int
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT count(*) FROM devices WHERE push_token = $1", pushToken).Scan(&n))
+	return n
+}

@@ -29,6 +29,25 @@ func (q *Queries) DeleteDeviceByToken(ctx context.Context, arg DeleteDeviceByTok
 	return err
 }
 
+const deleteUserDeviceByToken = `-- name: DeleteUserDeviceByToken :exec
+DELETE
+FROM devices
+WHERE user_id = $1
+  AND platform = $2
+  AND push_token = $3
+`
+
+type DeleteUserDeviceByTokenParams struct {
+	UserID    uuid.UUID
+	Platform  string
+	PushToken string
+}
+
+func (q *Queries) DeleteUserDeviceByToken(ctx context.Context, arg DeleteUserDeviceByTokenParams) error {
+	_, err := q.db.Exec(ctx, deleteUserDeviceByToken, arg.UserID, arg.Platform, arg.PushToken)
+	return err
+}
+
 const listHouseholdPushTokens = `-- name: ListHouseholdPushTokens :many
 SELECT d.push_token
 FROM devices d

@@ -19,6 +19,7 @@ type Device interface {
 	// PushTokens lists the tokens of every member's devices on the platform.
 	PushTokens(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]string, error)
 	DeleteByToken(ctx context.Context, platform model.Platform, token string) error
+	DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error
 	Bind(tx tx.Tx) Device
 }
 
@@ -69,6 +70,17 @@ func (r device) DeleteByToken(ctx context.Context, platform model.Platform, toke
 		PushToken: token,
 	}); err != nil {
 		return fmt.Errorf("delete device: %w", err)
+	}
+	return nil
+}
+
+func (r device) DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error {
+	if err := r.q.DeleteUserDeviceByToken(ctx, queries.DeleteUserDeviceByTokenParams{
+		UserID:    userID,
+		Platform:  string(platform),
+		PushToken: token,
+	}); err != nil {
+		return fmt.Errorf("delete owned device: %w", err)
 	}
 	return nil
 }

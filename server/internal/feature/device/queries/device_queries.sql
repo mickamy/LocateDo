@@ -12,6 +12,13 @@ FROM devices
 WHERE platform = $1
   AND push_token = $2;
 
+-- name: DeleteUserDeviceByToken :exec
+DELETE
+FROM devices
+WHERE user_id = $1
+  AND platform = $2
+  AND push_token = $3;
+
 -- A token already registered, to anyone, moves to this user.
 -- name: UpsertDevice :exec
 INSERT INTO devices (user_id, platform, push_token, last_seen_at)
