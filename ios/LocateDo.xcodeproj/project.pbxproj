@@ -168,6 +168,7 @@
 				3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				3BF1AEC03071100000D47174 /* XCRemoteSwiftPackageReference "connect-swift" */,
 				3BF1AEC13071100000D47174 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+				3BFCD2D33072600A00811294 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3BB55BF13070E8CE008A116A /* Products */;
@@ -659,6 +660,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.38.1;
+			};
+		};
+		3BFCD2D33072600A00811294 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.92.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
