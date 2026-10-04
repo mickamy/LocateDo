@@ -2,17 +2,18 @@ package worker
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
+
+	"github.com/mickamy/LocateDo/internal/lib/logger"
 )
 
 // Task is time-driven maintenance: it runs once at start-up and then on its
 // interval, and must be safe to run again at any time.
-type Task interface {
-	Name() string
-	Interval() time.Duration
-	Run(ctx context.Context) error
+type Task struct {
+	Name     string
+	Interval time.Duration
+	Run      func(ctx context.Context) error
 }
 
 type Tasks []Task
@@ -39,11 +40,11 @@ func (s Scheduler) Run(ctx context.Context) {
 }
 
 func (s Scheduler) loop(ctx context.Context, t Task) {
-	ticker := time.NewTicker(t.Interval())
+	ticker := time.NewTicker(t.Interval)
 	defer ticker.Stop()
 	for {
 		if err := t.Run(ctx); err != nil {
-			slog.ErrorContext(ctx, "task failed", "task", t.Name(), "error", err)
+			logger.Error(ctx, "task failed", "task", t.Name, "error", err)
 		}
 		select {
 		case <-ctx.Done():

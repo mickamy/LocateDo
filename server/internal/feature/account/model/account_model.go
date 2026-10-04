@@ -33,3 +33,10 @@ type RefreshToken struct {
 	ExpiresAt time.Time
 	UsedAt    *time.Time
 }
+
+// AppleRevocation is what the worker needs to revoke a deleted user's Apple
+// token once the user row, and the token with it, are gone.
+type AppleRevocation struct {
+	UserID      uuid.UUID `json:"user_id"`
+	SealedToken []byte    `json:"sealed_token"`
+}

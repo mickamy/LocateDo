@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
+	"github.com/mickamy/LocateDo/internal/lib/logger"
 	"github.com/mickamy/LocateDo/internal/outbox"
+	"github.com/mickamy/LocateDo/internal/worker/job"
 )
 
 const (
@@ -20,20 +21,12 @@ const (
 	maxBackoff   = time.Hour
 )
 
-type Handler interface {
-	Handle(ctx context.Context, m outbox.Message) error
-}
+type Handlers map[outbox.Kind]outbox.Handler
 
-type HandlerFunc func(ctx context.Context, m outbox.Message) error
-
-func (f HandlerFunc) Handle(ctx context.Context, m outbox.Message) error {
-	return f(ctx, m)
-}
-
-type Handlers map[outbox.Kind]Handler
-
-func NewHandlers() Handlers {
-	return Handlers{}
+func NewHandlers(revokeAppleToken *job.RevokeAppleToken) Handlers {
+	return Handlers{
+		outbox.KindRevokeAppleToken: revokeAppleToken,
+	}
 }
 
 // Consumer delivers outbox messages one at a time, holding each row's lock
@@ -53,7 +46,7 @@ func (c Consumer) Run(ctx context.Context) {
 	for {
 		delivered, err := c.Step(ctx)
 		if err != nil {
-			slog.ErrorContext(ctx, "outbox step failed", "error", err)
+			logger.Error(ctx, "outbox step failed", "error", err)
 		}
 		if delivered && err == nil {
 			continue
@@ -103,7 +96,7 @@ func (c Consumer) deliver(ctx context.Context, messages outbox.Repository, m out
 	}
 
 	attempt := m.Attempts + 1
-	slog.WarnContext(ctx, "outbox delivery failed", "kind", m.Kind, "id", m.ID, "attempt", attempt, "error", err)
+	logger.Warn(ctx, "outbox delivery failed", "kind", m.Kind, "id", m.ID, "attempt", attempt, "error", err)
 	if attempt >= MaxAttempts {
 		if err := messages.Kill(ctx, m.ID, err.Error()); err != nil {
 			return fmt.Errorf("kill: %w", err)

@@ -27,7 +27,7 @@ func TestConsumer_Step_deliversAndCompletes(t *testing.T) {
 	messages := outbox.NewRepository(d.Reader)
 	var seen [][]byte
 	handlers := worker.Handlers{
-		"greet": worker.HandlerFunc(func(_ context.Context, m outbox.Message) error {
+		"greet": outbox.HandlerFunc(func(_ context.Context, m outbox.Message) error {
 			seen = append(seen, m.Payload)
 			return nil
 		}),
@@ -60,7 +60,7 @@ func TestConsumer_Step_retriesThenGivesUp(t *testing.T) {
 	d := tdb.New(t)
 	messages := outbox.NewRepository(d.Reader)
 	handlers := worker.Handlers{
-		"flaky": worker.HandlerFunc(func(context.Context, outbox.Message) error { return errors.New("boom") }),
+		"flaky": outbox.HandlerFunc(func(context.Context, outbox.Message) error { return errors.New("boom") }),
 	}
 	enqueue(t, d, messages, outbox.Message{Kind: "flaky", RunAt: now})
 	consumer := worker.NewConsumer(d.Transactor, messages, handlers)
@@ -98,7 +98,7 @@ func TestConsumer_Step_unknownKindIsDead(t *testing.T) {
 	d := tdb.New(t)
 	messages := outbox.NewRepository(d.Reader)
 	enqueue(t, d, messages, outbox.Message{Kind: "mystery", RunAt: now})
-	consumer := worker.NewConsumer(d.Transactor, messages, worker.NewHandlers())
+	consumer := worker.NewConsumer(d.Transactor, messages, worker.Handlers{})
 
 	// act
 	delivered, err := consumer.Step(clock.Set(t.Context(), clock.NewFixed(now)))

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,7 +17,7 @@ func main() {
 	logger.Init(cfg.App.ModuleRoot, cfg.App.LogLevel.String())
 
 	if err := run(cfg); err != nil {
-		slog.Error("worker exited with error", "error", err)
+		logger.Error(context.Background(), "worker exited with error", "error", err)
 		os.Exit(1)
 	}
 }
@@ -35,7 +34,7 @@ func run(cfg di.Config) error {
 		_ = infra.Close()
 	}()
 
-	slog.Info("worker running")
-	worker.NewWorker(infra).Run(ctx)
+	logger.Info(ctx, "worker running")
+	worker.NewWorker(infra, di.MustNewLib(cfg)).Run(ctx)
 	return nil
 }

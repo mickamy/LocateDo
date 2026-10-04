@@ -5,14 +5,16 @@ package worker
 import (
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/outbox"
+	"github.com/mickamy/LocateDo/internal/worker/job"
 )
 
 // NewWorker initializes dependencies and constructs Worker.
-func NewWorker(infra di.Infra) *Worker {
+func NewWorker(infra di.Infra, lib di.Lib) *Worker {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	repository := outbox.NewRepository(reader)
-	handlers := NewHandlers()
+	revokeAppleToken := job.NewRevokeAppleToken(infra, lib)
+	handlers := NewHandlers(revokeAppleToken)
 	consumer := NewConsumer(transactor, repository, handlers)
 	tasks := NewTasks()
 	scheduler := NewScheduler(tasks)

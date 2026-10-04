@@ -5,23 +5,22 @@ package usecase
 import (
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
 // NewDeleteAccount initializes dependencies and constructs DeleteAccount.
-func NewDeleteAccount(infra di.Infra, lib di.Lib) *DeleteAccount {
+func NewDeleteAccount(infra di.Infra) *DeleteAccount {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	users := repository.NewUser(reader)
 	appleTokens := repository.NewAppleToken(reader)
-	apple := infra.Apple
-	box := lib.Box
+	messages := outbox.NewRepository(reader)
 
 	return &DeleteAccount{
 		transactor:  transactor,
 		users:       users,
 		appleTokens: appleTokens,
-		apple:       apple,
-		box:         box,
+		messages:    messages,
 	}
 }
 

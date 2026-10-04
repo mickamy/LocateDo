@@ -9,6 +9,7 @@ import (
 
 type Worker struct {
 	_         di.Infra  `di:"embed"`
+	_         di.Lib    `di:"embed"`
 	Consumer  Consumer  `di:""`
 	Scheduler Scheduler `di:""`
 }

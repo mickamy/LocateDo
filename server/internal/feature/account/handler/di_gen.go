@@ -11,7 +11,7 @@ import (
 func NewAccount(infra di.Infra, lib di.Lib) *Account {
 	signInWithApple := usecase.NewSignInWithApple(infra, lib)
 	refreshToken := usecase.NewRefreshToken(infra, lib)
-	deleteAccount := usecase.NewDeleteAccount(infra, lib)
+	deleteAccount := usecase.NewDeleteAccount(infra)
 
 	return &Account{
 		signInWithApple: signInWithApple,

@@ -11,22 +11,19 @@ import (
 	"github.com/mickamy/LocateDo/internal/worker"
 )
 
-type countingTask struct {
-	runs atomic.Int32
-}
-
-func (*countingTask) Name() string            { return "counting" }
-func (*countingTask) Interval() time.Duration { return 10 * time.Millisecond }
-func (t *countingTask) Run(context.Context) error {
-	t.runs.Add(1)
-	return nil
-}
-
 func TestScheduler_Run_repeatsUntilCancelled(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	task := &countingTask{}
+	var runs atomic.Int32
+	task := worker.Task{
+		Name:     "counting",
+		Interval: 10 * time.Millisecond,
+		Run: func(context.Context) error {
+			runs.Add(1)
+			return nil
+		},
+	}
 	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
 	defer cancel()
 
@@ -34,5 +31,5 @@ func TestScheduler_Run_repeatsUntilCancelled(t *testing.T) {
 	worker.NewScheduler(worker.Tasks{task}).Run(ctx)
 
 	// assert
-	assert.GreaterOrEqual(t, task.runs.Load(), int32(3), "once at start, then on the interval")
+	assert.GreaterOrEqual(t, runs.Load(), int32(3), "once at start, then on the interval")
 }

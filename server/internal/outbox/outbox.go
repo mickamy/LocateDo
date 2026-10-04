@@ -31,6 +31,17 @@ type Message struct {
 	Attempts  int32
 }
 
+// Handler delivers one kind of message. An error schedules a retry.
+type Handler interface {
+	Handle(ctx context.Context, m Message) error
+}
+
+type HandlerFunc func(ctx context.Context, m Message) error
+
+func (f HandlerFunc) Handle(ctx context.Context, m Message) error {
+	return f(ctx, m)
+}
+
 type Repository interface {
 	// Enqueue is a no-op when a pending message with the same dedupe key exists.
 	Enqueue(ctx context.Context, m Message) error
