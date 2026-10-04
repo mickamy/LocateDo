@@ -1,0 +1,76 @@
+package usecase_test
+
+import (
+	"testing"
+	"uuid"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/mickamy/LocateDo/internal/errors/aerrors"
+	"github.com/mickamy/LocateDo/internal/feature/category/usecase"
+	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
+	"github.com/mickamy/LocateDo/test/tdb"
+)
+
+func TestDeleteCategory(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	deleteCategory := usecase.NewDeleteCategory(d.Infra())
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	memberID := d.Seeder.Member(t, h.ID)
+	categoryID := d.Seeder.Category(t, h.ID)
+	placeID := d.Seeder.CategorizedPlace(t, h.ID, categoryID)
+
+	// act
+	err := deleteCategory.Do(t.Context(), usecase.DeleteCategoryInput{UserID: memberID, CategoryID: categoryID})
+	again := deleteCategory.Do(t.Context(), usecase.DeleteCategoryInput{UserID: memberID, CategoryID: categoryID})
+
+	// assert
+	require.NoError(t, err)
+	require.NoError(t, again, "a retry after the category is gone succeeds")
+	assert.Zero(t, d.Seeder.Count(t, "categories", h.ID))
+	var placeCategory *uuid.UUID
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT category_id FROM places WHERE id = $1", placeID).Scan(&placeCategory))
+	assert.Nil(t, placeCategory, "its places become uncategorized")
+}
+
+func TestDeleteCategory_anotherHousehold(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	other := d.Seeder.Household(t, hmodel.PlanFree)
+	categoryID := d.Seeder.Category(t, other.ID)
+
+	// act
+	err := usecase.NewDeleteCategory(d.Infra()).Do(t.Context(), usecase.DeleteCategoryInput{
+		UserID: h.OwnerID, CategoryID: categoryID,
+	})
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, 1, d.Seeder.Count(t, "categories", other.ID))
+}
+
+func TestDeleteCategory_outsider(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	categoryID := d.Seeder.Category(t, h.ID)
+
+	// act
+	err := usecase.NewDeleteCategory(d.Infra()).Do(t.Context(), usecase.DeleteCategoryInput{
+		UserID: d.Seeder.User(t), CategoryID: categoryID,
+	})
+
+	// assert
+	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
+	assert.Equal(t, 1, d.Seeder.Count(t, "categories", h.ID))
+}

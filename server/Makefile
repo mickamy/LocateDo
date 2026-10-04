@@ -112,6 +112,8 @@ gen-sqlc:
 gen-fixture:
 	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \
 		-source=./internal/feature/place/model -destination=internal/feature/place/fixture
+	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \
+		-source=./internal/feature/category/model -destination=internal/feature/category/fixture
 
 new-migration:
 	@if [ -z "$(name)" ]; then \
