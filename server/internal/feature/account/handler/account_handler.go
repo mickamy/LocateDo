@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"uuid"
 
 	"connectrpc.com/connect"
 
@@ -12,6 +13,7 @@ import (
 	accountv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
 	"github.com/mickamy/LocateDo/internal/lib/caller"
+	"github.com/mickamy/LocateDo/internal/lib/ptr"
 )
 
 type Account struct {
@@ -39,7 +41,10 @@ func (h *Account) SignInWithApple(
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	return connect.NewResponse(&accountv1.SignInWithAppleResponse{Session: mapper.SessionToAccountv1(out.Session)}), nil
+	return connect.NewResponse(&accountv1.SignInWithAppleResponse{
+		Session:     mapper.SessionToAccountv1(out.Session),
+		HouseholdId: ptr.Map(out.HouseholdID, uuid.UUID.String),
+	}), nil
 }
 
 func (h *Account) RefreshToken(
@@ -50,7 +55,10 @@ func (h *Account) RefreshToken(
 	if err != nil {
 		return nil, cerrors.Map(err)
 	}
-	return connect.NewResponse(&accountv1.RefreshTokenResponse{Session: mapper.SessionToAccountv1(out.Session)}), nil
+	return connect.NewResponse(&accountv1.RefreshTokenResponse{
+		Session:     mapper.SessionToAccountv1(out.Session),
+		HouseholdId: ptr.Map(out.HouseholdID, uuid.UUID.String),
+	}), nil
 }
 
 func (h *Account) DeleteAccount(

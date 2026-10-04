@@ -5,6 +5,7 @@ package usecase
 import (
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
@@ -29,12 +30,14 @@ func NewRefreshToken(infra di.Infra, lib di.Lib) *RefreshToken {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	tokens := repository.NewRefreshToken(reader)
+	memberships := repository2.NewMembership(reader)
 	signer := lib.Signer
 
 	return &RefreshToken{
-		transactor: transactor,
-		tokens:     tokens,
-		signer:     signer,
+		transactor:  transactor,
+		tokens:      tokens,
+		memberships: memberships,
+		signer:      signer,
 	}
 }
 
@@ -44,6 +47,7 @@ func NewSignInWithApple(infra di.Infra, lib di.Lib) *SignInWithApple {
 	reader := infra.Reader
 	users := repository.NewUser(reader)
 	tokens := repository.NewRefreshToken(reader)
+	memberships := repository2.NewMembership(reader)
 	appleTokens := repository.NewAppleToken(reader)
 	apple := infra.Apple
 	signer := lib.Signer
@@ -53,6 +57,7 @@ func NewSignInWithApple(infra di.Infra, lib di.Lib) *SignInWithApple {
 		transactor:  transactor,
 		users:       users,
 		tokens:      tokens,
+		memberships: memberships,
 		appleTokens: appleTokens,
 		apple:       apple,
 		signer:      signer,

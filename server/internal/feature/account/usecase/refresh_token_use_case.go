@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"uuid"
 
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/internal/lib/token"
@@ -19,18 +21,20 @@ type RefreshTokenInput struct {
 }
 
 type RefreshTokenOutput struct {
-	Session model.Session
+	Session     model.Session
+	HouseholdID *uuid.UUID
 }
 
 // RefreshToken rotates a refresh token. Presenting one that was already used
 // means it leaked, so the whole family is revoked and the device must sign in
 // again.
 type RefreshToken struct {
-	_          di.Infra                `di:"embed"`
-	_          di.Lib                  `di:"embed"`
-	transactor tx.Transactor           `di:""`
-	tokens     repository.RefreshToken `di:""`
-	signer     token.Signer            `di:""`
+	_           di.Infra                `di:"embed"`
+	_           di.Lib                  `di:"embed"`
+	transactor  tx.Transactor           `di:""`
+	tokens      repository.RefreshToken `di:""`
+	memberships hrepository.Membership  `di:""`
+	signer      token.Signer            `di:""`
 }
 
 func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTokenOutput, error) {
@@ -38,6 +42,7 @@ func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTok
 	hash := token.HashOpaque(in.RefreshToken)
 
 	var session model.Session
+	var householdID *uuid.UUID
 	// Set when the request is refused but the transaction must still commit,
 	// so that a family revoked for reuse stays revoked.
 	var rejected error
@@ -57,6 +62,10 @@ func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTok
 		}
 
 		session, err = startSession(ctx, tokens, uc.signer, current.UserID, current.FamilyID, now)
+		if err != nil {
+			return err
+		}
+		householdID, err = uc.householdOf(ctx, tx, current.UserID)
 		return err
 	}); err != nil {
 		return RefreshTokenOutput{}, fmt.Errorf("refresh token: %w", err)
@@ -64,7 +73,18 @@ func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTok
 	if rejected != nil {
 		return RefreshTokenOutput{}, rejected
 	}
-	return RefreshTokenOutput{Session: session}, nil
+	return RefreshTokenOutput{Session: session, HouseholdID: householdID}, nil
+}
+
+func (uc RefreshToken) householdOf(ctx context.Context, tx tx.Tx, userID uuid.UUID) (*uuid.UUID, error) {
+	m, err := uc.memberships.Bind(tx).FindByUser(ctx, userID)
+	if errors.Is(err, aerrors.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find membership: %w", err)
+	}
+	return &m.HouseholdID, nil
 }
 
 // reject explains why an unusable token was refused, revoking its family when

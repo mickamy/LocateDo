@@ -44,9 +44,15 @@ func (s Seeder) Member(t *testing.T, householdID uuid.UUID) uuid.UUID {
 	t.Helper()
 
 	userID := s.User(t)
+	s.Join(t, householdID, userID)
+	return userID
+}
+
+func (s Seeder) Join(t *testing.T, householdID, userID uuid.UUID) {
+	t.Helper()
+
 	s.exec(t, "INSERT INTO memberships (household_id, user_id, role) VALUES ($1, $2, $3)",
 		householdID, userID, string(hmodel.RoleMember))
-	return userID
 }
 
 func (s Seeder) SetPlan(t *testing.T, householdID uuid.UUID, plan hmodel.Plan) {

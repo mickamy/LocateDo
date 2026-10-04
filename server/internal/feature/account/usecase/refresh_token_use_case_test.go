@@ -9,6 +9,7 @@ import (
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
+	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/internal/lib/token"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -36,6 +37,30 @@ func TestRefreshToken_rotates(t *testing.T) {
 	assert.False(t, out.Session.NewUser)
 	assert.NotEqual(t, signedIn.Session.RefreshToken, out.Session.RefreshToken)
 	assert.Equal(t, now.Add(2*time.Hour+token.AccessTTL), out.Session.AccessTokenExpiresAt)
+	assert.Nil(t, out.HouseholdID)
+}
+
+func TestRefreshToken_returnsHousehold(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	lib := newLib()
+	signedIn, err := usecase.NewSignInWithApple(infra, lib).Do(fixedClock(t), signInInput("apple-sub", ""))
+	require.NoError(t, err)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	d.Seeder.Join(t, h.ID, signedIn.Session.UserID)
+
+	// act
+	out, err := usecase.NewRefreshToken(infra, lib).Do(fixedClock(t), usecase.RefreshTokenInput{
+		RefreshToken: signedIn.Session.RefreshToken,
+	})
+
+	// assert
+	require.NoError(t, err)
+	require.NotNil(t, out.HouseholdID)
+	assert.Equal(t, h.ID, *out.HouseholdID)
 }
 
 func TestRefreshToken_reuseRevokesFamily(t *testing.T) {

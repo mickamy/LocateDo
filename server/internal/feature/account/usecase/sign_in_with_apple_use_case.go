@@ -10,6 +10,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
@@ -25,7 +26,8 @@ type SignInWithAppleInput struct {
 }
 
 type SignInWithAppleOutput struct {
-	Session model.Session
+	Session     model.Session
+	HouseholdID *uuid.UUID
 }
 
 type SignInWithApple struct {
@@ -34,6 +36,7 @@ type SignInWithApple struct {
 	transactor  tx.Transactor           `di:""`
 	users       repository.User         `di:""`
 	tokens      repository.RefreshToken `di:""`
+	memberships hrepository.Membership  `di:""`
 	appleTokens repository.AppleToken   `di:""`
 	apple       apple.Auth              `di:""`
 	signer      token.Signer            `di:""`
@@ -57,6 +60,7 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 	}
 
 	var session model.Session
+	var householdID *uuid.UUID
 	if err := uc.transactor.WithTx(ctx, func(tx tx.Tx) error {
 		user, newUser, err := uc.findOrCreate(ctx, tx, identity.Subject, in.DisplayName)
 		if err != nil {
@@ -73,11 +77,13 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 			return err
 		}
 		session.NewUser = newUser
-		return nil
+
+		householdID, err = uc.householdOf(ctx, tx, user.ID)
+		return err
 	}); err != nil {
 		return SignInWithAppleOutput{}, fmt.Errorf("sign in with apple: %w", err)
 	}
-	return SignInWithAppleOutput{Session: session}, nil
+	return SignInWithAppleOutput{Session: session, HouseholdID: householdID}, nil
 }
 
 func (uc SignInWithApple) findOrCreate(
@@ -103,4 +109,15 @@ func (uc SignInWithApple) findOrCreate(
 		return model.User{}, false, fmt.Errorf("add identity: %w", err)
 	}
 	return user, true, nil
+}
+
+func (uc SignInWithApple) householdOf(ctx context.Context, tx tx.Tx, userID uuid.UUID) (*uuid.UUID, error) {
+	m, err := uc.memberships.Bind(tx).FindByUser(ctx, userID)
+	if errors.Is(err, aerrors.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find membership: %w", err)
+	}
+	return &m.HouseholdID, nil
 }

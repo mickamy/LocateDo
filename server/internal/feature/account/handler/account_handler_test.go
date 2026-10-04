@@ -35,6 +35,7 @@ func TestAccount_signInRefreshDelete(t *testing.T) {
 	require.NoError(t, err)
 	session := signedIn.Msg.GetSession()
 	assert.True(t, session.GetNewUser())
+	assert.Nil(t, signedIn.Msg.HouseholdId)
 	assert.NotEmpty(t, session.GetAccessToken())
 	assert.NotEmpty(t, session.GetRefreshToken())
 	assert.True(t, session.GetAccessTokenExpiresAt().AsTime().After(time.Now()))

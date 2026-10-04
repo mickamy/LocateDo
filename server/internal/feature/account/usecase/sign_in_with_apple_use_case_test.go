@@ -10,6 +10,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
+	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/lib/token"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -29,6 +30,7 @@ func TestSignInWithApple_newUser(t *testing.T) {
 	require.NoError(t, err)
 	s := out.Session
 	assert.True(t, s.NewUser)
+	assert.Nil(t, out.HouseholdID)
 	assert.Equal(t, now.Add(token.AccessTTL), s.AccessTokenExpiresAt)
 	userID, err := lib.Signer.VerifyAccess(s.AccessToken, now)
 	require.NoError(t, err)
@@ -99,4 +101,25 @@ func TestSignInWithApple_exchangeFails(t *testing.T) {
 	require.Error(t, err)
 	_, err = repository.NewUser(d.Reader).FindByIdentity(t.Context(), model.ProviderApple, "apple-sub")
 	require.ErrorIs(t, err, aerrors.ErrNotFound)
+}
+
+func TestSignInWithApple_returnsHousehold(t *testing.T) {
+	t.Parallel()
+
+	// arrange: signed in once on another device and joined a household there
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	signIn := usecase.NewSignInWithApple(infra, newLib())
+	first, err := signIn.Do(fixedClock(t), signInInput("apple-sub", ""))
+	require.NoError(t, err)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	d.Seeder.Join(t, h.ID, first.Session.UserID)
+
+	// act
+	out, err := signIn.Do(fixedClock(t), signInInput("apple-sub", ""))
+
+	// assert
+	require.NoError(t, err)
+	require.NotNil(t, out.HouseholdID)
+	assert.Equal(t, h.ID, *out.HouseholdID)
 }
