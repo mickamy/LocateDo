@@ -28,6 +28,11 @@ struct NearbyView: View {
             }
             .navigationTitle(Text(.tabHome))
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    SharingNoticeButton(source: .home) {
+                        Label(.sharingTitle, systemImage: "person.2")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isAddingPlace = true

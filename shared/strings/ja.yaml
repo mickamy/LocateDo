@@ -13,6 +13,10 @@ common:
   edit: "編集"
   delete: "削除"
   more: "その他"
+  ok: "OK"
+sharing:
+  title: "家族と共有"
+  coming_soon: "家族との共有は次のバージョンで使えるようになります。"
 onboarding:
   tagline: "行く場所が、やることを思い出させる。"
   description: "よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。"

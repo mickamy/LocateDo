@@ -239,6 +239,23 @@
         }
       }
     },
+    "common.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
     "common.save" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1257,6 +1274,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定を開く"
+          }
+        }
+      }
+    },
+    "sharing.coming_soon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family sharing is coming in the next version."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族との共有は次のバージョンで使えるようになります。"
+          }
+        }
+      }
+    },
+    "sharing.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share with family"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族と共有"
           }
         }
       }

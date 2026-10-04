@@ -13,6 +13,10 @@ common:
   edit: "Edit"
   delete: "Delete"
   more: "More"
+  ok: "OK"
+sharing:
+  title: "Share with family"
+  coming_soon: "Family sharing is coming in the next version."
 onboarding:
   tagline: "Where you go reminds you what to do."
   description: "Add the places you visit and the things to do there. LocateDo reminds you when you arrive."

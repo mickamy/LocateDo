@@ -55,6 +55,11 @@ struct SettingsView: View {
                     Text(.settingsDefaultRadiusLabel)
                 }
                 Section {
+                    SharingNoticeButton(source: .settings) {
+                        Label(.sharingTitle, systemImage: "person.2")
+                    }
+                }
+                Section {
                     LabeledContent {
                         Text(Self.version)
                     } label: {
