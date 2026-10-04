@@ -87,10 +87,13 @@ struct PlacePickerMapView: View {
                 }
                 .presentationDetents(selection == nil ? [Self.listDetent, .large] : [cardDetent], selection: $detent)
                 .presentationBackgroundInteraction(.enabled)
+                .presentationBackground(.thickMaterial)
                 .presentationDragIndicator(.visible)
             }
             .navigationTitle(Text(.placePickerTitle))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.thickMaterial, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(.commonCancel) {
@@ -116,6 +119,7 @@ struct PlacePickerMapView: View {
             } label: {
                 VStack(alignment: .leading) {
                     Text(item.name ?? "")
+                        .foregroundStyle(.primary)
                     if let address = item.address?.shortAddress {
                         Text(address)
                             .font(.footnote)
@@ -124,6 +128,7 @@ struct PlacePickerMapView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
     }
 
     private func selectionCard(_ selection: Selection) -> some View {
