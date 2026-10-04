@@ -5,10 +5,16 @@ on:
     paths:
       - "ios/**"
       - ".github/workflows/ios-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-ci.yml"
+  workflow_dispatch:
 
 concurrency:
   group: ios-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
