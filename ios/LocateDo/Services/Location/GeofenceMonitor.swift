@@ -10,6 +10,7 @@ final class GeofenceMonitor {
     private let locationProvider: LocationProvider
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "geofence")
     private var monitor: CLMonitor?
+    private var serviceSession: CLServiceSession?
     private var eventLoop: Task<Void, Never>?
 
     init(container: ModelContainer, notifier: ArrivalNotifier, locationProvider: LocationProvider) {
@@ -70,6 +71,7 @@ final class GeofenceMonitor {
     }
 
     private func run() async {
+        serviceSession = CLServiceSession(authorization: .always)
         let monitor = await CLMonitor("LocateDoPlaces")
         self.monitor = monitor
         let monitored = await monitor.identifiers.count
