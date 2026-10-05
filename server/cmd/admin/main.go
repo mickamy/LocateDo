@@ -8,14 +8,18 @@ import (
 	"os"
 	"uuid"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/mickamy/LocateDo/internal/di"
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
+	"github.com/mickamy/LocateDo/internal/infra/storage/db/migrate"
 )
 
 const usage = `usage: admin <command> [flags]
 
 commands:
+  migrate                                     apply pending database migrations
   set-plan -user <user id> -plan <free|pro>   set the plan of the household the user owns`
 
 func main() {
@@ -30,11 +34,27 @@ func run(ctx context.Context, cfg di.Config, args []string) error {
 		return errors.New(usage)
 	}
 	switch args[0] {
+	case "migrate":
+		return migrateUp(ctx, cfg)
 	case "set-plan":
 		return setPlan(ctx, cfg, args[1:])
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[0], usage)
 	}
+}
+
+func migrateUp(ctx context.Context, cfg di.Config) error {
+	pool, err := pgxpool.New(ctx, cfg.Database.AdminURL)
+	if err != nil {
+		return fmt.Errorf("connect: %w", err)
+	}
+	defer pool.Close()
+
+	if err := migrate.Up(ctx, pool); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+	fmt.Println("migrations applied")
+	return nil
 }
 
 func setPlan(ctx context.Context, cfg di.Config, args []string) error {

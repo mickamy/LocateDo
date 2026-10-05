@@ -1,9 +1,7 @@
 services:
   api:
-    build:
-      args:
-        BIN_NAME: api
-        MAIN_GO_FILE: ./cmd/api/main.go
+    build: .
+    command: [ "/bin/api" ]
     env_file: .env
     environment:
       MODULE_ROOT: /src
@@ -18,10 +16,8 @@ services:
         condition: service_healthy
 
   worker:
-    build:
-      args:
-        BIN_NAME: worker
-        MAIN_GO_FILE: ./cmd/worker/main.go
+    build: .
+    command: [ "/bin/worker" ]
     env_file: .env
     environment:
       MODULE_ROOT: /src

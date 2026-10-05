@@ -23,7 +23,6 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 # This is the architecture you're building for, which is passed in by the builder.
 # Placing it here allows the previous steps to be cached across architectures.
 ARG TARGETARCH
-ARG MAIN_GO_FILE
 
 # Build the application.
 # Leverage a cache mount to /go/pkg/mod/ to speed up subsequent builds.
@@ -31,7 +30,7 @@ ARG MAIN_GO_FILE
 # source code into the container.
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/app $MAIN_GO_FILE
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /out/ ./cmd/...
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal
@@ -67,11 +66,8 @@ RUN adduser \
     appuser
 USER appuser
 
-# Copy the executable from the "build" stage.
-COPY --from=build /bin/app /bin/
+# Copy the executables from the "build" stage; each service picks one as its command.
+COPY --from=build /out/api /out/worker /out/admin /bin/
 
 # Expose the port that the application listens on.
 EXPOSE 8080
-
-# What the container should run when it is started.
-ENTRYPOINT [ "/bin/app" ]
