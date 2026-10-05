@@ -277,7 +277,7 @@ platform :ios do
       "01-Arrival" => "Reminded the moment you arrive",
       "02-Nearby" => "See what's waiting nearby",
       "03-Place" => "A list for every store",
-      "04-Map" => "All your places on one map",
+      "04-Map" => "Your places on one map",
       "05-Todos" => "Every to-do in one place",
     },
     "ja" => {
