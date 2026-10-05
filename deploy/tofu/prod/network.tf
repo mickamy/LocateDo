@@ -48,8 +48,9 @@ resource "aws_route_table_association" "public" {
 # Requests arrive through Cloudflare Tunnel and operators come in through SSM,
 # so nothing is allowed in.
 resource "aws_security_group" "app" {
-  name   = "locatedo-prod-app"
-  vpc_id = aws_vpc.main.id
+  name        = "locatedo-prod-app"
+  description = "LocateDo prod app: outbound only"
+  vpc_id      = aws_vpc.main.id
 
   egress {
     from_port   = 0
