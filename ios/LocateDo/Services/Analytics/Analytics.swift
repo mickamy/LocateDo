@@ -7,6 +7,8 @@ enum AnalyticsEvent: String {
     case arrivalOpened = "arrival_opened"
     case shareTapped = "share_tapped"
     case inviteAccepted = "invite_accepted"
+    case paywallShown = "paywall_shown"
+    case paywallPurchased = "paywall_purchased"
 }
 
 nonisolated enum Analytics {

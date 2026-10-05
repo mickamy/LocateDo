@@ -54,6 +54,7 @@ struct PaywallView: View {
             }
         }
         .task {
+            Analytics.log(.paywallShown, parameters: ["trigger": trigger.rawValue])
             await loadPlans()
         }
         .onChange(of: entitlements.hasEntitlement) {
@@ -180,6 +181,13 @@ struct PaywallView: View {
         return .paywallSubscribe
     }
 
+    private var planName: String {
+        switch selected {
+        case .annual: "annual"
+        case .monthly: "monthly"
+        }
+    }
+
     private var isMember: Bool {
         let me = memberships.first { $0.userID == authenticator.session?.userID }
         return me?.role == .member
@@ -199,7 +207,9 @@ struct PaywallView: View {
         isWorking = true
         defer { isWorking = false }
         do {
-            _ = try await entitlements.purchase(selected)
+            if try await entitlements.purchase(selected) {
+                Analytics.log(.paywallPurchased, parameters: ["trigger": trigger.rawValue, "plan": planName])
+            }
         } catch {
             logger.error("Purchase failed: \(error, privacy: .public)")
             failure = .paywallFailed

@@ -135,6 +135,7 @@ struct AuthenticatorTests {
     @Test func concurrentRefreshesShareOneRequest() async throws {
         let account = FakeAccountService()
         account.enqueue(.success(Self.response(accessToken: "access-2", refreshToken: "refresh-2")))
+        account.delayRefreshes(by: .milliseconds(200))
         let authenticator = Authenticator(
             store: InMemorySessionStore(Self.session(expiresIn: 10)),
             account: account,
@@ -204,6 +205,7 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
             .failure(ConnectError(code: .unimplemented, message: nil))
         var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest?
         var deleteCalls = 0
+        var refreshDelay: Duration?
         var signOutTokens: [String] = []
         var signOutPushTokens: [String] = []
     }
@@ -226,6 +228,10 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         state.withLock { $0.deleteCalls }
     }
 
+    func delayRefreshes(by delay: Duration) {
+        state.withLock { $0.refreshDelay = delay }
+    }
+
     var signOutTokens: [String] {
         state.withLock { $0.signOutTokens }
     }
@@ -246,6 +252,9 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         request: Locatedo_Account_V1_RefreshTokenRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Account_V1_RefreshTokenResponse> {
+        if let delay = state.withLock({ $0.refreshDelay }) {
+            try? await Task.sleep(for: delay)
+        }
         let result = state.withLock { state in
             state.refreshCalls += 1
             state.lastRefreshToken = request.refreshToken
