@@ -11,7 +11,7 @@ HOW TO TRY IT
 3. When the device enters the place's radius, a notification lists the open to-dos there.
 
 ACCOUNT (OPTIONAL)
-No account is needed for the main features; everything is stored on the device. Sign in with Apple (Settings > Account) adds sync across devices and family sharing. No demo account is needed: any Apple ID can sign in. Account deletion: Settings > Account > Delete Account; it also revokes the Sign in with Apple token.
+No account is needed for the main features; everything is stored on the device. Sign in with Apple (Settings > Account) adds sync across devices and family sharing. No demo account is needed: any Apple ID can sign in. Account deletion: Settings > Account > Delete account; it also revokes the Sign in with Apple token.
 
 STOPBY PRO (AUTO-RENEWABLE SUBSCRIPTION)
 Free: 3 places and 15 open to-dos. Pro (yearly with a one-week free trial, or monthly) removes the limits and lets the owner share with up to 5 family members, who use Pro for free. The paywall opens from Settings > StopBy Pro, from the sharing screen, or when a free limit is reached. Restore Purchases is in Settings and on the paywall. Terms of Use (Apple's standard EULA) and the Privacy Policy are linked on the paywall.
