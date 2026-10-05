@@ -227,3 +227,10 @@ update:
   title: "アップデートが必要です"
   message: "このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。"
   open_app_store: "App Store を開く"
+maintenance:
+  upcoming: "{start}〜{end} はサーバーのメンテナンスのため同期を止めます。"
+  active: "サーバーのメンテナンス中です。{end} ごろに再開し、ためた変更を同期します。"
+  unavailable: "サーバーのメンテナンス中のため、今は使えません。{end} 以降にお試しください。"
+  dismiss: "閉じる"
+announcement:
+  title: "お知らせ"

@@ -36,6 +36,20 @@ struct RootView: View {
     private var main: some View {
         @Bindable var router = router
         return tabs
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    MaintenanceBanner()
+                }
+                .alert(
+                    Text(.announcementTitle),
+                    isPresented: announcement,
+                    presenting: appStatus.pendingNotice
+                ) { notice in
+                    Button(.commonOk) {
+                        appStatus.markNoticeShown(notice)
+                    }
+                } message: { notice in
+                    Text(notice.message.text(for: Bundle.main.preferredLocalizations.first) ?? "")
+                }
                 .alert(Text(.sessionEndedTitle), isPresented: sessionEndedNotice) {
                     Button(.commonOk) {}
                 } message: {
@@ -61,6 +75,12 @@ struct RootView: View {
             return
         }
         await appStatus.refresh()
+    }
+
+    private var announcement: Binding<Bool> {
+        Binding {
+            appStatus.pendingNotice != nil
+        } set: { _ in }
     }
 
     private var removedNotice: Binding<Bool> {

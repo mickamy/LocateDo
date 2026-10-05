@@ -126,6 +126,35 @@ struct AppStatusTests {
         #expect(late.pendingNotice == nil)
     }
 
+    @Test func theEndShowsOnlyTheTimeWhenTheWindowStaysWithinOneDay() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Asia/Tokyo"))
+        var timeOnly = Date.FormatStyle(date: .omitted, time: .shortened)
+        timeOnly.timeZone = calendar.timeZone
+        var withDate = Date.FormatStyle(date: .abbreviated, time: .shortened)
+        withDate.timeZone = calendar.timeZone
+        let sameDay = AppStatusDocument.Maintenance(startsAt: Self.starts, endsAt: Self.ends, message: nil)
+        let overnight = AppStatusDocument.Maintenance(
+            startsAt: Self.starts,
+            endsAt: Self.ends.addingTimeInterval(86_400),
+            message: nil
+        )
+
+        #expect(MaintenanceText.end(of: sameDay, calendar: calendar) == Self.ends.formatted(timeOnly))
+        #expect(MaintenanceText.end(of: overnight, calendar: calendar) == overnight.endsAt.formatted(withDate))
+    }
+
+    @Test func onlyAnActiveWindowCountsAsActive() async throws {
+        let earlier = Self.starts.addingTimeInterval(-1)
+        let before = makeStore(defaults: try makeDefaults(), version: "1.2.0", now: earlier) { _ in Self.full }
+        await before.refresh()
+        #expect(before.activeMaintenance == nil)
+
+        let during = makeStore(defaults: try makeDefaults(), version: "1.2.0", now: Self.starts) { _ in Self.full }
+        await during.refresh()
+        #expect(during.activeMaintenance?.endsAt == Self.ends)
+    }
+
     @Test(.timeLimit(.minutes(1)))
     func syncResumesWhenTheWindowEnds() async throws {
         let clock = Mutex(Self.ends.addingTimeInterval(-0.2))

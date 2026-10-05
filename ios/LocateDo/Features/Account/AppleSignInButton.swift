@@ -4,6 +4,7 @@ import SwiftUI
 
 struct AppleSignInButton: View {
     @Environment(AccountManager.self) private var account
+    @Environment(AppStatusStore.self) private var appStatus
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var nonce: String?
@@ -20,6 +21,8 @@ struct AppleSignInButton: View {
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
+            MaintenanceNote()
+                .multilineTextAlignment(.center)
             button
         }
         .alert(Text(.settingsAccountReplaceConfirmTitle), isPresented: $isConfirmingReplace) {
@@ -50,7 +53,7 @@ struct AppleSignInButton: View {
         }
         .frame(height: 50)
         .clipShape(.capsule)
-        .disabled(account.isWorking)
+        .disabled(account.isWorking || appStatus.activeMaintenance != nil)
     }
 
     private func prepare(_ request: ASAuthorizationAppleIDRequest) {

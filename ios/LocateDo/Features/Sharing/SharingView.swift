@@ -10,6 +10,7 @@ struct SharingView: View {
     @Environment(HouseholdManager.self) private var households
     @Environment(SyncEngine.self) private var sync
     @Environment(Entitlements.self) private var entitlements
+    @Environment(AppStatusStore.self) private var appStatus
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
     @Query private var syncStates: [SyncState]
@@ -81,10 +82,13 @@ struct SharingView: View {
                     } label: {
                         Label(.sharingInvite, systemImage: "person.badge.plus")
                     }
-                    .disabled(memberships.count >= Self.maxMembers)
+                    .disabled(memberships.count >= Self.maxMembers || appStatus.activeMaintenance != nil)
                 } footer: {
-                    if memberships.count >= Self.maxMembers {
-                        Text(.sharingFull)
+                    VStack(alignment: .leading, spacing: 8) {
+                        if memberships.count >= Self.maxMembers {
+                            Text(.sharingFull)
+                        }
+                        MaintenanceNote()
                     }
                 }
             }

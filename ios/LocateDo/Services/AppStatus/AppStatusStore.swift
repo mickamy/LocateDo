@@ -60,6 +60,13 @@ final class AppStatusStore {
         MaintenancePhase(document?.maintenance, at: now)
     }
 
+    var activeMaintenance: AppStatusDocument.Maintenance? {
+        guard case .active(let maintenance) = maintenancePhase else {
+            return nil
+        }
+        return maintenance
+    }
+
     var showsUpcomingBanner: Bool {
         guard case .upcoming(let maintenance) = maintenancePhase else {
             return false

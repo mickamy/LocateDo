@@ -6,6 +6,7 @@ import SwiftUI
 struct AcceptInviteView: View {
     @Environment(AccountManager.self) private var account
     @Environment(HouseholdManager.self) private var households
+    @Environment(AppStatusStore.self) private var appStatus
     @Environment(\.dismiss) private var dismiss
     @Query private var memberships: [Membership]
 
@@ -63,7 +64,7 @@ struct AcceptInviteView: View {
                             }
                         }
                     }
-                    .disabled(InviteLink.token(from: link) == nil || households.isWorking)
+                    .disabled(!canJoin)
                 } else {
                     VStack(spacing: 12) {
                         Text(.sharingSignInMessage)
@@ -73,10 +74,18 @@ struct AcceptInviteView: View {
                     }
                     .listRowBackground(Color.clear)
                 }
+            } footer: {
+                if account.isSignedIn {
+                    MaintenanceNote()
+                }
             }
         }
         .navigationTitle(Text(.inviteTitle))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var canJoin: Bool {
+        InviteLink.token(from: link) != nil && !households.isWorking && appStatus.activeMaintenance == nil
     }
 
     private func join() async {
