@@ -6,6 +6,7 @@ import (
 	"connectrpc.com/connect"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
+	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 )
 
 func Map(err error) *connect.Error {
@@ -22,6 +23,8 @@ func Map(err error) *connect.Error {
 		return connect.NewError(connect.CodePermissionDenied, err)
 	case errors.Is(err, aerrors.ErrInvalidArgument):
 		return connect.NewError(connect.CodeInvalidArgument, err)
+	case db.IsUnavailable(err):
+		return connect.NewError(connect.CodeUnavailable, err)
 	default:
 		return connect.NewError(connect.CodeInternal, err)
 	}
