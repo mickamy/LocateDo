@@ -551,7 +551,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api-stg.locatedo.com";
-				LOCATEDO_REVENUECAT_API_KEY = test_lqvPOSuItMaeQPmgcTBlMFVumra;
+				LOCATEDO_REVENUECAT_API_KEY = appl_qsTIyTqIrypCAUeieBVRdhcJFEd;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
