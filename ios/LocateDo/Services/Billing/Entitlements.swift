@@ -40,6 +40,29 @@ final class Entitlements {
         }
     }
 
+    func plans() async throws -> [PaywallPlan] {
+        guard let source else {
+            return []
+        }
+        return try await source.plans()
+    }
+
+    // Returns false when the buyer cancels.
+    func purchase(_ kind: PaywallPlan.Kind) async throws -> Bool {
+        guard let source, let hasPro = try await source.purchase(kind) else {
+            return false
+        }
+        hasEntitlement = hasPro
+        return true
+    }
+
+    func restore() async throws {
+        guard let source else {
+            return
+        }
+        hasEntitlement = try await source.restore()
+    }
+
     func logOut() async {
         guard let source else {
             return

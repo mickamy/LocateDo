@@ -128,6 +128,7 @@ struct RootView: View {
         .environment(authenticator)
         .environment(sync)
         .environment(account)
+        .environment(Entitlements(source: nil))
         .environment(HouseholdManager(
             household: api.household,
             authenticator: authenticator,

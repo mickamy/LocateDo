@@ -71,13 +71,14 @@ struct SettingsView: View {
                         Label(.sharingTitle, systemImage: "person.2")
                     }
                 }
+                ProSection()
                 Section {
                     LabeledContent {
                         Text(Self.version)
                     } label: {
                         Text(.settingsAboutVersion)
                     }
-                    Link(destination: Self.privacyPolicyURL) {
+                    Link(destination: LegalLinks.privacyPolicy) {
                         Label(.settingsAboutPrivacyPolicy, systemImage: "hand.raised")
                     }
                 } header: {
@@ -157,13 +158,6 @@ struct SettingsView: View {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             openURL(url)
         }
-    }
-
-    private static var privacyPolicyURL: URL {
-        if Bundle.main.preferredLocalizations.first == "ja" {
-            return URL(string: "https://locatedo.pages.dev/privacy-ja")!
-        }
-        return URL(string: "https://locatedo.pages.dev/privacy")!
     }
 
     private static var version: String {

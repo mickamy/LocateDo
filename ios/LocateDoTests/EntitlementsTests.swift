@@ -34,6 +34,35 @@ struct EntitlementsTests {
         #expect(!entitlements.hasEntitlement)
     }
 
+    @Test func aPurchaseGrantsTheEntitlement() async throws {
+        let entitlements = Entitlements(source: FakeEntitlementSource(hasPro: false))
+
+        let completed = try await entitlements.purchase(.annual)
+
+        #expect(completed)
+        #expect(entitlements.hasEntitlement)
+    }
+
+    @Test func aCancelledPurchaseChangesNothing() async throws {
+        let source = FakeEntitlementSource(hasPro: false)
+        source.cancelPurchases()
+        let entitlements = Entitlements(source: source)
+
+        let completed = try await entitlements.purchase(.monthly)
+
+        #expect(!completed)
+        #expect(!entitlements.hasEntitlement)
+    }
+
+    @Test func restoringTakesWhateverTheStoreHas() async throws {
+        let source = FakeEntitlementSource(hasPro: true)
+        let entitlements = Entitlements(source: source)
+
+        try await entitlements.restore()
+
+        #expect(entitlements.hasEntitlement)
+    }
+
     @Test func withoutASourceNothingHappens() async {
         let entitlements = Entitlements(source: nil)
 
@@ -48,6 +77,7 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
     private struct State {
         var hasPro: Bool
         var loggedIn: [String] = []
+        var cancelsPurchase = false
     }
 
     private let state: Mutex<State>
@@ -81,5 +111,30 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
 
     func updates() -> AsyncStream<Bool> {
         AsyncStream { $0.finish() }
+    }
+
+    func plans() async throws -> [PaywallPlan] {
+        [
+            PaywallPlan(kind: .annual, price: "$14.99", trialDays: 7),
+            PaywallPlan(kind: .monthly, price: "$2.99", trialDays: nil)
+        ]
+    }
+
+    func purchase(_ kind: PaywallPlan.Kind) async throws -> Bool? {
+        state.withLock { state in
+            if state.cancelsPurchase {
+                return nil
+            }
+            state.hasPro = true
+            return true
+        }
+    }
+
+    func restore() async throws -> Bool {
+        state.withLock { $0.hasPro }
+    }
+
+    func cancelPurchases() {
+        state.withLock { $0.cancelsPurchase = true }
     }
 }
