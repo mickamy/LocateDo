@@ -4,7 +4,9 @@ import (
 	"context"
 	"sync"
 	"time"
+	"uuid"
 
+	"github.com/mickamy/LocateDo/internal/lib/execution"
 	"github.com/mickamy/LocateDo/internal/lib/logger"
 	"github.com/mickamy/LocateDo/internal/worker/job"
 )
@@ -27,9 +29,9 @@ func NewTasks(
 	deadMessages *job.SweepDeadMessages,
 ) Tasks {
 	return Tasks{
-		{Name: "sweep tombstones", Interval: sweepInterval, Run: tombstones.Run},
-		{Name: "sweep refresh tokens", Interval: sweepInterval, Run: refreshTokens.Run},
-		{Name: "sweep dead messages", Interval: sweepInterval, Run: deadMessages.Run},
+		{Name: "sweep_tombstones", Interval: sweepInterval, Run: tombstones.Run},
+		{Name: "sweep_refresh_tokens", Interval: sweepInterval, Run: refreshTokens.Run},
+		{Name: "sweep_dead_messages", Interval: sweepInterval, Run: deadMessages.Run},
 	}
 }
 
@@ -54,8 +56,9 @@ func (s Scheduler) loop(ctx context.Context, t Task) {
 	ticker := time.NewTicker(t.Interval)
 	defer ticker.Stop()
 	for {
-		if err := t.Run(ctx); err != nil {
-			logger.Error(ctx, "task failed", "task", t.Name, "error", err)
+		runCtx := execution.Set(execution.SetJobName(ctx, t.Name), uuid.NewV7())
+		if err := t.Run(runCtx); err != nil {
+			logger.Error(runCtx, "task failed", "error", err)
 		}
 		select {
 		case <-ctx.Done():

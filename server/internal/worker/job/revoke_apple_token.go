@@ -9,6 +9,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
+	"github.com/mickamy/LocateDo/internal/lib/logger"
 	"github.com/mickamy/LocateDo/internal/lib/seal"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
@@ -36,5 +37,6 @@ func (h RevokeAppleToken) Handle(ctx context.Context, m outbox.Message) error {
 	if err := h.apple.Revoke(ctx, string(refreshToken), clock.Now(ctx)); err != nil {
 		return fmt.Errorf("revoke apple token: %w", err)
 	}
+	logger.Info(ctx, "revoked apple token", "user_id", r.UserID)
 	return nil
 }

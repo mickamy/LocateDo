@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"uuid"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
+	"github.com/mickamy/LocateDo/internal/lib/execution"
 	"github.com/mickamy/LocateDo/internal/lib/logger"
 	"github.com/mickamy/LocateDo/internal/outbox"
 	"github.com/mickamy/LocateDo/internal/worker/job"
@@ -92,6 +94,7 @@ func (c Consumer) Step(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("step: %w", err)
 	}
 
+	ctx = execution.Set(execution.SetJobName(ctx, string(m.Kind)), uuid.NewV7())
 	handleErr := c.handle(ctx, m)
 	if err := c.transactor.WithTx(ctx, func(tx tx.Tx) error {
 		return c.finish(ctx, c.messages.Bind(tx), m, handleErr)
@@ -119,7 +122,7 @@ func (c Consumer) finish(ctx context.Context, messages outbox.Repository, m outb
 		if err := messages.Complete(ctx, m.ID); err != nil {
 			return fmt.Errorf("complete: %w", err)
 		}
-		logger.Info(ctx, "outbox delivered", "kind", m.Kind, "id", m.ID, "attempts", m.Attempts+1,
+		logger.Info(ctx, "outbox delivered", "id", m.ID, "attempts", m.Attempts+1,
 			"queued_ms", clock.Now(ctx).Sub(m.CreatedAt).Milliseconds())
 		return nil
 	}
@@ -131,7 +134,7 @@ func (c Consumer) finish(ctx context.Context, messages outbox.Repository, m outb
 		}
 		return nil
 	}
-	logger.Warn(ctx, "outbox delivery failed", "kind", m.Kind, "id", m.ID, "attempt", attempt, "error", handleErr)
+	logger.Warn(ctx, "outbox delivery failed", "id", m.ID, "attempt", attempt, "error", handleErr)
 	if err := messages.Retry(ctx, m.ID, clock.Now(ctx).Add(backoff(attempt)), handleErr.Error()); err != nil {
 		return fmt.Errorf("retry: %w", err)
 	}

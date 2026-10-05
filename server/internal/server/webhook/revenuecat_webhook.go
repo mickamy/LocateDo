@@ -55,6 +55,7 @@ func (h *RevenueCat) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userIDs := users(body)
+	logger.Info(ctx, "revenuecat event", "type", body.Event.Type, "users", len(userIDs))
 	if body.Event.Type == "TEST" || len(userIDs) == 0 {
 		w.WriteHeader(http.StatusOK)
 		return

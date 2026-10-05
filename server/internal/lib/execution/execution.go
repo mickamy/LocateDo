@@ -5,7 +5,10 @@ import (
 	"uuid"
 )
 
-type contextKey struct{}
+type (
+	contextKey struct{}
+	jobNameKey struct{}
+)
 
 func NewID() (uuid.UUID, error) {
 	id := uuid.NewV7()
@@ -22,4 +25,13 @@ func Get(ctx context.Context) uuid.UUID {
 
 func Set(ctx context.Context, id uuid.UUID) context.Context {
 	return context.WithValue(ctx, contextKey{}, id)
+}
+
+func SetJobName(ctx context.Context, name string) context.Context {
+	return context.WithValue(ctx, jobNameKey{}, name)
+}
+
+func JobName(ctx context.Context) string {
+	name, _ := ctx.Value(jobNameKey{}).(string)
+	return name
 }

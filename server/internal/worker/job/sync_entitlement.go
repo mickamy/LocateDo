@@ -49,12 +49,15 @@ func (j SyncEntitlement) Handle(ctx context.Context, m outbox.Message) error {
 		plan = model.PlanPro
 	}
 
-	_, err = j.setPlan.Do(ctx, usecase.SetPlanInput{OwnerID: payload.UserID, Plan: plan})
+	out, err := j.setPlan.Do(ctx, usecase.SetPlanInput{OwnerID: payload.UserID, Plan: plan})
 	if errors.Is(err, aerrors.ErrNotFound) {
+		logger.Info(ctx, "synced entitlement; the user owns no household", "user_id", payload.UserID, "active", active)
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("sync entitlement: %w", err)
 	}
+	logger.Info(ctx, "synced entitlement", "user_id", payload.UserID, "active", active,
+		"household_id", out.HouseholdID, "plan", plan, "changed", out.Changed)
 	return nil
 }

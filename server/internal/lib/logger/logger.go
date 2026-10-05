@@ -54,6 +54,9 @@ func internalHandle(ctx context.Context, level slog.Level, msg string, args ...a
 	if execID != uuid.Nil() {
 		args = append(args, slog.String("execution_id", execID.String()))
 	}
+	if name := execution.JobName(ctx); name != "" {
+		args = append(args, slog.String("job_name", name))
+	}
 
 	slog.Default().Log(ctx, level, msg, args...)
 }
