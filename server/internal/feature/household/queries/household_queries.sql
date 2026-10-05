@@ -25,6 +25,14 @@ SET plan = $2
 WHERE id = $1
   AND plan <> $2;
 
+-- Both columns take the pre-update version, so every cursor a device holds
+-- falls below swept_version and its next Pull resets.
+-- name: AdvanceAllHouseholdVersions :many
+UPDATE households
+SET version       = version + sqlc.arg(step),
+    swept_version = version + sqlc.arg(step)
+RETURNING id;
+
 -- name: DeleteHousehold :execrows
 DELETE
 FROM households

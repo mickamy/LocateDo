@@ -20,6 +20,7 @@ const usage = `usage: admin <command> [flags]
 
 commands:
   migrate                                     apply pending database migrations
+  force-resync                                make every device pull its household from scratch (after a restore)
   set-plan -user <user id> -plan <free|pro>   set the plan of the household the user owns`
 
 func main() {
@@ -36,6 +37,8 @@ func run(ctx context.Context, cfg di.Config, args []string) error {
 	switch args[0] {
 	case "migrate":
 		return migrateUp(ctx, cfg)
+	case "force-resync":
+		return forceResync(ctx, cfg)
 	case "set-plan":
 		return setPlan(ctx, cfg, args[1:])
 	default:
@@ -54,6 +57,23 @@ func migrateUp(ctx context.Context, cfg di.Config) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 	fmt.Println("migrations applied")
+	return nil
+}
+
+func forceResync(ctx context.Context, cfg di.Config) error {
+	infra, err := di.NewInfra(ctx, cfg)
+	if err != nil {
+		return fmt.Errorf("build infrastructure: %w", err)
+	}
+	defer func() {
+		_ = infra.Close()
+	}()
+
+	n, err := usecase.NewForceResync(infra).Do(ctx)
+	if err != nil {
+		return fmt.Errorf("force-resync: %w", err)
+	}
+	fmt.Printf("%d households will resync from scratch\n", n)
 	return nil
 }
 

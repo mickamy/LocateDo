@@ -24,6 +24,9 @@ type Household interface {
 	FindByOwner(ctx context.Context, ownerID uuid.UUID) (model.Household, error)
 	// SetPlan reports whether the plan changed.
 	SetPlan(ctx context.Context, id uuid.UUID, plan model.Plan) (bool, error)
+	// AdvanceAllVersions moves every household's version and swept_version
+	// forward by step and returns the households it touched.
+	AdvanceAllVersions(ctx context.Context, step int64) ([]uuid.UUID, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	// MoveContents moves places, todos, and custom categories from one
 	// household to another; places in a built-in category switch to the
@@ -129,6 +132,14 @@ func (r household) SetPlan(ctx context.Context, id uuid.UUID, plan model.Plan) (
 		return false, fmt.Errorf("set plan: %w", err)
 	}
 	return n > 0, nil
+}
+
+func (r household) AdvanceAllVersions(ctx context.Context, step int64) ([]uuid.UUID, error) {
+	ids, err := r.q.AdvanceAllHouseholdVersions(ctx, step)
+	if err != nil {
+		return nil, fmt.Errorf("advance household versions: %w", err)
+	}
+	return ids, nil
 }
 
 func (r household) Delete(ctx context.Context, id uuid.UUID) error {

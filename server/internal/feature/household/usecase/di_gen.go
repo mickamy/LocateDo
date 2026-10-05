@@ -56,6 +56,20 @@ func NewCreateInvite(infra di.Infra) *CreateInvite {
 	}
 }
 
+// NewForceResync initializes dependencies and constructs ForceResync.
+func NewForceResync(infra di.Infra) *ForceResync {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	households := repository.NewHousehold(reader)
+	messages := outbox.NewRepository(reader)
+
+	return &ForceResync{
+		transactor: transactor,
+		households: households,
+		messages:   messages,
+	}
+}
+
 // NewRemoveMember initializes dependencies and constructs RemoveMember.
 func NewRemoveMember(infra di.Infra) *RemoveMember {
 	transactor := infra.Transactor

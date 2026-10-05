@@ -46,6 +46,35 @@ func (q *Queries) AcceptInvite(ctx context.Context, arg AcceptInviteParams) (Acc
 	return i, err
 }
 
+const advanceAllHouseholdVersions = `-- name: AdvanceAllHouseholdVersions :many
+UPDATE households
+SET version       = version + $1,
+    swept_version = version + $1
+RETURNING id
+`
+
+// Both columns take the pre-update version, so every cursor a device holds
+// falls below swept_version and its next Pull resets.
+func (q *Queries) AdvanceAllHouseholdVersions(ctx context.Context, step int64) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, advanceAllHouseholdVersions, step)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countMemberships = `-- name: CountMemberships :one
 SELECT count(*)
 FROM memberships

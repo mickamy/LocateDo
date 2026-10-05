@@ -180,3 +180,32 @@ func TestHousehold_FindForUpdate(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, found, locked)
 }
+
+func TestHousehold_AdvanceAllVersions(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	households := repository.NewHousehold(d.Reader)
+	a := d.Seeder.Household(t, model.PlanFree)
+	b := d.Seeder.Household(t, model.PlanPro)
+	d.Seeder.Place(t, b.ID)
+	before := map[uuid.UUID]int64{a.ID: d.Seeder.Version(t, a.ID), b.ID: d.Seeder.Version(t, b.ID)}
+
+	// act
+	var ids []uuid.UUID
+	d.InTx(t, func(tx tx.Tx) {
+		var err error
+		ids, err = households.Bind(tx).AdvanceAllVersions(t.Context(), 100)
+		require.NoError(t, err)
+	})
+
+	// assert
+	assert.ElementsMatch(t, []uuid.UUID{a.ID, b.ID}, ids)
+	for id, version := range before {
+		got, err := households.Find(t.Context(), id)
+		require.NoError(t, err)
+		assert.Equal(t, version+100, got.Version)
+		assert.Equal(t, version+100, got.SweptVersion)
+	}
+}
