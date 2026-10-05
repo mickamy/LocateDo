@@ -155,12 +155,14 @@ struct LocateDoApp: App {
             await geofence.sync()
         }
         account.onHouseholdReady = { [authenticator, devices, sync, geofence, entitlements] in
-            if let userID = authenticator.session?.userID {
-                await entitlements.logIn(userID: userID)
+            Task {
+                if let userID = authenticator.session?.userID {
+                    await entitlements.logIn(userID: userID)
+                }
+                await devices.registerIfSignedIn()
+                await sync.sync()
+                await geofence.sync()
             }
-            await devices.registerIfSignedIn()
-            await sync.sync()
-            await geofence.sync()
         }
         account.onSessionEnded = { [preferences, geofence, entitlements] in
             preferences.hasPendingSessionEndedNotice = true

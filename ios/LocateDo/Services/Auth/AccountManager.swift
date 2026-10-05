@@ -15,7 +15,7 @@ final class AccountManager {
     private var pendingAdoption: PendingAdoption?
     @ObservationIgnored var pushToken: () -> String? = { nil }
     @ObservationIgnored var onLocalDataReset: () async -> Void = {}
-    @ObservationIgnored var onHouseholdReady: () async -> Void = {}
+    @ObservationIgnored var onHouseholdReady: () -> Void = {}
     @ObservationIgnored var onSessionEnded: () async -> Void = {}
     @ObservationIgnored var onSignedOut: () async -> Void = {}
 
@@ -119,7 +119,7 @@ final class AccountManager {
         state.cursor = response.cursor
         try context.save()
         pendingHouseholdID = nil
-        await onHouseholdReady()
+        onHouseholdReady()
     }
 
     func deleteAccount() async throws {
@@ -190,7 +190,7 @@ final class AccountManager {
         state.cursor = 0
         state.plan = plan
         try context.save()
-        await onHouseholdReady()
+        onHouseholdReady()
     }
 
     private func adopt(_ adoption: PendingAdoption) async throws {
