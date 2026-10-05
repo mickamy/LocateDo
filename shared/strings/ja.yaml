@@ -1,6 +1,6 @@
 app:
-  name: "LocateDo"
-  bundle_name: "LocateDo"
+  name: "ちかメモ"
+  bundle_name: "ちかメモ"
 tab:
   home: "ホーム"
   map: "マップ"
@@ -29,7 +29,7 @@ sharing:
   leave_confirm_message: "この iPhone の場所と TODO は消え、ひとりで使う状態に戻ります。"
   failed: "共有の設定を変更できませんでした。もう一度お試しください。"
   invite: "招待する"
-  invite_message: "LocateDo で場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
+  invite_message: "ちかメモで場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
   full: "1 つの世帯に入れるのは 6 人までです。"
   accept: "招待を受ける"
 onboarding:
@@ -180,7 +180,7 @@ invite:
   link_placeholder: "招待リンク"
   message: "この世帯の人と、場所と TODO を共有します。この iPhone の場所と TODO は、その世帯にまとめられます。"
   join: "参加する"
-  invalid: "LocateDo の招待リンクではないようです。"
+  invalid: "ちかメモの招待リンクではないようです。"
   unavailable: "この招待は期限切れか、すでに使われているか、世帯が満員です。新しい招待をもらってください。"
   already_member: "すでにこの世帯に参加しています。"
   leave_first: "今ほかの人と共有しています。先にその共有から抜けてください。"

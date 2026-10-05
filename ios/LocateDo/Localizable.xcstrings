@@ -24,7 +24,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To notice when you arrive while LocateDo is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
+            "value" : "To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
           }
         },
         "ja" : {
@@ -75,13 +75,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo"
+            "value" : "StopBy"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo"
+            "value" : "ちかメモ"
           }
         }
       }
@@ -467,13 +467,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This doesn’t look like a LocateDo invite link."
+            "value" : "This doesn’t look like a StopBy invite link."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo の招待リンクではないようです。"
+            "value" : "ちかメモの招待リンクではないようです。"
           }
         }
       }
@@ -672,7 +672,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add the places you visit and the things to do there. LocateDo reminds you when you arrive."
+            "value" : "Add the places you visit and the things to do there. StopBy reminds you when you arrive."
           }
         },
         "ja" : {
@@ -706,7 +706,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo sends a notification when you arrive at a place that still has open to-dos."
+            "value" : "StopBy sends a notification when you arrive at a place that still has open to-dos."
           }
         },
         "ja" : {
@@ -740,7 +740,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo asks for your location to do that."
+            "value" : "StopBy asks for your location to do that."
           }
         },
         "ja" : {
@@ -1726,7 +1726,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrival reminders need “Always” so LocateDo can notice when you arrive while it is closed."
+            "value" : "Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed."
           }
         },
         "ja" : {
@@ -1981,13 +1981,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Join me on LocateDo to share places and to-dos. This link works for 72 hours:"
+            "value" : "Join me on StopBy to share places and to-dos. This link works for 72 hours:"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo で場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
+            "value" : "ちかメモで場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
           }
         }
       }

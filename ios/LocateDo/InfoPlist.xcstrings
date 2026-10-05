@@ -7,13 +7,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo"
+            "value" : "StopBy"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo"
+            "value" : "ちかメモ"
           }
         }
       }
@@ -24,7 +24,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo needs your location in the background to remind you when you arrive at a place."
+            "value" : "StopBy needs your location in the background to remind you when you arrive at a place."
           }
         },
         "ja" : {
@@ -41,7 +41,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LocateDo uses your location to show the places near you and the distance to them."
+            "value" : "StopBy uses your location to show the places near you and the distance to them."
           }
         },
         "ja" : {

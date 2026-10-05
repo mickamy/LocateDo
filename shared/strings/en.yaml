@@ -1,6 +1,6 @@
 app:
-  name: "LocateDo"
-  bundle_name: "LocateDo"
+  name: "StopBy"
+  bundle_name: "StopBy"
 tab:
   home: "Home"
   map: "Map"
@@ -29,21 +29,21 @@ sharing:
   leave_confirm_message: "Places and to-dos on this iPhone will be removed, and you’ll start over on your own."
   failed: "Couldn’t update sharing. Try again."
   invite: "Invite Someone"
-  invite_message: "Join me on LocateDo to share places and to-dos. This link works for 72 hours:"
+  invite_message: "Join me on StopBy to share places and to-dos. This link works for 72 hours:"
   full: "A household can have up to 6 members."
   accept: "Accept an Invite"
 onboarding:
   tagline: "Where you go reminds you what to do."
-  description: "Add the places you visit and the things to do there. LocateDo reminds you when you arrive."
-  permissions: "LocateDo asks for your location to do that."
+  description: "Add the places you visit and the things to do there. StopBy reminds you when you arrive."
+  permissions: "StopBy asks for your location to do that."
   start: "Get started"
   notifications_title: "Get notified when you arrive"
-  notifications_description: "LocateDo sends a notification when you arrive at a place that still has open to-dos."
+  notifications_description: "StopBy sends a notification when you arrive at a place that still has open to-dos."
   allow_notifications: "Allow notifications"
   later: "Not now"
 always_prompt:
   title: "Remind you even when the app is closed"
-  description: "To notice when you arrive while LocateDo is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
+  description: "To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
   allow: "Allow “Always”"
   later: "Not now"
 settings:
@@ -53,7 +53,7 @@ settings:
     when_in_use: "While using the app"
     denied: "Not allowed"
     not_determined: "Not asked yet"
-    needs_always: "Arrival reminders need “Always” so LocateDo can notice when you arrive while it is closed."
+    needs_always: "Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed."
     allow: "Allow location"
   notifications:
     title: "Notifications"
@@ -169,8 +169,8 @@ category:
   other: "Other"
   none: "Uncategorized"
 permission:
-  when_in_use: "LocateDo uses your location to show the places near you and the distance to them."
-  always: "LocateDo needs your location in the background to remind you when you arrive at a place."
+  when_in_use: "StopBy uses your location to show the places near you and the distance to them."
+  always: "StopBy needs your location in the background to remind you when you arrive at a place."
 session_ended:
   title: "Signed Out"
   message: "Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed."
@@ -182,7 +182,7 @@ invite:
   link_placeholder: "Invite link"
   message: "You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it."
   join: "Join"
-  invalid: "This doesn’t look like a LocateDo invite link."
+  invalid: "This doesn’t look like a StopBy invite link."
   unavailable: "This invite has expired, was already used, or the household is full. Ask for a new one."
   already_member: "You’re already in this household."
   leave_first: "You’re sharing with others now. Leave that sharing first."
