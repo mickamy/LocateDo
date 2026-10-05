@@ -1,4 +1,4 @@
-name: tofu-prod
+name: deploy-prod
 
 on:
   workflow_dispatch:

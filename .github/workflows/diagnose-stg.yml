@@ -1,4 +1,4 @@
-name: stg-diagnose
+name: diagnose-stg
 
 on:
   workflow_dispatch:
