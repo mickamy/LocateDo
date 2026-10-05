@@ -48,3 +48,23 @@ func TestPutCategory_anotherHousehold(t *testing.T) {
 	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
 	assert.Zero(t, d.Seeder.Count(t, "categories", other.ID))
 }
+
+func TestPutCategory_builtinAgainAfterDelete(t *testing.T) {
+	t.Parallel()
+
+	// arrange: the household's built-in shopping category was deleted
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	deleted := d.Seeder.BuiltinCategory(t, h.ID, "shopping")
+	require.NoError(t, usecase.NewDeleteCategory(d.Infra()).Do(t.Context(),
+		usecase.DeleteCategoryInput{HouseholdID: h.ID, CategoryID: deleted}))
+	shopping := "shopping"
+	c := fixture.Category(func(m *model.Category) { m.HouseholdID = h.ID; m.BuiltinKey = &shopping; m.Name = nil })
+
+	// act: a new id with the same builtin key
+	err := usecase.NewPutCategory(d.Infra()).Do(t.Context(), usecase.PutCategoryInput{HouseholdID: h.ID, Category: c})
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, 1, d.Seeder.Count(t, "categories", h.ID))
+}
