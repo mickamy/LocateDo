@@ -10,6 +10,9 @@ data "aws_iam_openid_connect_provider" "github" {
 locals {
   account_id = data.aws_caller_identity.current.account_id
   state_arn  = "arn:aws:s3:::locatedo-tofu-state/prod/terraform.tfstate"
+  # The repository issues immutable subjects (owner and repository ids), so a
+  # renamed or re-registered repository cannot match.
+  github_sub = "repo:mickamy@11856337/LocateDo@1402816584"
 }
 
 resource "aws_iam_role" "plan" {
@@ -24,7 +27,7 @@ resource "aws_iam_role" "plan" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "repo:mickamy/LocateDo:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = "${local.github_sub}:ref:refs/heads/main"
         }
       }
     }]
@@ -72,7 +75,7 @@ resource "aws_iam_role" "apply" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "repo:mickamy/LocateDo:environment:prod-infra"
+          "token.actions.githubusercontent.com:sub" = "${local.github_sub}:environment:prod-infra"
         }
       }
     }]
