@@ -13,12 +13,11 @@ final class ScreenshotTests: XCTestCase {
 
     @MainActor
     func testScreenshots() throws {
-        let japanese = Snapshot.deviceLanguage.hasPrefix("ja")
-        let seed = Seed(japanese: japanese)
-        XCUIDevice.shared.location = XCUILocation(location: seed.center)
-
         let app = XCUIApplication()
+        // Snapshot.deviceLanguage is only set once setupSnapshot has run.
         setupSnapshot(app)
+        let seed = Seed(japanese: Snapshot.deviceLanguage.hasPrefix("ja"))
+        XCUIDevice.shared.location = XCUILocation(location: seed.center)
         app.launchArguments += ["-SeedScreenshotData"]
         app.launch()
         finishOnboarding(app)
@@ -66,11 +65,12 @@ final class ScreenshotTests: XCTestCase {
         allowSystemAlert()
     }
 
-    // The notification alert reads "Don't Allow / Allow".
+    // The notification alert reads "Don't Allow / Allow". On a freshly erased simulator it can take
+    // more than 10 seconds to appear.
     @MainActor
     private func allowSystemAlert() {
         let alert = springboard.alerts.firstMatch
-        XCTAssertTrue(alert.waitForExistence(timeout: 10))
+        XCTAssertTrue(alert.waitForExistence(timeout: 60))
         alert.buttons.element(boundBy: 1).tap()
     }
 }
