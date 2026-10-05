@@ -16,7 +16,7 @@ WHERE id = (SELECT due.id
                OR (due.status = 'running' AND due.lease_until <= sqlc.arg(now))
             ORDER BY due.run_at
             LIMIT 1 FOR UPDATE SKIP LOCKED)
-RETURNING id, kind, payload, dedupe_key, run_at, attempts;
+RETURNING id, kind, payload, dedupe_key, run_at, attempts, created_at;
 
 -- name: CompleteMessage :exec
 DELETE

@@ -42,20 +42,27 @@ func (j PushHousehold) Handle(ctx context.Context, m outbox.Message) error {
 		return fmt.Errorf("list devices: %w", err)
 	}
 
+	var woken, forgotten int
 	var failed []error
 	for _, d := range devices {
 		err := j.pusher.Wake(ctx, apns.Environment(d.APNsEnvironment), d.PushToken, clock.Now(ctx))
 		switch {
+		case err == nil:
+			woken++
 		case errors.Is(err, apns.ErrUnregistered):
 			logger.Info(ctx, "forgetting a device token apns rejected",
 				"user_id", d.UserID, "apns_environment", d.APNsEnvironment, "error", err)
 			if err := j.forget(ctx, d.PushToken); err != nil {
 				failed = append(failed, err)
+				continue
 			}
-		case err != nil:
+			forgotten++
+		default:
 			failed = append(failed, err)
 		}
 	}
+	logger.Info(ctx, "woke household devices", "household_id", payload.HouseholdID,
+		"woken", woken, "forgotten", forgotten, "failed", len(failed))
 	if err := errors.Join(failed...); err != nil {
 		return fmt.Errorf("wake devices: %w", err)
 	}

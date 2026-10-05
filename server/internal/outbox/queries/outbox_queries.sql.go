@@ -22,7 +22,7 @@ WHERE id = (SELECT due.id
                OR (due.status = 'running' AND due.lease_until <= $2)
             ORDER BY due.run_at
             LIMIT 1 FOR UPDATE SKIP LOCKED)
-RETURNING id, kind, payload, dedupe_key, run_at, attempts
+RETURNING id, kind, payload, dedupe_key, run_at, attempts, created_at
 `
 
 type ClaimMessageParams struct {
@@ -37,6 +37,7 @@ type ClaimMessageRow struct {
 	DedupeKey *string
 	RunAt     time.Time
 	Attempts  int32
+	CreatedAt time.Time
 }
 
 // Takes the oldest due message, or one whose lease ran out because its
@@ -51,6 +52,7 @@ func (q *Queries) ClaimMessage(ctx context.Context, arg ClaimMessageParams) (Cla
 		&i.DedupeKey,
 		&i.RunAt,
 		&i.Attempts,
+		&i.CreatedAt,
 	)
 	return i, err
 }

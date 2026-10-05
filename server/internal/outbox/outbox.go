@@ -57,6 +57,7 @@ type Message struct {
 	DedupeKey *string
 	RunAt     time.Time
 	Attempts  int32
+	CreatedAt time.Time
 }
 
 // Handler delivers one kind of message. An error schedules a retry.
@@ -132,6 +133,7 @@ func (r repository) Claim(ctx context.Context, now, leaseUntil time.Time) (Messa
 		DedupeKey: row.DedupeKey,
 		RunAt:     row.RunAt,
 		Attempts:  row.Attempts,
+		CreatedAt: row.CreatedAt,
 	}, nil
 }
 

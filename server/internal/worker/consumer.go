@@ -119,6 +119,8 @@ func (c Consumer) finish(ctx context.Context, messages outbox.Repository, m outb
 		if err := messages.Complete(ctx, m.ID); err != nil {
 			return fmt.Errorf("complete: %w", err)
 		}
+		logger.Info(ctx, "outbox delivered", "kind", m.Kind, "id", m.ID, "attempts", m.Attempts+1,
+			"queued_ms", clock.Now(ctx).Sub(m.CreatedAt).Milliseconds())
 		return nil
 	}
 
