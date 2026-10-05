@@ -36,9 +36,6 @@ struct RootView: View {
     private var main: some View {
         @Bindable var router = router
         return tabs
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    MaintenanceBanner()
-                }
                 .alert(
                     Text(.announcementTitle),
                     isPresented: announcement,

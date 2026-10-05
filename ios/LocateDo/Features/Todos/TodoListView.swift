@@ -28,6 +28,7 @@ struct TodoListView: View {
                 }
             }
             .navigationTitle(Text(.tabTodos))
+            .maintenanceBanner()
             .toolbar {
                 if !places.isEmpty {
                     ToolbarItem(placement: .primaryAction) {

@@ -28,6 +28,7 @@ struct MapTabView: View {
                 }
             }
             .navigationTitle(Text(.tabMap))
+            .maintenanceBanner()
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(item: $selectedPlace) { place in
                 PlaceDetailView(place: place)

@@ -29,6 +29,7 @@ struct NearbyView: View {
                 }
             }
             .navigationTitle(Text(.tabHome))
+            .maintenanceBanner()
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     SharingButton(source: .home) {

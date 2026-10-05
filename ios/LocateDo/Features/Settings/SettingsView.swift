@@ -89,6 +89,7 @@ struct SettingsView: View {
                 #endif
             }
             .navigationTitle(Text(.tabSettings))
+            .maintenanceBanner()
             .task {
                 await refresh()
             }

@@ -2,8 +2,16 @@ import SwiftUI
 
 struct MaintenanceBanner: View {
     @Environment(AppStatusStore.self) private var appStatus
+    @Environment(Authenticator.self) private var authenticator
 
     var body: some View {
+        if authenticator.isSignedIn {
+            content
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch appStatus.maintenancePhase {
         case .upcoming(let maintenance) where appStatus.showsUpcomingBanner:
             banner(maintenance, isDismissible: true) {
@@ -52,6 +60,16 @@ struct MaintenanceBanner: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Color.orange.opacity(0.12))
+        .background(Color.orange.opacity(0.12), in: .rect(cornerRadius: 16))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+}
+
+extension View {
+    func maintenanceBanner() -> some View {
+        safeAreaBar(edge: .top) {
+            MaintenanceBanner()
+        }
     }
 }
