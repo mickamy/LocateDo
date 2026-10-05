@@ -3,7 +3,7 @@ StopBy reminds you of to-dos when you arrive at a place you saved, such as "buy 
 LOCATION ("ALWAYS" PERMISSION)
 Arrival reminders must work while the app is closed, which is the whole point of the app, so it asks for "Always" location after first asking for "While Using". Arrival detection runs on the device with iOS region monitoring (CLMonitor) around the places you saved; the current location is never sent to our servers or anyone else and is not stored as a history. The app still works with "While Using", but reminders then only fire while it is open; Settings explains this and links to iOS Settings.
 
-Video of a background arrival reminder: VIDEO_URL
+We can provide a screen recording of a background arrival reminder on request.
 
 HOW TO TRY IT
 1. Home > Add a place: pick a point on the map (or use the current location) and save it.
