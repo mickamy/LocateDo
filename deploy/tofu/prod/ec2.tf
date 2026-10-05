@@ -40,9 +40,9 @@ resource "aws_instance" "app" {
   }
 }
 
-# Postgres lives here so that replacing the instance keeps the data. Until
-# launch, destroy is allowed and leaves a snapshot; add prevent_destroy before
-# real users arrive.
+# Postgres lives here so that replacing the instance keeps the data. Resetting
+# the database is done on the host (empty /var/lib/locatedo/postgres), never by
+# destroying the volume; tearing prod down takes removing prevent_destroy first.
 resource "aws_ebs_volume" "data" {
   availability_zone = aws_subnet.public.availability_zone
   type              = "gp3"
@@ -52,6 +52,10 @@ resource "aws_ebs_volume" "data" {
 
   tags = {
     Name = "locatedo-prod-data"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
