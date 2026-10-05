@@ -49,7 +49,7 @@ struct SyncEngineTests {
         #expect(try fixture.queueCount() == 1)
     }
 
-    @Test(arguments: [Code.unavailable, .failedPrecondition, .permissionDenied, .internalError])
+    @Test(arguments: [Code.unavailable, .permissionDenied, .internalError])
     func keepsTheHeadAndStops(code: Code) async throws {
         let fixture = try SyncEngineFixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)

@@ -14,6 +14,7 @@ final class AppRouter {
     var pendingPlaceID: UUID?
     var isAddPlaceRequested = false
     var pendingInvite: PendingInvite?
+    var pendingPaywall: PaywallTrigger?
 
     func open(placeID: UUID) {
         selectedTab = .home

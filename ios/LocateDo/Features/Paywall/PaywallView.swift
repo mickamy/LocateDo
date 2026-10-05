@@ -2,11 +2,15 @@ import OSLog
 import SwiftData
 import SwiftUI
 
-enum PaywallTrigger: String {
+enum PaywallTrigger: String, Identifiable {
     case placeLimit = "place_limit"
     case todoLimit = "todo_limit"
     case share
     case settings
+
+    var id: String {
+        rawValue
+    }
 }
 
 struct PaywallView: View {

@@ -17,6 +17,7 @@ struct PlaceEditorView: View {
     @State private var category: PlaceCategory?
     @State private var isPickingLocation = false
     @FocusState private var isNameFocused: Bool
+    @State private var paywall: PaywallTrigger?
 
     init(place: Place? = nil, defaultRadiusMeters: Double = Place.defaultRadiusMeters, onSave: (() -> Void)? = nil) {
         self.place = place
@@ -85,6 +86,9 @@ struct PlaceEditorView: View {
                 }
             }
             .navigationTitle(Text(place == nil ? .placeEditorTitleNew : .placeEditorTitleEdit))
+            .sheet(item: $paywall) { trigger in
+                PaywallView(trigger: trigger)
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -160,13 +164,17 @@ struct PlaceEditorView: View {
             place.category = category
             writes.update(place)
         } else {
-            writes.add(Place(
+            let limit = writes.add(Place(
                 name: trimmedName,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
                 radiusMeters: radiusMeters,
                 category: category
             ))
+            if let limit {
+                paywall = limit.trigger
+                return
+            }
         }
         onSave?()
         dismiss()

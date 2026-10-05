@@ -42,6 +42,9 @@ struct RootView: View {
                         AcceptInviteView(token: invite.token)
                     }
                 }
+                .sheet(item: $router.pendingPaywall) { trigger in
+                    PaywallView(trigger: trigger)
+                }
     }
 
     private var removedNotice: Binding<Bool> {

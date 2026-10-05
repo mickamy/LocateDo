@@ -11,6 +11,7 @@ struct TodoEditorView: View {
     @State private var place: Place?
     @State private var assigneeID: UUID?
     @FocusState private var isTitleFocused: Bool
+    @State private var paywall: PaywallTrigger?
 
     init(place: Place? = nil) {
         _place = State(initialValue: place)
@@ -46,6 +47,9 @@ struct TodoEditorView: View {
                 }
             }
             .navigationTitle(Text(.todoEditorTitle))
+            .sheet(item: $paywall) { trigger in
+                PaywallView(trigger: trigger)
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -81,7 +85,10 @@ struct TodoEditorView: View {
         }
         let todo = Todo(title: title.trimmingCharacters(in: .whitespaces), place: place)
         todo.assigneeID = assigneeID
-        writes.add(todo)
+        if let limit = writes.add(todo) {
+            paywall = limit.trigger
+            return
+        }
         dismiss()
     }
 }

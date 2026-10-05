@@ -9,6 +9,7 @@ final class LocalWrites {
     private let isSignedIn: () -> Bool
     private let onQueued: () -> Void
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
+    @ObservationIgnored var isPro: () -> Bool = { false }
 
     init(context: ModelContext, isSignedIn: @escaping () -> Bool, onQueued: @escaping () -> Void = {}) {
         self.context = context
@@ -16,9 +17,14 @@ final class LocalWrites {
         self.onQueued = onQueued
     }
 
-    func add(_ place: Place) {
+    @discardableResult
+    func add(_ place: Place) -> FreeLimit? {
+        if reached(.places) {
+            return .places
+        }
         context.insert(place)
         commit([.put(place)])
+        return nil
     }
 
     func update(_ place: Place, now: Date = .now) {
@@ -32,19 +38,29 @@ final class LocalWrites {
         commit([write])
     }
 
-    func add(_ todo: Todo) {
+    @discardableResult
+    func add(_ todo: Todo) -> FreeLimit? {
+        if reached(.openTodos) {
+            return .openTodos
+        }
         context.insert(todo)
         todo.place?.todos.append(todo)
         commit([Write.put(todo)].compactMap(\.self))
+        return nil
     }
 
-    func toggleCompletion(_ todo: Todo, now: Date = .now) {
+    @discardableResult
+    func toggleCompletion(_ todo: Todo, now: Date = .now) -> FreeLimit? {
         if todo.isCompleted {
+            if reached(.openTodos) {
+                return .openTodos
+            }
             todo.reopen(at: now)
         } else {
             todo.complete(at: now)
         }
         commit([.completion(of: todo)])
+        return nil
     }
 
     func setAssignee(_ assigneeID: UUID?, of todo: Todo, now: Date = .now) {
@@ -59,6 +75,24 @@ final class LocalWrites {
             context.delete(todo)
         }
         commit(writes)
+    }
+
+    private func reached(_ limit: FreeLimit) -> Bool {
+        if isPro() {
+            return false
+        }
+        do {
+            switch limit {
+            case .places:
+                return try context.fetchCount(FetchDescriptor<Place>()) >= FreeLimit.maxPlaces
+            case .openTodos:
+                let open = FetchDescriptor<Todo>(predicate: #Predicate { $0.completedAt == nil })
+                return try context.fetchCount(open) >= FreeLimit.maxOpenTodos
+            }
+        } catch {
+            logger.error("Could not count rows for the free limit: \(error, privacy: .public)")
+            return false
+        }
     }
 
     private func commit(_ writes: [Write]) {

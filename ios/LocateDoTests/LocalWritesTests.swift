@@ -103,6 +103,43 @@ struct LocalWritesTests {
         #expect(input.assigneeID == ProtoInput.id(assignee))
     }
 
+    @Test func theFourthPlaceHitsTheFreeLimit() throws {
+        let fixture = try Fixture()
+        for index in 0..<FreeLimit.maxPlaces {
+            #expect(fixture.writes.add(Place(name: "Place \(index)", latitude: 35.0, longitude: 139.0)) == nil)
+        }
+
+        let limit = fixture.writes.add(Place(name: "One too many", latitude: 35.0, longitude: 139.0))
+
+        #expect(limit == .places)
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == FreeLimit.maxPlaces)
+    }
+
+    @Test func proHasNoPlaceLimit() throws {
+        let fixture = try Fixture()
+        fixture.probe.isPro = true
+        for index in 0...FreeLimit.maxPlaces {
+            #expect(fixture.writes.add(Place(name: "Place \(index)", latitude: 35.0, longitude: 139.0)) == nil)
+        }
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == FreeLimit.maxPlaces + 1)
+    }
+
+    @Test func openTodosAndReopeningHitTheFreeLimit() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let done = Todo(title: "Done", place: place)
+        fixture.writes.add(done)
+        fixture.writes.toggleCompletion(done)
+        for index in 0..<FreeLimit.maxOpenTodos {
+            #expect(fixture.writes.add(Todo(title: "Todo \(index)", place: place)) == nil)
+        }
+
+        #expect(fixture.writes.add(Todo(title: "One too many", place: place)) == .openTodos)
+        #expect(fixture.writes.toggleCompletion(done) == .openTodos)
+        #expect(done.isCompleted)
+    }
+
     @Test func deletingSeveralTodosQueuesADeleteForEach() throws {
         let fixture = try Fixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
@@ -139,6 +176,7 @@ struct LocalWritesTests {
             } onQueued: {
                 probe.queued += 1
             }
+            writes.isPro = { probe.isPro }
         }
 
         func queue() throws -> [Write] {
@@ -151,5 +189,6 @@ struct LocalWritesTests {
     private final class Probe {
         var signedIn = true
         var queued = 0
+        var isPro = false
     }
 }

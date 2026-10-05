@@ -68,6 +68,15 @@ struct LocateDoApp: App {
 
     private func connectServices() {
         connectAccount()
+        let isPro = { [entitlements, container] in
+            let plan = try? container.mainContext.fetch(FetchDescriptor<SyncState>()).first?.plan
+            return Entitlements.isPro(hasEntitlement: entitlements.hasEntitlement, plan: plan)
+        }
+        writes.isPro = isPro
+        sync.isPro = isPro
+        sync.onLimitRejected = { [router] limit in
+            router.pendingPaywall = limit.trigger
+        }
         geofence.onArrival = { [sync] in
             await sync.sync()
         }

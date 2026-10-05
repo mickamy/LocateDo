@@ -31,6 +31,8 @@ final class SyncEngine {
     @ObservationIgnored private var pullRequested = false
     @ObservationIgnored private var permissionDenied = false
     @ObservationIgnored var onRemoved: () async -> Void = {}
+    @ObservationIgnored var isPro: () -> Bool = { false }
+    @ObservationIgnored var onLimitRejected: (FreeLimit) -> Void = { _ in }
     @ObservationIgnored private var scheduled: Task<Void, Never>?
 
     init(
@@ -231,12 +233,30 @@ final class SyncEngine {
                 logger.error("Dropping a rejected \(kind, privacy: .public) write: \(error, privacy: .public)")
                 return true
             case .keep:
+                if (error as? ConnectError)?.code == .failedPrecondition && !isPro() {
+                    return await reject(write, kind: kind)
+                }
                 noteIfPermissionDenied(error)
                 head.attempts += 1
                 logger.notice("Keeping the \(kind, privacy: .public) write at the head: \(error, privacy: .public)")
                 return false
             }
         }
+    }
+
+    private func reject(_ write: Write, kind: String) async -> Bool {
+        logger.notice("Dropping a \(kind, privacy: .public) write rejected by the free limit")
+        do {
+            if let limit = try LimitRejection.revert(write, in: context) {
+                onLimitRejected(limit)
+            }
+            if case .putPlace = write {
+                await onPlacesChanged()
+            }
+        } catch {
+            logger.error("Could not undo a rejected write: \(error, privacy: .public)")
+        }
+        return true
     }
 
     private static func failure(for error: any Error) -> Failure {

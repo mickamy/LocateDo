@@ -9,6 +9,7 @@ struct SharingView: View {
     @Environment(Authenticator.self) private var authenticator
     @Environment(HouseholdManager.self) private var households
     @Environment(SyncEngine.self) private var sync
+    @Environment(Entitlements.self) private var entitlements
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
     @Query private var syncStates: [SyncState]
@@ -17,6 +18,7 @@ struct SharingView: View {
     @State private var isConfirmingLeave = false
     @State private var failure: LocalizedStringResource?
     @State private var invite: Invite?
+    @State private var paywall: PaywallTrigger?
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sharing")
 
@@ -60,9 +62,12 @@ struct SharingView: View {
 
     private var signedIn: some View {
         Form {
-            if isOwner && syncStates.first?.plan != .pro {
+            if isOwner && !isPro {
                 Section {
                     Text(.sharingProRequired)
+                    Button(.settingsProUpgrade) {
+                        paywall = .share
+                    }
                 }
             }
             Section {
@@ -84,7 +89,7 @@ struct SharingView: View {
                         .foregroundStyle(.red)
                 }
             }
-            if isOwner && syncStates.first?.plan == .pro {
+            if isOwner && isPro {
                 Section {
                     Button {
                         Task {
@@ -116,6 +121,9 @@ struct SharingView: View {
             }
         }
         .disabled(households.isWorking)
+        .sheet(item: $paywall) { trigger in
+            PaywallView(trigger: trigger)
+        }
         .sheet(item: $invite) { invite in
             ActivityView(items: [String(localized: .sharingInviteMessage) + "\n" + invite.url.absoluteString])
                 .presentationDetents([.medium, .large])
@@ -175,6 +183,10 @@ struct SharingView: View {
 
     private var currentMembership: Membership? {
         memberships.first { $0.userID == currentUserID }
+    }
+
+    private var isPro: Bool {
+        Entitlements.isPro(hasEntitlement: entitlements.hasEntitlement, plan: syncStates.first?.plan)
     }
 
     private var isOwner: Bool {

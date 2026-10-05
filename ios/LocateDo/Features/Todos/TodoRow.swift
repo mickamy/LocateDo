@@ -5,6 +5,7 @@ struct TodoRow: View {
     @Environment(LocalWrites.self) private var writes
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
     let todo: Todo
+    @State private var paywall: PaywallTrigger?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -36,6 +37,9 @@ struct TodoRow: View {
                     Label(.todoAssigneeChange, systemImage: "person.crop.circle")
                 }
             }
+        }
+        .sheet(item: $paywall) { trigger in
+            PaywallView(trigger: trigger)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityTitle)
@@ -74,7 +78,9 @@ struct TodoRow: View {
 
     private func toggle() {
         withAnimation {
-            writes.toggleCompletion(todo)
+            if let limit = writes.toggleCompletion(todo) {
+                paywall = limit.trigger
+            }
         }
     }
 }
