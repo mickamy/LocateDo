@@ -2,12 +2,19 @@ data "aws_ssm_parameter" "al2023_arm64" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
 
+# SSH goes through SSM (AWS-StartSSHSession); port 22 stays closed.
+resource "aws_key_pair" "operator" {
+  key_name   = "locatedo-prod-operator"
+  public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICsJ2AqlfP/Y4wq7oa4qYR/a5+KCT0C2hosgma5KowE/"
+}
+
 resource "aws_instance" "app" {
   ami                    = data.aws_ssm_parameter.al2023_arm64.value
   instance_type          = "t4g.small"
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.app.id]
   iam_instance_profile   = aws_iam_instance_profile.app.name
+  key_name               = aws_key_pair.operator.key_name
 
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
     data_volume_id = aws_ebs_volume.data.id
