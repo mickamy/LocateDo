@@ -10,6 +10,7 @@
 		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
 		3BF1AEC43071100000D47174 /* Connect in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC23071100000D47174 /* Connect */; };
 		3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC33071100000D47174 /* SwiftProtobuf */; };
+		3BFCD2D53072600A00811294 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 3BFCD2D43072600A00811294 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */,
+				3BFCD2D53072600A00811294 /* RevenueCat in Frameworks */,
 				3BF1AEC43071100000D47174 /* Connect in Frameworks */,
 				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
 			);
@@ -130,6 +132,7 @@
 				3BF1AEBE3071100000D47174 /* FirebaseAnalytics */,
 				3BF1AEC23071100000D47174 /* Connect */,
 				3BF1AEC33071100000D47174 /* SwiftProtobuf */,
+				3BFCD2D43072600A00811294 /* RevenueCat */,
 			);
 			productName = LocateDo;
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
@@ -299,6 +302,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "http://localhost:8080";
+				LOCATEDO_REVENUECAT_API_KEY = test_lqvPOSuItMaeQPmgcTBlMFVumra;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -352,6 +356,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api.locatedo.com";
+				LOCATEDO_REVENUECAT_API_KEY = appl_qsTIyTqIrypCAUeieBVRdhcJFEd;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -546,6 +551,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api-stg.locatedo.com";
+				LOCATEDO_REVENUECAT_API_KEY = test_lqvPOSuItMaeQPmgcTBlMFVumra;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -700,6 +706,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3BF1AEC13071100000D47174 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
 			productName = SwiftProtobuf;
+		};
+		3BFCD2D43072600A00811294 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BFCD2D33072600A00811294 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

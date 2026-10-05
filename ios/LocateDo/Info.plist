@@ -6,6 +6,8 @@
 	<string>$(LOCATEDO_API_BASE_URL)</string>
 	<key>LocateDoAPSEnvironment</key>
 	<string>$(APS_ENVIRONMENT)</string>
+	<key>LocateDoRevenueCatAPIKey</key>
+	<string>$(LOCATEDO_REVENUECAT_API_KEY)</string>
 	<key>LocateDoConfiguration</key>
 	<string>$(CONFIGURATION)</string>
 	<key>NSAppTransportSecurity</key>

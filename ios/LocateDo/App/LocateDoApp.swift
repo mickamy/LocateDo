@@ -18,6 +18,7 @@ struct LocateDoApp: App {
     private let network: NetworkMonitor
     private let devices: DeviceRegistration
     private let households: HouseholdManager
+    private let entitlements = Entitlements(source: LocateDoApp.makeEntitlementSource())
 
     init() {
         container = Self.makeContainer()
@@ -66,6 +67,7 @@ struct LocateDoApp: App {
     }
 
     private func connectServices() {
+        connectAccount()
         geofence.onArrival = { [sync] in
             await sync.sync()
         }
@@ -76,25 +78,6 @@ struct LocateDoApp: App {
             Task {
                 await account.endSession()
             }
-        }
-        account.pushToken = { [devices] in
-            devices.pushToken
-        }
-        account.onLocalDataReset = { [preferences, geofence] in
-            preferences.reset()
-            await geofence.sync()
-        }
-        account.onHouseholdReady = { [devices, sync, geofence] in
-            await devices.registerIfSignedIn()
-            await sync.sync()
-            await geofence.sync()
-        }
-        account.onSessionEnded = { [preferences, geofence] in
-            preferences.hasPendingSessionEndedNotice = true
-            await geofence.sync()
-        }
-        account.onSignedOut = { [geofence] in
-            await geofence.sync()
         }
         AppDelegate.onDeviceToken = { [devices] token in
             await devices.received(deviceToken: token)
@@ -112,6 +95,12 @@ struct LocateDoApp: App {
             Analytics.configure()
             geofence.start()
             network.start()
+            entitlements.start()
+            if let userID = authenticator.session?.userID {
+                Task { [entitlements] in
+                    await entitlements.logIn(userID: userID)
+                }
+            }
         }
     }
 
@@ -133,7 +122,45 @@ struct LocateDoApp: App {
         .environment(sync)
         .environment(account)
         .environment(households)
+        .environment(entitlements)
         .environment(writes)
+    }
+
+    private func connectAccount() {
+        account.pushToken = { [devices] in
+            devices.pushToken
+        }
+        account.onLocalDataReset = { [preferences, geofence, entitlements] in
+            preferences.reset()
+            await entitlements.logOut()
+            await geofence.sync()
+        }
+        account.onHouseholdReady = { [authenticator, devices, sync, geofence, entitlements] in
+            if let userID = authenticator.session?.userID {
+                await entitlements.logIn(userID: userID)
+            }
+            await devices.registerIfSignedIn()
+            await sync.sync()
+            await geofence.sync()
+        }
+        account.onSessionEnded = { [preferences, geofence, entitlements] in
+            preferences.hasPendingSessionEndedNotice = true
+            await entitlements.logOut()
+            await geofence.sync()
+        }
+        account.onSignedOut = { [geofence, entitlements] in
+            await entitlements.logOut()
+            await geofence.sync()
+        }
+    }
+
+    private static func makeEntitlementSource() -> (any EntitlementSource)? {
+        guard !isRunningTests,
+              let apiKey = Bundle.main.object(forInfoDictionaryKey: "LocateDoRevenueCatAPIKey") as? String,
+              !apiKey.isEmpty else {
+            return nil
+        }
+        return RevenueCatEntitlementSource(apiKey: apiKey)
     }
 
     private static func makeAuthenticator(
