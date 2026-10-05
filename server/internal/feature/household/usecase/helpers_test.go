@@ -55,3 +55,19 @@ func contents() model.Contents {
 func newID() uuid.UUID {
 	return uuid.NewV7()
 }
+
+func clearPushes(t *testing.T, d tdb.DB) {
+	t.Helper()
+
+	_, err := d.Writer.Exec(t.Context(), "DELETE FROM outbox_messages WHERE kind = 'push_household'")
+	require.NoError(t, err)
+}
+
+func pushes(t *testing.T, d tdb.DB) int {
+	t.Helper()
+
+	var n int
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT count(*) FROM outbox_messages WHERE kind = 'push_household'").Scan(&n))
+	return n
+}

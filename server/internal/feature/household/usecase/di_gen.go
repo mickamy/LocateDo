@@ -67,3 +67,17 @@ func NewRemoveMember(infra di.Infra) *RemoveMember {
 		memberships: memberships,
 	}
 }
+
+// NewSetPlan initializes dependencies and constructs SetPlan.
+func NewSetPlan(infra di.Infra) *SetPlan {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	households := repository.NewHousehold(reader)
+	messages := outbox.NewRepository(reader)
+
+	return &SetPlan{
+		transactor: transactor,
+		households: households,
+		messages:   messages,
+	}
+}
