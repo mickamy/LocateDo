@@ -262,10 +262,12 @@ platform :ios do
                        "-of", "csv=p=0", raw, log: false).strip.split(",")
     caption = File.join(root, "../tools/video/caption.swift")
     outro = File.join(work, "outro.png")
+    # U+2011 keeps "to-dos" from breaking at its hyphen.
     sh("swift", caption, outro, width, height,
-       "When you arrive at a saved place, even with StopBy closed, iOS region monitoring wakes the app " \
-       "and it posts a notification listing that place's open to-dos.\n\nYour location never leaves the device.",
-       "--card")
+       "When you get to a saved place, StopBy sends a notification with that place's to\u2011dos, " \
+       "even while the app is closed. Your location stays on your iPhone.",
+       "--card", "--title", "Reminded when you arrive",
+       "--icon", File.join(root, "LocateDo/Assets.xcassets/AppIcon.appiconset/AppIcon.png"))
     scale = "scale=#{width}:#{height},setsar=1,fps=30,format=yuv420p"
     sh("ffmpeg", "-v", "error", "-y",
        "-ss", start, "-t", length, "-i", raw, "-loop", "1", "-t", "7", "-i", outro,
