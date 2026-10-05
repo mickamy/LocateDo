@@ -150,6 +150,7 @@ struct SettingsView: View {
                     await notifier.requestAuthorization()
                 }
             }
+            .accessibilityIdentifier("settings.allowNotifications")
         } else {
             Button(.settingsOpenSettings) {
                 openSystemSettings()

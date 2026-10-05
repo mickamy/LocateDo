@@ -53,7 +53,7 @@ final class ReviewVideoTests: XCTestCase {
     @MainActor
     private func allowNotifications(_ app: XCUIApplication) {
         app.tabBars.buttons.element(boundBy: 3).tapWhenReady()
-        app.buttons["Allow notifications"].tapWhenReady()
+        app.buttons["settings.allowNotifications"].tapWhenReady()
         let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
         XCTAssertTrue(alert.waitForExistence(timeout: 60))
         alert.buttons["Allow"].tap()

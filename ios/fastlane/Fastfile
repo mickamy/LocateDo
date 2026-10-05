@@ -5,12 +5,75 @@ APP_IDENTIFIER = "com.locatedo.LocateDo"
 STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
 DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
 PROJECT = "LocateDo.xcodeproj"
+# One build folder for every UI-test lane, so later runs and other languages only build what changed.
+UI_TEST_DERIVED_DATA = File.expand_path("../build/ui-tests/DerivedData", __dir__)
 
 def simulator_udid(device)
   devices = JSON.parse(`xcrun simctl list devices available --json`)["devices"]
   match = devices.values.flatten.find { |candidate| candidate["name"] == device }
   UI.user_error!("No available simulator named #{device}") unless match
   match["udid"]
+end
+
+# Builds the Debug app with the store icon, starts an erased simulator with "Always" granted, and runs one
+# UI test while the screen is recorded to <work>/raw.mp4. Returns the test output and when recording began.
+def record_ui_test(udid:, work:, test:, env: {})
+  root = File.expand_path("..", __dir__)
+  derived_data = UI_TEST_DERIVED_DATA
+  FileUtils.mkdir_p(work)
+  sh("xcodebuild", "build-for-testing", "-project", File.join(root, PROJECT), "-scheme", "dev",
+     "-destination", "id=#{udid}", "-derivedDataPath", derived_data,
+     "ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon")
+  sh("xcrun", "simctl", "shutdown", udid, error_callback: ->(_) {})
+  sh("xcrun", "simctl", "erase", udid)
+  sh("xcrun", "simctl", "boot", udid)
+  sh("xcrun", "simctl", "bootstatus", udid, "-b")
+  sh("xcrun", "simctl", "status_bar", udid, "override", "--time", "9:41",
+     "--batteryState", "charged", "--batteryLevel", "100")
+  # Granted up front so the recording shows neither the permission alerts nor the "Always" banner.
+  sh("xcrun", "simctl", "install", udid, File.join(derived_data, "Build/Products/Debug-iphonesimulator/LocateDo.app"))
+  sh("xcrun", "simctl", "privacy", udid, "grant", "location-always", DEV_APP_IDENTIFIER)
+  raw = File.join(work, "raw.mp4")
+  results = File.join(work, "results.xcresult")
+  FileUtils.rm_rf(results)
+  # The clock starts when simctl reports "Recording started", which comes a few seconds after the spawn.
+  reader, writer = IO.pipe
+  recorder = Process.spawn("xcrun", "simctl", "io", udid, "recordVideo", "--codec", "h264", "--force", raw,
+                           out: writer, err: writer)
+  writer.close
+  reader.each_line { |line| break if line.include?("Recording started") }
+  recording_started = Time.now.to_f
+  previous = env.keys.to_h { |key| [key, ENV.fetch(key, nil)] }
+  output = nil
+  begin
+    ENV.update(env)
+    output = sh("xcodebuild", "test-without-building", "-project", File.join(root, PROJECT), "-scheme", "dev",
+                "-destination", "id=#{udid}", "-derivedDataPath", derived_data, "-parallel-testing-enabled", "NO",
+                "-resultBundlePath", results, "-only-testing:LocateDoUITests/#{test}",
+                "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "300")
+  ensure
+    ENV.update(previous)
+    Process.kill("INT", recorder)
+    Process.wait(recorder)
+  end
+  # After a crash xcodebuild relaunches the runner and can report a pass with no tests run.
+  summary = JSON.parse(sh("xcrun", "xcresulttool", "get", "test-results", "summary", "--path", results, log: false))
+  unless summary["passedTests"] == 1 && summary["failedTests"].zero?
+    UI.user_error!("#{test} did not pass exactly once: #{summary.slice('passedTests', 'failedTests', 'skippedTests')}")
+  end
+  [output, recording_started]
+end
+
+# Grants and system alerts are unreliable until the simulator has finished booting.
+def boot_simulator(udid)
+  sh("xcrun", "simctl", "boot", udid)
+  sh("xcrun", "simctl", "bootstatus", udid, "-b")
+end
+
+# Seconds into the recording for a time printed by the test. The first frame lands about two seconds
+# after simctl prints "Recording started" (measured on the review video).
+def recording_offset(time, recording_started)
+  (time - recording_started - 2).clamp(0, nil).round(2)
 end
 
 platform :ios do
@@ -146,7 +209,7 @@ platform :ios do
     )
   end
 
-  desc "Upload the App Store listing and review notes in fastlane/metadata (no binary, no screenshots)"
+  desc "Upload the App Store listing, screenshots, and review notes in fastlane/ (no binary, no submission)"
   lane :metadata do
     notes = File.read(File.expand_path("metadata/review_information/notes.txt", __dir__))
     UI.user_error!("Replace VIDEO_URL in the review notes first") if notes.include?("VIDEO_URL")
@@ -155,7 +218,7 @@ platform :ios do
       app_identifier: APP_IDENTIFIER,
       app_version: get_version_number(xcodeproj: PROJECT, target: "LocateDo"),
       skip_binary_upload: true,
-      skip_screenshots: true,
+      overwrite_screenshots: true,
       submit_for_review: false,
       force: true,
       precheck_include_in_app_purchases: false,
@@ -175,7 +238,7 @@ platform :ios do
   lane :screenshots do |options|
     device = options.fetch(:device, "iPhone 18 Pro Max")
     udid = simulator_udid(device)
-    derived_data = File.expand_path("../build/screenshots", __dir__)
+    derived_data = UI_TEST_DERIVED_DATA
     # The store icon replaces the Debug one in the shots.
     sh("xcodebuild", "build-for-testing", "-project", File.expand_path("../#{PROJECT}", __dir__),
        "-scheme", "dev", "-destination", "id=#{udid}", "-derivedDataPath", derived_data,
@@ -187,9 +250,14 @@ platform :ios do
       # installed, and it survives the reinstall the test run does, which keeps the location banner out.
       sh("xcrun", "simctl", "shutdown", udid, error_callback: ->(_) {})
       sh("xcrun", "simctl", "erase", udid)
-      sh("xcrun", "simctl", "boot", udid)
-      # Grants and system alerts are unreliable until the simulator has finished booting.
-      sh("xcrun", "simctl", "bootstatus", udid, "-b")
+      # snapshot only localizes the app; the lock screen follows the simulator's own language, which
+      # takes a reboot to apply.
+      boot_simulator(udid)
+      locale = language == "ja" ? "ja_JP" : language.tr("-", "_")
+      sh("xcrun", "simctl", "spawn", udid, "defaults", "write", "-g", "AppleLanguages", "-array", language)
+      sh("xcrun", "simctl", "spawn", udid, "defaults", "write", "-g", "AppleLocale", "-string", locale)
+      sh("xcrun", "simctl", "shutdown", udid)
+      boot_simulator(udid)
       sh("xcrun", "simctl", "install", udid, app)
       sh("xcrun", "simctl", "privacy", udid, "grant", "location-always", DEV_APP_IDENTIFIER)
       snapshot(
@@ -206,74 +274,93 @@ platform :ios do
 
   desc "Record the walkthrough for App Review into build/review-video/review.mp4 (needs ffmpeg)"
   lane :review_video do |options|
-    device = options.fetch(:device, "iPhone 18 Pro Max")
-    udid = simulator_udid(device)
+    udid = simulator_udid(options.fetch(:device, "iPhone 18 Pro Max"))
     root = File.expand_path("..", __dir__)
-    derived_data = File.join(root, "build/review-video/DerivedData")
     work = File.join(root, "build/review-video")
-    FileUtils.mkdir_p(work)
-    sh("xcodebuild", "build-for-testing", "-project", File.join(root, PROJECT), "-scheme", "dev",
-       "-destination", "id=#{udid}", "-derivedDataPath", derived_data,
-       "ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon")
-    sh("xcrun", "simctl", "shutdown", udid, error_callback: ->(_) {})
-    sh("xcrun", "simctl", "erase", udid)
-    sh("xcrun", "simctl", "boot", udid)
-    sh("xcrun", "simctl", "bootstatus", udid, "-b")
-    sh("xcrun", "simctl", "status_bar", udid, "override", "--time", "9:41",
-       "--batteryState", "charged", "--batteryLevel", "100")
-    # Granted up front so the walkthrough shows neither the permission alerts nor the "Always" banner.
-    sh("xcrun", "simctl", "install", udid, File.join(derived_data, "Build/Products/Debug-iphonesimulator/LocateDo.app"))
-    sh("xcrun", "simctl", "privacy", udid, "grant", "location-always", DEV_APP_IDENTIFIER)
+    output, recording_started = record_ui_test(udid: udid, work: work, test: "ReviewVideoTests")
     raw = File.join(work, "raw.mp4")
-    results = File.join(work, "results.xcresult")
-    FileUtils.rm_rf(results)
-    # The clock starts when simctl reports "Recording started", which comes a few seconds after the spawn.
-    reader, writer = IO.pipe
-    recorder = Process.spawn("xcrun", "simctl", "io", udid, "recordVideo", "--codec", "h264", "--force", raw,
-                             out: writer, err: writer)
-    writer.close
-    reader.each_line { |line| break if line.include?("Recording started") }
-    recording_started = Time.now.to_f
-    output = nil
-    begin
-      output = sh("xcodebuild", "test-without-building", "-project", File.join(root, PROJECT), "-scheme", "dev",
-         "-destination", "id=#{udid}", "-derivedDataPath", derived_data, "-parallel-testing-enabled", "NO",
-         "-resultBundlePath", results, "-only-testing:LocateDoUITests/ReviewVideoTests",
-         "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "300")
-    ensure
-      Process.kill("INT", recorder)
-      Process.wait(recorder)
-    end
-    # After a crash xcodebuild relaunches the runner and can report a pass with no tests run.
-    summary = JSON.parse(sh("xcrun", "xcresulttool", "get", "test-results", "summary", "--path", results, log: false))
-    unless summary["passedTests"] == 1 && summary["failedTests"].zero?
-      UI.user_error!("ReviewVideoTests did not pass exactly once: #{summary.slice('passedTests', 'failedTests', 'skippedTests')}")
-    end
 
-    # The test prints when the app is on screen; everything before it is launch and home screen.
     first = output[/REVIEW_VIDEO_START (\d+\.\d+)/, 1]
     last = output[/REVIEW_VIDEO_END (\d+\.\d+)/, 1]
     UI.user_error!("ReviewVideoTests did not print its start and end") unless first && last
-    # The recorder runs about two seconds ahead of its "Recording started" line, so start that much earlier.
-    start = (first.to_f - recording_started - 2).clamp(0, nil).round(2).to_s
-    length = (last.to_f - first.to_f + 2).round(2).to_s
+    start = recording_offset(first.to_f, recording_started)
+    length = (recording_offset(last.to_f, recording_started) - start).round(2)
 
     width, height = sh("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
                        "-of", "csv=p=0", raw, log: false).strip.split(",")
-    caption = File.join(root, "../tools/video/caption.swift")
     outro = File.join(work, "outro.png")
     # U+2011 keeps "to-dos" from breaking at its hyphen.
-    sh("swift", caption, outro, width, height,
+    sh("swift", File.join(root, "../tools/video/caption.swift"), outro, width, height,
        "When you get to a saved place, StopBy sends a notification with that place's to\u2011dos, " \
        "even while the app is closed. Your location stays on your iPhone.",
        "--card", "--title", "Reminded when you arrive",
        "--icon", File.join(root, "LocateDo/Assets.xcassets/AppIcon.appiconset/AppIcon.png"))
     scale = "scale=#{width}:#{height},setsar=1,fps=30,format=yuv420p"
     sh("ffmpeg", "-v", "error", "-y",
-       "-ss", start, "-t", length, "-i", raw, "-loop", "1", "-t", "7", "-i", outro,
+       "-ss", start.to_s, "-t", length.to_s, "-i", raw, "-loop", "1", "-t", "7", "-i", outro,
        "-filter_complex", "[0]#{scale}[a];[1]#{scale}[b];[a][b]concat=n=2:v=1:a=0",
        "-c:v", "libx264", "-crf", "20", "-movflags", "+faststart", File.join(work, "review.mp4"))
     UI.success("Wrote #{File.join(work, 'review.mp4')}")
+  end
+
+  # Captions per scene, in the order the preview tells the story.
+  PREVIEW_SCENES = {
+    "en-US" => [
+      ["arrival", "Get reminded at the store"],
+      ["place", "Check things off as you shop"],
+      ["home", "See what's waiting nearby"],
+      ["map", "All your places on one map"],
+      ["todos", "Every list in one place"],
+    ],
+    "ja" => [
+      ["arrival", "お店に着いたら、お知らせ"],
+      ["place", "買ったらチェック"],
+      ["home", "近くの用事がひと目で"],
+      ["map", "場所はマップでも"],
+      ["todos", "買い物リストをまとめて"],
+    ],
+  }.freeze
+
+  desc "Record the App Store app previews (886x1920, en-US and ja) into build/app-preview (needs ffmpeg)"
+  lane :app_preview do |options|
+    udid = simulator_udid(options.fetch(:device, "iPhone 18 Pro Max"))
+    root = File.expand_path("..", __dir__)
+    caption = File.join(root, "../tools/video/caption.swift")
+    PREVIEW_SCENES.each do |language, scenes|
+      work = File.join(root, "build/app-preview", language)
+      output, recording_started = record_ui_test(
+        udid: udid, work: work, test: "AppPreviewTests",
+        env: { "TEST_RUNNER_PREVIEW_LANGUAGE" => language.split("-").first }
+      )
+      inputs = ["-i", File.join(work, "raw.mp4")]
+      filters = []
+      duration = 0.0
+      scenes.each_with_index do |(name, text), index|
+        first = output[/PREVIEW #{name} start (\d+\.\d+)/, 1]
+        last = output[/PREVIEW #{name} end (\d+\.\d+)/, 1]
+        UI.user_error!("AppPreviewTests did not print the #{name} scene") unless first && last
+        start = recording_offset(first.to_f, recording_started)
+        finish = recording_offset(last.to_f, recording_started)
+        duration += finish - start
+        image = File.join(work, "#{name}.png")
+        sh("swift", caption, image, "886", "1920", text)
+        inputs += ["-i", image]
+        filters << "[0:v]trim=start=#{start}:end=#{finish},setpts=PTS-STARTPTS," \
+                   "scale=886:-2,crop=886:1920,setsar=1,fps=30,format=yuv420p[v#{index}]"
+        filters << "[v#{index}][#{index + 1}:v]overlay=0:0[c#{index}]"
+      end
+      UI.user_error!("The #{language} preview runs #{duration.round(1)} s; it must be 15-30 s") unless (15..30).cover?(duration)
+      labels = scenes.each_index.map { |index| "[c#{index}]" }.join
+      filters << "#{labels}concat=n=#{scenes.size}:v=1:a=0[video]"
+      # App previews need a stereo audio track, even a silent one.
+      sh("ffmpeg", "-v", "error", "-y", *inputs,
+         "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+         "-filter_complex", filters.join(";"), "-map", "[video]", "-map", "#{scenes.size + 1}:a",
+         "-c:v", "libx264", "-profile:v", "high", "-crf", "18", "-r", "30",
+         "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart",
+         File.join(root, "build/app-preview/#{language}.mp4"))
+      UI.success("Wrote build/app-preview/#{language}.mp4 (#{duration.round(1)} s)")
+    end
   end
 
   # App privacy answers need an Apple ID session; an App Store Connect API key cannot set them.
