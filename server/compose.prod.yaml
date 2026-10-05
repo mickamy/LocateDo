@@ -1,0 +1,60 @@
+# Runs on the prod EC2 instance next to a .env built from Parameter Store
+# (/locatedo/prod/db/* and /locatedo/prod/app/*) and IMAGE_TAG set by the deploy.
+
+x-app: &app
+  image: ghcr.io/mickamy/locatedo-server:${IMAGE_TAG:?}
+  env_file: .env
+  environment:
+    MODULE_ROOT: /src
+    DATABASE_URL: postgres://admin:${DB_ADMIN_PASSWORD:?}@db:5432/locatedo?sslmode=disable
+    DATABASE_WRITER_URL: postgres://locatedo_writer:${DB_WRITER_PASSWORD:?}@db:5432/locatedo?sslmode=disable
+    DATABASE_READER_URL: postgres://locatedo_reader:${DB_READER_PASSWORD:?}@db:5432/locatedo?sslmode=disable
+  restart: always
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  api:
+    <<: *app
+    command: [ "/bin/api" ]
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  worker:
+    <<: *app
+    command: [ "/bin/worker" ]
+
+  migrate:
+    <<: *app
+    command: [ "/bin/admin", "migrate" ]
+    restart: "no"
+    profiles:
+      - tools
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.9.3
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
+    restart: always
+    depends_on:
+      - api
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?}
+      POSTGRES_DB: locatedo
+      DB_WRITER_PASSWORD: ${DB_WRITER_PASSWORD:?}
+      DB_READER_PASSWORD: ${DB_READER_PASSWORD:?}
+    restart: always
+    volumes:
+      - /var/lib/locatedo/postgres:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d locatedo" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
