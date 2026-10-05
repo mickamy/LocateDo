@@ -139,6 +139,38 @@ platform :ios do
     )
   end
 
+  desc "Upload the App Store listing and review notes in fastlane/metadata (no binary, no screenshots)"
+  lane :metadata do
+    api_key
+    deliver(
+      app_identifier: APP_IDENTIFIER,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      # The contact stays out of this public repo; only the notes live in metadata/.
+      app_review_information: {
+        first_name: ENV.fetch("APP_REVIEW_FIRST_NAME"),
+        last_name: ENV.fetch("APP_REVIEW_LAST_NAME"),
+        phone_number: ENV.fetch("APP_REVIEW_PHONE_NUMBER"),
+        email_address: ENV.fetch("APP_REVIEW_EMAIL_ADDRESS"),
+        demo_required: false,
+        notes: File.read(File.expand_path("metadata/review_information/notes.txt", __dir__))
+      }
+    )
+  end
+
+  # App privacy answers need an Apple ID session; an App Store Connect API key cannot set them.
+  desc "Upload the App Privacy answers in fastlane/app_privacy_details.json (asks for an Apple ID login)"
+  lane :app_privacy do
+    upload_app_privacy_details_to_app_store(
+      username: ENV.fetch("FASTLANE_USER"),
+      app_identifier: APP_IDENTIFIER,
+      json_path: File.expand_path("app_privacy_details.json", __dir__)
+    )
+  end
+
   private_lane :api_key do
     app_store_connect_api_key(
       key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
