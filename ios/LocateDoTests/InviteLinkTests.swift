@@ -4,7 +4,7 @@ import Testing
 @testable import LocateDo
 
 struct InviteLinkTests {
-    private static let token = "AbC-dEf_0123456789xyz"
+    private static let token = "example_Invite-Link"
 
     @Test func buildsTheLinkOnTheOwnedDomain() {
         #expect(InviteLink.url(for: Self.token)?.absoluteString == "https://locatedo.com/i/\(Self.token)")
