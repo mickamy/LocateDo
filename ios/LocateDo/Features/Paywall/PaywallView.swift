@@ -25,6 +25,8 @@ struct PaywallView: View {
     @State private var selected: PaywallPlan.Kind = .annual
     @State private var isLoading = true
     @State private var isWorking = false
+    @State private var isRestoring = false
+    @State private var isShowingRestored = false
     @State private var failure: LocalizedStringResource?
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "billing")
@@ -58,9 +60,16 @@ struct PaywallView: View {
             await loadPlans()
         }
         .onChange(of: entitlements.hasEntitlement) {
-            if entitlements.hasEntitlement {
+            if entitlements.hasEntitlement && !isRestoring && !isShowingRestored {
                 dismiss()
             }
+        }
+        .alert(Text(.paywallRestoredTitle), isPresented: $isShowingRestored) {
+            Button(.commonOk) {
+                dismiss()
+            }
+        } message: {
+            Text(.paywallRestoredMessage)
         }
     }
 
@@ -130,7 +139,7 @@ struct PaywallView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .disabled(isWorking)
+            .disabled(isWorking || isRestoring)
             if let failure {
                 Text(failure)
                     .font(.footnote)
@@ -148,9 +157,18 @@ struct PaywallView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             HStack(spacing: 16) {
-                Button(.paywallRestore) {
+                Button {
                     Task {
                         await restore()
+                    }
+                } label: {
+                    ZStack {
+                        Text(.paywallRestore)
+                            .opacity(isRestoring ? 0 : 1)
+                        if isRestoring {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
                     }
                 }
                 Link(destination: LegalLinks.termsOfUse) {
@@ -161,7 +179,7 @@ struct PaywallView: View {
                 }
             }
             .font(.caption)
-            .disabled(isWorking)
+            .disabled(isWorking || isRestoring)
         }
     }
 
@@ -218,11 +236,13 @@ struct PaywallView: View {
 
     private func restore() async {
         failure = nil
-        isWorking = true
-        defer { isWorking = false }
+        isRestoring = true
+        defer { isRestoring = false }
         do {
             try await entitlements.restore()
-            if !entitlements.hasEntitlement {
+            if entitlements.hasEntitlement {
+                isShowingRestored = true
+            } else {
                 failure = .paywallNothingToRestore
             }
         } catch {

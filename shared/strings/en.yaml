@@ -224,6 +224,8 @@ paywall:
   member_message: "Ask your household’s owner to upgrade to Pro."
   failed: "Couldn’t complete the purchase. Try again."
   nothing_to_restore: "No purchases to restore."
+  restored_title: "Purchases Restored"
+  restored_message: "StopBy Pro is active again."
   unavailable: "Plans couldn’t be loaded. Try again later."
 update:
   title: "Update Required"

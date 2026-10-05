@@ -1142,6 +1142,40 @@
         }
       }
     },
+    "paywall.restored_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StopBy Pro is active again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ちかメモ Pro をご利用いただけます。"
+          }
+        }
+      }
+    },
+    "paywall.restored_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purchases Restored"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購入を復元しました"
+          }
+        }
+      }
+    },
     "paywall.start_trial" : {
       "extractionState" : "manual",
       "localizations" : {

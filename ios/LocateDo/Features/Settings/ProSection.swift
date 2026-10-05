@@ -11,6 +11,8 @@ struct ProSection: View {
 
     @State private var isShowingPaywall = false
     @State private var isManaging = false
+    @State private var isRestoring = false
+    @State private var isShowingRestored = false
     @State private var failure: LocalizedStringResource?
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "billing")
@@ -32,11 +34,20 @@ struct ProSection: View {
                 }
             }
             if !isMember {
-                Button(.paywallRestore) {
+                Button {
                     Task {
                         await restore()
                     }
+                } label: {
+                    HStack {
+                        Text(.paywallRestore)
+                        Spacer()
+                        if isRestoring {
+                            ProgressView()
+                        }
+                    }
                 }
+                .disabled(isRestoring)
             }
         } footer: {
             if let failure {
@@ -48,6 +59,11 @@ struct ProSection: View {
             PaywallView(trigger: .settings)
         }
         .manageSubscriptionsSheet(isPresented: $isManaging)
+        .alert(Text(.paywallRestoredTitle), isPresented: $isShowingRestored) {
+            Button(.commonOk) {}
+        } message: {
+            Text(.paywallRestoredMessage)
+        }
     }
 
     private var isPro: Bool {
@@ -68,9 +84,13 @@ struct ProSection: View {
 
     private func restore() async {
         failure = nil
+        isRestoring = true
+        defer { isRestoring = false }
         do {
             try await entitlements.restore()
-            if !entitlements.hasEntitlement {
+            if entitlements.hasEntitlement {
+                isShowingRestored = true
+            } else {
                 failure = .paywallNothingToRestore
             }
         } catch {

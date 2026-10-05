@@ -222,6 +222,8 @@ paywall:
   member_message: "世帯のオーナーが Pro にすると使えるようになります。"
   failed: "購入できませんでした。もう一度お試しください。"
   nothing_to_restore: "復元できる購入が見つかりませんでした。"
+  restored_title: "購入を復元しました"
+  restored_message: "ちかメモ Pro をご利用いただけます。"
   unavailable: "プランを読み込めませんでした。しばらくしてからお試しください。"
 update:
   title: "アップデートが必要です"
