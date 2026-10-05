@@ -67,6 +67,13 @@ struct SettingsView: View {
                     Text(.settingsDefaultRadiusLabel)
                 }
                 Section {
+                    NavigationLink {
+                        CategoriesView()
+                    } label: {
+                        Label(.categoryTitle, systemImage: "tag")
+                    }
+                }
+                Section {
                     SharingButton(source: .settings) {
                         Label(.sharingTitle, systemImage: "person.2")
                     }

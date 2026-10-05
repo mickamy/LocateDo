@@ -46,6 +46,14 @@ struct PlaceCategoryTests {
         #expect(category.displayName == "Costco")
     }
 
+    @Test func aBuiltinKeepsNoNameWhileItShowsItsTranslation() {
+        let title = String(localized: BuiltinCategory.shopping.title)
+
+        #expect(CategoryEditorView.storedName(title, for: .shopping) == nil)
+        #expect(CategoryEditorView.storedName("Costco", for: .shopping) == "Costco")
+        #expect(CategoryEditorView.storedName(title, for: nil) == title)
+    }
+
     @Test func everyPaletteKeyHasItsOwnStyle() {
         let symbols = CategoryPalette.icons.map { CategoryStyle.systemImage(forIcon: $0) }
         #expect(Set(symbols).count == CategoryPalette.icons.count)

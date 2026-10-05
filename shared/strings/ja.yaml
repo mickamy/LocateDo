@@ -202,6 +202,33 @@ category:
   life: "生活"
   other: "その他"
   none: "未分類"
+  title: "カテゴリ"
+  add: "カテゴリを追加"
+  new_title: "新しいカテゴリ"
+  edit_title: "カテゴリを編集"
+  manage: "カテゴリを編集"
+  name: "名前"
+  name_placeholder: "例: ドラッグストア"
+  icon: "アイコン"
+  color: "色"
+  place_count:
+    plural:
+      other: "{count} 件の場所"
+  delete_confirm_title: "「{name}」を削除しますか？"
+  delete_confirm_message:
+    plural:
+      other: "{count} 件の場所が未分類になります。"
+  last_one: "カテゴリは 1 つ以上必要です。"
+  color_blue: "青"
+  color_green: "緑"
+  color_orange: "オレンジ"
+  color_red: "赤"
+  color_pink: "ピンク"
+  color_purple: "紫"
+  color_teal: "ティール"
+  color_yellow: "黄"
+  color_brown: "茶"
+  color_gray: "グレー"
 permission:
   when_in_use: "近くの場所と、そこまでの距離を表示するために位置情報を使います。"
   always: "場所に着いたときにお知らせするため、バックグラウンドでも位置情報が必要です。"

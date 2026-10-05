@@ -71,6 +71,23 @@ nonisolated enum CategoryPalette {
     ]
 
     static let colors = ["blue", "green", "orange", "red", "pink", "purple", "teal", "yellow", "brown", "gray"]
+
+    private static let colorNames: [String: LocalizedStringResource] = [
+        "blue": .categoryColorBlue,
+        "green": .categoryColorGreen,
+        "orange": .categoryColorOrange,
+        "red": .categoryColorRed,
+        "pink": .categoryColorPink,
+        "purple": .categoryColorPurple,
+        "teal": .categoryColorTeal,
+        "yellow": .categoryColorYellow,
+        "brown": .categoryColorBrown,
+        "gray": .categoryColorGray
+    ]
+
+    static func colorName(_ color: String) -> LocalizedStringResource {
+        colorNames[color] ?? .categoryColorGray
+    }
 }
 
 extension Place {

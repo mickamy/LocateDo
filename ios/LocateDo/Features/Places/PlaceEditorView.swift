@@ -81,6 +81,11 @@ struct PlaceEditorView: View {
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
+                    NavigationLink {
+                        CategoriesView()
+                    } label: {
+                        Label(.categoryManage, systemImage: "slider.horizontal.3")
+                    }
                 } header: {
                     Text(.placeEditorCategoryLabel)
                 }
@@ -109,6 +114,11 @@ struct PlaceEditorView: View {
                     if name.isEmpty, let suggestedName {
                         name = suggestedName
                     }
+                }
+            }
+            .onChange(of: categories) {
+                if let category, !categories.contains(category) {
+                    self.category = nil
                 }
             }
             .onAppear {
