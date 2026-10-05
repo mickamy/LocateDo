@@ -121,6 +121,15 @@ settings:
     free: "無料プラン"
     upgrade: "Pro にする"
     manage: "サブスクリプションを管理"
+    term: "プラン"
+    annual: "年額"
+    monthly: "月額"
+    trial: "{term}（無料お試し中）"
+    renews: "次回の更新"
+    ends: "期限"
+    auto_renew_off: "自動更新はオフです。"
+    billing_issue: "お支払いに問題があります。サブスクリプションの管理から確認してください。"
+    household: "世帯の Pro で利用中です。"
 home:
   open_summary:
     plural:

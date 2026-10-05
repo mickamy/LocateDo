@@ -2417,6 +2417,74 @@
         }
       }
     },
+    "settings.pro.annual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年額"
+          }
+        }
+      }
+    },
+    "settings.pro.auto_renew_off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-renew is off."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動更新はオフです。"
+          }
+        }
+      }
+    },
+    "settings.pro.billing_issue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There’s a problem with your payment. Check it in Manage Subscription."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お支払いに問題があります。サブスクリプションの管理から確認してください。"
+          }
+        }
+      }
+    },
+    "settings.pro.ends" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ends"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限"
+          }
+        }
+      }
+    },
     "settings.pro.free" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2430,6 +2498,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無料プラン"
+          }
+        }
+      }
+    },
+    "settings.pro.household" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro comes with your household’s plan."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "世帯の Pro で利用中です。"
           }
         }
       }
@@ -2451,6 +2536,57 @@
         }
       }
     },
+    "settings.pro.monthly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月額"
+          }
+        }
+      }
+    },
+    "settings.pro.renews" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renews"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次回の更新"
+          }
+        }
+      }
+    },
+    "settings.pro.term" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プラン"
+          }
+        }
+      }
+    },
     "settings.pro.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2464,6 +2600,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ちかメモ Pro"
+          }
+        }
+      }
+    },
+    "settings.pro.trial" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (free trial)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（無料お試し中）"
           }
         }
       }

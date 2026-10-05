@@ -123,6 +123,15 @@ settings:
     free: "Free plan"
     upgrade: "Upgrade to Pro"
     manage: "Manage Subscription"
+    term: "Plan"
+    annual: "Yearly"
+    monthly: "Monthly"
+    trial: "{term} (free trial)"
+    renews: "Renews"
+    ends: "Ends"
+    auto_renew_off: "Auto-renew is off."
+    billing_issue: "There’s a problem with your payment. Check it in Manage Subscription."
+    household: "Pro comes with your household’s plan."
 home:
   open_summary:
     plural:
