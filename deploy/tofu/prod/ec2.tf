@@ -40,24 +40,24 @@ resource "aws_instance" "app" {
   }
 }
 
-# Postgres lives here so that replacing the instance keeps the data.
+# Postgres lives here so that replacing the instance keeps the data. Until
+# launch, destroy is allowed and leaves a snapshot; add prevent_destroy before
+# real users arrive.
 resource "aws_ebs_volume" "data" {
   availability_zone = aws_subnet.public.availability_zone
   type              = "gp3"
   size              = 20
   encrypted         = true
+  final_snapshot    = true
 
   tags = {
     Name = "locatedo-prod-data"
   }
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_volume_attachment" "data" {
-  device_name = "/dev/sdf"
-  volume_id   = aws_ebs_volume.data.id
-  instance_id = aws_instance.app.id
+  device_name                    = "/dev/sdf"
+  volume_id                      = aws_ebs_volume.data.id
+  instance_id                    = aws_instance.app.id
+  stop_instance_before_detaching = true
 }
