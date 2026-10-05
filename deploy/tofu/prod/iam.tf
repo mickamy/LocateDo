@@ -87,7 +87,7 @@ resource "aws_iam_role_policy" "deploy" {
       },
       {
         Effect   = "Allow"
-        Action   = ["ssm:GetCommandInvocation"]
+        Action   = ["ssm:GetCommandInvocation", "ec2:DescribeInstances"]
         Resource = "*"
       },
     ]

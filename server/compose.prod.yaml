@@ -5,6 +5,7 @@ x-app: &app
   image: ghcr.io/mickamy/locatedo-server:${IMAGE_TAG:?}
   env_file: .env
   environment:
+    ENV: production
     MODULE_ROOT: /src
     DATABASE_URL: postgres://admin:${DB_ADMIN_PASSWORD:?}@db:5432/locatedo?sslmode=disable
     DATABASE_WRITER_URL: postgres://locatedo_writer:${DB_WRITER_PASSWORD:?}@db:5432/locatedo?sslmode=disable
