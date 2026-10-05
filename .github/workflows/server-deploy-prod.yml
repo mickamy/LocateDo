@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: Server image tag to deploy (defaults to the commit this runs on)
+        description: Commit to deploy, short SHA allowed (defaults to the last successful server-image build on main)
         required: false
 
 permissions:
@@ -20,15 +20,33 @@ jobs:
     environment: prod
     timeout-minutes: 20
     permissions:
+      actions: read
       contents: read
       id-token: write
       packages: read
-    env:
-      IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
 
     steps:
+      - name: Pick the image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED: ${{ inputs.image_tag }}
+        run: |
+          if [ -n "${REQUESTED}" ]; then
+            tag=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REQUESTED}" --jq .sha)
+          else
+            tag=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow server-image.yml --branch main \
+              --status success --limit 1 --json headSha --jq '.[0].headSha')
+          fi
+          if [ -z "${tag}" ]; then
+            echo "::error::no successful server-image build on main"
+            exit 1
+          fi
+          echo "IMAGE_TAG=${tag}" >> "${GITHUB_ENV}"
+
+      # The Compose file and init script must come from the same commit as the image.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ env.IMAGE_TAG }}
           persist-credentials: false
 
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
