@@ -2,7 +2,7 @@ name: ios-firebase
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths:
       - "ios/**"
       - ".github/workflows/ios-firebase.yml"

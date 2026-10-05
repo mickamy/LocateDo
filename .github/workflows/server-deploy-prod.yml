@@ -1,6 +1,11 @@
 name: server-deploy-prod
 
 on:
+  workflow_call:
+    inputs:
+      image_tag:
+        type: string
+        required: true
   workflow_dispatch:
     inputs:
       image_tag:
@@ -10,15 +15,15 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: server-prod
-  cancel-in-progress: false
-
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: prod
-    timeout-minutes: 20
+    timeout-minutes: 30
+    concurrency:
+      group: server-prod
+      cancel-in-progress: false
     permissions:
       actions: read
       contents: read
@@ -30,6 +35,7 @@ jobs:
 
     steps:
       - name: Pick the image
+        id: image
         env:
           GH_TOKEN: ${{ github.token }}
           REQUESTED: ${{ inputs.image_tag }}
@@ -40,16 +46,40 @@ jobs:
             tag=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow server-image.yml --branch main \
               --status success --limit 1 --json headSha --jq '.[0].headSha')
           fi
-          if [ -z "${tag}" ]; then
-            echo "::error::no successful server-image build on main"
+          if [[ ! "${tag}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::no image to deploy (got '${tag}')"
             exit 1
           fi
-          echo "IMAGE_TAG=${tag}" >> "${GITHUB_ENV}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      # A release that also changes infrastructure (a log group, a permission) must
+      # not start the new containers before that change is applied.
+      - name: Wait for this commit's infrastructure apply
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          for _ in $(seq 1 60); do
+            run=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow infra-apply-prod.yml --commit "${IMAGE_TAG}" \
+              --limit 1 --json status,conclusion \
+              --jq '.[0] | if . == null then "none" else "\(.status) \(.conclusion)" end')
+            case "${run}" in
+              none | "completed success") exit 0 ;;
+              completed*)
+                echo "::error::infra-apply-prod for this commit ended with ${run#completed }"
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "::error::infra-apply-prod for this commit did not finish in 10 minutes"
+          exit 1
 
       # The Compose file and init script must come from the same commit as the image.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.IMAGE_TAG }}
+          ref: ${{ steps.image.outputs.tag }}
           persist-credentials: false
 
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -59,6 +89,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check that the image exists
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
         run: docker buildx imagetools inspect "ghcr.io/mickamy/locatedo-server:${IMAGE_TAG}" >/dev/null
 
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
@@ -96,6 +128,7 @@ jobs:
 
       - name: Run the deploy script on the instance
         env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

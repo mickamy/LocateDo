@@ -2,10 +2,12 @@ version: 2
 updates:
   - package-ecosystem: gomod
     directory: /server
+    target-branch: dev
     schedule:
       interval: weekly
   - package-ecosystem: gomod
     directory: /server/tools
+    target-branch: dev
     schedule:
       interval: weekly
   - package-ecosystem: gomod
