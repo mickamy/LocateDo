@@ -1,0 +1,70 @@
+name: ios-screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: Simulator device type for the 6.9-inch screenshots
+        required: true
+        default: iPhone 18 Pro Max
+
+concurrency:
+  group: ios-screenshots
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  screenshots:
+    name: fastlane screenshots
+    runs-on: xcode-27
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      DEVICE: ${{ inputs.device }}
+    steps:
+      # Credentials stay so the last step can push the screenshot branch.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          working-directory: ios
+          bundler-cache: true
+      - name: Create the simulator
+        run: xcrun simctl create "LocateDo Shots" "$DEVICE"
+      - name: Take the screenshots
+        run: bundle exec fastlane screenshots device:"LocateDo Shots"
+        working-directory: ios
+        env:
+          CI: "true"
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: screenshots
+          path: ios/fastlane/screenshots/**/*.png
+          if-no-files-found: ignore
+      - name: Open a pull request with the screenshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git add ios/fastlane/screenshots
+          if git diff --cached --quiet; then
+            echo "The screenshots did not change"
+            exit 0
+          fi
+          branch="screenshots/${GITHUB_RUN_ID}"
+          git switch -c "$branch"
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898283+github-actions[bot]@users.noreply.github.com" \
+            commit -m "chore(ios): update the App Store screenshots"
+          git push origin "$branch"
+          echo "Screenshots taken by [this run]($RUN_URL) on $DEVICE." \
+            > "$RUNNER_TEMP/pr-body.md"
+          gh pr create --base "$GITHUB_REF_NAME" --head "$branch" \
+            --title "chore(ios): update the App Store screenshots" --body-file "$RUNNER_TEMP/pr-body.md"

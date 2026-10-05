@@ -3,10 +3,8 @@ project("./LocateDo.xcodeproj")
 scheme("dev")
 only_testing(["LocateDoUITests/ScreenshotTests"])
 output_directory("./fastlane/screenshots")
-clear_previous_screenshots(true)
 override_status_bar(true)
 concurrent_simulators(false)
-# Every language starts from an erased simulator, the same as a fresh CI runner.
-erase_simulator(true)
-# Parallel testing would run on clones; the store icon replaces the Debug one.
-xcargs("-parallel-testing-enabled NO ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon")
+# `fastlane screenshots` builds once, then erases the simulator and grants location per language.
+# Parallel testing would run on clones without that grant.
+xcargs("-parallel-testing-enabled NO")

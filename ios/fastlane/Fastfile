@@ -6,6 +6,13 @@ STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
 DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
 PROJECT = "LocateDo.xcodeproj"
 
+def simulator_udid(device)
+  devices = JSON.parse(`xcrun simctl list devices available --json`)["devices"]
+  match = devices.values.flatten.find { |candidate| candidate["name"] == device }
+  UI.user_error!("No available simulator named #{device}") unless match
+  match["udid"]
+end
+
 platform :ios do
   # produce still wants an Apple ID login, so this talks to the API directly.
   desc "Create the App IDs (with push notifications) and point at the App Store Connect record"
@@ -166,7 +173,31 @@ platform :ios do
 
   desc "Take the App Store screenshots in English and Japanese (see Snapfile)"
   lane :screenshots do |options|
-    snapshot(devices: [options.fetch(:device, "iPhone 18 Pro Max")])
+    device = options.fetch(:device, "iPhone 18 Pro Max")
+    udid = simulator_udid(device)
+    derived_data = File.expand_path("../build/screenshots", __dir__)
+    # The store icon replaces the Debug one in the shots.
+    sh("xcodebuild", "build-for-testing", "-project", File.expand_path("../#{PROJECT}", __dir__),
+       "-scheme", "dev", "-destination", "id=#{udid}", "-derivedDataPath", derived_data,
+       "ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon")
+    app = File.join(derived_data, "Build/Products/Debug-iphonesimulator/LocateDo.app")
+    FileUtils.rm_rf(File.expand_path("screenshots", __dir__))
+    %w[en-US ja].each do |language|
+      # Each language starts from an erased simulator. "Always" can only be granted once the app is
+      # installed, and it survives the reinstall the test run does, which keeps the location banner out.
+      sh("xcrun", "simctl", "shutdown", udid, error_callback: ->(_) {})
+      sh("xcrun", "simctl", "erase", udid)
+      sh("xcrun", "simctl", "boot", udid)
+      sh("xcrun", "simctl", "install", udid, app)
+      sh("xcrun", "simctl", "privacy", udid, "grant", "location-always", DEV_APP_IDENTIFIER)
+      snapshot(
+        devices: [device],
+        languages: [language],
+        test_without_building: true,
+        derived_data_path: derived_data,
+        clear_previous_screenshots: false
+      )
+    end
   end
 
   # App privacy answers need an Apple ID session; an App Store Connect API key cannot set them.

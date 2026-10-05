@@ -1,8 +1,9 @@
 import CoreLocation
 import XCTest
 
-// Run through `fastlane screenshots`, which erases the simulator first. Region monitoring is unsupported
-// in the simulator, so the arrival notification comes from the debug "Simulate arrival in 10 s" action.
+// Run through `fastlane screenshots`, which erases the simulator and grants "Always" first. Region
+// monitoring is unsupported in the simulator, so the arrival notification comes from the debug
+// "Simulate arrival in 10 s" action.
 final class ScreenshotTests: XCTestCase {
     private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
@@ -57,16 +58,15 @@ final class ScreenshotTests: XCTestCase {
     private func finishOnboarding(_ app: XCUIApplication) {
         let start = app.buttons["onboarding.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 10))
+        // "Always" is granted before launch, so only the notification alert appears.
         start.tap()
-        allowSystemAlert()
         let allowNotifications = app.buttons["onboarding.allowNotifications"]
         XCTAssertTrue(allowNotifications.waitForExistence(timeout: 5))
         allowNotifications.tap()
         allowSystemAlert()
     }
 
-    // Location alerts read "Allow Once / Allow While Using App / Don't Allow" and notification alerts
-    // "Don't Allow / Allow", so the second button allows either way.
+    // The notification alert reads "Don't Allow / Allow".
     @MainActor
     private func allowSystemAlert() {
         let alert = springboard.alerts.firstMatch
