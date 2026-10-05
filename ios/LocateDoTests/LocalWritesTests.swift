@@ -160,6 +160,52 @@ struct LocalWritesTests {
         #expect(sequences == Array(1...Int64(sequences.count)))
     }
 
+    @Test func aNewCategoryGoesLastAndIsQueued() throws {
+        let fixture = try Fixture()
+        let gym = PlaceCategory(name: "Gym", icon: "dumbbell", color: "teal", sortOrder: 0)
+
+        fixture.writes.add(gym)
+
+        #expect(gym.sortOrder == BuiltinCategory.allCases.count)
+        #expect(try fixture.queue() == [.put(gym)])
+    }
+
+    @Test func deletingACategoryQueuesTheDeleteAndUncategorizesItsPlaces() throws {
+        let fixture = try Fixture()
+        let shopping = try #require(try fixture.categories().first)
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0, category: shopping)
+        fixture.writes.add(place)
+        let write = Write.delete(shopping)
+
+        #expect(fixture.writes.delete(shopping))
+
+        #expect(place.category == nil)
+        #expect(try fixture.queue().last == write)
+    }
+
+    @Test func theLastCategoryCannotBeDeleted() throws {
+        let fixture = try Fixture()
+        let categories = try fixture.categories()
+        for category in categories.dropLast() {
+            fixture.writes.delete(category)
+        }
+        let last = try #require(categories.last)
+
+        #expect(!fixture.writes.delete(last))
+        #expect(try fixture.categories().map(\.id) == [last.id])
+    }
+
+    @Test func reorderingSendsOnlyTheCategoriesThatMoved() throws {
+        let fixture = try Fixture()
+        let categories = try fixture.categories()
+        let moved = [categories[1], categories[0], categories[2], categories[3]]
+
+        fixture.writes.reorder(moved)
+
+        #expect(try fixture.categories().map(\.id) == moved.map(\.id))
+        #expect(try fixture.queue() == [.put(categories[1]), .put(categories[0])])
+    }
+
     private struct Fixture {
         let container: ModelContainer
         let context: ModelContext
@@ -177,6 +223,10 @@ struct LocalWritesTests {
                 probe.queued += 1
             }
             writes.isPro = { probe.isPro }
+        }
+
+        func categories() throws -> [PlaceCategory] {
+            try context.fetch(FetchDescriptor<PlaceCategory>(sortBy: [SortDescriptor(\.sortOrder)]))
         }
 
         func queue() throws -> [Write] {

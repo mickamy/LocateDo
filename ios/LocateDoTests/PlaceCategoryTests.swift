@@ -46,8 +46,17 @@ struct PlaceCategoryTests {
         #expect(category.displayName == "Costco")
     }
 
+    @Test func everyPaletteKeyHasItsOwnStyle() {
+        let symbols = CategoryPalette.icons.map { CategoryStyle.systemImage(forIcon: $0) }
+        #expect(Set(symbols).count == CategoryPalette.icons.count)
+        #expect(!symbols.contains("tag.slash"))
+
+        let tints = CategoryPalette.colors.map { CategoryStyle.tint(forColor: $0) }
+        #expect(Set(tints).count == CategoryPalette.colors.count)
+    }
+
     @Test func styleFallsBackForUnknownKeysAndNoCategory() {
-        let unknown = CategoryStyle(PlaceCategory(name: "Gym", icon: "dumbbell", color: "teal", sortOrder: 4))
+        let unknown = CategoryStyle(PlaceCategory(name: "Gym", icon: "rocket", color: "neon", sortOrder: 4))
         #expect(unknown.name == "Gym")
         #expect(unknown.systemImage == "mappin")
         #expect(unknown.tint == .gray)

@@ -17,24 +17,60 @@ nonisolated struct CategoryStyle {
         tint = Self.tint(forColor: category.color)
     }
 
+    private static let symbols = [
+        "cart": "cart",
+        "bag": "bag",
+        "fork_knife": "fork.knife",
+        "cup": "cup.and.saucer",
+        "cross": "cross.case",
+        "dumbbell": "dumbbell",
+        "book": "book",
+        "briefcase": "briefcase",
+        "building": "building.columns",
+        "house": "house",
+        "car": "car",
+        "fuel": "fuelpump",
+        "gift": "gift",
+        "pawprint": "pawprint",
+        "leaf": "leaf",
+        "mappin": "mappin"
+    ]
+
+    private static let tints: [String: Color] = [
+        "blue": .blue,
+        "green": .green,
+        "orange": .orange,
+        "red": .red,
+        "pink": .pink,
+        "purple": .purple,
+        "teal": .teal,
+        "yellow": .yellow,
+        "brown": .brown,
+        "gray": .gray
+    ]
+
     static func systemImage(forIcon icon: String?) -> String {
-        switch icon {
-        case "cart": "cart"
-        case "briefcase": "briefcase"
-        case "house": "house"
-        case nil: "tag.slash"
-        default: "mappin"
+        guard let icon else {
+            return "tag.slash"
         }
+        return symbols[icon] ?? "mappin"
     }
 
     static func tint(forColor color: String?) -> Color {
-        switch color {
-        case "green": .green
-        case "blue": .blue
-        case "orange": .orange
-        default: .gray
+        guard let color else {
+            return .gray
         }
+        return tints[color] ?? .gray
     }
+}
+
+nonisolated enum CategoryPalette {
+    static let icons = [
+        "cart", "bag", "fork_knife", "cup", "cross", "dumbbell", "book", "briefcase",
+        "building", "house", "car", "fuel", "gift", "pawprint", "leaf", "mappin"
+    ]
+
+    static let colors = ["blue", "green", "orange", "red", "pink", "purple", "teal", "yellow", "brown", "gray"]
 }
 
 extension Place {
