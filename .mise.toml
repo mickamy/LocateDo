@@ -1,6 +1,8 @@
 [tools]
 actionlint = "1.7.12"
+aws-cli = { version = "2.37.9", symlink_bins = "true" }
 buf = "1.73.0"
 golangci-lint = "2.14.0"
+opentofu = "1.13.1"
 pinact = "5.0.0"
 swiftlint = "0.65.1"
