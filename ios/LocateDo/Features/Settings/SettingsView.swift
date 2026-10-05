@@ -67,6 +67,13 @@ struct SettingsView: View {
                     Text(.settingsDefaultRadiusLabel)
                 }
                 Section {
+                    NavigationLink {
+                        CategoriesView()
+                    } label: {
+                        Label(.categoryTitle, systemImage: "tag")
+                    }
+                }
+                Section {
                     SharingButton(source: .settings) {
                         Label(.sharingTitle, systemImage: "person.2")
                     }
@@ -143,6 +150,7 @@ struct SettingsView: View {
                     await notifier.requestAuthorization()
                 }
             }
+            .accessibilityIdentifier("settings.allowNotifications")
         } else {
             Button(.settingsOpenSettings) {
                 openSystemSettings()

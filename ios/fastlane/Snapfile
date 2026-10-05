@@ -1,0 +1,10 @@
+languages(["en-US", "ja"])
+project("./LocateDo.xcodeproj")
+scheme("dev")
+only_testing(["LocateDoUITests/ScreenshotTests"])
+output_directory("./fastlane/screenshots")
+override_status_bar(true)
+concurrent_simulators(false)
+# `fastlane screenshots` builds once, then erases the simulator and grants location per language.
+# Parallel testing would run on clones without that grant.
+xcargs("-parallel-testing-enabled NO")

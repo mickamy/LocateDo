@@ -54,7 +54,7 @@
   <p class="lang"><a href="privacy-ja.html" hreflang="ja">日本語</a></p>
 
   <h1>StopBy Privacy Policy</h1>
-  <p class="meta">Effective October 4, 2026</p>
+  <p class="meta">Effective October 5, 2026</p>
 
   <p>StopBy (ちかメモ in Japanese) is a to-do app that reminds you of things to do when you arrive at a place, and lets a household share those lists. This policy explains what information the app handles, what stays on your device, what is sent to our servers, and what is shared with other companies.</p>
 
@@ -72,7 +72,7 @@
   <p>Until you sign in, this data exists only on your device, and deleting the app deletes it.</p>
 
   <h2>Accounts and sync</h2>
-  <p>You can use StopBy without an account. If you sign in with Apple, we create an account for you and your places, to-dos, and categories are uploaded to and kept in sync with servers operated by us, currently located in Japan.</p>
+  <p>You can use StopBy without an account. If you sign in with Apple, we create an account for you and your places, to-dos, and categories are uploaded to and kept in sync with servers operated by us. These servers run on Amazon Web Services in the United States (Oregon), so if you live outside the United States, your data is transferred there.</p>
   <table>
     <tr><th>What we store on our servers</th><th>Why</th></tr>
     <tr><td>The identifier Apple assigns to your account for StopBy, and the name you choose to share at sign-in (if any). We do not store your email address, including Apple's relay address.</td><td>To recognize you when you sign in again</td></tr>
@@ -97,6 +97,7 @@
     <tr><th>What is sent</th><th>Why</th></tr>
     <tr><td>That an arrival reminder was shown or opened, and how many open to-dos it listed</td><td>To measure whether reminders fire and help</td></tr>
     <tr><td>That the sharing button, a paywall, or an invitation was used, and from which screen</td><td>To decide what to improve</td></tr>
+    <tr><td>That a subscription was purchased, and whether it was yearly or monthly</td><td>To understand which plans people choose</td></tr>
     <tr><td>An app-instance identifier (Apple's identifier for vendor), device model, iOS version, app version, language, and an approximate country derived by Google from your network address</td><td>Standard Firebase Analytics data used to count users and sessions</td></tr>
   </table>
   <p>The names of your places, their coordinates, your to-do titles, your display name, and your precise location are not included in any analytics event. StopBy does not use the advertising identifier (IDFA) and does not track you across other apps or websites.</p>
@@ -107,14 +108,16 @@
     <li>Apple: Sign in with Apple, App Store purchases, and push notification delivery.</li>
     <li>Google (Firebase Analytics): usage analytics as described above.</li>
     <li>RevenueCat: subscription verification as described above.</li>
-    <li>Cloudflare: routes traffic to our servers and stores our encrypted database backups.</li>
+    <li>Amazon Web Services: hosts our servers, our database backups (encrypted at rest), and our server logs in the United States.</li>
+    <li>Cloudflare: routes traffic to our servers and serves this website.</li>
   </ul>
   <p>We do not sell your data, we do not show ads, and we do not share data with anyone else except when required by law.</p>
 
   <h2>Retention and deletion</h2>
   <ul>
     <li>Data on your device is deleted when you delete the app.</li>
-    <li>Data on our servers is kept while your account exists. You can delete your account from Settings in the app; this removes your account, your devices, and, if you are the household owner, the household and everything in it. Backup copies are removed within 30 days.</li>
+    <li>Data on our servers is kept while your account exists. You can delete your account from Settings in the app; this removes your account, your devices, and, if you are the household owner, the household and everything in it. Database backups are taken daily and removed within 70 days.</li>
+    <li>Server logs, which include account and household identifiers and details of each request, are kept for 30 days to operate the service and keep it secure.</li>
     <li>Analytics data is retained by Google as described above. To ask us to delete analytics data associated with your app instance, contact us at the address below.</li>
   </ul>
 
@@ -133,7 +136,7 @@
   <p>When this policy changes, the new version is posted here with a new effective date. Material changes are also announced in the app.</p>
 
   <h2>Contact</h2>
-  <p>Questions about this policy: <a href="mailto:contact@locatedo.com">contact@locatedo.com</a></p>
+  <p>Questions about this policy: <a href="mailto:privacy@locatedo.com">privacy@locatedo.com</a></p>
 </main>
 </body>
 </html>

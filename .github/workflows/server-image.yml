@@ -62,3 +62,6 @@ jobs:
     uses: ./.github/workflows/server-deploy-prod.yml
     with:
       image_tag: ${{ github.sha }}
+    # The deploy job reads the prod environment's secrets, which a called
+    # workflow only sees when the caller hands them down.
+    secrets: inherit # zizmor: ignore[secrets-inherit]

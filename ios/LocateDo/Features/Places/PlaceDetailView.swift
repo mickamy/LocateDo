@@ -115,6 +115,7 @@ struct PlaceDetailView: View {
                 } label: {
                     Label(.commonMore, systemImage: "ellipsis.circle")
                 }
+                .accessibilityIdentifier("place.menu")
             }
         }
         .confirmationDialog(

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>ちかメモ サポート</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 0 64px;
+  }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 36px 0 8px; }
+  p, li { margin: 0 0 12px; }
+  ul { padding-left: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  .meta { color: var(--muted); margin-bottom: 24px; }
+  .lang { font-size: 15px; margin-bottom: 32px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <p class="lang"><a href="support.html" hreflang="en">English</a></p>
+
+  <h1>ちかメモ サポート</h1>
+  <p class="meta">場所に着いたらやることを知らせる TODO アプリ「ちかメモ」（英語名 StopBy）のサポートページです。</p>
+
+  <h2>アプリを閉じていると通知が来ない</h2>
+  <ul>
+    <li>iOS の設定 &gt; プライバシーとセキュリティ &gt; 位置情報サービス &gt; ちかメモ で「常に」を選び、「正確な位置情報」をオンにしてください。</li>
+    <li>iOS の設定 &gt; 通知 &gt; ちかメモ で、通知を許可してください。</li>
+    <li>iOS が到着に気づくまで数分かかることがあり、狭い範囲ほど気づきにくくなります。通知の半径は 100 m 以上がおすすめです。</li>
+  </ul>
+
+  <h2>複数の端末で使いたい</h2>
+  <p>アプリの 設定 &gt; アカウント から Apple でサインインしてください。どの端末でも同じ Apple ID を使うと、場所、TODO、カテゴリが同期されます。</p>
+
+  <h2>家族と共有したい</h2>
+  <p>共有には、世帯のオーナーのちかメモ Pro が必要です。家族は無料で参加できます。ホームの人のアイコンから「招待する」を選び、リンクを送ってください。リンクは 1 回だけ使え、72 時間有効です。1 つの世帯には 6 人まで入れます。</p>
+
+  <h2>ちかメモ Pro の復元・解約</h2>
+  <ul>
+    <li>新しい端末で購入を復元するには、設定 &gt; ちかメモ Pro &gt; 購入を復元 を選んでください。</li>
+    <li>解約は、設定 &gt; ちかメモ Pro &gt; サブスクリプションを管理、または iOS の設定の Apple ID &gt; サブスクリプション から行えます。更新されないようにするには、現在の期間が終わる 24 時間前までに解約してください。</li>
+  </ul>
+
+  <h2>アカウントを削除したい</h2>
+  <p>設定 &gt; アカウント &gt; アカウントを削除 を選んでください。サーバーからアカウントが削除され、世帯のオーナーであれば、世帯とその中身もすべて削除されます。アカウントがない場合、データは端末の中だけにあり、アプリを削除すると消えます。</p>
+
+  <h2>お問い合わせ</h2>
+  <p><a href="mailto:support@locatedo.com">support@locatedo.com</a> までメールでご連絡ください。iPhone の機種、iOS のバージョン、アプリのバージョン（設定 &gt; このアプリについて &gt; バージョン）を書いていただけると助かります。</p>
+  <p><a href="privacy-ja.html">プライバシーポリシー</a>もあわせてご覧ください。</p>
+</main>
+</body>
+</html>

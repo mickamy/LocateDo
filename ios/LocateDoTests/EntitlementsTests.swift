@@ -63,6 +63,22 @@ struct EntitlementsTests {
         #expect(entitlements.hasEntitlement)
     }
 
+    @Test func keepsWhatTheStoreSaysAboutTheSubscription() async {
+        let subscription = ProSubscription(
+            term: .monthly,
+            expiresAt: Date(timeIntervalSince1970: 1_800_000_000),
+            willRenew: false,
+            isTrial: false,
+            hasBillingIssue: false
+        )
+        let entitlements = Entitlements(source: FakeEntitlementSource(subscription: subscription))
+
+        await entitlements.logIn(userID: UUID())
+
+        #expect(entitlements.subscription == subscription)
+        #expect(entitlements.hasEntitlement)
+    }
+
     @Test func withoutASourceNothingHappens() async {
         let entitlements = Entitlements(source: nil)
 
@@ -74,16 +90,28 @@ struct EntitlementsTests {
 }
 
 nonisolated final class FakeEntitlementSource: EntitlementSource {
+    static let annual = ProSubscription(
+        term: .annual,
+        expiresAt: Date(timeIntervalSince1970: 1_800_000_000),
+        willRenew: true,
+        isTrial: false,
+        hasBillingIssue: false
+    )
+
     private struct State {
-        var hasPro: Bool
+        var subscription: ProSubscription?
         var loggedIn: [String] = []
         var cancelsPurchase = false
     }
 
     private let state: Mutex<State>
 
-    init(hasPro: Bool) {
-        state = Mutex(State(hasPro: hasPro))
+    init(subscription: ProSubscription?) {
+        state = Mutex(State(subscription: subscription))
+    }
+
+    convenience init(hasPro: Bool) {
+        self.init(subscription: Self.subscription(hasPro: hasPro))
     }
 
     var loggedIn: [String] {
@@ -91,25 +119,32 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
     }
 
     func setHasPro(_ hasPro: Bool) {
-        state.withLock { $0.hasPro = hasPro }
+        state.withLock { $0.subscription = Self.subscription(hasPro: hasPro) }
     }
 
-    func logIn(_ appUserID: String) async throws -> Bool {
+    private static func subscription(hasPro: Bool) -> ProSubscription? {
+        guard hasPro else {
+            return nil
+        }
+        return annual
+    }
+
+    func logIn(_ appUserID: String) async throws -> ProSubscription? {
         state.withLock { state in
             state.loggedIn.append(appUserID)
-            return state.hasPro
+            return state.subscription
         }
     }
 
-    func logOut() async throws -> Bool {
-        state.withLock { $0.hasPro }
+    func logOut() async throws -> ProSubscription? {
+        state.withLock { $0.subscription }
     }
 
-    func refresh() async throws -> Bool {
-        state.withLock { $0.hasPro }
+    func refresh() async throws -> ProSubscription? {
+        state.withLock { $0.subscription }
     }
 
-    func updates() -> AsyncStream<Bool> {
+    func updates() -> AsyncStream<ProSubscription?> {
         AsyncStream { $0.finish() }
     }
 
@@ -120,18 +155,18 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
         ]
     }
 
-    func purchase(_ kind: PaywallPlan.Kind) async throws -> Bool? {
+    func purchase(_ kind: PaywallPlan.Kind) async throws -> PurchaseOutcome {
         state.withLock { state in
             if state.cancelsPurchase {
-                return nil
+                return .cancelled
             }
-            state.hasPro = true
-            return true
+            state.subscription = Self.annual
+            return .completed(Self.annual)
         }
     }
 
-    func restore() async throws -> Bool {
-        state.withLock { $0.hasPro }
+    func restore() async throws -> ProSubscription? {
+        state.withLock { $0.subscription }
     }
 
     func cancelPurchases() {

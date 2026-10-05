@@ -77,6 +77,42 @@ final class LocalWrites {
         commit(writes)
     }
 
+    func add(_ category: PlaceCategory) {
+        let last = FetchDescriptor<PlaceCategory>(sortBy: [SortDescriptor(\.sortOrder, order: .reverse)])
+        let highest = (try? context.fetch(last).first?.sortOrder) ?? -1
+        category.sortOrder = highest + 1
+        context.insert(category)
+        commit([.put(category)])
+    }
+
+    func update(_ category: PlaceCategory, now: Date = .now) {
+        category.updatedAt = now
+        commit([.put(category)])
+    }
+
+    // The last category stays, because an empty store re-seeds the built-ins at launch.
+    @discardableResult
+    func delete(_ category: PlaceCategory) -> Bool {
+        let count = (try? context.fetchCount(FetchDescriptor<PlaceCategory>())) ?? 0
+        guard count > 1 else {
+            return false
+        }
+        let write = Write.delete(category)
+        context.delete(category)
+        commit([write])
+        return true
+    }
+
+    func reorder(_ categories: [PlaceCategory], now: Date = .now) {
+        var writes: [Write] = []
+        for (index, category) in categories.enumerated() where category.sortOrder != index {
+            category.sortOrder = index
+            category.updatedAt = now
+            writes.append(.put(category))
+        }
+        commit(writes)
+    }
+
     private func reached(_ limit: FreeLimit) -> Bool {
         if isPro() {
             return false

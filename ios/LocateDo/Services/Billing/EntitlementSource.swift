@@ -17,14 +17,13 @@ struct PaywallPlan: Identifiable, Equatable {
 }
 
 protocol EntitlementSource {
-    func logIn(_ appUserID: String) async throws -> Bool
-    func logOut() async throws -> Bool
-    func refresh() async throws -> Bool
-    func updates() -> AsyncStream<Bool>
+    func logIn(_ appUserID: String) async throws -> ProSubscription?
+    func logOut() async throws -> ProSubscription?
+    func refresh() async throws -> ProSubscription?
+    func updates() -> AsyncStream<ProSubscription?>
     func plans() async throws -> [PaywallPlan]
-    // Returns nil when the buyer cancels.
-    func purchase(_ kind: PaywallPlan.Kind) async throws -> Bool?
-    func restore() async throws -> Bool
+    func purchase(_ kind: PaywallPlan.Kind) async throws -> PurchaseOutcome
+    func restore() async throws -> ProSubscription?
 }
 
 final class RevenueCatEntitlementSource: EntitlementSource {
@@ -36,27 +35,27 @@ final class RevenueCatEntitlementSource: EntitlementSource {
         Purchases.configure(withAPIKey: apiKey)
     }
 
-    func logIn(_ appUserID: String) async throws -> Bool {
+    func logIn(_ appUserID: String) async throws -> ProSubscription? {
         let (info, _) = try await Purchases.shared.logIn(appUserID)
-        return Self.hasPro(info)
+        return Self.subscription(in: info)
     }
 
-    func logOut() async throws -> Bool {
+    func logOut() async throws -> ProSubscription? {
         if Purchases.shared.isAnonymous {
             return try await refresh()
         }
-        return Self.hasPro(try await Purchases.shared.logOut())
+        return Self.subscription(in: try await Purchases.shared.logOut())
     }
 
-    func refresh() async throws -> Bool {
-        Self.hasPro(try await Purchases.shared.customerInfo())
+    func refresh() async throws -> ProSubscription? {
+        Self.subscription(in: try await Purchases.shared.customerInfo())
     }
 
-    func updates() -> AsyncStream<Bool> {
+    func updates() -> AsyncStream<ProSubscription?> {
         AsyncStream { continuation in
             let task = Task {
                 for await info in Purchases.shared.customerInfoStream {
-                    continuation.yield(Self.hasPro(info))
+                    continuation.yield(Self.subscription(in: info))
                 }
                 continuation.finish()
             }
@@ -91,23 +90,32 @@ final class RevenueCatEntitlementSource: EntitlementSource {
         }
     }
 
-    func purchase(_ kind: PaywallPlan.Kind) async throws -> Bool? {
+    func purchase(_ kind: PaywallPlan.Kind) async throws -> PurchaseOutcome {
         guard let package = packages[kind] else {
             throw ErrorCode.productNotAvailableForPurchaseError
         }
         let result = try await Purchases.shared.purchase(package: package)
         if result.userCancelled {
+            return .cancelled
+        }
+        return .completed(Self.subscription(in: result.customerInfo))
+    }
+
+    func restore() async throws -> ProSubscription? {
+        Self.subscription(in: try await Purchases.shared.restorePurchases())
+    }
+
+    private static func subscription(in info: CustomerInfo) -> ProSubscription? {
+        guard let entitlement = info.entitlements[entitlementID], entitlement.isActive else {
             return nil
         }
-        return Self.hasPro(result.customerInfo)
-    }
-
-    func restore() async throws -> Bool {
-        Self.hasPro(try await Purchases.shared.restorePurchases())
-    }
-
-    private static func hasPro(_ info: CustomerInfo) -> Bool {
-        info.entitlements[entitlementID]?.isActive == true
+        return ProSubscription(
+            term: ProSubscription.term(forProductID: entitlement.productIdentifier),
+            expiresAt: entitlement.expirationDate,
+            willRenew: entitlement.willRenew,
+            isTrial: entitlement.periodType == .trial,
+            hasBillingIssue: entitlement.billingIssueDetectedAt != nil
+        )
     }
 
     private static func trialDays(of package: Package, eligible: Bool) -> Int? {

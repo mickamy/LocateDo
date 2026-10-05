@@ -4,12 +4,12 @@ import SwiftData
 import SwiftUI
 
 struct ProSection: View {
+    @Environment(AppRouter.self) private var router
     @Environment(Entitlements.self) private var entitlements
     @Environment(Authenticator.self) private var authenticator
     @Query private var syncStates: [SyncState]
     @Query private var memberships: [Membership]
 
-    @State private var isShowingPaywall = false
     @State private var isManaging = false
     @State private var isRestoring = false
     @State private var isShowingRestored = false
@@ -24,13 +24,16 @@ struct ProSection: View {
             } label: {
                 Text(.settingsProTitle)
             }
+            ForEach(details, id: \.self) { detail in
+                row(for: detail)
+            }
             if entitlements.hasEntitlement {
                 Button(.settingsProManage) {
                     isManaging = true
                 }
             } else if !isPro && !isMember {
                 Button(.settingsProUpgrade) {
-                    isShowingPaywall = true
+                    router.pendingPaywall = .settings
                 }
             }
             if !isMember {
@@ -55,14 +58,64 @@ struct ProSection: View {
                     .foregroundStyle(.red)
             }
         }
-        .sheet(isPresented: $isShowingPaywall) {
-            PaywallView(trigger: .settings)
-        }
         .manageSubscriptionsSheet(isPresented: $isManaging)
         .alert(Text(.paywallRestoredTitle), isPresented: $isShowingRestored) {
             Button(.commonOk) {}
         } message: {
             Text(.paywallRestoredMessage)
+        }
+    }
+
+    private var details: [ProDetail] {
+        ProDetail.details(subscription: entitlements.subscription, plan: syncStates.first?.plan)
+    }
+
+    @ViewBuilder
+    private func row(for detail: ProDetail) -> some View {
+        switch detail {
+        case .term(let term, let isTrial):
+            LabeledContent {
+                if isTrial {
+                    Text(.settingsProTrial(String(localized: termName(term))))
+                } else {
+                    Text(termName(term))
+                }
+            } label: {
+                Text(.settingsProTerm)
+            }
+        case .renews(let date):
+            LabeledContent {
+                Text(date, format: .dateTime.year().month().day())
+            } label: {
+                Text(.settingsProRenews)
+            }
+        case .ends(let date):
+            LabeledContent {
+                Text(date, format: .dateTime.year().month().day())
+            } label: {
+                Text(.settingsProEnds)
+            }
+        case .autoRenewOff:
+            Text(.settingsProAutoRenewOff)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        case .billingIssue:
+            Text(.settingsProBillingIssue)
+                .font(.footnote)
+                .foregroundStyle(.red)
+        case .household:
+            Text(.settingsProHousehold)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func termName(_ term: ProSubscription.Term) -> LocalizedStringResource {
+        switch term {
+        case .annual:
+            .settingsProAnnual
+        case .monthly:
+            .settingsProMonthly
         }
     }
 

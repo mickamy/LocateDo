@@ -44,10 +44,12 @@ extension View {
     }
 
     // Sized from outside the scroll view: containerRelativeFrame follows the refresh inset and leaves the offset stuck.
+    // The bottom padding lifts the content a little above the true center, which otherwise reads as too low.
     func syncRefreshableEmptyState() -> some View {
         GeometryReader { proxy in
             ScrollView {
-                frame(width: proxy.size.width, height: proxy.size.height)
+                padding(.bottom, proxy.size.height * 0.15)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
             }
             .syncRefreshable()
         }
