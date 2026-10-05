@@ -7,14 +7,23 @@ struct RootView: View {
     @Environment(AppPreferences.self) private var preferences
     @Environment(AccountManager.self) private var account
     @Environment(SyncEngine.self) private var sync
+    @Environment(AppStatusStore.self) private var appStatus
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
-            if preferences.hasCompletedOnboarding {
+            if appStatus.requiresUpdate {
+                UpdateRequiredView()
+                    .task(id: scenePhase) {
+                        await refreshAppStatus()
+                    }
+            } else if preferences.hasCompletedOnboarding {
                 main
             } else {
                 OnboardingView()
+                    .task(id: scenePhase) {
+                        await refreshAppStatus()
+                    }
             }
         }
         .onOpenURL { url in
@@ -45,6 +54,13 @@ struct RootView: View {
                 .sheet(item: $router.pendingPaywall) { trigger in
                     PaywallView(trigger: trigger)
                 }
+    }
+
+    private func refreshAppStatus() async {
+        guard scenePhase == .active else {
+            return
+        }
+        await appStatus.refresh()
     }
 
     private var removedNotice: Binding<Bool> {
@@ -81,6 +97,10 @@ struct RootView: View {
         }
         .task(id: scenePhase) {
             guard scenePhase == .active else {
+                return
+            }
+            await appStatus.refresh()
+            guard !appStatus.requiresUpdate else {
                 return
             }
             do {
@@ -144,4 +164,5 @@ struct RootView: View {
             sync: sync
         ))
         .environment(LocalWrites(context: container.mainContext) { authenticator.isSignedIn })
+        .environment(AppStatusStore(url: nil, currentVersion: "1.0", gate: MaintenanceGate()))
 }

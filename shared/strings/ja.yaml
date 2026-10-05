@@ -223,3 +223,7 @@ paywall:
   failed: "購入できませんでした。もう一度お試しください。"
   nothing_to_restore: "復元できる購入が見つかりませんでした。"
   unavailable: "プランを読み込めませんでした。しばらくしてからお試しください。"
+update:
+  title: "アップデートが必要です"
+  message: "このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。"
+  open_app_store: "App Store を開く"

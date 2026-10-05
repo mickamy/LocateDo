@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import Testing
 
 @testable import LocateDo
@@ -123,6 +124,30 @@ struct AppStatusTests {
         let late = makeStore(defaults: fresh, version: "1.2.0", now: notice.until) { _ in Self.full }
         await late.refresh()
         #expect(late.pendingNotice == nil)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func syncResumesWhenTheWindowEnds() async throws {
+        let clock = Mutex(Self.ends.addingTimeInterval(-0.2))
+        let store = AppStatusStore(
+            url: URL(string: "https://locatedo.com/app-status-stg.json"),
+            currentVersion: "1.2.0",
+            gate: MaintenanceGate(),
+            defaults: try makeDefaults(),
+            clock: { clock.withLock { $0 } },
+            fetch: { _ in Self.full }
+        )
+        await store.refresh()
+        #expect(store.maintenancePhase != .none)
+
+        clock.withLock { $0 = Self.ends }
+        await withCheckedContinuation { continuation in
+            store.onMaintenanceEnded = {
+                continuation.resume()
+            }
+        }
+
+        #expect(store.maintenancePhase == .none)
     }
 
     private func makeStore(

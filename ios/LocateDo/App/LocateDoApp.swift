@@ -18,6 +18,7 @@ struct LocateDoApp: App {
     private let network: NetworkMonitor
     private let devices: DeviceRegistration
     private let households: HouseholdManager
+    private let appStatus: AppStatusStore
     private let entitlements = Entitlements(source: LocateDoApp.makeEntitlementSource())
 
     init() {
@@ -26,6 +27,7 @@ struct LocateDoApp: App {
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         let tokens = AccessTokenStore()
         let gate = MaintenanceGate()
+        appStatus = Self.makeAppStatus(gate: gate)
         api = APIClient(environment: .current, tokens: tokens, gate: gate)
         authenticator = Self.makeAuthenticator(api: api, tokens: tokens, preferences: preferences)
         let sync = SyncEngine(
@@ -96,6 +98,11 @@ struct LocateDoApp: App {
         AppDelegate.onRemoteNotification = { [sync] in
             await sync.sync()
         }
+        appStatus.onMaintenanceEnded = { [sync] in
+            Task {
+                await sync.sync()
+            }
+        }
         sync.onRemoved = { [households] in
             await households.handleRemoval()
         }
@@ -135,6 +142,7 @@ struct LocateDoApp: App {
         .environment(households)
         .environment(entitlements)
         .environment(writes)
+        .environment(appStatus)
     }
 
     private func connectAccount() {
@@ -163,6 +171,15 @@ struct LocateDoApp: App {
             await entitlements.logOut()
             await geofence.sync()
         }
+    }
+
+    private static func makeAppStatus(gate: MaintenanceGate) -> AppStatusStore {
+        var url: URL?
+        if !isRunningTests, let raw = Bundle.main.object(forInfoDictionaryKey: "LocateDoAppStatusURL") as? String {
+            url = URL(string: raw)
+        }
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+        return AppStatusStore(url: url, currentVersion: version, gate: gate)
     }
 
     private static func makeEntitlementSource() -> (any EntitlementSource)? {
