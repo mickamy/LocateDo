@@ -4,6 +4,7 @@ services:
     command: [ "/bin/api" ]
     env_file: .env
     environment:
+      ENV: staging
       MODULE_ROOT: /src
       DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
       DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
@@ -20,6 +21,7 @@ services:
     command: [ "/bin/worker" ]
     env_file: .env
     environment:
+      ENV: staging
       MODULE_ROOT: /src
       DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
       DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
