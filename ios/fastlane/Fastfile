@@ -200,6 +200,8 @@ platform :ios do
         clear_previous_screenshots: false
       )
     end
+    # Lossless, so the store sees the same pixels while each retake adds less to the repository.
+    sh("oxipng", "-o", "4", "--strip", "safe", "-q", "-r", File.expand_path("screenshots", __dir__))
   end
 
   desc "Record the setup walkthrough for App Review into build/review-video/review.mp4 (needs ffmpeg)"
