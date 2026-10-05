@@ -183,16 +183,18 @@ resource "aws_sns_topic_subscription" "alerts_us_east_1_email" {
   endpoint  = local.alert_email
 }
 
+# Five minutes, so the reboot after a weekly security update (one to three
+# minutes) stays quiet while a real outage still alerts.
 resource "aws_cloudwatch_metric_alarm" "api_health" {
   provider            = aws.us_east_1
   alarm_name          = "locatedo-prod-api-health"
-  alarm_description   = "https://api.locatedo.com/healthz is failing from Route 53's checkers."
+  alarm_description   = "https://api.locatedo.com/healthz has been failing from Route 53's checkers for 5 minutes."
   namespace           = "AWS/Route53"
   metric_name         = "HealthCheckStatus"
   dimensions          = { HealthCheckId = aws_route53_health_check.api.id }
   statistic           = "Minimum"
   period              = 60
-  evaluation_periods  = 2
+  evaluation_periods  = 5
   threshold           = 1
   comparison_operator = "LessThanThreshold"
   treat_missing_data  = "breaching"
