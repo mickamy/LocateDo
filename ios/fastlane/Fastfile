@@ -268,8 +268,46 @@ platform :ios do
         clear_previous_screenshots: false
       )
     end
+    compose_screenshots
+  end
+
+  # Headlines for the App Store images, by screenshot name.
+  SCREENSHOT_HEADLINES = {
+    "en-US" => {
+      "01-Arrival" => "Reminded the moment you arrive",
+      "02-Nearby" => "See what's waiting nearby",
+      "03-Place" => "A list for every store",
+      "04-Map" => "All your places on one map",
+      "05-Todos" => "Every to-do in one place",
+    },
+    "ja" => {
+      "01-Arrival" => "着いたら、すぐお知らせ",
+      "02-Nearby" => "近くの用事がひと目で",
+      "03-Place" => "お店ごとの買い物リスト",
+      "04-Map" => "場所はマップでも",
+      "05-Todos" => "TODO をまとめてチェック",
+    },
+  }.freeze
+
+  # Moves snapshot's raw shots to build/screenshots-raw and writes the App Store images, with headlines,
+  # to fastlane/screenshots, which deliver uploads.
+  private_lane :compose_screenshots do
+    root = File.expand_path("..", __dir__)
+    output = File.expand_path("screenshots", __dir__)
+    raw = File.join(root, "build/screenshots-raw")
+    FileUtils.rm_rf(raw)
+    FileUtils.mv(output, raw)
+    SCREENSHOT_HEADLINES.each do |language, headlines|
+      FileUtils.mkdir_p(File.join(output, language))
+      headlines.each do |name, headline|
+        source = Dir[File.join(raw, language, "*-#{name}.png")].first
+        UI.user_error!("No #{language} screenshot for #{name}") unless source
+        sh("swift", File.join(root, "../tools/screenshots/compose.swift"), source,
+           File.join(output, language, "#{name}.png"), headline, "--language", language.split("-").first)
+      end
+    end
     # Lossless, so the store sees the same pixels while each retake adds less to the repository.
-    sh("oxipng", "-o", "4", "--strip", "safe", "-q", "-r", File.expand_path("screenshots", __dir__))
+    sh("oxipng", "-o", "4", "--strip", "safe", "-q", "-r", output)
   end
 
   desc "Record the walkthrough for App Review into build/review-video/review.mp4 (needs ffmpeg)"
