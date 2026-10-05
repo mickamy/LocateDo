@@ -41,6 +41,20 @@ sharing:
   benefit_plan_title: "One plan covers everyone"
   benefit_plan_message: "When the owner has Pro, family members join for free."
   invited_hint: "Got an invite link? Sign in to join."
+  invite_header_title: "Invite your family"
+  invite_header_message: "People you invite can use your places and to-dos with you."
+  shared_header_title:
+    plural:
+      one: "{count:int} person sharing"
+      other: "{count:int} people sharing"
+  shared_header_message: "Places and to-dos anyone adds reach everyone’s iPhone."
+  member_header_title: "You’re in {name}’s household"
+  member_header_message: "Places and to-dos are shared with everyone in this household."
+  seats_left:
+    plural:
+      one: "You can invite {count:int} more person."
+      other: "You can invite {count:int} more people."
+  invite_expiry: "Invite links work for 72 hours."
 onboarding:
   tagline: "Where you go reminds you what to do."
   description: "Add the places you visit and the things to do there. StopBy reminds you when you arrive."

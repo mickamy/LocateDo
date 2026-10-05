@@ -10,7 +10,6 @@ struct SharingView: View {
     @Environment(HouseholdManager.self) private var households
     @Environment(SyncEngine.self) private var sync
     @Environment(Entitlements.self) private var entitlements
-    @Environment(AppStatusStore.self) private var appStatus
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
     @Query private var syncStates: [SyncState]
@@ -46,17 +45,21 @@ struct SharingView: View {
 
     private var signedIn: some View {
         Form {
-            if isOwner && !isPro {
+            if let status {
                 Section {
-                    Text(.sharingProRequired)
-                    Button(.settingsProUpgrade) {
+                    SharingHeader(status: status, seatsLeft: seatsLeft) {
                         paywall = .share
+                    } onInvite: {
+                        Task {
+                            await createInvite()
+                        }
                     }
                 }
+                .listRowBackground(Color.clear)
             }
             Section {
                 ForEach(memberships) { membership in
-                    row(for: membership)
+                    MemberRow(membership: membership, isCurrentUser: membership.userID == currentUserID)
                         .swipeActions {
                             if isOwner && membership.userID != currentUserID {
                                 Button(.sharingRemove, role: .destructive) {
@@ -73,30 +76,13 @@ struct SharingView: View {
                         .foregroundStyle(.red)
                 }
             }
-            if isOwner && isPro {
+            if memberships.count <= 1 {
                 Section {
-                    Button {
-                        Task {
-                            await createInvite()
-                        }
+                    NavigationLink {
+                        AcceptInviteView()
                     } label: {
-                        Label(.sharingInvite, systemImage: "person.badge.plus")
+                        Label(.sharingAccept, systemImage: "envelope.open")
                     }
-                    .disabled(memberships.count >= Self.maxMembers || appStatus.activeMaintenance != nil)
-                } footer: {
-                    VStack(alignment: .leading, spacing: 8) {
-                        if memberships.count >= Self.maxMembers {
-                            Text(.sharingFull)
-                        }
-                        MaintenanceNote()
-                    }
-                }
-            }
-            Section {
-                NavigationLink {
-                    AcceptInviteView()
-                } label: {
-                    Label(.sharingAccept, systemImage: "envelope.open")
                 }
             }
             if !isOwner && currentMembership != nil {
@@ -148,20 +134,25 @@ struct SharingView: View {
         }
     }
 
-    private func row(for membership: Membership) -> some View {
-        HStack {
-            Text(membership.shownName)
-            if membership.userID == currentUserID {
-                Text(.sharingYou)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            if membership.role == .owner {
-                Text(.sharingOwner)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+    private var status: SharingStatus? {
+        guard let currentMembership else {
+            return nil
         }
+        if currentMembership.role == .member {
+            let owner = memberships.first { $0.role == .owner }
+            return .member(ownerName: owner?.shownName ?? String(localized: .sharingUnnamedMember))
+        }
+        if !isPro {
+            return .ownerFree
+        }
+        if memberships.count > 1 {
+            return .ownerSharing(count: memberships.count)
+        }
+        return .ownerAlone
+    }
+
+    private var seatsLeft: Int {
+        max(Self.maxMembers - memberships.count, 0)
     }
 
     private var currentUserID: UUID? {

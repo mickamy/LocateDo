@@ -2689,6 +2689,57 @@
         }
       }
     },
+    "sharing.invite_expiry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite links work for 72 hours."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待リンクは 72 時間有効です。"
+          }
+        }
+      }
+    },
+    "sharing.invite_header_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "People you invite can use your places and to-dos with you."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待した人と、場所と TODO を一緒に使えます。"
+          }
+        }
+      }
+    },
+    "sharing.invite_header_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite your family"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族を招待しましょう"
+          }
+        }
+      }
+    },
     "sharing.invite_message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2774,6 +2825,40 @@
         }
       }
     },
+    "sharing.member_header_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos are shared with everyone in this household."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この世帯の全員と、場所と TODO を共有しています。"
+          }
+        }
+      }
+    },
+    "sharing.member_header_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’re in %@’s household"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ さんの世帯に参加しています"
+          }
+        }
+      }
+    },
     "sharing.members" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2855,6 +2940,93 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ さんを共有から外しますか？"
+          }
+        }
+      }
+    },
+    "sharing.seats_left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You can invite %lld more person."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You can invite %lld more people."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "あと %lld 人招待できます。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sharing.shared_header_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos anyone adds reach everyone’s iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誰かが足した場所や TODO が、全員の iPhone に届きます。"
+          }
+        }
+      }
+    },
+    "sharing.shared_header_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld person sharing"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld people sharing"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 人で共有しています"
+                }
+              }
+            }
           }
         }
       }

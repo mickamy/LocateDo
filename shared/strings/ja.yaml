@@ -41,6 +41,18 @@ sharing:
   benefit_plan_title: "1 つの契約で全員が使える"
   benefit_plan_message: "オーナーが Pro なら、家族は無料で参加できます。"
   invited_hint: "招待リンクをもらった方も、サインインすると参加できます。"
+  invite_header_title: "家族を招待しましょう"
+  invite_header_message: "招待した人と、場所と TODO を一緒に使えます。"
+  shared_header_title:
+    plural:
+      other: "{count} 人で共有しています"
+  shared_header_message: "誰かが足した場所や TODO が、全員の iPhone に届きます。"
+  member_header_title: "{name} さんの世帯に参加しています"
+  member_header_message: "この世帯の全員と、場所と TODO を共有しています。"
+  seats_left:
+    plural:
+      other: "あと {count} 人招待できます。"
+  invite_expiry: "招待リンクは 72 時間有効です。"
 onboarding:
   tagline: "行く場所が、やることを思い出させる。"
   description: "よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。"
