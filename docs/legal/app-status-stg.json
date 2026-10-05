@@ -2,7 +2,7 @@
   "minimum_version": { "ios": "1.0.0", "android": "1.0.0" },
   "maintenance": {
     "starts_at": "2026-10-05T09:30:00Z",
-    "ends_at": "2026-10-05T10:00:00Z",
+    "ends_at": "2026-10-06T01:00:00Z",
     "message": { "ja": "Staging でメンテナンス表示を確かめています。", "en": "Testing the maintenance notice on Staging." }
   },
   "notice": null
