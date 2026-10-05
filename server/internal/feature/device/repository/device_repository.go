@@ -69,7 +69,7 @@ func (r device) ListByHousehold(
 		Platform:    string(platform),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("list devices: %w", err)
+		return nil, fmt.Errorf("list household devices: %w", err)
 	}
 	devices := make([]model.Device, 0, len(rows))
 	for _, row := range rows {
