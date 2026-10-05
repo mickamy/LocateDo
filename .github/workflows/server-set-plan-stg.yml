@@ -1,0 +1,61 @@
+name: server-set-plan-stg
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_id:
+        description: Id of the household's owner (Settings > Debug > User on a Staging build)
+        required: true
+      plan:
+        description: Plan to set
+        required: true
+        type: choice
+        options:
+          - pro
+          - free
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-stg
+  cancel-in-progress: false
+
+jobs:
+  set-plan:
+    runs-on: self-hosted
+    environment: stg
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: |
+            server/go.sum
+            server/tools/go.sum
+
+      - name: Create .env file
+        run: |
+          make -B -C server .env
+
+      - name: Set plan
+        working-directory: server
+        env:
+          USER_ID: ${{ inputs.user_id }}
+          PLAN: ${{ inputs.plan }}
+        run: |
+          set -a
+          . ./.env
+          set +a
+          go run ./cmd/admin set-plan -user "$USER_ID" -plan "$PLAN"
+
+      - name: Remove .env file
+        if: always()
+        run: |
+          rm -f server/.env
