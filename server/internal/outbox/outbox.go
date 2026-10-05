@@ -73,10 +73,13 @@ func (f HandlerFunc) Handle(ctx context.Context, m Message) error {
 type Repository interface {
 	// Enqueue is a no-op when a pending message with the same dedupe key exists.
 	Enqueue(ctx context.Context, m Message) error
-	// Claim locks the oldest due message until the transaction ends, so call it
-	// on a bound repository and finish the message in the same transaction.
-	Claim(ctx context.Context, now time.Time) (Message, error)
+	// Claim leases the oldest due message, or one whose lease expired, until
+	// leaseUntil. The lease is what keeps other workers off it, so the claim can
+	// commit before the message is delivered.
+	Claim(ctx context.Context, now, leaseUntil time.Time) (Message, error)
 	Complete(ctx context.Context, id uuid.UUID) error
+	// Retry returns the message to the queue, or drops it when a pending
+	// message with the same dedupe key arrived meanwhile and will do the work.
 	Retry(ctx context.Context, id uuid.UUID, runAt time.Time, lastError string) error
 	Kill(ctx context.Context, id uuid.UUID, lastError string) error
 	// SweepDead removes dead messages created before the cutoff and reports how many.
@@ -114,8 +117,8 @@ func (r repository) Enqueue(ctx context.Context, m Message) error {
 	return nil
 }
 
-func (r repository) Claim(ctx context.Context, now time.Time) (Message, error) {
-	row, err := r.q.ClaimMessage(ctx, now)
+func (r repository) Claim(ctx context.Context, now, leaseUntil time.Time) (Message, error) {
+	row, err := r.q.ClaimMessage(ctx, queries.ClaimMessageParams{Now: now, LeaseUntil: &leaseUntil})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Message{}, aerrors.NotFound("message")
 	}
@@ -140,8 +143,12 @@ func (r repository) Complete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r repository) Retry(ctx context.Context, id uuid.UUID, runAt time.Time, lastError string) error {
-	if err := r.q.RetryMessage(ctx, queries.RetryMessageParams{ID: id, RunAt: runAt, LastError: &lastError}); err != nil {
+	n, err := r.q.RetryMessage(ctx, queries.RetryMessageParams{ID: id, RunAt: runAt, LastError: &lastError})
+	if err != nil {
 		return fmt.Errorf("retry message: %w", err)
+	}
+	if n == 0 {
+		return r.Complete(ctx, id)
 	}
 	return nil
 }

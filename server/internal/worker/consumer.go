@@ -17,9 +17,15 @@ import (
 const (
 	PollInterval = time.Second
 	MaxAttempts  = 20
-	baseBackoff  = 10 * time.Second
-	maxBackoff   = time.Hour
+	// Lease outlasts HandleTimeout, so a live worker always finishes before
+	// another one may take the message over.
+	Lease         = 5 * time.Minute
+	HandleTimeout = 2 * time.Minute
+	baseBackoff   = 10 * time.Second
+	maxBackoff    = time.Hour
 )
+
+var errUnknownKind = errors.New("no handler for this kind")
 
 type Handlers map[outbox.Kind]outbox.Handler
 
@@ -35,8 +41,11 @@ func NewHandlers(
 	}
 }
 
-// Consumer delivers outbox messages one at a time, holding each row's lock
-// for the whole delivery so a crash simply returns the message to the queue.
+// Consumer delivers outbox messages one at a time. A claim leases the message
+// and commits at once; delivery runs outside any transaction, so writes made
+// meanwhile queue a fresh message instead of being folded into this one. A
+// worker that dies mid-delivery leaves the lease to run out, and the message
+// is claimed again.
 type Consumer struct {
 	transactor tx.Transactor
 	messages   outbox.Repository
@@ -67,34 +76,46 @@ func (c Consumer) Run(ctx context.Context) {
 
 // Step claims and delivers one due message; it reports whether there was one.
 func (c Consumer) Step(ctx context.Context) (bool, error) {
-	var delivered bool
-	if err := c.transactor.WithTx(ctx, func(tx tx.Tx) error {
-		messages := c.messages.Bind(tx)
-		m, err := messages.Claim(ctx, clock.Now(ctx))
-		if errors.Is(err, aerrors.ErrNotFound) {
-			return nil
-		}
-		if err != nil {
+	now := clock.Now(ctx)
+	var m outbox.Message
+	err := c.transactor.WithTx(ctx, func(tx tx.Tx) error {
+		var err error
+		if m, err = c.messages.Bind(tx).Claim(ctx, now, now.Add(Lease)); err != nil {
 			return fmt.Errorf("claim: %w", err)
 		}
-		delivered = true
-		return c.deliver(ctx, messages, m)
-	}); err != nil {
-		return delivered, fmt.Errorf("step: %w", err)
+		return nil
+	})
+	if errors.Is(err, aerrors.ErrNotFound) {
+		return false, nil
 	}
-	return delivered, nil
+	if err != nil {
+		return false, fmt.Errorf("step: %w", err)
+	}
+
+	handleErr := c.handle(ctx, m)
+	if err := c.transactor.WithTx(ctx, func(tx tx.Tx) error {
+		return c.finish(ctx, c.messages.Bind(tx), m, handleErr)
+	}); err != nil {
+		return true, fmt.Errorf("finish: %w", err)
+	}
+	return true, nil
 }
 
-func (c Consumer) deliver(ctx context.Context, messages outbox.Repository, m outbox.Message) error {
+func (c Consumer) handle(ctx context.Context, m outbox.Message) error {
 	handler, ok := c.handlers[m.Kind]
 	if !ok {
-		if err := messages.Kill(ctx, m.ID, "no handler for kind "+string(m.Kind)); err != nil {
-			return fmt.Errorf("kill: %w", err)
-		}
-		return nil
+		return fmt.Errorf("%w: %s", errUnknownKind, m.Kind)
 	}
-	err := handler.Handle(ctx, m)
-	if err == nil {
+	ctx, cancel := context.WithTimeout(ctx, HandleTimeout)
+	defer cancel()
+	if err := handler.Handle(ctx, m); err != nil {
+		return fmt.Errorf("handle %s: %w", m.Kind, err)
+	}
+	return nil
+}
+
+func (c Consumer) finish(ctx context.Context, messages outbox.Repository, m outbox.Message, handleErr error) error {
+	if handleErr == nil {
 		if err := messages.Complete(ctx, m.ID); err != nil {
 			return fmt.Errorf("complete: %w", err)
 		}
@@ -102,14 +123,14 @@ func (c Consumer) deliver(ctx context.Context, messages outbox.Repository, m out
 	}
 
 	attempt := m.Attempts + 1
-	logger.Warn(ctx, "outbox delivery failed", "kind", m.Kind, "id", m.ID, "attempt", attempt, "error", err)
-	if attempt >= MaxAttempts {
-		if err := messages.Kill(ctx, m.ID, err.Error()); err != nil {
+	if errors.Is(handleErr, errUnknownKind) || attempt >= MaxAttempts {
+		if err := messages.Kill(ctx, m.ID, handleErr.Error()); err != nil {
 			return fmt.Errorf("kill: %w", err)
 		}
 		return nil
 	}
-	if err := messages.Retry(ctx, m.ID, clock.Now(ctx).Add(backoff(attempt)), err.Error()); err != nil {
+	logger.Warn(ctx, "outbox delivery failed", "kind", m.Kind, "id", m.ID, "attempt", attempt, "error", handleErr)
+	if err := messages.Retry(ctx, m.ID, clock.Now(ctx).Add(backoff(attempt)), handleErr.Error()); err != nil {
 		return fmt.Errorf("retry: %w", err)
 	}
 	return nil

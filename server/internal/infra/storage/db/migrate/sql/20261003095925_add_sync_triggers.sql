@@ -1,12 +1,15 @@
 -- +goose Up
 -- One pending push per household: writes that land before the worker picks it
--- up ride along with it.
+-- up ride along with it, and the short delay lets a burst of writes share one.
+-- A message being delivered is running, not pending, so later writes queue a
+-- fresh push.
 -- +goose StatementBegin
 CREATE FUNCTION enqueue_household_push(household uuid) RETURNS void
     LANGUAGE sql AS
 $$
-INSERT INTO outbox_messages (kind, payload, dedupe_key)
-VALUES ('push_household', jsonb_build_object('household_id', household), 'push:' || household)
+INSERT INTO outbox_messages (kind, payload, dedupe_key, run_at)
+VALUES ('push_household', jsonb_build_object('household_id', household), 'push:' || household,
+        now() + interval '5 seconds')
 ON CONFLICT (dedupe_key) WHERE status = 'pending' DO NOTHING;
 $$;
 -- +goose StatementEnd

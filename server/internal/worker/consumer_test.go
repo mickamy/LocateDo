@@ -3,6 +3,7 @@ package worker_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 	"uuid"
@@ -89,6 +90,49 @@ func TestConsumer_Step_retriesThenGivesUp(t *testing.T) {
 	status, attempts, _ = message(t, d)
 	assert.Equal(t, "dead", status)
 	assert.Equal(t, int32(worker.MaxAttempts), attempts)
+}
+
+func TestConsumer_Step_aWriteDuringDeliveryIsDeliveredNext(t *testing.T) {
+	t.Parallel()
+
+	// arrange: delivering the push takes long enough for another write to land
+	d := tdb.New(t)
+	messages := outbox.NewRepository(d.Reader)
+	key := "push:" + uuid.NewV7().String()
+	push := outbox.Message{Kind: "push", DedupeKey: &key, RunAt: now}
+	var deliveries int
+	handlers := worker.Handlers{
+		"push": outbox.HandlerFunc(func(ctx context.Context, _ outbox.Message) error {
+			deliveries++
+			if deliveries > 1 {
+				return nil
+			}
+			if err := d.Transactor.WithTx(ctx, func(tx tx.Tx) error {
+				return messages.Bind(tx).Enqueue(ctx, push)
+			}); err != nil {
+				return fmt.Errorf("enqueue: %w", err)
+			}
+			return nil
+		}),
+	}
+	enqueue(t, d, messages, push)
+	consumer := worker.NewConsumer(d.Transactor, messages, handlers)
+	ctx := clock.Set(t.Context(), clock.NewFixed(now))
+
+	// act
+	first, err := consumer.Step(ctx)
+	require.NoError(t, err)
+	second, err := consumer.Step(ctx)
+	require.NoError(t, err)
+	third, err := consumer.Step(ctx)
+	require.NoError(t, err)
+
+	// assert
+	assert.True(t, first)
+	assert.True(t, second, "the write queued its own push")
+	assert.False(t, third)
+	assert.Equal(t, 2, deliveries)
+	assert.Zero(t, count(t, d))
 }
 
 func TestConsumer_Step_unknownKindIsDead(t *testing.T) {

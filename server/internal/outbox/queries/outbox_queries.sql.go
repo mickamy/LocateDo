@@ -13,14 +13,22 @@ import (
 )
 
 const claimMessage = `-- name: ClaimMessage :one
-SELECT id, kind, payload, dedupe_key, run_at, attempts
-FROM outbox_messages
-WHERE status = 'pending'
-  AND run_at <= $1
-ORDER BY run_at
-LIMIT 1
-    FOR UPDATE SKIP LOCKED
+UPDATE outbox_messages
+SET status      = 'running',
+    lease_until = $1
+WHERE id = (SELECT due.id
+            FROM outbox_messages due
+            WHERE (due.status = 'pending' AND due.run_at <= $2)
+               OR (due.status = 'running' AND due.lease_until <= $2)
+            ORDER BY due.run_at
+            LIMIT 1 FOR UPDATE SKIP LOCKED)
+RETURNING id, kind, payload, dedupe_key, run_at, attempts
 `
+
+type ClaimMessageParams struct {
+	LeaseUntil *time.Time
+	Now        time.Time
+}
 
 type ClaimMessageRow struct {
 	ID        uuid.UUID
@@ -31,8 +39,10 @@ type ClaimMessageRow struct {
 	Attempts  int32
 }
 
-func (q *Queries) ClaimMessage(ctx context.Context, runAt time.Time) (ClaimMessageRow, error) {
-	row := q.db.QueryRow(ctx, claimMessage, runAt)
+// Takes the oldest due message, or one whose lease ran out because its
+// worker died, and leases it until lease_until.
+func (q *Queries) ClaimMessage(ctx context.Context, arg ClaimMessageParams) (ClaimMessageRow, error) {
+	row := q.db.QueryRow(ctx, claimMessage, arg.LeaseUntil, arg.Now)
 	var i ClaimMessageRow
 	err := row.Scan(
 		&i.ID,
@@ -82,9 +92,10 @@ func (q *Queries) EnqueueMessage(ctx context.Context, arg EnqueueMessageParams) 
 
 const killMessage = `-- name: KillMessage :exec
 UPDATE outbox_messages
-SET attempts   = attempts + 1,
-    status     = 'dead',
-    last_error = $2
+SET attempts    = attempts + 1,
+    status      = 'dead',
+    lease_until = NULL,
+    last_error  = $2
 WHERE id = $1
 `
 
@@ -98,12 +109,18 @@ func (q *Queries) KillMessage(ctx context.Context, arg KillMessageParams) error 
 	return err
 }
 
-const retryMessage = `-- name: RetryMessage :exec
-UPDATE outbox_messages
-SET attempts   = attempts + 1,
-    run_at     = $2,
-    last_error = $3
-WHERE id = $1
+const retryMessage = `-- name: RetryMessage :execrows
+UPDATE outbox_messages m
+SET status      = 'pending',
+    lease_until = NULL,
+    attempts    = m.attempts + 1,
+    run_at      = $2,
+    last_error  = $3
+WHERE m.id = $1
+  AND NOT EXISTS (SELECT 1
+                  FROM outbox_messages p
+                  WHERE p.status = 'pending'
+                    AND p.dedupe_key = m.dedupe_key)
 `
 
 type RetryMessageParams struct {
@@ -112,9 +129,13 @@ type RetryMessageParams struct {
 	LastError *string
 }
 
-func (q *Queries) RetryMessage(ctx context.Context, arg RetryMessageParams) error {
-	_, err := q.db.Exec(ctx, retryMessage, arg.ID, arg.RunAt, arg.LastError)
-	return err
+// Skipped when a pending message with the same dedupe key already waits.
+func (q *Queries) RetryMessage(ctx context.Context, arg RetryMessageParams) (int64, error) {
+	result, err := q.db.Exec(ctx, retryMessage, arg.ID, arg.RunAt, arg.LastError)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const sweepDeadMessages = `-- name: SweepDeadMessages :execrows

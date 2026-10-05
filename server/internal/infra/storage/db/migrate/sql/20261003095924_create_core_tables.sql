@@ -162,19 +162,22 @@ CREATE INDEX deletions_household_id_version_idx ON deletions (household_id, vers
 
 CREATE TABLE outbox_messages
 (
-    id         uuid PRIMARY KEY     DEFAULT uuidv7(),
-    kind       text        NOT NULL,
-    payload    jsonb       NOT NULL DEFAULT '{}'::jsonb,
-    dedupe_key text,
-    status     text        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'dead')),
-    run_at     timestamptz NOT NULL DEFAULT now(),
-    attempts   integer     NOT NULL DEFAULT 0,
-    last_error text,
-    created_at timestamptz NOT NULL DEFAULT now()
+    id          uuid PRIMARY KEY     DEFAULT uuidv7(),
+    kind        text        NOT NULL,
+    payload     jsonb       NOT NULL DEFAULT '{}'::jsonb,
+    dedupe_key  text,
+    status      text        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'dead')),
+    run_at      timestamptz NOT NULL DEFAULT now(),
+    attempts    integer     NOT NULL DEFAULT 0,
+    last_error  text,
+    -- A claimed message is running until then; past it, its worker is presumed dead.
+    lease_until timestamptz,
+    created_at  timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE UNIQUE INDEX outbox_messages_pending_dedupe_key_idx ON outbox_messages (dedupe_key) WHERE status = 'pending';
 CREATE INDEX outbox_messages_pending_run_at_idx ON outbox_messages (run_at) WHERE status = 'pending';
+CREATE INDEX outbox_messages_running_lease_until_idx ON outbox_messages (lease_until) WHERE status = 'running';
 CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
 
 -- +goose Down
