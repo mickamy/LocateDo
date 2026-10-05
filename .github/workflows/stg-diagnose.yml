@@ -56,3 +56,40 @@ jobs:
               if entry.get("msg") == "internal error":
                   print(entry.get("time"), entry.get("procedure"), entry.get("error"))
           ' | tail -20
+
+      - name: worker warnings and errors (time, message, kind, and error only)
+        run: |
+          name=$(docker ps --filter label=com.docker.compose.service=worker --format '{{.Names}}' | head -n 1)
+          if [ -z "$name" ]; then
+            echo "no worker container found"
+            exit 0
+          fi
+          docker logs --since 6h "$name" 2>&1 | python3 -c '
+          import json, sys
+          for line in sys.stdin:
+              try:
+                  entry = json.loads(line)
+              except ValueError:
+                  continue
+              if entry.get("level") in ("WARN", "ERROR") or entry.get("msg", "").startswith("forgetting"):
+                  print(entry.get("time"), entry.get("level"), entry.get("msg"),
+                        entry.get("kind") or entry.get("task") or "", entry.get("apns_environment") or "",
+                        entry.get("error"))
+          ' | tail -30
+
+      - name: Outbox and devices
+        run: |
+          name=$(docker ps --filter label=com.docker.compose.service=db --format '{{.Names}}' | head -n 1)
+          if [ -z "$name" ]; then
+            echo "no db container found"
+            exit 0
+          fi
+          docker exec "$name" psql -U admin -d locatedo -c "
+            SELECT kind, status, count(*), max(attempts) AS max_attempts, min(run_at) AS oldest_run_at
+            FROM outbox_messages GROUP BY kind, status ORDER BY kind, status"
+          docker exec "$name" psql -U admin -d locatedo -c "
+            SELECT kind, attempts, left(last_error, 200) AS last_error
+            FROM outbox_messages WHERE last_error IS NOT NULL ORDER BY created_at DESC LIMIT 10"
+          docker exec "$name" psql -U admin -d locatedo -c "
+            SELECT platform, apns_environment, count(*), max(last_seen_at) AS last_seen_at
+            FROM devices GROUP BY platform, apns_environment ORDER BY platform, apns_environment"

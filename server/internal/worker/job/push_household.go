@@ -13,6 +13,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/infra/apns"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
+	"github.com/mickamy/LocateDo/internal/lib/logger"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
@@ -46,6 +47,8 @@ func (j PushHousehold) Handle(ctx context.Context, m outbox.Message) error {
 		err := j.pusher.Wake(ctx, apns.Environment(d.APNsEnvironment), d.PushToken, clock.Now(ctx))
 		switch {
 		case errors.Is(err, apns.ErrUnregistered):
+			logger.Info(ctx, "forgetting a device token apns rejected",
+				"user_id", d.UserID, "apns_environment", d.APNsEnvironment, "error", err)
 			if err := j.forget(ctx, d.PushToken); err != nil {
 				failed = append(failed, err)
 			}
