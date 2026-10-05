@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "app_parameters" {
 
 # Put-only: a compromised instance can add backups but not read or erase them.
 resource "aws_iam_role_policy" "app_backups" {
-  name = "write-backups"
+  name = "write-backups-and-metrics"
   role = aws_iam_role.app.id
 
   policy = jsonencode({
@@ -58,7 +58,7 @@ resource "aws_iam_role_policy" "app_backups" {
         Action   = ["cloudwatch:PutMetricData"]
         Resource = "*"
         Condition = {
-          StringEquals = { "cloudwatch:namespace" = "LocateDo/Backup" }
+          StringEquals = { "cloudwatch:namespace" = ["LocateDo/Backup", "LocateDo/Host"] }
         }
       },
     ]

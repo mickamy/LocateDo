@@ -1,8 +1,8 @@
 #!/bin/bash
 # Runs on the prod instance through SSM. The deploy workflow prepends
 # IMAGE_TAG, BUNDLE_B64 (a tar.gz of the deployed commit's compose file, init
-# script, backup script, and systemd units), and GHCR_USER / GHCR_TOKEN (the
-# job's token, valid until it ends).
+# script, backup script, systemd units, and CloudWatch agent config), and
+# GHCR_USER / GHCR_TOKEN (the job's token, valid until it ends).
 set -euo pipefail
 
 : "${IMAGE_TAG:?}" "${BUNDLE_B64:?}" "${GHCR_USER:?}" "${GHCR_TOKEN:?}"
@@ -19,6 +19,13 @@ install -m 755 "${bundle}/scripts/backup-prod.sh" backup.sh
 install -m 644 "${bundle}"/systemd/* /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now locatedo-backup.timer
+
+if ! rpm -q amazon-cloudwatch-agent >/dev/null; then
+  dnf install -y amazon-cloudwatch-agent
+fi
+install -m 644 "${bundle}/cloudwatch/agent.json" /opt/aws/amazon-cloudwatch-agent/etc/locatedo.json
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/locatedo.json
 
 umask 077
 aws ssm get-parameters-by-path --region us-west-2 --path /locatedo/prod --recursive --with-decryption \
