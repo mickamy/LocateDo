@@ -164,8 +164,6 @@ platform :ios do
     )
   end
 
-  # The simulator needs "Always" location for the app first, e.g.
-  # xcrun simctl privacy "<device>" grant location-always com.locatedo.LocateDo.dev
   desc "Take the App Store screenshots in English and Japanese (see Snapfile)"
   lane :screenshots do |options|
     snapshot(devices: [options.fetch(:device, "iPhone 18 Pro Max")])

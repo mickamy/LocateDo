@@ -1,7 +1,8 @@
 import CoreLocation
 import XCTest
 
-// Run through `fastlane screenshots`; grant "Always" location to the app first so the arrival fires while it is closed.
+// Run through `fastlane screenshots`, which erases the simulator first. Region monitoring is unsupported
+// in the simulator, so the arrival notification comes from the debug "Simulate arrival in 10 s" action.
 final class ScreenshotTests: XCTestCase {
     private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
@@ -38,45 +39,44 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts[seed.firstTodo].waitForExistence(timeout: 5))
         snapshot("05-Todos")
 
+        // Last, so the device stays locked: schedule the arrival, lock, and catch it on the lock screen.
         app.tabBars.buttons.element(boundBy: 0).tap()
-        XCUIDevice.shared.press(.home)
-        sleep(2)
-        XCUIDevice.shared.location = XCUILocation(location: seed.grocery)
+        grocery.tap()
+        app.buttons["place.menu"].tap()
+        app.buttons["Simulate arrival in 10 s (debug)"].tap()
+        XCUIDevice.shared.perform(NSSelectorFromString("pressLockButton"))
         let banner = springboard.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", seed.groceryName))
             .firstMatch
-        XCTAssertTrue(banner.waitForExistence(timeout: 90))
+        XCTAssertTrue(banner.waitForExistence(timeout: 30))
+        sleep(1)
         snapshot("01-Arrival")
     }
 
     @MainActor
     private func finishOnboarding(_ app: XCUIApplication) {
         let start = app.buttons["onboarding.start"]
-        guard start.waitForExistence(timeout: 5) else {
-            return
-        }
+        XCTAssertTrue(start.waitForExistence(timeout: 10))
         start.tap()
-        allowSystemAlert(atIndex: 1)
+        allowSystemAlert()
         let allowNotifications = app.buttons["onboarding.allowNotifications"]
         XCTAssertTrue(allowNotifications.waitForExistence(timeout: 5))
         allowNotifications.tap()
-        allowSystemAlert(atIndex: 1)
+        allowSystemAlert()
     }
 
     // Location alerts read "Allow Once / Allow While Using App / Don't Allow" and notification alerts
-    // "Don't Allow / Allow", so index 1 allows either way.
+    // "Don't Allow / Allow", so the second button allows either way.
     @MainActor
-    private func allowSystemAlert(atIndex index: Int) {
+    private func allowSystemAlert() {
         let alert = springboard.alerts.firstMatch
-        if alert.waitForExistence(timeout: 3) {
-            alert.buttons.element(boundBy: index).tap()
-        }
+        XCTAssertTrue(alert.waitForExistence(timeout: 10))
+        alert.buttons.element(boundBy: 1).tap()
     }
 }
 
 private struct Seed {
     let center: CLLocation
-    let grocery: CLLocation
     let groceryName: String
     let firstTodo: String
 
@@ -91,6 +91,5 @@ private struct Seed {
             groceryName = "Grocery store"
             firstTodo = "Milk"
         }
-        grocery = CLLocation(latitude: center.coordinate.latitude + 0.0030, longitude: center.coordinate.longitude)
     }
 }
