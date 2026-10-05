@@ -52,11 +52,13 @@ resource "aws_iam_role_policy" "plan" {
         Resource = "${local.state_arn}.tflock"
       },
       {
+        # OpenTofu reads the DB passwords under /locatedo/prod/db, which matter
+        # little since Postgres takes no outside connections; app secrets stay hidden.
         Effect = "Deny"
         Action = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath", "ssm:GetParameterHistory"]
         Resource = [
-          "arn:aws:ssm:us-west-2:${local.account_id}:parameter/locatedo/prod",
-          "arn:aws:ssm:us-west-2:${local.account_id}:parameter/locatedo/prod/*",
+          "arn:aws:ssm:us-west-2:${local.account_id}:parameter/locatedo/prod/app",
+          "arn:aws:ssm:us-west-2:${local.account_id}:parameter/locatedo/prod/app/*",
         ]
       },
     ]

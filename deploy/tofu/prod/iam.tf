@@ -75,7 +75,7 @@ resource "aws_iam_role_policy" "deploy" {
       {
         Effect   = "Allow"
         Action   = ["ssm:PutParameter"]
-        Resource = "arn:aws:ssm:us-west-2:${data.aws_caller_identity.current.account_id}:parameter/locatedo/prod/*"
+        Resource = "arn:aws:ssm:us-west-2:${data.aws_caller_identity.current.account_id}:parameter/locatedo/prod/app/*"
       },
       {
         Effect = "Allow"
