@@ -8,6 +8,7 @@ final class AppPreferences {
         static let promptedAlwaysLocation = "promptedAlwaysLocation"
         static let defaultRadiusMeters = "defaultRadiusMeters"
         static let pendingSessionEndedNotice = "pendingSessionEndedNotice"
+        static let pendingRemovedNotice = "pendingRemovedNotice"
     }
 
     private let defaults: UserDefaults
@@ -28,11 +29,16 @@ final class AppPreferences {
         didSet { defaults.set(hasPendingSessionEndedNotice, forKey: Key.pendingSessionEndedNotice) }
     }
 
+    var hasPendingRemovedNotice: Bool {
+        didSet { defaults.set(hasPendingRemovedNotice, forKey: Key.pendingRemovedNotice) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.completedOnboarding)
         hasPromptedAlwaysLocation = defaults.bool(forKey: Key.promptedAlwaysLocation)
         hasPendingSessionEndedNotice = defaults.bool(forKey: Key.pendingSessionEndedNotice)
+        hasPendingRemovedNotice = defaults.bool(forKey: Key.pendingRemovedNotice)
         let storedRadius = defaults.double(forKey: Key.defaultRadiusMeters)
         defaultRadiusMeters = Place.radiusRange.contains(storedRadius) ? storedRadius : Place.defaultRadiusMeters
     }

@@ -17,6 +17,7 @@ struct LocateDoApp: App {
     private let writes: LocalWrites
     private let network: NetworkMonitor
     private let devices: DeviceRegistration
+    private let households: HouseholdManager
 
     init() {
         container = Self.makeContainer()
@@ -43,19 +44,14 @@ struct LocateDoApp: App {
             household: api.household,
             authenticator: authenticator,
             context: container.mainContext
-        ) { [preferences, geofence] in
-            preferences.reset()
-            await geofence.sync()
-        } onHouseholdReady: { [geofence] in
-            await devices.registerIfSignedIn()
-            await sync.sync()
-            await geofence.sync()
-        } onSessionEnded: { [preferences, geofence] in
-            preferences.hasPendingSessionEndedNotice = true
-            await geofence.sync()
-        } onSignedOut: { [geofence] in
-            await geofence.sync()
-        }
+        )
+        households = HouseholdManager(
+            household: api.household,
+            authenticator: authenticator,
+            context: container.mainContext,
+            account: account,
+            sync: sync
+        )
         writes = LocalWrites(context: container.mainContext) { [authenticator] in
             authenticator.isSignedIn
         } onQueued: {
@@ -81,11 +77,33 @@ struct LocateDoApp: App {
         account.pushToken = { [devices] in
             devices.pushToken
         }
+        account.onLocalDataReset = { [preferences, geofence] in
+            preferences.reset()
+            await geofence.sync()
+        }
+        account.onHouseholdReady = { [devices, sync, geofence] in
+            await devices.registerIfSignedIn()
+            await sync.sync()
+            await geofence.sync()
+        }
+        account.onSessionEnded = { [preferences, geofence] in
+            preferences.hasPendingSessionEndedNotice = true
+            await geofence.sync()
+        }
+        account.onSignedOut = { [geofence] in
+            await geofence.sync()
+        }
         AppDelegate.onDeviceToken = { [devices] token in
             await devices.received(deviceToken: token)
         }
         AppDelegate.onRemoteNotification = { [sync] in
             await sync.sync()
+        }
+        sync.onRemoved = { [households] in
+            await households.handleRemoval()
+        }
+        households.onRemoved = { [preferences] in
+            preferences.hasPendingRemovedNotice = true
         }
         if !Self.isRunningTests {
             Analytics.configure()
@@ -111,6 +129,7 @@ struct LocateDoApp: App {
         .environment(authenticator)
         .environment(sync)
         .environment(account)
+        .environment(households)
         .environment(writes)
     }
 

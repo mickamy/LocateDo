@@ -17,8 +17,21 @@ struct RootView: View {
                 } message: {
                     Text(.sessionEndedMessage)
                 }
+                .alert(Text(.removedTitle), isPresented: removedNotice) {
+                    Button(.commonOk) {}
+                } message: {
+                    Text(.removedMessage)
+                }
         } else {
             OnboardingView()
+        }
+    }
+
+    private var removedNotice: Binding<Bool> {
+        Binding {
+            preferences.hasPendingRemovedNotice
+        } set: { isPresented in
+            preferences.hasPendingRemovedNotice = isPresented
         }
     }
 
@@ -74,6 +87,20 @@ struct RootView: View {
         account: api.account,
         tokens: tokens
     )
+    let sync = SyncEngine(
+        places: api.place,
+        todos: api.todo,
+        categories: api.category,
+        syncService: api.sync,
+        authenticator: authenticator,
+        context: container.mainContext
+    )
+    let account = AccountManager(
+        account: api.account,
+        household: api.household,
+        authenticator: authenticator,
+        context: container.mainContext
+    )
     RootView()
         .modelContainer(container)
         .environment(router)
@@ -82,19 +109,14 @@ struct RootView: View {
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))
         .environment(authenticator)
-        .environment(SyncEngine(
-            places: api.place,
-            todos: api.todo,
-            categories: api.category,
-            syncService: api.sync,
-            authenticator: authenticator,
-            context: container.mainContext
-        ))
-        .environment(AccountManager(
-            account: api.account,
+        .environment(sync)
+        .environment(account)
+        .environment(HouseholdManager(
             household: api.household,
             authenticator: authenticator,
-            context: container.mainContext
+            context: container.mainContext,
+            account: account,
+            sync: sync
         ))
         .environment(LocalWrites(context: container.mainContext) { authenticator.isSignedIn })
 }

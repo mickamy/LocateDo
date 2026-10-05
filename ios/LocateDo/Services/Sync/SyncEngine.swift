@@ -30,6 +30,7 @@ final class SyncEngine {
     @ObservationIgnored private var rerunRequested = false
     @ObservationIgnored private var pullRequested = false
     @ObservationIgnored private var permissionDenied = false
+    @ObservationIgnored var onRemoved: () async -> Void = {}
     @ObservationIgnored private var scheduled: Task<Void, Never>?
 
     init(
@@ -140,6 +141,10 @@ final class SyncEngine {
         do {
             try await authenticator.refresh()
             logger.notice("Permission denied with a valid session; treating it as a removal from the household")
+            // Not awaited: starting over syncs again, which would wait on this very run.
+            Task {
+                await onRemoved()
+            }
         } catch {
             logger.notice("Permission denied and the refresh failed: \(error, privacy: .public)")
         }

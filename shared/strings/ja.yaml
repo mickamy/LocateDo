@@ -16,7 +16,18 @@ common:
   ok: "OK"
 sharing:
   title: "家族と共有"
-  coming_soon: "家族との共有は次のバージョンで使えるようになります。"
+  sign_in_message: "家族と場所や TODO を共有するには、Apple でサインインしてください。"
+  pro_required: "家族との共有は Pro の機能です。"
+  members: "メンバー"
+  owner: "オーナー"
+  you: "自分"
+  unnamed_member: "メンバー"
+  remove: "外す"
+  remove_confirm_title: "{name} さんを共有から外しますか？"
+  leave: "共有から抜ける"
+  leave_confirm_title: "共有から抜けますか？"
+  leave_confirm_message: "この iPhone の場所と TODO は消え、ひとりで使う状態に戻ります。"
+  failed: "共有の設定を変更できませんでした。もう一度お試しください。"
 onboarding:
   tagline: "行く場所が、やることを思い出させる。"
   description: "よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。"
@@ -153,3 +164,6 @@ permission:
 session_ended:
   title: "サインアウトしました"
   message: "別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。"
+removed:
+  title: "共有から外れました"
+  message: "共有している世帯から外されたため、この iPhone のデータを消去し、ひとりで使う状態に戻りました。"

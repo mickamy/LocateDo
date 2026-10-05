@@ -14,15 +14,15 @@ final class AccountManager {
     private(set) var isWorking = false
     private var pendingAdoption: PendingAdoption?
     @ObservationIgnored var pushToken: () -> String? = { nil }
+    @ObservationIgnored var onLocalDataReset: () async -> Void = {}
+    @ObservationIgnored var onHouseholdReady: () async -> Void = {}
+    @ObservationIgnored var onSessionEnded: () async -> Void = {}
+    @ObservationIgnored var onSignedOut: () async -> Void = {}
 
     private let account: any Locatedo_Account_V1_AccountServiceClientInterface
     private let household: any Locatedo_Household_V1_HouseholdServiceClientInterface
     private let authenticator: Authenticator
     private let context: ModelContext
-    private let onLocalDataReset: () async -> Void
-    private let onHouseholdReady: () async -> Void
-    private let onSessionEnded: () async -> Void
-    private let onSignedOut: () async -> Void
     private var pendingHouseholdID: UUID?
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "account")
 
@@ -30,20 +30,12 @@ final class AccountManager {
         account: any Locatedo_Account_V1_AccountServiceClientInterface,
         household: any Locatedo_Household_V1_HouseholdServiceClientInterface,
         authenticator: Authenticator,
-        context: ModelContext,
-        onLocalDataReset: @escaping () async -> Void = {},
-        onHouseholdReady: @escaping () async -> Void = {},
-        onSessionEnded: @escaping () async -> Void = {},
-        onSignedOut: @escaping () async -> Void = {}
+        context: ModelContext
     ) {
         self.account = account
         self.household = household
         self.authenticator = authenticator
         self.context = context
-        self.onLocalDataReset = onLocalDataReset
-        self.onHouseholdReady = onHouseholdReady
-        self.onSessionEnded = onSessionEnded
-        self.onSignedOut = onSignedOut
     }
 
     var isSignedIn: Bool {
@@ -166,6 +158,12 @@ final class AccountManager {
         pendingAdoption = nil
         try resetLocalData()
         await onSignedOut()
+    }
+
+    func startOver() async throws {
+        pendingAdoption = nil
+        try resetLocalData()
+        try await uploadLocalDataIfNeeded()
     }
 
     func endSession() async {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SharingNoticeButton<Label: View>: View {
+struct SharingButton<Label: View>: View {
     enum Source: String {
         case home
         case settings
@@ -17,8 +17,8 @@ struct SharingNoticeButton<Label: View>: View {
         } label: {
             label()
         }
-        .alert(Text(.sharingComingSoon), isPresented: $isPresented) {
-            Button(.commonOk) {}
+        .sheet(isPresented: $isPresented) {
+            SharingView()
         }
     }
 }

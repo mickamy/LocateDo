@@ -16,7 +16,18 @@ common:
   ok: "OK"
 sharing:
   title: "Share with family"
-  coming_soon: "Family sharing is coming in the next version."
+  sign_in_message: "Sign in with Apple to share places and to-dos with your family."
+  pro_required: "Sharing with family is a Pro feature."
+  members: "Members"
+  owner: "Owner"
+  you: "You"
+  unnamed_member: "Member"
+  remove: "Remove"
+  remove_confirm_title: "Remove {name} from sharing?"
+  leave: "Leave Sharing"
+  leave_confirm_title: "Leave sharing?"
+  leave_confirm_message: "Places and to-dos on this iPhone will be removed, and you’ll start over on your own."
+  failed: "Couldn’t update sharing. Try again."
 onboarding:
   tagline: "Where you go reminds you what to do."
   description: "Add the places you visit and the things to do there. LocateDo reminds you when you arrive."
@@ -155,3 +166,6 @@ permission:
 session_ended:
   title: "Signed Out"
   message: "Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed."
+removed:
+  title: "Removed from Sharing"
+  message: "You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own."

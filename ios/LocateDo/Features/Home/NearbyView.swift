@@ -31,7 +31,7 @@ struct NearbyView: View {
             .navigationTitle(Text(.tabHome))
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    SharingNoticeButton(source: .home) {
+                    SharingButton(source: .home) {
                         Label(.sharingTitle, systemImage: "person.2")
                     }
                 }

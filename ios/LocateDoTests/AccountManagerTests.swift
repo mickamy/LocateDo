@@ -265,15 +265,11 @@ struct AccountManagerTests {
                 household: household,
                 authenticator: authenticator,
                 context: context
-            ) {
-                resets.increment()
-            } onHouseholdReady: {
-                ready.increment()
-            } onSessionEnded: {
-                ended.increment()
-            } onSignedOut: {
-                signedOut.increment()
-            }
+            )
+            manager.onLocalDataReset = { resets.increment() }
+            manager.onHouseholdReady = { ready.increment() }
+            manager.onSessionEnded = { ended.increment() }
+            manager.onSignedOut = { signedOut.increment() }
         }
     }
 }
@@ -295,6 +291,8 @@ nonisolated final class FakeHouseholdService: Locatedo_Household_V1_HouseholdSer
         var lastCreate: Locatedo_Household_V1_CreateHouseholdRequest?
         var createCalls = 0
         var failNext = false
+        var removed: [Locatedo_Household_V1_RemoveMemberRequest] = []
+        var failRemove = false
     }
 
     private let state = Mutex(State())
@@ -305,6 +303,14 @@ nonisolated final class FakeHouseholdService: Locatedo_Household_V1_HouseholdSer
 
     var createCalls: Int {
         state.withLock { $0.createCalls }
+    }
+
+    var removed: [Locatedo_Household_V1_RemoveMemberRequest] {
+        state.withLock { $0.removed }
+    }
+
+    func failRemove() {
+        state.withLock { $0.failRemove = true }
     }
 
     func failNext() {
@@ -349,6 +355,13 @@ nonisolated final class FakeHouseholdService: Locatedo_Household_V1_HouseholdSer
         request: Locatedo_Household_V1_RemoveMemberRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Household_V1_RemoveMemberResponse> {
-        ResponseMessage(result: .failure(ConnectError(code: .unimplemented, message: nil)))
+        let shouldFail = state.withLock { state in
+            state.removed.append(request)
+            return state.failRemove
+        }
+        if shouldFail {
+            return ResponseMessage(result: .failure(ConnectError(code: .unavailable, message: nil)))
+        }
+        return ResponseMessage(result: .success(Locatedo_Household_V1_RemoveMemberResponse()))
     }
 }
