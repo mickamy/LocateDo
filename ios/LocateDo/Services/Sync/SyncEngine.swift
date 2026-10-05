@@ -23,6 +23,7 @@ final class SyncEngine {
     private let syncService: any Locatedo_Sync_V1_SyncServiceClientInterface
     private let authenticator: Authenticator
     private let context: ModelContext
+    private let gate: MaintenanceGate
     private let onPlacesChanged: () async -> Void
     private(set) var lastPullSummary: String?
     @ObservationIgnored private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
@@ -42,12 +43,14 @@ final class SyncEngine {
         syncService: any Locatedo_Sync_V1_SyncServiceClientInterface,
         authenticator: Authenticator,
         context: ModelContext,
+        gate: MaintenanceGate = MaintenanceGate(),
         onPlacesChanged: @escaping () async -> Void = {}
     ) {
         sender = WriteSender(places: places, todos: todos, categories: categories, authenticator: authenticator)
         self.syncService = syncService
         self.authenticator = authenticator
         self.context = context
+        self.gate = gate
         self.onPlacesChanged = onPlacesChanged
     }
 
@@ -75,6 +78,9 @@ final class SyncEngine {
     }
 
     private func run(pulling: Bool) async {
+        guard !gate.isClosed() else {
+            return
+        }
         rerunRequested = true
         if pulling {
             pullRequested = true
@@ -258,7 +264,9 @@ final class SyncEngine {
         }
         return true
     }
+}
 
+extension SyncEngine {
     private static func failure(for error: any Error) -> Failure {
         guard let error = error as? ConnectError else {
             return .keep

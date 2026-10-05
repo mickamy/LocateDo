@@ -49,6 +49,30 @@ struct SyncEngineTests {
         #expect(try fixture.queueCount() == 1)
     }
 
+    @Test func staysQuietDuringMaintenanceAndCatchesUpAfter() async throws {
+        let fixture = try SyncEngineFixture()
+        try fixture.enqueue([.put(Place(name: "Store", latitude: 35.0, longitude: 139.0))])
+        fixture.gate.update(AppStatusDocument.Maintenance(
+            startsAt: Date(timeIntervalSinceNow: -60),
+            endsAt: Date(timeIntervalSinceNow: 3_600),
+            message: nil
+        ))
+
+        await fixture.engine.sync()
+
+        #expect(fixture.services.sent.isEmpty)
+        #expect(fixture.pulls.cursors.isEmpty)
+        let head = try #require(try PendingWrite.head(in: fixture.context))
+        #expect(head.attempts == 0)
+
+        fixture.gate.update(nil)
+        await fixture.engine.sync()
+
+        #expect(fixture.services.sent == ["putPlace"])
+        #expect(fixture.pulls.cursors == [0])
+        #expect(try fixture.queueCount() == 0)
+    }
+
     @Test(arguments: [Code.unavailable, .permissionDenied, .internalError])
     func keepsTheHeadAndStops(code: Code) async throws {
         let fixture = try SyncEngineFixture()
@@ -289,6 +313,7 @@ struct SyncEngineFixture {
     let account = FakeAccountService()
     let sessionEnded = ResetCounter()
     let placeChanges = ResetCounter()
+    let gate = MaintenanceGate()
     let engine: SyncEngine
 
     init(signedIn: Bool = true, householdID: UUID? = SyncEngineTests.householdID) throws {
@@ -321,7 +346,8 @@ struct SyncEngineFixture {
             categories: services,
             syncService: pulls,
             authenticator: authenticator,
-            context: context
+            context: context,
+            gate: gate
         ) {
             placeChanges.increment()
         }

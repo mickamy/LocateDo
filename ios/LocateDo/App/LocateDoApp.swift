@@ -25,7 +25,8 @@ struct LocateDoApp: App {
         notifier = ArrivalNotifier(router: router)
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         let tokens = AccessTokenStore()
-        api = APIClient(environment: .current, tokens: tokens)
+        let gate = MaintenanceGate()
+        api = APIClient(environment: .current, tokens: tokens, gate: gate)
         authenticator = Self.makeAuthenticator(api: api, tokens: tokens, preferences: preferences)
         let sync = SyncEngine(
             places: api.place,
@@ -33,7 +34,8 @@ struct LocateDoApp: App {
             categories: api.category,
             syncService: api.sync,
             authenticator: authenticator,
-            context: container.mainContext
+            context: container.mainContext,
+            gate: gate
         ) { [geofence] in
             await geofence.sync()
         }

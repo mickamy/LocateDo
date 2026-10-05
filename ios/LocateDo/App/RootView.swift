@@ -101,7 +101,11 @@ struct RootView: View {
     let locationProvider = LocationProvider()
     let notifier = ArrivalNotifier(router: router)
     let tokens = AccessTokenStore()
-    let api = APIClient(environment: APIEnvironment(baseURL: URL(string: "http://localhost:8080")!), tokens: tokens)
+    let api = APIClient(
+        environment: APIEnvironment(baseURL: URL(string: "http://localhost:8080")!),
+        tokens: tokens,
+        gate: MaintenanceGate()
+    )
     let authenticator = Authenticator(
         store: KeychainSessionStore(service: "preview"),
         account: api.account,
