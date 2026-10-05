@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="168.80 174.80 686.40 686.40">
+  <mask id="check">
+    <rect x="168.80" y="174.80" width="686.40" height="686.40" fill="white"/>
+    <path d="M406.40 441.20 L483.20 518.00 L627.20 354.80" fill="none" stroke="black" stroke-width="52.80" stroke-linecap="round" stroke-linejoin="round"/>
+  </mask>
+  <path d="M512.00 830.00 L699.35 596.00 A240.00 240.00 0 1 0 324.65 596.00 Z" mask="url(#check)" fill="#0A84FF" stroke="#0A84FF" stroke-width="36.00" stroke-linejoin="round"/>
+</svg>
