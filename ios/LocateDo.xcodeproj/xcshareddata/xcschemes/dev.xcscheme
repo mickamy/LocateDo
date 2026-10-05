@@ -39,6 +39,16 @@
                ReferencedContainer = "container:LocateDo.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3BF628943073C9D40025FB46"
+               BuildableName = "LocateDoUITests.xctest"
+               ReferencedContainer = "container:LocateDo.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -1,6 +1,7 @@
 included:
   - LocateDo
   - LocateDoTests
+  - LocateDoUITests
 
 opt_in_rules:
   - empty_count
@@ -16,3 +17,4 @@ identifier_name:
 
 excluded:
   - LocateDo/Generated
+  - LocateDoUITests/SnapshotHelper.swift

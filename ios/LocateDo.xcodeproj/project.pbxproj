@@ -21,11 +21,19 @@
 			remoteGlobalIDString = 3BB55BEF3070E8CE008A116A;
 			remoteInfo = LocateDo;
 		};
+		3BF628993073C9D40025FB46 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3BB55BEF3070E8CE008A116A;
+			remoteInfo = LocateDo;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		3B34EEAF3071027900D47174 /* LocateDoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BB55BF03070E8CE008A116A /* LocateDo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocateDo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,6 +60,11 @@
 			path = LocateDo;
 			sourceTree = "<group>";
 		};
+		3BF628963073C9D40025FB46 /* LocateDoUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LocateDoUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +82,11 @@
 				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
 			);
 		};
+		3BF628923073C9D40025FB46 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -77,6 +95,7 @@
 			children = (
 				3BB55BF23070E8CE008A116A /* LocateDo */,
 				3B34EEB03071027900D47174 /* LocateDoTests */,
+				3BF628963073C9D40025FB46 /* LocateDoUITests */,
 				3BB55BF13070E8CE008A116A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -86,6 +105,7 @@
 			children = (
 				3BB55BF03070E8CE008A116A /* LocateDo.app */,
 				3B34EEAF3071027900D47174 /* LocateDoTests.xctest */,
+				3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -138,6 +158,27 @@
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		3BF628943073C9D40025FB46 /* LocateDoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3BF6289B3073C9D40025FB46 /* Build configuration list for PBXNativeTarget "LocateDoUITests" */;
+			buildPhases = (
+				3BF628913073C9D40025FB46 /* Sources */,
+				3BF628923073C9D40025FB46 /* Frameworks */,
+				3BF628933073C9D40025FB46 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3BF6289A3073C9D40025FB46 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3BF628963073C9D40025FB46 /* LocateDoUITests */,
+			);
+			name = LocateDoUITests;
+			productName = LocateDoUITests;
+			productReference = 3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -154,6 +195,10 @@
 					};
 					3BB55BEF3070E8CE008A116A = {
 						CreatedOnToolsVersion = 27.0;
+					};
+					3BF628943073C9D40025FB46 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 3BB55BEF3070E8CE008A116A;
 					};
 				};
 			};
@@ -180,6 +225,7 @@
 			targets = (
 				3BB55BEF3070E8CE008A116A /* LocateDo */,
 				3B34EEAE3071027900D47174 /* LocateDoTests */,
+				3BF628943073C9D40025FB46 /* LocateDoUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -191,6 +237,11 @@
 			);
 		};
 		3BB55BEE3070E8CE008A116A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		3BF628933073C9D40025FB46 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -208,6 +259,11 @@
 			files = (
 			);
 		};
+		3BF628913073C9D40025FB46 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -215,6 +271,11 @@
 			isa = PBXTargetDependency;
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
 			targetProxy = 3B34EEB33071027900D47174 /* PBXContainerItemProxy */;
+		};
+		3BF6289A3073C9D40025FB46 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
+			targetProxy = 3BF628993073C9D40025FB46 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -627,6 +688,71 @@
 			};
 			name = Staging;
 		};
+		3BF6289C3073C9D40025FB46 /* Debug configuration for PBXNativeTarget "LocateDoUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LocateDo;
+			};
+			name = Debug;
+		};
+		3BF6289D3073C9D40025FB46 /* Release configuration for PBXNativeTarget "LocateDoUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LocateDo;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3BF6289E3073C9D40025FB46 /* Staging configuration for PBXNativeTarget "LocateDoUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LocateDo;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Staging;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -654,6 +780,15 @@
 				3BB55BFF3070E8CE008A116A /* Debug configuration for PBXNativeTarget "LocateDo" */,
 				3BB55C003070E8CE008A116A /* Release configuration for PBXNativeTarget "LocateDo" */,
 				3BF1AEBC3071100000D47174 /* Staging configuration for PBXNativeTarget "LocateDo" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		3BF6289B3073C9D40025FB46 /* Build configuration list for PBXNativeTarget "LocateDoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3BF6289C3073C9D40025FB46 /* Debug configuration for PBXNativeTarget "LocateDoUITests" */,
+				3BF6289D3073C9D40025FB46 /* Release configuration for PBXNativeTarget "LocateDoUITests" */,
+				3BF6289E3073C9D40025FB46 /* Staging configuration for PBXNativeTarget "LocateDoUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};
