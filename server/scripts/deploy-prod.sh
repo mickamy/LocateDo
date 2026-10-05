@@ -1,8 +1,8 @@
 #!/bin/bash
 # Runs on the prod instance through SSM. The deploy workflow prepends
 # IMAGE_TAG, BUNDLE_B64 (a tar.gz of the deployed commit's compose file, init
-# script, backup script, systemd units, and CloudWatch agent config), and
-# GHCR_USER / GHCR_TOKEN (the job's token, valid until it ends).
+# script, backup and patch scripts, systemd units, and CloudWatch agent
+# config), and GHCR_USER / GHCR_TOKEN (the job's token, valid until it ends).
 set -euo pipefail
 
 : "${IMAGE_TAG:?}" "${BUNDLE_B64:?}" "${GHCR_USER:?}" "${GHCR_TOKEN:?}"
@@ -16,9 +16,14 @@ cd /opt/locatedo
 install -m 644 "${bundle}/compose.prod.yaml" compose.yaml
 install -m 755 "${bundle}/initdb/create-roles.sh" initdb/create-roles.sh
 install -m 755 "${bundle}/scripts/backup-prod.sh" backup.sh
+install -m 755 "${bundle}/scripts/patch-prod.sh" patch.sh
 install -m 644 "${bundle}"/systemd/* /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now locatedo-backup.timer
+systemctl enable --now locatedo-backup.timer locatedo-patch.timer
+
+if ! rpm -q dnf-plugins-core >/dev/null; then
+  dnf install -y dnf-plugins-core
+fi
 
 if ! rpm -q amazon-cloudwatch-agent >/dev/null; then
   dnf install -y amazon-cloudwatch-agent

@@ -1,0 +1,9 @@
+[Unit]
+Description=Apply LocateDo host security updates weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 11:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

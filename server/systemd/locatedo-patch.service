@@ -1,0 +1,6 @@
+[Unit]
+Description=Apply LocateDo host security updates
+
+[Service]
+Type=oneshot
+ExecStart=/opt/locatedo/patch.sh

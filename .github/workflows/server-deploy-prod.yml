@@ -109,7 +109,7 @@ jobs:
 
           {
             printf 'export IMAGE_TAG=%q GHCR_USER=%q GHCR_TOKEN=%q\n' "${IMAGE_TAG}" "${GHCR_USER}" "${GHCR_TOKEN}"
-            bundle=$(tar -cz -C server compose.prod.yaml initdb scripts/backup-prod.sh systemd cloudwatch | base64 -w0)
+            bundle=$(tar -cz -C server compose.prod.yaml initdb scripts/backup-prod.sh scripts/patch-prod.sh systemd cloudwatch | base64 -w0)
             printf 'export BUNDLE_B64=%q\n' "${bundle}"
             cat server/scripts/deploy-prod.sh
           } > deploy.sh
