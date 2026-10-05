@@ -142,6 +142,10 @@ todo:
     title_placeholder: "e.g., Buy milk"
     place_label: "Place"
   completed_section: "Completed"
+  assignee:
+    label: "Assignee"
+    anyone: "Anyone"
+    change: "Change Assignee"
   list:
     empty_title: "No to-dos yet"
     empty_message: "Add a to-do to a place and we’ll remind you when you arrive."

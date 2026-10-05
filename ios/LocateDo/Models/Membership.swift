@@ -22,3 +22,12 @@ final class Membership {
         self.updatedAt = updatedAt
     }
 }
+
+extension Membership {
+    var shownName: String {
+        if displayName.isEmpty {
+            return String(localized: .sharingUnnamedMember)
+        }
+        return displayName
+    }
+}

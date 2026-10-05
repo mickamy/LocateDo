@@ -5,9 +5,11 @@ struct TodoEditorView: View {
     @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Place.sortOrder) private var places: [Place]
+    @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
 
     @State private var title = ""
     @State private var place: Place?
+    @State private var assigneeID: UUID?
     @FocusState private var isTitleFocused: Bool
 
     init(place: Place? = nil) {
@@ -37,6 +39,9 @@ struct TodoEditorView: View {
                         }
                     } label: {
                         Text(.todoEditorPlaceLabel)
+                    }
+                    if memberships.count > 1 {
+                        AssigneePicker(memberships: memberships, selection: $assigneeID)
                     }
                 }
             }
@@ -74,7 +79,9 @@ struct TodoEditorView: View {
         guard let place else {
             return
         }
-        writes.add(Todo(title: title.trimmingCharacters(in: .whitespaces), place: place))
+        let todo = Todo(title: title.trimmingCharacters(in: .whitespaces), place: place)
+        todo.assigneeID = assigneeID
+        writes.add(todo)
         dismiss()
     }
 }

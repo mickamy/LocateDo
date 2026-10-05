@@ -69,6 +69,9 @@ struct LocateDoApp: App {
         geofence.onArrival = { [sync] in
             await sync.sync()
         }
+        geofence.currentUserID = { [authenticator] in
+            authenticator.session?.userID
+        }
         authenticator.onSessionEnded = { [account] in
             Task {
                 await account.endSession()

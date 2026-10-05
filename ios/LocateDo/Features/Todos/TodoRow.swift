@@ -1,7 +1,9 @@
+import SwiftData
 import SwiftUI
 
 struct TodoRow: View {
     @Environment(LocalWrites.self) private var writes
+    @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
     let todo: Todo
 
     var body: some View {
@@ -14,17 +16,53 @@ struct TodoRow: View {
                     .foregroundStyle(todo.isCompleted ? Color.accentColor : Color.secondary)
             }
             .buttonStyle(.plain)
-            Text(todo.title)
-                .strikethrough(todo.isCompleted)
-                .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(todo.title)
+                    .strikethrough(todo.isCompleted)
+                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                if let assignee {
+                    Text(assignee.shownName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .contextMenu {
+            if memberships.count > 1 {
+                Menu {
+                    AssigneePicker(memberships: memberships, selection: assigneeSelection)
+                        .pickerStyle(.inline)
+                } label: {
+                    Label(.todoAssigneeChange, systemImage: "person.crop.circle")
+                }
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(todo.title)
+        .accessibilityLabel(accessibilityTitle)
         .accessibilityValue(Text(status))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction {
             toggle()
         }
+    }
+
+    private var assignee: Membership? {
+        memberships.first { $0.userID == todo.assigneeID }
+    }
+
+    private var assigneeSelection: Binding<UUID?> {
+        Binding {
+            todo.assigneeID
+        } set: { assigneeID in
+            writes.setAssignee(assigneeID, of: todo)
+        }
+    }
+
+    private var accessibilityTitle: String {
+        guard let assignee else {
+            return todo.title
+        }
+        return "\(todo.title), \(assignee.shownName)"
     }
 
     private var status: LocalizedStringResource {

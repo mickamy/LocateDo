@@ -14,6 +14,13 @@ nonisolated enum NotificationPolicy {
         return now.timeIntervalSince(lastNotifiedAt) >= cooldown
     }
 
+    static func notifiableTodos(_ todos: [Todo], for userID: UUID?) -> [Todo] {
+        guard let userID else {
+            return todos
+        }
+        return todos.filter { $0.assigneeID == nil || $0.assigneeID == userID }
+    }
+
     static func body(todoTitles: [String]) -> String {
         let shown = Array(todoTitles.prefix(maxTitles)).formatted(.list(type: .and, width: .narrow))
         let rest = todoTitles.count - maxTitles

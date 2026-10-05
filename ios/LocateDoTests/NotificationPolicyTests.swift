@@ -35,4 +35,21 @@ struct NotificationPolicyTests {
         #expect(!body.contains("Butter"))
         #expect(body.contains("2"))
     }
+
+    @Test func notifiesOnlyForTodosAssignedToAnyoneOrToTheUser() {
+        let me = UUID()
+        let partner = UUID()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        let anyone = Todo(title: "Milk", place: place)
+        let mine = Todo(title: "Bread", place: place)
+        mine.assigneeID = me
+        let theirs = Todo(title: "Eggs", place: place)
+        theirs.assigneeID = partner
+
+        let todos = [anyone, mine, theirs]
+
+        #expect(NotificationPolicy.notifiableTodos(todos, for: me).map(\.title) == ["Milk", "Bread"])
+        #expect(NotificationPolicy.notifiableTodos(todos, for: partner).map(\.title) == ["Milk", "Eggs"])
+        #expect(NotificationPolicy.notifiableTodos(todos, for: nil).map(\.title) == ["Milk", "Bread", "Eggs"])
+    }
 }

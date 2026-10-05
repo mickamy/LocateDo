@@ -141,6 +141,10 @@ todo:
     title_placeholder: "例) 牛乳を買う"
     place_label: "場所"
   completed_section: "完了済み"
+  assignee:
+    label: "担当"
+    anyone: "誰でも"
+    change: "担当を変更"
   list:
     empty_title: "TODO がまだありません"
     empty_message: "場所に TODO を追加すると、着いたときにお知らせします。"

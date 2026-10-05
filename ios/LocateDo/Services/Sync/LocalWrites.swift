@@ -47,6 +47,12 @@ final class LocalWrites {
         commit([.completion(of: todo)])
     }
 
+    func setAssignee(_ assigneeID: UUID?, of todo: Todo, now: Date = .now) {
+        todo.assigneeID = assigneeID
+        todo.updatedAt = now
+        commit([Write.put(todo)].compactMap(\.self))
+    }
+
     func delete(_ todos: [Todo]) {
         let writes = todos.map(Write.delete)
         for todo in todos {

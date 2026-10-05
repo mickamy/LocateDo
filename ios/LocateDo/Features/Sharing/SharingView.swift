@@ -127,7 +127,7 @@ struct SharingView: View {
             await sync.sync()
         }
         .confirmationDialog(
-            Text(.sharingRemoveConfirmTitle(memberToRemove.map(name(of:)) ?? "")),
+            Text(.sharingRemoveConfirmTitle(memberToRemove?.shownName ?? "")),
             isPresented: isConfirmingRemove,
             titleVisibility: .visible,
             presenting: memberToRemove
@@ -155,7 +155,7 @@ struct SharingView: View {
 
     private func row(for membership: Membership) -> some View {
         HStack {
-            Text(name(of: membership))
+            Text(membership.shownName)
             if membership.userID == currentUserID {
                 Text(.sharingYou)
                     .foregroundStyle(.secondary)
@@ -189,13 +189,6 @@ struct SharingView: View {
                 memberToRemove = nil
             }
         }
-    }
-
-    private func name(of membership: Membership) -> String {
-        if membership.displayName.isEmpty {
-            return String(localized: .sharingUnnamedMember)
-        }
-        return membership.displayName
     }
 
     private func remove(_ userID: UUID) async {

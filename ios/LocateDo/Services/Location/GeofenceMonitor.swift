@@ -14,6 +14,7 @@ final class GeofenceMonitor {
     private var eventLoop: Task<Void, Never>?
     private var authorizationWatch: Task<Void, Never>?
     @ObservationIgnored var onArrival: () async -> Void = {}
+    @ObservationIgnored var currentUserID: () -> UUID? = { nil }
 
     init(container: ModelContainer, notifier: ArrivalNotifier, locationProvider: LocationProvider) {
         self.container = container
@@ -151,7 +152,7 @@ final class GeofenceMonitor {
             logger.notice("No place for \(placeID.uuidString, privacy: .public)")
             return
         }
-        let openTodos = place.openTodos
+        let openTodos = NotificationPolicy.notifiableTodos(place.openTodos, for: currentUserID())
         let now = Date()
         let shouldNotify = NotificationPolicy.shouldNotify(
             openTodoCount: openTodos.count,

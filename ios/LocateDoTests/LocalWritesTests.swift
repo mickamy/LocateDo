@@ -85,6 +85,24 @@ struct LocalWritesTests {
         #expect(completions[0].completedAt.date == completedAt)
     }
 
+    @Test func changingTheAssigneeQueuesAPut() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let todo = Todo(title: "Milk", place: place)
+        fixture.writes.add(todo)
+        let assignee = UUID()
+
+        fixture.writes.setAssignee(assignee, of: todo)
+
+        #expect(todo.assigneeID == assignee)
+        guard case .putTodo(let input) = try fixture.queue().last else {
+            Issue.record("Expected putTodo")
+            return
+        }
+        #expect(input.assigneeID == ProtoInput.id(assignee))
+    }
+
     @Test func deletingSeveralTodosQueuesADeleteForEach() throws {
         let fixture = try Fixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
