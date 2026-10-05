@@ -1,25 +1,25 @@
-name: deploy-ci
+name: infra-ci
 
 on:
   pull_request:
     paths:
       - deploy/**
       - .mise.toml
-      - deploy-ci.yml
+      - .github/workflows/infra-ci.yml
   push:
     branches:
       - main
     paths:
       - deploy/**
       - .mise.toml
-      - deploy-ci.yml
+      - .github/workflows/infra-ci.yml
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: tofu-check-${{ github.ref }}
+  group: infra-ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:

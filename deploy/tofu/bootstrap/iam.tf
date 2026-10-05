@@ -1,4 +1,4 @@
-# The roles the tofu-prod workflow runs as. They live outside deploy/tofu/prod
+# The roles the infra-apply-prod workflow runs as. They live outside deploy/tofu/prod
 # so that destroying prod never removes them, and are applied from a laptop.
 
 data "aws_caller_identity" "current" {}
