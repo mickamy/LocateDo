@@ -1,8 +1,21 @@
 # Runs on the prod EC2 instance next to a .env built from Parameter Store
 # (/locatedo/prod/db/* and /locatedo/prod/app/*) and IMAGE_TAG set by the deploy.
 
+# Logs go straight to CloudWatch Logs; Docker keeps only a small local copy
+# for `docker compose logs`. non-blocking drops lines rather than stalling
+# the app when CloudWatch is unreachable.
+x-logging: &logging
+  driver: awslogs
+  options:
+    awslogs-region: us-west-2
+    awslogs-group: /locatedo/prod/containers
+    tag: "{{.Name}}"
+    mode: non-blocking
+    max-buffer-size: 4m
+
 x-app: &app
   image: ghcr.io/mickamy/locatedo-server:${IMAGE_TAG:?}
+  logging: *logging
   env_file: .env
   environment:
     ENV: production
@@ -38,6 +51,7 @@ services:
     command: tunnel --no-autoupdate run
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
+    logging: *logging
     restart: always
     depends_on:
       - api
@@ -50,6 +64,7 @@ services:
       POSTGRES_DB: locatedo
       DB_WRITER_PASSWORD: ${DB_WRITER_PASSWORD:?}
       DB_READER_PASSWORD: ${DB_READER_PASSWORD:?}
+    logging: *logging
     restart: always
     volumes:
       - /var/lib/locatedo/postgres:/var/lib/postgresql

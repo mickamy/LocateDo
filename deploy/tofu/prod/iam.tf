@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "app_parameters" {
 
 # Put-only: a compromised instance can add backups but not read or erase them.
 resource "aws_iam_role_policy" "app_backups" {
-  name = "write-backups-and-metrics"
+  name = "write-backups-metrics-and-logs"
   role = aws_iam_role.app.id
 
   policy = jsonencode({
@@ -52,6 +52,11 @@ resource "aws_iam_role_policy" "app_backups" {
         Effect   = "Allow"
         Action   = ["s3:PutObject"]
         Resource = "arn:aws:s3:::locatedo-prod-backups-${data.aws_caller_identity.current.account_id}/prod/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "${aws_cloudwatch_log_group.containers.arn}:*"
       },
       {
         Effect   = "Allow"

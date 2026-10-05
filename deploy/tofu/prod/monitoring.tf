@@ -2,6 +2,11 @@ locals {
   alert_email = "dev@locatedo.com"
 }
 
+resource "aws_cloudwatch_log_group" "containers" {
+  name              = "/locatedo/prod/containers"
+  retention_in_days = 30
+}
+
 resource "aws_sns_topic" "alerts" {
   name = "locatedo-prod-alerts"
 }
@@ -72,6 +77,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   ok_actions          = [aws_sns_topic.alerts.arn]
 }
 
+# EBS publishes this sparsely, so a gap is not a stall.
 resource "aws_cloudwatch_metric_alarm" "data_volume_stalled" {
   alarm_name          = "locatedo-prod-data-volume-stalled"
   alarm_description   = "I/O to the Postgres volume stalled."
@@ -79,10 +85,11 @@ resource "aws_cloudwatch_metric_alarm" "data_volume_stalled" {
   metric_name         = "VolumeStalledIOCheck"
   dimensions          = { VolumeId = aws_ebs_volume.data.id }
   statistic           = "Maximum"
-  period              = 60
-  evaluation_periods  = 2
+  period              = 300
+  evaluation_periods  = 1
   threshold           = 1
   comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.alerts.arn]
   ok_actions          = [aws_sns_topic.alerts.arn]
 }
@@ -109,6 +116,21 @@ resource "aws_cloudwatch_metric_alarm" "data_disk" {
   namespace           = "LocateDo/Host"
   metric_name         = "disk_used_percent"
   dimensions          = { InstanceId = aws_instance.app.id, path = "/var/lib/locatedo", fstype = "ext4" }
+  statistic           = "Maximum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 80
+  comparison_operator = "GreaterThanThreshold"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "root_disk" {
+  alarm_name          = "locatedo-prod-root-disk"
+  alarm_description   = "The root volume (OS, images, local log copies) is more than 80% full."
+  namespace           = "LocateDo/Host"
+  metric_name         = "disk_used_percent"
+  dimensions          = { InstanceId = aws_instance.app.id, path = "/", fstype = "xfs" }
   statistic           = "Maximum"
   period              = 300
   evaluation_periods  = 1
