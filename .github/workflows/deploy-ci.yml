@@ -33,6 +33,7 @@ jobs:
         root:
           - prod
           - bootstrap
+          - persistent
     defaults:
       run:
         working-directory: deploy/tofu/${{ matrix.root }}
