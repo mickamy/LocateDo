@@ -23,6 +23,9 @@ struct LocateDoApp: App {
 
     init() {
         container = Self.makeContainer()
+        #if DEBUG
+        ScreenshotSeed.replaceIfRequested(in: container.mainContext)
+        #endif
         notifier = ArrivalNotifier(router: router)
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         let tokens = AccessTokenStore()

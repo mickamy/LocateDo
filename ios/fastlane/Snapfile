@@ -1,0 +1,10 @@
+languages(["en-US", "ja"])
+project("./LocateDo.xcodeproj")
+scheme("dev")
+only_testing(["LocateDoUITests/ScreenshotTests"])
+output_directory("./fastlane/screenshots")
+clear_previous_screenshots(true)
+override_status_bar(true)
+concurrent_simulators(false)
+# Parallel testing runs on clones, which lack the "Always" location grant.
+xcargs("-parallel-testing-enabled NO")

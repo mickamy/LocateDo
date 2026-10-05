@@ -61,6 +61,7 @@ struct OnboardingView: View {
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .disabled(isRequesting)
+        .accessibilityIdentifier("onboarding.start")
     }
 
     @ViewBuilder
@@ -85,6 +86,7 @@ struct OnboardingView: View {
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .disabled(isRequesting)
+        .accessibilityIdentifier("onboarding.allowNotifications")
         Button(.onboardingLater) {
             finish()
         }
