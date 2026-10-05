@@ -4,13 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: plan only, or plan and then apply / destroy after approval
+        description: plan only, or plan and then apply after approval
         required: true
         type: choice
         options:
           - plan
           - apply
-          - destroy
 
 permissions:
   contents: read
@@ -44,14 +43,8 @@ jobs:
       - run: tofu init -input=false
 
       - name: Plan
-        env:
-          ACTION: ${{ inputs.action }}
         run: |
-          args=(-input=false -no-color -out=tfplan)
-          if [ "$ACTION" = destroy ]; then
-            args+=(-destroy)
-          fi
-          tofu plan "${args[@]}" | tee plan.txt
+          tofu plan -input=false -no-color -out=tfplan | tee plan.txt
           {
             echo '```'
             cat plan.txt
