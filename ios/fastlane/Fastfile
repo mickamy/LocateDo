@@ -204,7 +204,7 @@ platform :ios do
     sh("oxipng", "-o", "4", "--strip", "safe", "-q", "-r", File.expand_path("screenshots", __dir__))
   end
 
-  desc "Record the setup walkthrough for App Review into build/review-video/review.mp4 (needs ffmpeg)"
+  desc "Record the walkthrough for App Review into build/review-video/review.mp4 (needs ffmpeg)"
   lane :review_video do |options|
     device = options.fetch(:device, "iPhone 18 Pro Max")
     udid = simulator_udid(device)
@@ -221,13 +221,22 @@ platform :ios do
     sh("xcrun", "simctl", "bootstatus", udid, "-b")
     sh("xcrun", "simctl", "status_bar", udid, "override", "--time", "9:41",
        "--batteryState", "charged", "--batteryLevel", "100")
+    # Granted up front so the walkthrough shows neither the permission alerts nor the "Always" banner.
+    sh("xcrun", "simctl", "install", udid, File.join(derived_data, "Build/Products/Debug-iphonesimulator/LocateDo.app"))
+    sh("xcrun", "simctl", "privacy", udid, "grant", "location-always", DEV_APP_IDENTIFIER)
     raw = File.join(work, "raw.mp4")
     results = File.join(work, "results.xcresult")
     FileUtils.rm_rf(results)
-    recorder = Process.spawn("xcrun", "simctl", "io", udid, "recordVideo", "--codec", "h264", "--force", raw)
+    # The clock starts when simctl reports "Recording started", which comes a few seconds after the spawn.
+    reader, writer = IO.pipe
+    recorder = Process.spawn("xcrun", "simctl", "io", udid, "recordVideo", "--codec", "h264", "--force", raw,
+                             out: writer, err: writer)
+    writer.close
+    reader.each_line { |line| break if line.include?("Recording started") }
+    recording_started = Time.now.to_f
+    output = nil
     begin
-      sleep(2)
-      sh("xcodebuild", "test-without-building", "-project", File.join(root, PROJECT), "-scheme", "dev",
+      output = sh("xcodebuild", "test-without-building", "-project", File.join(root, PROJECT), "-scheme", "dev",
          "-destination", "id=#{udid}", "-derivedDataPath", derived_data, "-parallel-testing-enabled", "NO",
          "-resultBundlePath", results, "-only-testing:LocateDoUITests/ReviewVideoTests",
          "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "300")
@@ -241,22 +250,26 @@ platform :ios do
       UI.user_error!("ReviewVideoTests did not pass exactly once: #{summary.slice('passedTests', 'failedTests', 'skippedTests')}")
     end
 
+    # The test prints when the app is on screen; everything before it is launch and home screen.
+    first = output[/REVIEW_VIDEO_START (\d+\.\d+)/, 1]
+    last = output[/REVIEW_VIDEO_END (\d+\.\d+)/, 1]
+    UI.user_error!("ReviewVideoTests did not print its start and end") unless first && last
+    # The recorder runs about two seconds ahead of its "Recording started" line, so start that much earlier.
+    start = (first.to_f - recording_started - 2).clamp(0, nil).round(2).to_s
+    length = (last.to_f - first.to_f + 2).round(2).to_s
+
     width, height = sh("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
                        "-of", "csv=p=0", raw, log: false).strip.split(",")
     caption = File.join(root, "../tools/video/caption.swift")
-    intro = File.join(work, "intro.png")
     outro = File.join(work, "outro.png")
-    sh("swift", caption, intro, width, height,
-       "StopBy reminds you of to-dos when you arrive at a place you saved.\n\nThis video shows the setup. " \
-       "Arrival detection uses iOS region monitoring, which only runs on a real device.", "--card")
     sh("swift", caption, outro, width, height,
        "When you arrive at a saved place, even with StopBy closed, iOS region monitoring wakes the app " \
        "and it posts a notification listing that place's open to-dos.\n\nYour location never leaves the device.",
        "--card")
     scale = "scale=#{width}:#{height},setsar=1,fps=30,format=yuv420p"
     sh("ffmpeg", "-v", "error", "-y",
-       "-loop", "1", "-t", "5", "-i", intro, "-i", raw, "-loop", "1", "-t", "7", "-i", outro,
-       "-filter_complex", "[0]#{scale}[a];[1]#{scale}[b];[2]#{scale}[c];[a][b][c]concat=n=3:v=1:a=0",
+       "-ss", start, "-t", length, "-i", raw, "-loop", "1", "-t", "7", "-i", outro,
+       "-filter_complex", "[0]#{scale}[a];[1]#{scale}[b];[a][b]concat=n=2:v=1:a=0",
        "-c:v", "libx264", "-crf", "20", "-movflags", "+faststart", File.join(work, "review.mp4"))
     UI.success("Wrote #{File.join(work, 'review.mp4')}")
   end
