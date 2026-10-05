@@ -183,15 +183,19 @@ final class AccountManager {
         return try context.fetch(FetchDescriptor<PlaceCategory>()).contains { $0.builtin == nil }
     }
 
-    private func adopt(_ adoption: PendingAdoption) async throws {
-        try authenticator.signIn(adoption.session)
+    func join(householdID: UUID, plan: Plan) async throws {
         try deleteSyncedData()
         let state = try SyncState.current(in: context)
-        state.householdID = adoption.householdID
+        state.householdID = householdID
         state.cursor = 0
-        state.plan = .free
+        state.plan = plan
         try context.save()
         await onHouseholdReady()
+    }
+
+    private func adopt(_ adoption: PendingAdoption) async throws {
+        try authenticator.signIn(adoption.session)
+        try await join(householdID: adoption.householdID, plan: .free)
     }
 
     private func resetLocalData() throws {

@@ -10,8 +10,23 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        if preferences.hasCompletedOnboarding {
-            tabs
+        Group {
+            if preferences.hasCompletedOnboarding {
+                main
+            } else {
+                OnboardingView()
+            }
+        }
+        .onOpenURL { url in
+            if let token = InviteLink.token(from: url.absoluteString) {
+                router.pendingInvite = PendingInvite(token: token)
+            }
+        }
+    }
+
+    private var main: some View {
+        @Bindable var router = router
+        return tabs
                 .alert(Text(.sessionEndedTitle), isPresented: sessionEndedNotice) {
                     Button(.commonOk) {}
                 } message: {
@@ -22,9 +37,11 @@ struct RootView: View {
                 } message: {
                     Text(.removedMessage)
                 }
-        } else {
-            OnboardingView()
-        }
+                .sheet(item: $router.pendingInvite) { invite in
+                    NavigationStack {
+                        AcceptInviteView(token: invite.token)
+                    }
+                }
     }
 
     private var removedNotice: Binding<Bool> {

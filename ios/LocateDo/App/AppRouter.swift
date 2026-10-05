@@ -13,6 +13,7 @@ final class AppRouter {
     var selectedTab: AppTab = .home
     var pendingPlaceID: UUID?
     var isAddPlaceRequested = false
+    var pendingInvite: PendingInvite?
 
     func open(placeID: UUID) {
         selectedTab = .home
@@ -22,5 +23,13 @@ final class AppRouter {
     func requestAddPlace() {
         selectedTab = .home
         isAddPlaceRequested = true
+    }
+}
+
+struct PendingInvite: Identifiable {
+    let token: String
+
+    var id: String {
+        token
     }
 }

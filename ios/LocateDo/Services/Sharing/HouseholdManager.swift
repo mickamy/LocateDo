@@ -4,6 +4,15 @@ import OSLog
 import SwiftData
 import SwiftProtobuf
 
+struct Invite: Identifiable {
+    let url: URL
+    let expiresAt: Date
+
+    var id: URL {
+        url
+    }
+}
+
 @Observable
 final class HouseholdManager {
     private(set) var isWorking = false
@@ -48,6 +57,45 @@ final class HouseholdManager {
         await sync.drain()
         try await removeMember(userID)
         try await account.startOver()
+    }
+
+    func createInvite() async throws -> Invite {
+        isWorking = true
+        defer { isWorking = false }
+
+        guard let householdID = try SyncState.current(in: context).householdID else {
+            throw AuthError.signedOut
+        }
+        let request = Locatedo_Household_V1_CreateInviteRequest.with {
+            $0.householdID = ProtoInput.id(householdID)
+        }
+        let client = household
+        let response = try await authenticator.authorized { await client.createInvite(request: request, headers: [:]) }
+        guard let url = InviteLink.url(for: response.token) else {
+            throw URLError(.badURL)
+        }
+        return Invite(url: url, expiresAt: response.expiresAt.date)
+    }
+
+    func accept(token: String) async throws {
+        isWorking = true
+        defer { isWorking = false }
+
+        await sync.drain()
+        let request = Locatedo_Household_V1_AcceptInviteRequest.with {
+            $0.token = token
+        }
+        let client = household
+        let response = try await authenticator.authorized { await client.acceptInvite(request: request, headers: [:]) }
+        guard let householdID = UUID(uuidString: response.household.id) else {
+            throw URLError(.cannotParseResponse)
+        }
+        var plan = Plan.free
+        if response.household.plan == .pro {
+            plan = .pro
+        }
+        try await account.join(householdID: householdID, plan: plan)
+        Analytics.log(.inviteAccepted)
     }
 
     func handleRemoval() async {

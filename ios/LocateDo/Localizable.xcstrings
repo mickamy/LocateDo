@@ -427,6 +427,159 @@
         }
       }
     },
+    "invite.already_member" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’re already in this household."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すでにこの世帯に参加しています。"
+          }
+        }
+      }
+    },
+    "invite.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t join. Try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参加できませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "invite.invalid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This doesn’t look like a LocateDo invite link."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LocateDo の招待リンクではないようです。"
+          }
+        }
+      }
+    },
+    "invite.join" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参加する"
+          }
+        }
+      }
+    },
+    "invite.leave_first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’re sharing with others now. Leave that sharing first."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今ほかの人と共有しています。先にその共有から抜けてください。"
+          }
+        }
+      }
+    },
+    "invite.link_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite link"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待リンク"
+          }
+        }
+      }
+    },
+    "invite.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この世帯の人と、場所と TODO を共有します。この iPhone の場所と TODO は、その世帯にまとめられます。"
+          }
+        }
+      }
+    },
+    "invite.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join a Household"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "世帯に参加"
+          }
+        }
+      }
+    },
+    "invite.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This invite has expired, was already used, or the household is full. Ask for a new one."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この招待は期限切れか、すでに使われているか、世帯が満員です。新しい招待をもらってください。"
+          }
+        }
+      }
+    },
     "map.empty.message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1754,6 +1907,23 @@
         }
       }
     },
+    "sharing.accept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept an Invite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待を受ける"
+          }
+        }
+      }
+    },
     "sharing.failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1767,6 +1937,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共有の設定を変更できませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "sharing.full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A household can have up to 6 members."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 つの世帯に入れるのは 6 人までです。"
+          }
+        }
+      }
+    },
+    "sharing.invite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite Someone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待する"
+          }
+        }
+      }
+    },
+    "sharing.invite_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join me on LocateDo to share places and to-dos. This link works for 72 hours:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LocateDo で場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
           }
         }
       }

@@ -293,6 +293,9 @@ nonisolated final class FakeHouseholdService: Locatedo_Household_V1_HouseholdSer
         var failNext = false
         var removed: [Locatedo_Household_V1_RemoveMemberRequest] = []
         var failRemove = false
+        var acceptedTokens: [String] = []
+        var acceptResult: Result<Locatedo_Household_V1_AcceptInviteResponse, ConnectError> =
+            .failure(ConnectError(code: .unimplemented, message: nil))
     }
 
     private let state = Mutex(State())
@@ -311,6 +314,14 @@ nonisolated final class FakeHouseholdService: Locatedo_Household_V1_HouseholdSer
 
     func failRemove() {
         state.withLock { $0.failRemove = true }
+    }
+
+    var acceptedTokens: [String] {
+        state.withLock { $0.acceptedTokens }
+    }
+
+    func respondToAccept(with result: Result<Locatedo_Household_V1_AcceptInviteResponse, ConnectError>) {
+        state.withLock { $0.acceptResult = result }
     }
 
     func failNext() {
@@ -341,14 +352,21 @@ nonisolated final class FakeHouseholdService: Locatedo_Household_V1_HouseholdSer
         request: Locatedo_Household_V1_CreateInviteRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Household_V1_CreateInviteResponse> {
-        ResponseMessage(result: .failure(ConnectError(code: .unimplemented, message: nil)))
+        var response = Locatedo_Household_V1_CreateInviteResponse()
+        response.token = "invite-token-0123456789"
+        response.expiresAt = Google_Protobuf_Timestamp(date: Date(timeIntervalSince1970: 1_800_000_000))
+        return ResponseMessage(result: .success(response))
     }
 
     func acceptInvite(
         request: Locatedo_Household_V1_AcceptInviteRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Household_V1_AcceptInviteResponse> {
-        ResponseMessage(result: .failure(ConnectError(code: .unimplemented, message: nil)))
+        let result = state.withLock { state in
+            state.acceptedTokens.append(request.token)
+            return state.acceptResult
+        }
+        return ResponseMessage(result: result)
     }
 
     func removeMember(

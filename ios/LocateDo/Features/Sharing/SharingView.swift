@@ -3,6 +3,8 @@ import SwiftData
 import SwiftUI
 
 struct SharingView: View {
+    private static let maxMembers = 6
+
     @Environment(AccountManager.self) private var account
     @Environment(Authenticator.self) private var authenticator
     @Environment(HouseholdManager.self) private var households
@@ -14,6 +16,7 @@ struct SharingView: View {
     @State private var memberToRemove: Membership?
     @State private var isConfirmingLeave = false
     @State private var failure: LocalizedStringResource?
+    @State private var invite: Invite?
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sharing")
 
@@ -81,6 +84,29 @@ struct SharingView: View {
                         .foregroundStyle(.red)
                 }
             }
+            if isOwner && syncStates.first?.plan == .pro {
+                Section {
+                    Button {
+                        Task {
+                            await createInvite()
+                        }
+                    } label: {
+                        Label(.sharingInvite, systemImage: "person.badge.plus")
+                    }
+                    .disabled(memberships.count >= Self.maxMembers)
+                } footer: {
+                    if memberships.count >= Self.maxMembers {
+                        Text(.sharingFull)
+                    }
+                }
+            }
+            Section {
+                NavigationLink {
+                    AcceptInviteView()
+                } label: {
+                    Label(.sharingAccept, systemImage: "envelope.open")
+                }
+            }
             if !isOwner && currentMembership != nil {
                 Section {
                     Button(.sharingLeave, role: .destructive) {
@@ -90,6 +116,10 @@ struct SharingView: View {
             }
         }
         .disabled(households.isWorking)
+        .sheet(item: $invite) { invite in
+            ActivityView(items: [String(localized: .sharingInviteMessage) + "\n" + invite.url.absoluteString])
+                .presentationDetents([.medium, .large])
+        }
         .task {
             await sync.sync()
         }
@@ -174,6 +204,16 @@ struct SharingView: View {
             try await households.remove(userID)
         } catch {
             logger.error("Removing a member failed: \(error, privacy: .public)")
+            failure = .sharingFailed
+        }
+    }
+
+    private func createInvite() async {
+        failure = nil
+        do {
+            invite = try await households.createInvite()
+        } catch {
+            logger.error("Creating an invite failed: \(error, privacy: .public)")
             failure = .sharingFailed
         }
     }
