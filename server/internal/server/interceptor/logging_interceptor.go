@@ -29,7 +29,7 @@ func Logging(cfg config.App) connect.UnaryInterceptorFunc {
 				logger.Error(ctx, "failed to generate execution ID", "error", err)
 				return nil, connect.NewError(connect.CodeInternal, errInternal)
 			}
-			ctx = execution.Set(ctx, execID)
+			ctx = execution.SetID(ctx, execID)
 
 			// log the request details
 			reqFields := []any{slog.String("procedure", req.Spec().Procedure)}

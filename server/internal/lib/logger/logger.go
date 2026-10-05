@@ -50,7 +50,7 @@ func internalHandle(ctx context.Context, level slog.Level, msg string, args ...a
 	source = strings.TrimPrefix(source, moduleRoot+"/")
 	args = append(args, slog.String("source", source))
 
-	execID := execution.Get(ctx)
+	execID := execution.GetID(ctx)
 	if execID != uuid.Nil() {
 		args = append(args, slog.String("execution_id", execID.String()))
 	}

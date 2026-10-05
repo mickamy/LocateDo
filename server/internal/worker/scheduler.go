@@ -56,7 +56,7 @@ func (s Scheduler) loop(ctx context.Context, t Task) {
 	ticker := time.NewTicker(t.Interval)
 	defer ticker.Stop()
 	for {
-		runCtx := execution.Set(execution.SetJobName(ctx, t.Name), uuid.NewV7())
+		runCtx := execution.SetID(execution.SetJobName(ctx, t.Name), uuid.NewV7())
 		if err := t.Run(runCtx); err != nil {
 			logger.Error(runCtx, "task failed", "error", err)
 		}

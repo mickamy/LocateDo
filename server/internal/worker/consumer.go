@@ -94,7 +94,7 @@ func (c Consumer) Step(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("step: %w", err)
 	}
 
-	ctx = execution.Set(execution.SetJobName(ctx, string(m.Kind)), uuid.NewV7())
+	ctx = execution.SetID(execution.SetJobName(ctx, string(m.Kind)), uuid.NewV7())
 	handleErr := c.handle(ctx, m)
 	if err := c.transactor.WithTx(ctx, func(tx tx.Tx) error {
 		return c.finish(ctx, c.messages.Bind(tx), m, handleErr)
