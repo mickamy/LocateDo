@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>LocateDo Invite</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 64px 0;
+  }
+  h1 {
+    font-size: 28px;
+    line-height: 1.25;
+    margin: 0 0 16px;
+  }
+  p {
+    margin: 0 0 16px;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .link {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 24px 0;
+    padding: 12px;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+  }
+  .link code {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font: 15px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  button {
+    flex: none;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #ffffff;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  [lang="ja"] .en, [lang="en"] .ja {
+    display: none;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="en">You're invited to share on LocateDo</span><span class="ja">LocateDo の共有に招待されています</span></h1>
+  <p class="en">On an iPhone with LocateDo installed, tapping this link opens the invite in the app.</p>
+  <p class="ja">LocateDo が入っている iPhone でこのリンクをタップすると、アプリで招待が開きます。</p>
+  <p class="en">If the app doesn't open, copy the link below and paste it in LocateDo under Settings › Share with family › Accept an invite.</p>
+  <p class="ja">アプリが開かないときは、下のリンクをコピーして、LocateDo の 設定 › 家族と共有 › 招待を受ける に貼り付けてください。</p>
+  <div class="link">
+    <code id="link"></code>
+    <button type="button" id="copy"><span class="en">Copy</span><span class="ja">コピー</span></button>
+  </div>
+  <p class="muted en">The invite expires 72 hours after it was sent and can be used once.</p>
+  <p class="muted ja">招待は送られてから 72 時間有効で、1 回だけ使えます。</p>
+</main>
+<script>
+  if ((navigator.language || "").toLowerCase().startsWith("ja")) {
+    document.documentElement.lang = "ja";
+  }
+  const link = location.origin + location.pathname;
+  document.getElementById("link").textContent = link;
+  document.getElementById("copy").addEventListener("click", () => {
+    navigator.clipboard.writeText(link);
+  });
+</script>
+</body>
+</html>

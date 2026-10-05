@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "AZ28EH9G9N.com.locatedo.LocateDo",
+          "AZ28EH9G9N.com.locatedo.LocateDo.stg",
+          "AZ28EH9G9N.com.locatedo.LocateDo.dev"
+        ],
+        "components": [
+          { "/": "/i/*", "comment": "Household invites" }
+        ]
+      }
+    ]
+  }
+}
