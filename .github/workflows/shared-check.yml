@@ -10,7 +10,7 @@ on:
       - "ios/LocateDo/InfoPlist.xcstrings"
       - ".github/workflows/shared-check.yml"
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "shared/**"
       - "tools/l10n/**"

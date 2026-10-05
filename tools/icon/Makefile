@@ -1,6 +1,6 @@
 ASSETS := ../../ios/LocateDo/Assets.xcassets
 PREVIEW_DIR := preview
-SITE := ../../docs/legal
+SITE := ../../site
 
 .PHONY: generate preview favicon
 
