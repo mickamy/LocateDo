@@ -28,7 +28,7 @@ struct SharingView: View {
                 if account.isSignedIn {
                     signedIn
                 } else {
-                    signedOut
+                    SharingIntroView()
                 }
             }
             .navigationTitle(Text(.sharingTitle))
@@ -41,23 +41,6 @@ struct SharingView: View {
                 }
             }
         }
-    }
-
-    private var signedOut: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            Image(systemName: "person.2.circle")
-                .font(.system(size: 64))
-                .foregroundStyle(.tint)
-                .accessibilityHidden(true)
-            Text(.sharingSignInMessage)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Spacer()
-            AppleSignInButton()
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 28)
     }
 
     private var signedIn: some View {

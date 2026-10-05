@@ -13,17 +13,17 @@ struct AccountBenefitsView: View {
                     .multilineTextAlignment(.center)
             }
             VStack(alignment: .leading, spacing: 24) {
-                benefit(
+                BenefitRow(
                     systemImage: "iphone.and.arrow.forward",
                     title: .settingsAccountBenefitsSyncTitle,
                     message: .settingsAccountBenefitsSyncMessage
                 )
-                benefit(
+                BenefitRow(
                     systemImage: "person.2",
                     title: .settingsAccountBenefitsShareTitle,
                     message: .settingsAccountBenefitsShareMessage
                 )
-                benefit(
+                BenefitRow(
                     systemImage: "lock.shield",
                     title: .settingsAccountBenefitsPrivacyTitle,
                     message: .settingsAccountBenefitsPrivacyMessage
@@ -33,27 +33,5 @@ struct AccountBenefitsView: View {
         .padding(.horizontal, 32)
         .padding(.vertical, 40)
         .frame(maxWidth: .infinity)
-    }
-
-    private func benefit(
-        systemImage: String,
-        title: LocalizedStringResource,
-        message: LocalizedStringResource
-    ) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: systemImage)
-                .font(.title2)
-                .foregroundStyle(.tint)
-                .frame(width: 32)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }

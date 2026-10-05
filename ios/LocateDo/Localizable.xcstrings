@@ -2383,6 +2383,108 @@
         }
       }
     },
+    "sharing.benefit_assign_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign a to-do and only that person is reminded when they arrive."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TODO に担当を決めると、着いたときにその人にだけ知らせます。"
+          }
+        }
+      }
+    },
+    "sharing.benefit_assign_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The right person gets reminded"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "着いた人に、その人の用事を"
+          }
+        }
+      }
+    },
+    "sharing.benefit_lists_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos anyone adds show up on everyone’s iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誰かが足した場所や TODO が、全員の iPhone にすぐ届きます。"
+          }
+        }
+      }
+    },
+    "sharing.benefit_lists_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One list for everyone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "みんなで同じリスト"
+          }
+        }
+      }
+    },
+    "sharing.benefit_plan_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the owner has Pro, family members join for free."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーナーが Pro なら、家族は無料で参加できます。"
+          }
+        }
+      }
+    },
+    "sharing.benefit_plan_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One plan covers everyone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 つの契約で全員が使える"
+          }
+        }
+      }
+    },
     "sharing.failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2417,6 +2519,40 @@
         }
       }
     },
+    "sharing.intro_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Apple to share places and to-dos with your family."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple でサインインすると、家族と場所や TODO を共有できます。"
+          }
+        }
+      }
+    },
+    "sharing.intro_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use it together"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族と一緒に使う"
+          }
+        }
+      }
+    },
     "sharing.invite" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2447,6 +2583,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ちかメモで場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
+          }
+        }
+      }
+    },
+    "sharing.invited_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got an invite link? Sign in to join."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待リンクをもらった方も、サインインすると参加できます。"
           }
         }
       }
