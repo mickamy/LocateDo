@@ -24,6 +24,9 @@ jobs:
       contents: read
       id-token: write
       packages: read
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Pick the image

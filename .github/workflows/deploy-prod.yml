@@ -28,6 +28,7 @@ jobs:
       id-token: write
     defaults:
       run:
+        shell: bash
         working-directory: deploy/tofu/prod
 
     steps:
@@ -75,6 +76,7 @@ jobs:
       id-token: write
     defaults:
       run:
+        shell: bash
         working-directory: deploy/tofu/prod
 
     steps:
