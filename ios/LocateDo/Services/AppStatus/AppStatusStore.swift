@@ -110,7 +110,7 @@ final class AppStatusStore {
 
     private func apply() {
         now = clock()
-        gate.update(document?.maintenance)
+        gate.update(document?.maintenance, requiresUpdate: requiresUpdate)
         boundary?.cancel()
         guard let next = nextBoundary() else {
             return

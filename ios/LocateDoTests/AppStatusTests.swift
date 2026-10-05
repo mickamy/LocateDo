@@ -69,6 +69,16 @@ struct AppStatusTests {
         #expect(!gate.isClosed(at: Self.ends))
     }
 
+    @Test func theGateStaysClosedWhileAnUpdateIsRequired() async throws {
+        let outdated = makeStore(defaults: try makeDefaults(), version: "1.1.9") { _ in Self.full }
+        await outdated.refresh()
+        #expect(outdated.gate.isClosed(at: Self.ends))
+
+        let current = makeStore(defaults: try makeDefaults(), version: "1.2.0") { _ in Self.full }
+        await current.refresh()
+        #expect(!current.gate.isClosed(at: Self.ends))
+    }
+
     @Test func aFetchedStatusIsKeptForWhenTheNextFetchFails() async throws {
         let defaults = try makeDefaults()
         let first = makeStore(defaults: defaults, version: "1.0") { _ in Self.full }

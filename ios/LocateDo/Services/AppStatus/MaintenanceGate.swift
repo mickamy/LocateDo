@@ -2,22 +2,30 @@ import Foundation
 import Synchronization
 
 nonisolated final class MaintenanceGate: Sendable {
-    private let window = Mutex<DateInterval?>(nil)
+    private struct State {
+        var window: DateInterval?
+        var requiresUpdate = false
+    }
 
-    func update(_ maintenance: AppStatusDocument.Maintenance?) {
-        var interval: DateInterval?
+    private let state = Mutex(State())
+
+    func update(_ maintenance: AppStatusDocument.Maintenance?, requiresUpdate: Bool = false) {
+        var window: DateInterval?
         if let maintenance, maintenance.startsAt < maintenance.endsAt {
-            interval = DateInterval(start: maintenance.startsAt, end: maintenance.endsAt)
+            window = DateInterval(start: maintenance.startsAt, end: maintenance.endsAt)
         }
-        window.withLock { $0 = interval }
+        state.withLock { $0 = State(window: window, requiresUpdate: requiresUpdate) }
     }
 
     func isClosed(at now: Date = .now) -> Bool {
-        window.withLock { interval in
-            guard let interval else {
+        state.withLock { state in
+            if state.requiresUpdate {
+                return true
+            }
+            guard let window = state.window else {
                 return false
             }
-            return interval.start <= now && now < interval.end
+            return window.start <= now && now < window.end
         }
     }
 }
