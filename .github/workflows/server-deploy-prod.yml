@@ -106,8 +106,8 @@ jobs:
 
           {
             printf 'export IMAGE_TAG=%q GHCR_USER=%q GHCR_TOKEN=%q\n' "${IMAGE_TAG}" "${GHCR_USER}" "${GHCR_TOKEN}"
-            printf 'export COMPOSE_B64=%q\n' "$(base64 -w0 server/compose.prod.yaml)"
-            printf 'export CREATE_ROLES_B64=%q\n' "$(base64 -w0 server/initdb/create-roles.sh)"
+            bundle=$(tar -cz -C server compose.prod.yaml initdb scripts/backup-prod.sh systemd | base64 -w0)
+            printf 'export BUNDLE_B64=%q\n' "${bundle}"
             cat server/scripts/deploy-prod.sh
           } > deploy.sh
           jq -n --rawfile script deploy.sh '{commands: [$script], executionTimeout: ["900"]}' > parameters.json

@@ -1,17 +1,24 @@
 #!/bin/bash
 # Runs on the prod instance through SSM. The deploy workflow prepends
-# IMAGE_TAG, COMPOSE_B64 and CREATE_ROLES_B64 (the files from the deployed
-# commit), and GHCR_USER / GHCR_TOKEN (the job's token, valid until it ends).
+# IMAGE_TAG, BUNDLE_B64 (a tar.gz of the deployed commit's compose file, init
+# script, backup script, and systemd units), and GHCR_USER / GHCR_TOKEN (the
+# job's token, valid until it ends).
 set -euo pipefail
 
-: "${IMAGE_TAG:?}" "${COMPOSE_B64:?}" "${CREATE_ROLES_B64:?}" "${GHCR_USER:?}" "${GHCR_TOKEN:?}"
+: "${IMAGE_TAG:?}" "${BUNDLE_B64:?}" "${GHCR_USER:?}" "${GHCR_TOKEN:?}"
+
+bundle=$(mktemp -d)
+trap 'rm -rf "${bundle}"' EXIT
+base64 -d <<<"${BUNDLE_B64}" | tar -xz -C "${bundle}"
 
 mkdir -p /opt/locatedo/initdb
 cd /opt/locatedo
-
-base64 -d <<<"${COMPOSE_B64}" >compose.yaml
-base64 -d <<<"${CREATE_ROLES_B64}" >initdb/create-roles.sh
-chmod +x initdb/create-roles.sh
+install -m 644 "${bundle}/compose.prod.yaml" compose.yaml
+install -m 755 "${bundle}/initdb/create-roles.sh" initdb/create-roles.sh
+install -m 755 "${bundle}/scripts/backup-prod.sh" backup.sh
+install -m 644 "${bundle}"/systemd/* /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now locatedo-backup.timer
 
 umask 077
 aws ssm get-parameters-by-path --region us-west-2 --path /locatedo/prod --recursive --with-decryption \
@@ -23,7 +30,7 @@ printf "IMAGE_TAG='%s'\n" "${IMAGE_TAG}" >>.env.new
 mv .env.new .env
 
 docker login ghcr.io --username "${GHCR_USER}" --password-stdin <<<"${GHCR_TOKEN}"
-trap 'docker logout ghcr.io >/dev/null' EXIT
+trap 'docker logout ghcr.io >/dev/null; rm -rf "${bundle}"' EXIT
 docker compose pull --quiet
 docker logout ghcr.io
 docker compose run --rm migrate

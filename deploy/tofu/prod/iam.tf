@@ -40,6 +40,31 @@ resource "aws_iam_role_policy" "app_parameters" {
   })
 }
 
+# Put-only: a compromised instance can add backups but not read or erase them.
+resource "aws_iam_role_policy" "app_backups" {
+  name = "write-backups"
+  role = aws_iam_role.app.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject"]
+        Resource = "arn:aws:s3:::locatedo-prod-backups-${data.aws_caller_identity.current.account_id}/prod/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData"]
+        Resource = "*"
+        Condition = {
+          StringEquals = { "cloudwatch:namespace" = "LocateDo/Backup" }
+        }
+      },
+    ]
+  })
+}
+
 # The account already has GitHub's provider, shared with other projects.
 data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
