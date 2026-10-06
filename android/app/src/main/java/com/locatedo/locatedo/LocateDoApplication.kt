@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.locatedo.locatedo.core.account.AccountManager
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.geofence.GeofenceSync
@@ -43,6 +44,8 @@ class LocateDoApplication : Application() {
 
     @Inject lateinit var householdManager: HouseholdManager
 
+    @Inject lateinit var entitlements: Entitlements
+
     @Inject @ApplicationScope lateinit var applicationScope: CoroutineScope
 
     override fun onCreate() {
@@ -54,14 +57,17 @@ class LocateDoApplication : Application() {
         geofenceSync.start()
         syncEngine.start()
         networkMonitor.start()
+        entitlements.start()
         collectSyncTriggers()
         applicationScope.launch {
             authenticator.sessionEnded.collect {
                 accountManager.endSession()
             }
         }
-        // A household whose creation failed last time, and an installation the server has not seen yet.
+        // A household whose creation failed last time, an installation the server has not seen yet, and the store's
+        // view of the signed-in user.
         applicationScope.launch {
+            authenticator.current()?.let { entitlements.logIn(it.userId) }
             try {
                 accountManager.uploadLocalDataIfNeeded()
             } catch (e: Exception) {

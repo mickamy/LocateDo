@@ -169,6 +169,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.installations)
+    implementation(libs.revenuecat.purchases)
     implementation(libs.firebase.crashlytics)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)

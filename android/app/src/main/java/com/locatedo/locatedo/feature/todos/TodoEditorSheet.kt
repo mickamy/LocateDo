@@ -49,8 +49,6 @@ fun TodoEditorSheet(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val draft = uiState.draft
     val focusRequester = remember { FocusRequester() }
-    var limitMessage by remember { mutableStateOf<String?>(null) }
-    val limitText = stringResource(R.string.paywall_reason_todos)
 
     LaunchedEffect(Unit) {
         viewModel.start(placeId)
@@ -60,7 +58,6 @@ fun TodoEditorSheet(
         viewModel.events.collect { event ->
             when (event) {
                 TodoEditorEvent.Saved -> onDismiss()
-                is TodoEditorEvent.LimitReached -> limitMessage = limitText
             }
         }
     }
@@ -93,9 +90,6 @@ fun TodoEditorSheet(
             val assignees = assigneeChoices(uiState.members)
             if (assignees.isNotEmpty()) {
                 AssigneePicker(choices = assignees, selectedId = draft.assigneeId, onSelect = viewModel::setAssignee)
-            }
-            limitMessage?.let { message ->
-                Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onDismiss) {

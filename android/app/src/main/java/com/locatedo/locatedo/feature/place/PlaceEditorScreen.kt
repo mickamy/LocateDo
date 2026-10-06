@@ -24,8 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -64,14 +62,11 @@ fun PlaceEditorScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val draft = uiState.draft
-    val snackbarHostState = remember { SnackbarHostState() }
-    val limitMessage = stringResource(R.string.paywall_reason_places)
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is PlaceEditorEvent.Saved -> onSaved(event.isNew)
-                is PlaceEditorEvent.LimitReached -> snackbarHostState.showSnackbar(limitMessage)
                 PlaceEditorEvent.LocationChosen -> Unit
             }
         }
@@ -95,7 +90,6 @@ fun PlaceEditorScreen(
                 },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
             modifier = Modifier

@@ -14,14 +14,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -35,12 +32,13 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
-import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
+import com.locatedo.locatedo.feature.paywall.PaywallScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
@@ -53,6 +51,7 @@ import com.locatedo.locatedo.ui.navigation.AcceptInviteKey
 import com.locatedo.locatedo.ui.navigation.AccountKey
 import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
+import com.locatedo.locatedo.ui.navigation.PaywallKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
@@ -60,7 +59,6 @@ import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
-import kotlinx.coroutines.flow.Flow
 
 private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
@@ -77,6 +75,7 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     val appState by appViewModel.uiState.collectAsStateWithLifecycle()
     val pendingPlace by appViewModel.pendingPlace.collectAsStateWithLifecycle()
     val pendingInvite by appViewModel.pendingInvite.collectAsStateWithLifecycle()
+    val pendingPaywall by appViewModel.pendingPaywall.collectAsStateWithLifecycle()
 
     when {
         appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
@@ -86,7 +85,8 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
             pendingPlace = pendingPlace,
             pendingInvite = pendingInvite,
             onInviteConsumed = appViewModel::inviteConsumed,
-            limitRejected = appViewModel.limitRejected,
+            pendingPaywall = pendingPaywall,
+            onPaywallConsumed = appViewModel::paywallConsumed,
         )
     }
     if (appState.isExplainingAlwaysLocation) {
@@ -125,16 +125,14 @@ private fun Tabs(
     pendingPlace: UUID?,
     pendingInvite: String?,
     onInviteConsumed: (String) -> Unit,
-    limitRejected: Flow<FreeLimit>,
+    pendingPaywall: PaywallTrigger?,
+    onPaywallConsumed: (PaywallTrigger) -> Unit,
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
-    val snackbarHostState = remember { SnackbarHostState() }
-    val placeLimitMessage = stringResource(R.string.paywall_reason_places)
-    val todoLimitMessage = stringResource(R.string.paywall_reason_todos)
 
     LaunchedEffect(pendingPlace) {
         if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
@@ -149,19 +147,17 @@ private fun Tabs(
             onInviteConsumed(pendingInvite)
         }
     }
-    LaunchedEffect(Unit) {
-        limitRejected.collect { limit ->
-            val message = when (limit) {
-                FreeLimit.PLACES -> placeLimitMessage
-                FreeLimit.OPEN_TODOS -> todoLimitMessage
+    LaunchedEffect(pendingPaywall) {
+        if (pendingPaywall != null) {
+            if (backStack.lastOrNull() !is PaywallKey) {
+                backStack.add(PaywallKey(pendingPaywall))
             }
-            snackbarHostState.showSnackbar(message)
+            onPaywallConsumed(pendingPaywall)
         }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (current in tabKeys) {
                 NavigationBar {
@@ -241,6 +237,9 @@ private fun Tabs(
                         onBack = { backStack.removeLastOrNull() },
                         onJoined = { backStack.removeLastOrNull() },
                     )
+                }
+                entry<PaywallKey> { key ->
+                    PaywallScreen(trigger = key.trigger, onClose = { backStack.removeLastOrNull() })
                 }
                 entry<PlaceSearchKey> {
                     PlaceSearchScreen(

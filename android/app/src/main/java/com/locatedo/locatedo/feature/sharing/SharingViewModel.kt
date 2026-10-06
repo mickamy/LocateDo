@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.SyncStateRepository
 import com.locatedo.locatedo.core.model.MemberRole
@@ -87,6 +89,7 @@ class SharingViewModel @Inject constructor(
     authenticator: Authenticator,
     private val households: HouseholdManager,
     private val sync: SyncEngine,
+    private val paywallRequests: PaywallRequests,
 ) : ViewModel() {
     private val isRefreshing = MutableStateFlow(false)
     private val hasFailed = MutableStateFlow(false)
@@ -130,6 +133,8 @@ class SharingViewModel @Inject constructor(
             }
         }
     }
+
+    fun upgrade() = paywallRequests.request(PaywallTrigger.SHARE)
 
     fun createInvite() {
         viewModelScope.launch {

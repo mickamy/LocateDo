@@ -8,6 +8,7 @@ import com.locatedo.household.v1.household
 import com.locatedo.locatedo.core.account.AccountManager
 import com.locatedo.locatedo.core.api.AccessTokenStore
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.data.FakeProStatus
 import com.locatedo.locatedo.core.data.LocalData
 import com.locatedo.locatedo.core.data.RoomCategoryRepository
@@ -28,6 +29,7 @@ import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.core.sync.WriteSender
 import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakeDeviceService
+import com.locatedo.locatedo.testing.FakeEntitlementSource
 import com.locatedo.locatedo.testing.FakeHouseholdService
 import com.locatedo.locatedo.testing.FakeInstallationIdSource
 import com.locatedo.locatedo.testing.FakeSyncService
@@ -218,6 +220,7 @@ class HouseholdManagerTest {
             localData = localData,
             queue = queue,
             deviceRegistration = DeviceRegistration(FakeDeviceService(), authenticator, FakeInstallationIdSource()),
+            entitlements = Entitlements(FakeEntitlementSource(), this),
             preferences = preferences,
             clock = fixedClock,
         )

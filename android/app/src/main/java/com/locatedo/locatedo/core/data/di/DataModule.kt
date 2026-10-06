@@ -9,7 +9,7 @@ import com.locatedo.locatedo.core.data.RoomMembershipRepository
 import com.locatedo.locatedo.core.data.RoomPlaceRepository
 import com.locatedo.locatedo.core.data.RoomSyncStateRepository
 import com.locatedo.locatedo.core.data.RoomTodoRepository
-import com.locatedo.locatedo.core.data.SyncStateProStatus
+import com.locatedo.locatedo.core.data.EntitlementProStatus
 import com.locatedo.locatedo.core.data.SyncStateRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import dagger.Binds
@@ -36,5 +36,5 @@ abstract class DataModule {
     abstract fun membershipRepository(repository: RoomMembershipRepository): MembershipRepository
 
     @Binds
-    abstract fun proStatus(status: SyncStateProStatus): ProStatus
+    abstract fun proStatus(status: EntitlementProStatus): ProStatus
 }

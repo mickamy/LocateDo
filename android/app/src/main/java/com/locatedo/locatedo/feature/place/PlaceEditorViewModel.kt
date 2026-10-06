@@ -11,7 +11,8 @@ import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
-import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.places.PlacePrediction
@@ -70,7 +71,6 @@ data class PlaceEditorUiState(
 sealed interface PlaceEditorEvent {
     data object LocationChosen : PlaceEditorEvent
     data class Saved(val isNew: Boolean) : PlaceEditorEvent
-    data class LimitReached(val limit: FreeLimit) : PlaceEditorEvent
 }
 
 // Scoped to the activity, not a screen: the search, pick, and form screens share one draft.
@@ -83,6 +83,7 @@ class PlaceEditorViewModel @Inject constructor(
     private val geocodingRepository: GeocodingRepository,
     private val locationRepository: LocationRepository,
     private val preferences: AppPreferences,
+    private val paywallRequests: PaywallRequests,
     private val clock: Clock,
 ) : ViewModel() {
     private val draft = MutableStateFlow(PlaceDraft())
@@ -238,9 +239,11 @@ class PlaceEditorViewModel @Inject constructor(
                 )
                 null
             }
-            _events.emit(
-                if (limit == null) PlaceEditorEvent.Saved(isNew = current.placeId == null) else PlaceEditorEvent.LimitReached(limit),
-            )
+            if (limit == null) {
+                _events.emit(PlaceEditorEvent.Saved(isNew = current.placeId == null))
+            } else {
+                paywallRequests.request(limit.paywallTrigger)
+            }
         }
     }
 

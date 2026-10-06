@@ -6,6 +6,8 @@ import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
@@ -49,6 +51,7 @@ class PlaceEditorViewModelTest {
     private val now = Instant.parse("2026-10-06T00:00:00Z")
     private val clock = Clock.fixed(now, ZoneOffset.UTC)
     private val places = FakePlaceRepository()
+    private val paywalls = PaywallRequests()
     private val categories = FakeCategoryRepository()
     private val search = FakePlacesRepository()
     private val geocoding = FakeGeocodingRepository()
@@ -146,7 +149,7 @@ class PlaceEditorViewModelTest {
     }
 
     @Test
-    fun savingOverTheFreeLimitRaisesTheLimit() = runTest(dispatcher) {
+    fun savingOverTheFreeLimitOpensThePaywall() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
         places.limit = FreeLimit.PLACES
@@ -155,7 +158,8 @@ class PlaceEditorViewModelTest {
 
         viewModel.save()
 
-        assertEquals(PlaceEditorEvent.LimitReached(FreeLimit.PLACES), events.last())
+        assertEquals(PaywallTrigger.PLACE_LIMIT, paywalls.pending.value)
+        assertTrue(events.none { it is PlaceEditorEvent.Saved })
         assertTrue(places.added.isEmpty())
     }
 
@@ -217,6 +221,7 @@ class PlaceEditorViewModelTest {
             geocodingRepository = geocoding,
             locationRepository = FakeLocationRepository(),
             preferences = preferences,
+            paywallRequests = paywalls,
             clock = clock,
         )
         backgroundScope.launch { viewModel.uiState.collect {} }
