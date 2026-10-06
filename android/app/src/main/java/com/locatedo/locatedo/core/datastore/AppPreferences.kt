@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.locatedo.locatedo.core.model.Place
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +28,11 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val requestedNotifications = booleanPreferencesKey("requestedNotifications")
         val promptedAlwaysLocation = booleanPreferencesKey("promptedAlwaysLocation")
         val defaultRadiusMeters = doublePreferencesKey("defaultRadiusMeters")
+        val registeredGeofences = stringPreferencesKey("registeredGeofences")
     }
+
+    // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
+    val registeredGeofences: Flow<String> = dataStore.data.map { it[Keys.registeredGeofences] ?: "" }
 
     val data: Flow<UserPreferences> = dataStore.data.map { preferences ->
         val radius = preferences[Keys.defaultRadiusMeters]
@@ -62,6 +67,10 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setDefaultRadiusMeters(meters: Double) {
         dataStore.edit { it[Keys.defaultRadiusMeters] = meters }
+    }
+
+    suspend fun setRegisteredGeofences(encoded: String) {
+        dataStore.edit { it[Keys.registeredGeofences] = encoded }
     }
 
     suspend fun reset() {

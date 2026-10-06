@@ -54,6 +54,17 @@ class AppPreferencesTest {
     }
 
     @Test
+    fun theGeofenceRecordIsKeptApartFromThePreferences() = runTest {
+        val preferences = preferences()
+
+        preferences.setRegisteredGeofences("a|1.0|2.0|100.0")
+        preferences.reset()
+
+        assertEquals("a|1.0|2.0|100.0", preferences.registeredGeofences.first())
+        assertEquals(UserPreferences(), preferences.data.first())
+    }
+
+    @Test
     fun resetClearsEverything() = runTest {
         val preferences = preferences()
         preferences.setCompletedOnboarding(true)

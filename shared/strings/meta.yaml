@@ -16,3 +16,5 @@ category.move_up:
   platforms: [android]
 category.move_down:
   platforms: [android]
+notification.channel_arrivals:
+  platforms: [android]

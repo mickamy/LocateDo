@@ -77,6 +77,7 @@
     <string name="maintenance_upcoming">Sync will pause for server maintenance from %1$s to %2$s.</string>
     <string name="map_empty_message">Places you add appear here.</string>
     <string name="notification_arrived_title">You’re at %1$s</string>
+    <string name="notification_channel_arrivals">Arrival reminders</string>
     <plurals name="notification_more">
         <item quantity="one">+%1$d more</item>
         <item quantity="other">+%1$d more</item>

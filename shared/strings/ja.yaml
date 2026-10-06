@@ -195,6 +195,7 @@ todo:
     open: "未完了"
     done: "完了"
 notification:
+  channel_arrivals: "到着のお知らせ"
   arrived_title: "{place} に到着しました"
   more:
     plural:

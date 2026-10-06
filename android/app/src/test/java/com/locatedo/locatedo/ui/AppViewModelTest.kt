@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.ui
 
+import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.testPreferences
@@ -42,7 +43,7 @@ class AppViewModelTest {
     fun startsLoadingThenReflectsOnboarding() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         preferences.setCompletedOnboarding(true)
-        val viewModel = AppViewModel(preferences, FakePermissionsRepository())
+        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests())
         assertTrue(viewModel.uiState.value.isLoading)
 
         subscribe(viewModel)
@@ -55,7 +56,7 @@ class AppViewModelTest {
     @Test
     fun theFirstPlaceOffersAlwaysLocationOnceWhileItIsWhenInUse() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
+        val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE), PlaceSelectionRequests())
         subscribe(viewModel)
 
         viewModel.placeAdded()
@@ -73,7 +74,7 @@ class AppViewModelTest {
     fun nothingIsOfferedWhenLocationIsAlreadyAlwaysOrNotGranted() = runTest(dispatcher) {
         for (location in listOf(LocationAuth.ALWAYS, LocationAuth.DENIED, LocationAuth.NOT_DETERMINED)) {
             val preferences = testPreferences(folder.newFolder(location.name), backgroundScope)
-            val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = location))
+            val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = location), PlaceSelectionRequests())
             subscribe(viewModel)
 
             viewModel.placeAdded()

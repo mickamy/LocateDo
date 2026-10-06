@@ -15,6 +15,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -46,6 +47,7 @@ import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
+import java.util.UUID
 
 private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
@@ -60,11 +62,12 @@ private val tabKeys = tabs.map { it.key }
 @Composable
 fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     val appState by appViewModel.uiState.collectAsStateWithLifecycle()
+    val pendingPlace by appViewModel.pendingPlace.collectAsStateWithLifecycle()
 
     when {
         appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
         !appState.hasCompletedOnboarding -> OnboardingScreen()
-        else -> Tabs(onPlaceAdded = appViewModel::placeAdded)
+        else -> Tabs(onPlaceAdded = appViewModel::placeAdded, pendingPlace = pendingPlace)
     }
     if (appState.isExplainingAlwaysLocation) {
         AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
@@ -72,12 +75,19 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun Tabs(onPlaceAdded: () -> Unit) {
+private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
+
+    LaunchedEffect(pendingPlace) {
+        if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
+            backStack.clear()
+            backStack.add(HomeKey)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

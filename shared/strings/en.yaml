@@ -198,6 +198,7 @@ todo:
     open: "Open"
     done: "Done"
 notification:
+  channel_arrivals: "Arrival reminders"
   arrived_title: "You’re at {place}"
   more:
     plural:

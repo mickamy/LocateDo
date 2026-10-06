@@ -2,10 +2,12 @@ package com.locatedo.locatedo.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,8 +28,12 @@ data class AppUiState(
 class AppViewModel @Inject constructor(
     private val preferences: AppPreferences,
     private val permissions: PermissionsRepository,
+    selectionRequests: PlaceSelectionRequests,
 ) : ViewModel() {
     private val isExplainingAlwaysLocation = MutableStateFlow(false)
+
+    // A place asked for from outside the home tab (a notification tap); the tabs switch to home so it can be shown.
+    val pendingPlace: StateFlow<UUID?> = selectionRequests.pending
 
     val uiState: StateFlow<AppUiState> = combine(preferences.data, isExplainingAlwaysLocation) { stored, explaining ->
         AppUiState(

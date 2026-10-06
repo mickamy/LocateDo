@@ -5,6 +5,8 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
+import com.locatedo.locatedo.core.geofence.GeofenceRegion
+import com.locatedo.locatedo.core.geofence.GeofenceRegistrar
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.location.GeocodingRepository
 import com.locatedo.locatedo.core.location.LocationRepository
@@ -14,6 +16,7 @@ import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.Permissions
@@ -58,7 +61,38 @@ class FakePlaceRepository : PlaceRepository {
         state.value = state.value.filter { it.place.id != id }
     }
 
-    override suspend fun markNotified(id: UUID, at: Instant) = Unit
+    override suspend fun markNotified(id: UUID, at: Instant) {
+        state.value = state.value.map { if (it.place.id == id) it.copy(place = it.place.copy(lastNotifiedAt = at)) else it }
+    }
+}
+
+class FakeGeofenceRegistrar : GeofenceRegistrar {
+    val added = mutableListOf<List<GeofenceRegion>>()
+    val removed = mutableListOf<List<String>>()
+    var failAdd = false
+
+    override suspend fun add(regions: List<GeofenceRegion>): Boolean {
+        if (failAdd) {
+            return false
+        }
+        added += regions
+        return true
+    }
+
+    override suspend fun remove(requestIds: List<String>): Boolean {
+        removed += requestIds
+        return true
+    }
+}
+
+class FakeArrivalNotifier : ArrivalNotifier {
+    val notified = mutableListOf<Pair<Place, List<String>>>()
+
+    override fun prepare() = Unit
+
+    override fun notifyArrival(place: Place, todoTitles: List<String>) {
+        notified += place to todoTitles
+    }
 }
 
 class FakeCategoryRepository : CategoryRepository {
