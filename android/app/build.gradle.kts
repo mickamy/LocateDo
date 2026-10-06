@@ -55,6 +55,10 @@ android {
         compose = true
         buildConfig = true
     }
+    // Connect clients and messages from shared/proto (`cd shared/proto && buf generate`).
+    sourceSets.getByName("main") {
+        java.directories.add("src/main/generated")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -88,6 +92,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.connect.kotlin)
+    implementation(libs.connect.kotlin.okhttp)
+    implementation(libs.connect.kotlin.google.javalite.ext)
+    implementation(libs.protobuf.javalite)
+    implementation(libs.protobuf.kotlin.lite)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
 }
