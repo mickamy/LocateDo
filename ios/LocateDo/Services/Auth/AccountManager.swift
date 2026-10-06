@@ -12,7 +12,9 @@ final class AccountManager {
     }
 
     private(set) var isWorking = false
+    private(set) var isResettingLocalData = false
     private var pendingAdoption: PendingAdoption?
+    private var screenClearance: CheckedContinuation<Void, Never>?
     @ObservationIgnored var pushToken: () -> String? = { nil }
     @ObservationIgnored var onLocalDataReset: () async -> Void = {}
     @ObservationIgnored var onHouseholdReady: () -> Void = {}
@@ -23,6 +25,7 @@ final class AccountManager {
     private let household: any Locatedo_Household_V1_HouseholdServiceClientInterface
     private let authenticator: Authenticator
     private let context: ModelContext
+    private let resetsOffscreen: Bool
     private var pendingHouseholdID: UUID?
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "account")
 
@@ -30,12 +33,14 @@ final class AccountManager {
         account: any Locatedo_Account_V1_AccountServiceClientInterface,
         household: any Locatedo_Household_V1_HouseholdServiceClientInterface,
         authenticator: Authenticator,
-        context: ModelContext
+        context: ModelContext,
+        resetsOffscreen: Bool = true
     ) {
         self.account = account
         self.household = household
         self.authenticator = authenticator
         self.context = context
+        self.resetsOffscreen = resetsOffscreen
     }
 
     var isSignedIn: Bool {
@@ -131,8 +136,10 @@ final class AccountManager {
             await client.deleteAccount(request: Locatedo_Account_V1_DeleteAccountRequest(), headers: [:])
         }
         try authenticator.signOut()
-        try resetLocalData()
-        await onLocalDataReset()
+        try await offscreen {
+            try resetLocalData()
+            await onLocalDataReset()
+        }
     }
 
     func hasUnsyncedWrites() throws -> Bool {
@@ -156,24 +163,30 @@ final class AccountManager {
         }
         try authenticator.signOut()
         pendingAdoption = nil
-        try resetLocalData()
-        await onSignedOut()
+        try await offscreen {
+            try resetLocalData()
+            await onSignedOut()
+        }
     }
 
     func startOver() async throws {
         pendingAdoption = nil
-        try resetLocalData()
-        try await uploadLocalDataIfNeeded()
+        try await offscreen {
+            try resetLocalData()
+            try await uploadLocalDataIfNeeded()
+        }
     }
 
     func endSession() async {
         pendingAdoption = nil
-        do {
-            try resetLocalData()
-        } catch {
-            logger.error("Could not clear local data after the session ended: \(error, privacy: .public)")
+        await offscreen {
+            do {
+                try resetLocalData()
+            } catch {
+                logger.error("Could not clear local data after the session ended: \(error, privacy: .public)")
+            }
+            await onSessionEnded()
         }
-        await onSessionEnded()
     }
 
     private func hasUserData() throws -> Bool {
@@ -184,13 +197,30 @@ final class AccountManager {
     }
 
     func join(householdID: UUID, plan: Plan) async throws {
-        try deleteSyncedData()
-        let state = try SyncState.current(in: context)
-        state.householdID = householdID
-        state.cursor = 0
-        state.plan = plan
-        try context.save()
+        try await offscreen {
+            try deleteSyncedData()
+            let state = try SyncState.current(in: context)
+            state.householdID = householdID
+            state.cursor = 0
+            state.plan = plan
+            try context.save()
+        }
         onHouseholdReady()
+    }
+
+    func screenDidClear() {
+        screenClearance?.resume()
+        screenClearance = nil
+    }
+
+    // Rows still on screen would read the models being deleted and crash, so RootView swaps the tabs out first.
+    private func offscreen(_ body: () async throws -> Void) async rethrows {
+        isResettingLocalData = true
+        defer { isResettingLocalData = false }
+        if resetsOffscreen {
+            await withCheckedContinuation { screenClearance = $0 }
+        }
+        try await body()
     }
 
     private func adopt(_ adoption: PendingAdoption) async throws {
