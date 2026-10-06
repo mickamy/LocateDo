@@ -399,8 +399,8 @@ func (x *CreateHouseholdRequest) GetTodos() []*InitialTodo {
 type CreateHouseholdResponse struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	Household *Household             `protobuf:"bytes,1,opt,name=household,proto3" json:"household,omitempty"`
-	// The household version the upload landed at. The device already holds
-	// everything up to here, so it is the cursor for its first Pull.
+	// The cursor for the first Pull. Always 0 so the device receives the owner
+	// membership the server created along with the rows it uploaded.
 	Cursor        int64 `protobuf:"varint,2,opt,name=cursor,proto3" json:"cursor,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

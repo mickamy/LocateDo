@@ -18,6 +18,8 @@ import (
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1/householdv1connect"
 	placev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1"
+	syncv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/sync/v1"
+	"github.com/mickamy/LocateDo/internal/gen/locatedo/sync/v1/syncv1connect"
 	todov1 "github.com/mickamy/LocateDo/internal/gen/locatedo/todo/v1"
 	"github.com/mickamy/LocateDo/internal/server"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -46,8 +48,16 @@ func TestHousehold_createInviteAcceptRemove(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, householdID, created.Msg.GetHousehold().GetId())
 	assert.Equal(t, householdv1.Plan_PLAN_FREE, created.Msg.GetHousehold().GetPlan())
-	assert.Equal(t, d.Seeder.Version(t, uuid.MustParse(householdID)), created.Msg.GetCursor(),
-		"the device can start pulling from here")
+	assert.Zero(t, created.Msg.GetCursor())
+	pulled, err := newSyncClient(t, d).Pull(t.Context(), authed(owner, &syncv1.PullRequest{
+		HouseholdId: householdID,
+		Cursor:      created.Msg.GetCursor(),
+	}))
+	require.NoError(t, err)
+	require.NotEmpty(t, pulled.Msg.GetChanges())
+	membership := pulled.Msg.GetChanges()[0].GetMembership()
+	assert.Equal(t, owner.String(), membership.GetUserId(), "the first pull carries the owner membership")
+	assert.Equal(t, householdv1.Role_ROLE_OWNER, membership.GetRole())
 	assert.Equal(t, 1, completedTodos(t, d, householdID), "only the todo sent with completed_at is completed")
 
 	// act & assert: inviting needs pro
@@ -111,12 +121,26 @@ func TestHousehold_requiresToken(t *testing.T) {
 func newClient(t *testing.T, d tdb.DB) householdv1connect.HouseholdServiceClient {
 	t.Helper()
 
+	srv := newServer(t, d)
+	return householdv1connect.NewHouseholdServiceClient(srv.Client(), srv.URL)
+}
+
+func newSyncClient(t *testing.T, d tdb.DB) syncv1connect.SyncServiceClient {
+	t.Helper()
+
+	srv := newServer(t, d)
+	return syncv1connect.NewSyncServiceClient(srv.Client(), srv.URL)
+}
+
+func newServer(t *testing.T, d tdb.DB) *httptest.Server {
+	t.Helper()
+
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
 	handlers := server.NewHandlers(cfg, d.Infra(), lib)
 	srv := httptest.NewServer(server.Handler(*handlers))
 	t.Cleanup(srv.Close)
-	return householdv1connect.NewHouseholdServiceClient(srv.Client(), srv.URL)
+	return srv
 }
 
 // user creates a user and an access token for them.
