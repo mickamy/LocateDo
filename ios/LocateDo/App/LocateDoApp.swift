@@ -81,7 +81,8 @@ struct LocateDoApp: App {
         }
         writes.isPro = isPro
         sync.isPro = isPro
-        sync.onLimitRejected = { [router] limit in
+        sync.onLimitRejected = { [router, writes] limit in
+            writes.logLimitReached(limit)
             router.pendingPaywall = limit.trigger
         }
         geofence.onArrival = { [sync] in
@@ -113,15 +114,19 @@ struct LocateDoApp: App {
             preferences.hasPendingRemovedNotice = true
         }
         if !Self.isRunningTests {
-            Analytics.configure()
-            InstallDate.record(defaults: .standard, now: .now)
-            geofence.start()
-            network.start()
-            entitlements.start()
-            if let userID = authenticator.session?.userID {
-                Task { [entitlements] in
-                    await entitlements.logIn(userID: userID)
-                }
+            startServices()
+        }
+    }
+
+    private func startServices() {
+        Analytics.configure()
+        InstallDate.record(defaults: .standard, now: .now)
+        geofence.start()
+        network.start()
+        entitlements.start()
+        if let userID = authenticator.session?.userID {
+            Task { [entitlements] in
+                await entitlements.logIn(userID: userID)
             }
         }
     }
