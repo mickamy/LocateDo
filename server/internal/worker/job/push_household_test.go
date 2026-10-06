@@ -15,12 +15,13 @@ import (
 
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/infra/apns"
+	"github.com/mickamy/LocateDo/internal/infra/fcm"
 	"github.com/mickamy/LocateDo/internal/outbox"
 	"github.com/mickamy/LocateDo/internal/worker/job"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
 
-func TestPushHousehold_wakesEveryMembersIOSDevice(t *testing.T) {
+func TestPushHousehold_wakesEveryMembersDeviceOnItsPlatform(t *testing.T) {
 	t.Parallel()
 
 	// arrange
@@ -32,16 +33,39 @@ func TestPushHousehold_wakesEveryMembersIOSDevice(t *testing.T) {
 	device(t, d, memberID, "android", "", "member-android")
 	outsider := d.Seeder.Household(t, hmodel.PlanPro)
 	device(t, d, outsider.OwnerID, "ios", "production", "stranger-phone")
+	device(t, d, outsider.OwnerID, "android", "", "stranger-android")
 	pusher := &fakePusher{}
+	android := &fakeFCM{}
 
 	// act
-	err := pushJob(d, pusher).Handle(t.Context(), pushMessage(t, h.ID))
+	err := pushJob(d, pusher, android).Handle(t.Context(), pushMessage(t, h.ID))
 
 	// assert
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"owner-phone", "member-phone"}, pusher.woken())
 	assert.Equal(t, apns.Production, pusher.environment("owner-phone"))
 	assert.Equal(t, apns.Sandbox, pusher.environment("member-phone"))
+	assert.Equal(t, []string{"member-android"}, android.woken())
+}
+
+func TestPushHousehold_forgetsUnregisteredAndroidTokens(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	device(t, d, h.OwnerID, "android", "", "stale-android")
+	device(t, d, h.OwnerID, "android", "", "fresh-android")
+	device(t, d, h.OwnerID, "ios", "production", "stale-android")
+	android := &fakeFCM{fail: map[string]error{"stale-android": fcm.ErrUnregistered}}
+
+	// act
+	err := pushJob(d, &fakePusher{}, android).Handle(t.Context(), pushMessage(t, h.ID))
+
+	// assert
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{"fresh-android", "stale-android"}, tokens(t, d),
+		"only the Android registration is forgotten")
 }
 
 func TestPushHousehold_forgetsUnregisteredTokens(t *testing.T) {
@@ -55,7 +79,7 @@ func TestPushHousehold_forgetsUnregisteredTokens(t *testing.T) {
 	pusher := &fakePusher{fail: map[string]error{"stale": apns.ErrUnregistered}}
 
 	// act
-	err := pushJob(d, pusher).Handle(t.Context(), pushMessage(t, h.ID))
+	err := pushJob(d, pusher, &fakeFCM{}).Handle(t.Context(), pushMessage(t, h.ID))
 
 	// assert
 	require.NoError(t, err, "an unregistered token is not a failure")
@@ -73,7 +97,7 @@ func TestPushHousehold_retriesOtherFailures(t *testing.T) {
 	pusher := &fakePusher{fail: map[string]error{"flaky": errors.New("status 503")}}
 
 	// act
-	err := pushJob(d, pusher).Handle(t.Context(), pushMessage(t, h.ID))
+	err := pushJob(d, pusher, &fakeFCM{}).Handle(t.Context(), pushMessage(t, h.ID))
 
 	// assert
 	require.ErrorContains(t, err, "503")
@@ -143,9 +167,35 @@ func (f *fakePusher) environment(token string) apns.Environment {
 	return f.envs[token]
 }
 
-func pushJob(d tdb.DB, pusher apns.Pusher) *job.PushHousehold {
+type fakeFCM struct {
+	fail map[string]error
+
+	mu   sync.Mutex
+	woke []string
+}
+
+var _ fcm.Pusher = (*fakeFCM)(nil)
+
+func (f *fakeFCM) Wake(_ context.Context, token string, _ time.Time) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.woke = append(f.woke, token)
+	return nil
+}
+
+func (f *fakeFCM) woken() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.woke)
+}
+
+func pushJob(d tdb.DB, ios apns.Pusher, android fcm.Pusher) *job.PushHousehold {
 	infra := d.Infra()
-	infra.APNs = pusher
+	infra.APNs = ios
+	infra.FCM = android
 	return job.NewPushHousehold(infra)
 }
 

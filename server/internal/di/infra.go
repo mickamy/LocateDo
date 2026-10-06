@@ -9,6 +9,8 @@ import (
 	"github.com/mickamy/LocateDo/config"
 	"github.com/mickamy/LocateDo/internal/infra/apns"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
+	"github.com/mickamy/LocateDo/internal/infra/fcm"
+	"github.com/mickamy/LocateDo/internal/infra/google"
 	"github.com/mickamy/LocateDo/internal/infra/revenuecat"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
@@ -17,7 +19,9 @@ import (
 
 const (
 	appleHTTPTimeout  = 10 * time.Second
+	googleHTTPTimeout = 10 * time.Second
 	apnsHTTPTimeout   = 10 * time.Second
+	fcmHTTPTimeout    = 10 * time.Second
 	revenueCatTimeout = 10 * time.Second
 )
 
@@ -30,7 +34,9 @@ type Infra struct {
 	Transactor     tx.Transactor           `di:"with=provideTransactor"`
 	ReadTransactor tx.ReadTransactor       `di:"with=provideReadTransactor"`
 	Apple          apple.Auth              `di:"with=provideApple"`
+	Google         google.Auth             `di:"with=provideGoogle"`
 	APNs           apns.Pusher             `di:"with=provideAPNs"`
+	FCM            fcm.Pusher              `di:"with=provideFCM"`
 	Entitlements   revenuecat.Entitlements `di:"with=provideRevenueCat"`
 }
 
@@ -82,6 +88,13 @@ func provideApple(cfg config.Apple) (apple.Auth, error) {
 	return apple.NewClient(appleCfg, &http.Client{Timeout: appleHTTPTimeout}), nil
 }
 
+func provideGoogle(cfg config.Google) google.Auth {
+	return google.NewClient(
+		google.Config{BaseURL: cfg.BaseURL, ClientID: cfg.ClientID},
+		&http.Client{Timeout: googleHTTPTimeout},
+	)
+}
+
 func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
 	apnsCfg := apns.Config{
 		ProductionURL: apns.ProductionURL,
@@ -98,6 +111,18 @@ func provideAPNs(cfg config.APNs, appleCfg config.Apple) (apns.Pusher, error) {
 		apnsCfg.PrivateKey = key
 	}
 	return apns.NewClient(apnsCfg, &http.Client{Timeout: apnsHTTPTimeout}), nil
+}
+
+func provideFCM(cfg config.FCM) (fcm.Pusher, error) {
+	fcmCfg := fcm.Config{BaseURL: fcm.DefaultBaseURL, TokenURL: fcm.DefaultTokenURL}
+	if cfg.ServiceAccount != "" {
+		account, err := fcm.ParseServiceAccount(cfg.ServiceAccount)
+		if err != nil {
+			return nil, fmt.Errorf("parse FCM_SERVICE_ACCOUNT: %w", err)
+		}
+		fcmCfg.ServiceAccount = &account
+	}
+	return fcm.NewClient(fcmCfg, &http.Client{Timeout: fcmHTTPTimeout}), nil
 }
 
 func provideRevenueCat(cfg config.RevenueCat) revenuecat.Entitlements {

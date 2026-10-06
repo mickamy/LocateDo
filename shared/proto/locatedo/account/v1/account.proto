@@ -41,10 +41,16 @@ message SignInWithAppleResponse {
 
 message SignInWithGoogleRequest {
   string id_token = 1 [(buf.validate.field).string.min_len = 1];
+  string nonce = 2 [(buf.validate.field).string = {
+    min_len: 16
+    max_len: 128
+  }];
 }
 
 message SignInWithGoogleResponse {
   Session session = 1;
+  // Set when the user already belongs to a household; the device adopts it instead of creating one.
+  optional string household_id = 2;
 }
 
 message RefreshTokenRequest {

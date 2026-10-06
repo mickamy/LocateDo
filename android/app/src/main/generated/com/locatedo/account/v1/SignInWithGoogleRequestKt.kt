@@ -45,6 +45,23 @@ public object SignInWithGoogleRequestKt {
     public fun clearIdToken() {
       _builder.clearIdToken()
     }
+
+    /**
+     * `string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }`
+     */
+    public var nonce: kotlin.String
+      @kotlin.jvm.JvmName("getNonce")
+        get() = _builder.nonce
+      @kotlin.jvm.JvmName("setNonce")
+        set(value) {
+        _builder.nonce = value
+      }
+    /**
+     * `string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }`
+     */
+    public fun clearNonce() {
+      _builder.clearNonce()
+    }
   }
 }
 public inline fun com.locatedo.account.v1.SignInWithGoogleRequest.copy(block: `com.locatedo.account.v1`.SignInWithGoogleRequestKt.Dsl.() -> kotlin.Unit): com.locatedo.account.v1.SignInWithGoogleRequest =

@@ -3,31 +3,28 @@ package apple
 import (
 	"context"
 	"crypto/ecdsa"
-	"crypto/rsa"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/mickamy/LocateDo/internal/lib/jwks"
 )
 
 const (
 	DefaultBaseURL = "https://appleid.apple.com"
 
-	issuer             = "https://appleid.apple.com"
-	clientSecretTTL    = 5 * time.Minute
-	keysRefetchMinWait = time.Minute
-	maxResponseBytes   = 1 << 20
+	issuer           = "https://appleid.apple.com"
+	clientSecretTTL  = 5 * time.Minute
+	maxResponseBytes = 1 << 20
 )
 
 var (
@@ -60,11 +57,11 @@ type Identity struct {
 type Client struct {
 	cfg  Config
 	http *http.Client
-	keys *keySet
+	keys *jwks.Cache
 }
 
 func NewClient(cfg Config, httpClient *http.Client) Client {
-	return Client{cfg: cfg, http: httpClient, keys: &keySet{}}
+	return Client{cfg: cfg, http: httpClient, keys: jwks.New(cfg.BaseURL+"/auth/keys", httpClient)}
 }
 
 type identityClaims struct {
@@ -80,7 +77,7 @@ func (c Client) VerifyIdentityToken(ctx context.Context, raw, rawNonce string, n
 	_, err := jwt.ParseWithClaims(raw, &claims,
 		func(t *jwt.Token) (any, error) {
 			kid, _ := t.Header["kid"].(string)
-			return c.publicKey(ctx, kid, now)
+			return c.keys.Key(ctx, kid, now)
 		},
 		jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Alg()}),
 		jwt.WithIssuer(issuer),
@@ -196,105 +193,4 @@ func (c Client) postForm(ctx context.Context, path string, form url.Values, out 
 		return fmt.Errorf("decode response: %w", err)
 	}
 	return nil
-}
-
-func (c Client) publicKey(ctx context.Context, kid string, now time.Time) (*rsa.PublicKey, error) {
-	if key, ok := c.keys.get(kid); ok {
-		return key, nil
-	}
-	if !c.keys.shouldRefetch(now) {
-		return nil, fmt.Errorf("unknown key id %q", kid)
-	}
-	if err := c.fetchKeys(ctx, now); err != nil {
-		return nil, err
-	}
-	if key, ok := c.keys.get(kid); ok {
-		return key, nil
-	}
-	return nil, fmt.Errorf("unknown key id %q", kid)
-}
-
-func (c Client) fetchKeys(ctx context.Context, now time.Time) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.cfg.BaseURL+"/auth/keys", nil)
-	if err != nil {
-		return fmt.Errorf("new keys request: %w", err)
-	}
-	res, err := c.http.Do(req)
-	if err != nil {
-		return fmt.Errorf("fetch keys: %w", err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("fetch keys: status %d", res.StatusCode)
-	}
-
-	var set struct {
-		Keys []struct {
-			Kty string `json:"kty"`
-			Kid string `json:"kid"`
-			N   string `json:"n"`
-			E   string `json:"e"`
-		} `json:"keys"`
-	}
-	if err := json.NewDecoder(io.LimitReader(res.Body, maxResponseBytes)).Decode(&set); err != nil {
-		return fmt.Errorf("decode keys: %w", err)
-	}
-
-	keys := make(map[string]*rsa.PublicKey, len(set.Keys))
-	for _, k := range set.Keys {
-		if k.Kty != "RSA" {
-			continue
-		}
-		key, err := rsaKey(k.N, k.E)
-		if err != nil {
-			return fmt.Errorf("key %q: %w", k.Kid, err)
-		}
-		keys[k.Kid] = key
-	}
-	c.keys.replace(keys, now)
-	return nil
-}
-
-func rsaKey(n, e string) (*rsa.PublicKey, error) {
-	nb, err := base64.RawURLEncoding.DecodeString(n)
-	if err != nil {
-		return nil, fmt.Errorf("decode n: %w", err)
-	}
-	eb, err := base64.RawURLEncoding.DecodeString(e)
-	if err != nil {
-		return nil, fmt.Errorf("decode e: %w", err)
-	}
-	exp := new(big.Int).SetBytes(eb)
-	if !exp.IsInt64() || exp.Int64() > 1<<31-1 {
-		return nil, errors.New("exponent too large")
-	}
-	return &rsa.PublicKey{N: new(big.Int).SetBytes(nb), E: int(exp.Int64())}, nil
-}
-
-// keySet caches Apple's signing keys. An unknown kid triggers a refetch, but
-// at most once per keysRefetchMinWait so bogus kids cannot hammer Apple.
-type keySet struct {
-	mu        sync.RWMutex
-	keys      map[string]*rsa.PublicKey
-	fetchedAt time.Time
-}
-
-func (s *keySet) get(kid string) (*rsa.PublicKey, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	key, ok := s.keys[kid]
-	return key, ok
-}
-
-func (s *keySet) shouldRefetch(now time.Time) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.fetchedAt.IsZero() || now.Sub(s.fetchedAt) >= keysRefetchMinWait
-}
-
-func (s *keySet) replace(keys map[string]*rsa.PublicKey, now time.Time) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.keys = keys
-	s.fetchedAt = now
 }

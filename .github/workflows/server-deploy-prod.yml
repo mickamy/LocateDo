@@ -106,9 +106,11 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
           APPLE_PRIVATE_KEY: ${{ secrets.APPLE_PRIVATE_KEY }}
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
           APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
           APNS_PRIVATE_KEY: ${{ secrets.APNS_PRIVATE_KEY }}
           APNS_TOPIC: com.locatedo.LocateDo
+          FCM_SERVICE_ACCOUNT: ${{ secrets.FCM_SERVICE_ACCOUNT }}
           REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
           REVENUECAT_PROJECT_ID: proj593408b8
           REVENUECAT_ENTITLEMENT_ID: entlf8b9ff89f9
@@ -124,6 +126,13 @@ jobs:
             fi
             aws ssm put-parameter --name "/locatedo/prod/app/${name}" --type SecureString \
               --value "${!name}" --overwrite >/dev/null
+          done
+          # Android is not released yet, so these may still be unset.
+          for name in GOOGLE_CLIENT_ID FCM_SERVICE_ACCOUNT; do
+            if [ -n "${!name}" ]; then
+              aws ssm put-parameter --name "/locatedo/prod/app/${name}" --type SecureString \
+                --value "${!name}" --overwrite >/dev/null
+            fi
           done
 
       - name: Run the deploy script on the instance

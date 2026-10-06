@@ -55,6 +55,42 @@ public object SignInWithGoogleResponseKt {
 
     public val SignInWithGoogleResponseKt.Dsl.sessionOrNull: com.locatedo.account.v1.Session?
       get() = _builder.sessionOrNull
+
+    /**
+     * ```
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * ```
+     *
+     * `optional string household_id = 2 [json_name = "householdId"];`
+     */
+    public var householdId: kotlin.String
+      @kotlin.jvm.JvmName("getHouseholdId")
+        get() = _builder.householdId
+      @kotlin.jvm.JvmName("setHouseholdId")
+        set(value) {
+        _builder.householdId = value
+      }
+    /**
+     * ```
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * ```
+     *
+     * `optional string household_id = 2 [json_name = "householdId"];`
+     */
+    public fun clearHouseholdId() {
+      _builder.clearHouseholdId()
+    }
+    /**
+     * ```
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * ```
+     *
+     * `optional string household_id = 2 [json_name = "householdId"];`
+     * @return Whether the householdId field is set.
+     */
+    public fun hasHouseholdId(): kotlin.Boolean {
+      return _builder.hasHouseholdId()
+    }
   }
 }
 public inline fun com.locatedo.account.v1.SignInWithGoogleResponse.copy(block: `com.locatedo.account.v1`.SignInWithGoogleResponseKt.Dsl.() -> kotlin.Unit): com.locatedo.account.v1.SignInWithGoogleResponse =

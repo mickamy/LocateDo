@@ -15,6 +15,7 @@ public  final class SignInWithGoogleResponse extends
     // @@protoc_insertion_point(message_implements:locatedo.account.v1.SignInWithGoogleResponse)
     SignInWithGoogleResponseOrBuilder {
   private SignInWithGoogleResponse() {
+    householdId_ = "";
   }
   private int bitField0_;
   public static final int SESSION_FIELD_NUMBER = 1;
@@ -62,6 +63,85 @@ public  final class SignInWithGoogleResponse extends
   private void clearSession() {
     session_ = null;
     bitField0_ = (bitField0_ & ~0x00000001);
+  }
+
+  public static final int HOUSEHOLD_ID_FIELD_NUMBER = 2;
+  private java.lang.String householdId_;
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @return Whether the householdId field is set.
+   */
+  @java.lang.Override
+  public boolean hasHouseholdId() {
+    return ((bitField0_ & 0x00000002) != 0);
+  }
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @return The householdId.
+   */
+  @java.lang.Override
+  public java.lang.String getHouseholdId() {
+    return householdId_;
+  }
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @return The bytes for householdId.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getHouseholdIdBytes() {
+    return com.google.protobuf.ByteString.copyFromUtf8(householdId_);
+  }
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @param value The householdId to set.
+   */
+  private void setHouseholdId(
+      java.lang.String value) {
+    java.util.Objects.requireNonNull(value);
+    bitField0_ |= 0x00000002;
+    householdId_ = value;
+  }
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   */
+  private void clearHouseholdId() {
+    bitField0_ = (bitField0_ & ~0x00000002);
+    householdId_ = getDefaultInstance().getHouseholdId();
+  }
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @param value The bytes for householdId to set.
+   */
+  private void setHouseholdIdBytes(
+      com.google.protobuf.ByteString value) {
+    checkByteStringIsUtf8(value);
+    householdId_ = value.toStringUtf8();
+    bitField0_ |= 0x00000002;
   }
 
   public static com.locatedo.account.v1.SignInWithGoogleResponse parseFrom(
@@ -208,6 +288,87 @@ public  final class SignInWithGoogleResponse extends
       return this;
     }
 
+    /**
+     * <pre>
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * </pre>
+     *
+     * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+     * @return Whether the householdId field is set.
+     */
+    @java.lang.Override
+    public boolean hasHouseholdId() {
+      return instance.hasHouseholdId();
+    }
+    /**
+     * <pre>
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * </pre>
+     *
+     * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+     * @return The householdId.
+     */
+    @java.lang.Override
+    public java.lang.String getHouseholdId() {
+      return instance.getHouseholdId();
+    }
+    /**
+     * <pre>
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * </pre>
+     *
+     * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+     * @return The bytes for householdId.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getHouseholdIdBytes() {
+      return instance.getHouseholdIdBytes();
+    }
+    /**
+     * <pre>
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * </pre>
+     *
+     * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+     * @param value The householdId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setHouseholdId(
+        java.lang.String value) {
+      copyOnWrite();
+      instance.setHouseholdId(value);
+      return this;
+    }
+    /**
+     * <pre>
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * </pre>
+     *
+     * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearHouseholdId() {
+      copyOnWrite();
+      instance.clearHouseholdId();
+      return this;
+    }
+    /**
+     * <pre>
+     * Set when the user already belongs to a household; the device adopts it instead of creating one.
+     * </pre>
+     *
+     * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+     * @param value The bytes for householdId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setHouseholdIdBytes(
+        com.google.protobuf.ByteString value) {
+      copyOnWrite();
+      instance.setHouseholdIdBytes(value);
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.account.v1.SignInWithGoogleResponse)
   }
   @java.lang.Override
@@ -226,9 +387,11 @@ public  final class SignInWithGoogleResponse extends
           java.lang.Object[] objects = new java.lang.Object[] {
             "bitField0_",
             "session_",
+            "householdId_",
           };
           java.lang.String info =
-              "\u0000\u0001\u0000\u0001\u0001\u0001\u0001\u0000\u0000\u0000\u0001\u1009\u0000";
+              "\u0000\u0002\u0000\u0001\u0001\u0002\u0002\u0000\u0000\u0000\u0001\u1009\u0000\u0002" +
+              "\u1208\u0001";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {
