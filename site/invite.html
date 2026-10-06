@@ -8,6 +8,12 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="robots" content="noindex">
 <title>StopBy Invite</title>
+<script>
+  // A separate page lets Cloudflare Web Analytics count invites opened on Android.
+  if (/Android/i.test(navigator.userAgent)) {
+    location.replace("/invite-android");
+  }
+</script>
 <style>
   :root {
     color-scheme: light dark;

@@ -75,6 +75,7 @@ struct PlaceDetailView: View {
             }
         }
         .syncRefreshable()
+        .trackScreen(.placeDetail)
         .navigationTitle(place.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

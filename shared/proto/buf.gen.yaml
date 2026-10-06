@@ -27,3 +27,15 @@ plugins:
       - Visibility=Internal
       - GenerateAsyncMethods=true
       - GenerateCallbackMethods=false
+  - remote: buf.build/protocolbuffers/java:v36.2
+    out: ../../android/app/src/main/generated
+    opt: lite
+  - remote: buf.build/protocolbuffers/kotlin:v36.2
+    out: ../../android/app/src/main/generated
+    opt: lite
+  - remote: buf.build/connectrpc/kotlin:v0.9.0
+    out: ../../android/app/src/main/generated
+    opt:
+      - generateCoroutineMethods=true
+      - generateCallbackMethods=false
+      - generateBlockingUnaryMethods=false

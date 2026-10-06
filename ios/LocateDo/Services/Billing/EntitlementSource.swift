@@ -33,6 +33,8 @@ final class RevenueCatEntitlementSource: EntitlementSource {
 
     init(apiKey: String) {
         Purchases.configure(withAPIKey: apiKey)
+        // Lets RevenueCat's Firebase integration send subscription events to the same Analytics user.
+        Purchases.shared.attribution.setFirebaseAppInstanceID(Analytics.appInstanceID())
     }
 
     func logIn(_ appUserID: String) async throws -> ProSubscription? {

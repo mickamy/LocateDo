@@ -27,6 +27,7 @@ struct SharingView: View {
             Group {
                 if account.isSignedIn {
                     signedIn
+                        .trackScreen(.sharing)
                 } else {
                     SharingIntroView()
                 }

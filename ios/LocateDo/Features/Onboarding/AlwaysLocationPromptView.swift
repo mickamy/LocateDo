@@ -30,6 +30,7 @@ struct AlwaysLocationPromptView: View {
                 dismiss()
             }
         }
+        .trackScreen(.alwaysLocationPrompt)
         .padding(32)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)

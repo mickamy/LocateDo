@@ -3,7 +3,7 @@ import SwiftUI
 import UserNotifications
 
 struct OnboardingView: View {
-    private enum Step {
+    private enum Step: String {
         case intro
         case notifications
     }
@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @Environment(ArrivalNotifier.self) private var notifier
     @State private var step: Step = .intro
     @State private var isRequesting = false
+    @State private var startedAt = Date()
 
     var body: some View {
         VStack(spacing: 20) {
@@ -26,6 +27,9 @@ struct OnboardingView: View {
         }
         .padding(32)
         .animation(.default, value: step)
+        .onChange(of: step, initial: true) {
+            Analytics.logScreen(.onboarding, parameters: [.step: step.rawValue])
+        }
         .onChange(of: locationProvider.authorizationStatus) {
             if step == .intro, isRequesting, locationProvider.authorizationStatus != .notDetermined {
                 advanceToNotifications()
@@ -119,6 +123,11 @@ struct OnboardingView: View {
     }
 
     private func finish() {
+        Analytics.log(.onboardingCompleted, parameters: [
+            .locationAuth: DailyState.LocationAuth(locationProvider.authorizationStatus).rawValue,
+            .notificationAuth: DailyState.NotificationAuth(notifier.authorizationStatus).rawValue,
+            .durationS: max(Int(Date().timeIntervalSince(startedAt)), 0)
+        ])
         preferences.hasCompletedOnboarding = true
     }
 }

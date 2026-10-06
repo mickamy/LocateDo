@@ -19,7 +19,7 @@ struct LocateDoApp: App {
     private let devices: DeviceRegistration
     private let households: HouseholdManager
     private let appStatus: AppStatusStore
-    private let entitlements = Entitlements(source: LocateDoApp.makeEntitlementSource())
+    private let entitlements = LocateDoApp.makeEntitlements()
 
     init() {
         container = Self.makeContainer()
@@ -81,8 +81,12 @@ struct LocateDoApp: App {
         }
         writes.isPro = isPro
         sync.isPro = isPro
-        sync.onLimitRejected = { [router] limit in
+        sync.onLimitRejected = { [router, writes] limit in
+            writes.logLimitReached(limit)
             router.pendingPaywall = limit.trigger
+        }
+        notifier.onOpened = { [writes] placeID in
+            writes.arrivalOpened(placeID: placeID)
         }
         geofence.onArrival = { [sync] in
             await sync.sync()
@@ -113,14 +117,18 @@ struct LocateDoApp: App {
             preferences.hasPendingRemovedNotice = true
         }
         if !Self.isRunningTests {
-            Analytics.configure()
-            geofence.start()
-            network.start()
-            entitlements.start()
-            if let userID = authenticator.session?.userID {
-                Task { [entitlements] in
-                    await entitlements.logIn(userID: userID)
-                }
+            startServices()
+        }
+    }
+
+    private func startServices() {
+        InstallDate.record(defaults: .standard, now: .now)
+        geofence.start()
+        network.start()
+        entitlements.start()
+        if let userID = authenticator.session?.userID {
+            Task { [entitlements] in
+                await entitlements.logIn(userID: userID)
             }
         }
     }
@@ -185,6 +193,14 @@ struct LocateDoApp: App {
         }
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
         return AppStatusStore(url: url, currentVersion: version, gate: gate)
+    }
+
+    // Firebase starts first so RevenueCat can be handed the Analytics instance ID as it is configured.
+    private static func makeEntitlements() -> Entitlements {
+        if !isRunningTests {
+            Analytics.configure()
+        }
+        return Entitlements(source: makeEntitlementSource())
     }
 
     private static func makeEntitlementSource() -> (any EntitlementSource)? {

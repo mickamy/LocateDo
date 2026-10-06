@@ -209,6 +209,31 @@ platform :ios do
     )
   end
 
+  # Rewrites only the MARKETING_VERSION lines: saving through the xcodeproj gem would reformat Xcode 27's project.
+  desc "Set the app version on every target (bump:patch|minor|major, or version:1.2.3); the build number stays automatic"
+  lane :bump_version do |options|
+    path = File.expand_path("../#{PROJECT}/project.pbxproj", __dir__)
+    pbxproj = File.read(path)
+    current = pbxproj.scan(/MARKETING_VERSION = ([^;]+);/).flatten.uniq
+    UI.user_error!("Targets disagree on the version: #{current.join(', ')}") unless current.size == 1
+    current = current.first
+    version = options[:version]
+    unless version
+      parts = current.split(".").map(&:to_i)
+      parts << 0 while parts.size < 3
+      case options.fetch(:bump, "patch").to_s
+      when "major" then parts = [parts[0] + 1, 0, 0]
+      when "minor" then parts = [parts[0], parts[1] + 1, 0]
+      when "patch" then parts = [parts[0], parts[1], parts[2] + 1]
+      else UI.user_error!("bump must be patch, minor, or major")
+      end
+      version = parts.join(".")
+    end
+    UI.user_error!("Not a version: #{version}") unless version.match?(/\A\d+\.\d+(\.\d+)?\z/)
+    File.write(path, pbxproj.gsub(/MARKETING_VERSION = [^;]+;/, "MARKETING_VERSION = #{version};"))
+    UI.success("Version #{current} -> #{version}. Write fastlane/metadata/*/release_notes.txt for it.")
+  end
+
   desc "Upload the App Store listing, screenshots, and review notes in fastlane/ (no binary, no submission)"
   lane :metadata do
     notes = File.read(File.expand_path("metadata/review_information/notes.txt", __dir__))

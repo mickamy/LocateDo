@@ -8,6 +8,9 @@ on:
       - "server/internal/gen/**"
       - "ios/LocateDo/Localizable.xcstrings"
       - "ios/LocateDo/InfoPlist.xcstrings"
+      - "ios/LocateDo/Generated/**"
+      - "android/app/src/main/generated/**"
+      - "android/app/src/main/res/values*/strings.xml"
       - ".github/workflows/shared-check.yml"
   push:
     branches: [main, dev]
@@ -17,6 +20,9 @@ on:
       - "server/internal/gen/**"
       - "ios/LocateDo/Localizable.xcstrings"
       - "ios/LocateDo/InfoPlist.xcstrings"
+      - "ios/LocateDo/Generated/**"
+      - "android/app/src/main/generated/**"
+      - "android/app/src/main/res/values*/strings.xml"
       - ".github/workflows/shared-check.yml"
   workflow_dispatch:
 
@@ -46,8 +52,8 @@ jobs:
         working-directory: shared/proto
         run: |
           buf generate
-          git -C ../.. add -N server/internal/gen
-          git -C ../.. diff --exit-code --stat -- server/internal/gen
+          git -C ../.. add -N server/internal/gen ios/LocateDo/Generated android/app/src/main/generated
+          git -C ../.. diff --exit-code --stat -- server/internal/gen ios/LocateDo/Generated android/app/src/main/generated
 
   strings:
     name: l10n check

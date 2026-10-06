@@ -1,0 +1,4 @@
+<resources>
+    <!-- Compose draws everything; this only sets the window up before the first frame. -->
+    <style name="Theme.LocateDo" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

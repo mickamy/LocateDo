@@ -30,6 +30,7 @@ struct AccountBenefitsView: View {
                 )
             }
         }
+        .trackScreen(.accountBenefits)
         .padding(.horizontal, 32)
         .padding(.vertical, 40)
         .frame(maxWidth: .infinity)

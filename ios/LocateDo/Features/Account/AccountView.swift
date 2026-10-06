@@ -24,6 +24,7 @@ struct AccountView: View {
                 Form {
                     signedIn
                 }
+                .trackScreen(.account)
             } else {
                 signedOut
             }

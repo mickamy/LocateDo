@@ -10,6 +10,11 @@ final class LocalWrites {
     private let onQueued: () -> Void
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
     @ObservationIgnored var isPro: () -> Bool = { false }
+    @ObservationIgnored var analytics: any AnalyticsSink = FirebaseAnalyticsSink()
+    @ObservationIgnored var daysSinceInstall: () -> Int = {
+        InstallDate.daysSinceInstall(defaults: .standard, now: .now)
+    }
+    @ObservationIgnored private(set) var lastArrivalOpen: ArrivalOpen?
 
     init(context: ModelContext, isSignedIn: @escaping () -> Bool, onQueued: @escaping () -> Void = {}) {
         self.context = context
@@ -18,12 +23,24 @@ final class LocalWrites {
     }
 
     @discardableResult
-    func add(_ place: Place) -> FreeLimit? {
+    func add(_ place: Place, source: PlaceSource? = nil) -> FreeLimit? {
         if reached(.places) {
+            logLimitReached(.places)
             return .places
         }
         context.insert(place)
         commit([.put(place)])
+        var parameters: AnalyticsParameters = [
+            .placeCount: count(FetchDescriptor<Place>()),
+            .category: place.analyticsCategory,
+            .radiusM: Int(place.radiusMeters),
+            .daysSinceInstall: daysSinceInstall()
+        ]
+        if let source {
+            parameters[.source] = source.rawValue
+        }
+        analytics.log(.placeAdded, parameters: parameters)
+        updateCountProperties()
         return nil
     }
 
@@ -32,20 +49,36 @@ final class LocalWrites {
         commit([.put(place)])
     }
 
-    func delete(_ place: Place) {
+    func delete(_ place: Place, now: Date = .now) {
         let write = Write.delete(place)
+        let ageDays = Int(now.timeIntervalSince(place.createdAt) / 86_400)
+        let openTodos = place.openTodos.count
         context.delete(place)
         commit([write])
+        analytics.log(.placeDeleted, parameters: [
+            .placeCount: count(FetchDescriptor<Place>()),
+            .ageDays: max(ageDays, 0),
+            .openTodos: openTodos
+        ])
+        updateCountProperties()
     }
 
     @discardableResult
     func add(_ todo: Todo) -> FreeLimit? {
         if reached(.openTodos) {
+            logLimitReached(.openTodos)
             return .openTodos
         }
         context.insert(todo)
         todo.place?.todos.append(todo)
         commit([Write.put(todo)].compactMap(\.self))
+        analytics.log(.todoAdded, parameters: [
+            .openTodoCount: count(Self.openTodos),
+            .placeOpenTodos: todo.place?.openTodos.count ?? 0,
+            .assigned: todo.assigneeID != nil,
+            .daysSinceInstall: daysSinceInstall()
+        ])
+        updateCountProperties()
         return nil
     }
 
@@ -53,6 +86,7 @@ final class LocalWrites {
     func toggleCompletion(_ todo: Todo, now: Date = .now) -> FreeLimit? {
         if todo.isCompleted {
             if reached(.openTodos) {
+                logLimitReached(.openTodos)
                 return .openTodos
             }
             todo.reopen(at: now)
@@ -60,7 +94,15 @@ final class LocalWrites {
             todo.complete(at: now)
         }
         commit([.completion(of: todo)])
+        if todo.isCompleted {
+            logCompletion(of: todo, now: now)
+        }
+        updateCountProperties()
         return nil
+    }
+
+    func arrivalOpened(placeID: UUID, at now: Date = .now) {
+        lastArrivalOpen = ArrivalOpen(placeID: placeID, openedAt: now)
     }
 
     func setAssignee(_ assigneeID: UUID?, of todo: Todo, now: Date = .now) {
@@ -75,6 +117,7 @@ final class LocalWrites {
             context.delete(todo)
         }
         commit(writes)
+        updateCountProperties()
     }
 
     func add(_ category: PlaceCategory) {
@@ -122,13 +165,47 @@ final class LocalWrites {
             case .places:
                 return try context.fetchCount(FetchDescriptor<Place>()) >= FreeLimit.maxPlaces
             case .openTodos:
-                let open = FetchDescriptor<Todo>(predicate: #Predicate { $0.completedAt == nil })
-                return try context.fetchCount(open) >= FreeLimit.maxOpenTodos
+                return try context.fetchCount(Self.openTodos) >= FreeLimit.maxOpenTodos
             }
         } catch {
             logger.error("Could not count rows for the free limit: \(error, privacy: .public)")
             return false
         }
+    }
+
+    private static var openTodos: FetchDescriptor<Todo> {
+        FetchDescriptor<Todo>(predicate: #Predicate { $0.completedAt == nil })
+    }
+
+    private func count<T: PersistentModel>(_ descriptor: FetchDescriptor<T>) -> Int {
+        (try? context.fetchCount(descriptor)) ?? 0
+    }
+
+    private func logCompletion(of todo: Todo, now: Date) {
+        var via = CompletionVia.app
+        if let lastArrivalOpen {
+            via = lastArrivalOpen.via(completingAt: todo.place?.id, now: now)
+        }
+        let ageHours = Int(now.timeIntervalSince(todo.createdAt) / 3_600)
+        analytics.log(.todoCompleted, parameters: [
+            .via: via.rawValue,
+            .ageHours: max(ageHours, 0),
+            .openTodoCount: count(Self.openTodos)
+        ])
+    }
+
+    func logLimitReached(_ limit: FreeLimit) {
+        analytics.log(.limitReached, parameters: [
+            .kind: limit.analyticsKind,
+            .daysSinceInstall: daysSinceInstall()
+        ])
+    }
+
+    private func updateCountProperties() {
+        let places = count(FetchDescriptor<Place>())
+        let openTodos = count(Self.openTodos)
+        analytics.setUserProperty(DailyState.capped(places, at: DailyState.placeCountCap), for: .placeCount)
+        analytics.setUserProperty(DailyState.capped(openTodos, at: DailyState.openTodoCountCap), for: .openTodoCount)
     }
 
     private func commit(_ writes: [Write]) {

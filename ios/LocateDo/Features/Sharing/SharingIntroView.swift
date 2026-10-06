@@ -39,6 +39,7 @@ struct SharingIntroView: View {
             .padding(.vertical, 40)
             .frame(maxWidth: .infinity)
         }
+        .trackScreen(.sharingIntro)
         .background(Color(.systemGroupedBackground))
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 12) {

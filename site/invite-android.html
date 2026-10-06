@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="robots" content="noindex">
+<title>StopBy Android</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 64px 0;
+  }
+  h1 {
+    font-size: 28px;
+    line-height: 1.25;
+    margin: 0 0 16px;
+  }
+  p {
+    margin: 0 0 16px;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  [lang="ja"] .en, [lang="en"] .ja {
+    display: none;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="en">You're invited to share on StopBy</span><span class="ja">ちかメモの共有に招待されています</span></h1>
+  <p class="en">StopBy is only on iPhone for now. An Android version is in the works.</p>
+  <p class="ja">ちかメモは今のところ iPhone 版だけです。Android 版は開発中です。</p>
+  <p class="en">Let the person who invited you know that you use Android. We'll announce the Android version in the app when it's ready.</p>
+  <p class="ja">招待してくれた人に、Android を使っていることを伝えてください。Android 版ができたら、アプリの中でお知らせします。</p>
+</main>
+<script>
+  if ((navigator.language || "").toLowerCase().startsWith("ja")) {
+    document.documentElement.lang = "ja";
+  }
+</script>
+</body>
+</html>

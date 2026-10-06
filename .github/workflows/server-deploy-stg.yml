@@ -1,9 +1,16 @@
 name: server-deploy-stg
 
 on:
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/server-deploy-stg.yml"
   push:
-    branches:
-      - dev
+    branches: [main, dev]
+    paths:
+      - "server/**"
+      - ".github/workflows/server-deploy-stg.yml"
+  workflow_dispatch:
 
 concurrency:
   group: server-stg
@@ -45,9 +52,7 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: server/go.mod
-          cache-dependency-path: |
-            server/go.sum
-            server/tools/go.sum
+          cache: false
 
       - name: Migrate database
         run: |

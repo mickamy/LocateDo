@@ -46,6 +46,7 @@ struct TodoEditorView: View {
                     }
                 }
             }
+            .trackScreen(.todoEditor)
             .navigationTitle(Text(.todoEditorTitle))
             .sheet(item: $paywall) { trigger in
                 PaywallView(trigger: trigger)

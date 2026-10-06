@@ -14,17 +14,20 @@ import (
 	"strings"
 
 	"github.com/mickamy/LocateDo/tools/l10n/internal/analyze"
+	"github.com/mickamy/LocateDo/tools/l10n/internal/android"
 	"github.com/mickamy/LocateDo/tools/l10n/internal/locale"
 	"github.com/mickamy/LocateDo/tools/l10n/internal/xcstrings"
 )
 
-const usage = "usage: l10n <generate|check> -src <dir> -xcstrings <path> [-infoplist <path>] [-default <lang>]"
+const usage = "usage: l10n <generate|check> -src <dir> -xcstrings <path>" +
+	" [-infoplist <path>] [-android <res dir>] [-default <lang>]"
 
 type options struct {
 	src         string
 	defaultLang string
 	xcstrings   string
 	infoplist   string
+	android     string
 }
 
 func main() {
@@ -73,6 +76,7 @@ func parseFlags(cmd string, args []string, stderr io.Writer) (options, error) {
 	fs.StringVar(&opts.defaultLang, "default", "en", "default language")
 	fs.StringVar(&opts.xcstrings, "xcstrings", "", "Localizable.xcstrings to generate")
 	fs.StringVar(&opts.infoplist, "infoplist", "", "InfoPlist.xcstrings to generate (required when meta uses infoplist)")
+	fs.StringVar(&opts.android, "android", "", "Android res directory to generate values*/strings.xml into")
 	if err := fs.Parse(args); err != nil {
 		return options{}, fmt.Errorf("parse flags: %w", err)
 	}
@@ -100,6 +104,11 @@ func build(opts options) (map[string][]byte, []analyze.Diag, error) {
 		outputs[opts.infoplist] = xcstrings.GenerateInfoPlist(model)
 	} else if hasInfoplist(model) {
 		return nil, nil, errors.New("meta.yaml uses infoplist, so -infoplist is required")
+	}
+	if opts.android != "" {
+		for rel, data := range android.Generate(model) {
+			outputs[filepath.Join(opts.android, rel)] = data
+		}
 	}
 	return outputs, diags, nil
 }

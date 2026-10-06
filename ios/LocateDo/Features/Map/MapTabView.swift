@@ -27,6 +27,7 @@ struct MapTabView: View {
                     emptyCard
                 }
             }
+            .trackScreen(.map)
             .navigationTitle(Text(.tabMap))
             .maintenanceBanner()
             .navigationBarTitleDisplayMode(.inline)

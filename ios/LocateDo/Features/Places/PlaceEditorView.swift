@@ -13,6 +13,7 @@ struct PlaceEditorView: View {
     var onSave: (() -> Void)?
     @State private var name: String
     @State private var coordinate: CLLocationCoordinate2D?
+    @State private var source: PlaceSource?
     @State private var radiusMeters: Double
     @State private var category: PlaceCategory?
     @State private var isPickingLocation = false
@@ -90,6 +91,7 @@ struct PlaceEditorView: View {
                     Text(.placeEditorCategoryLabel)
                 }
             }
+            .trackScreen(.placeEditor, parameters: [.mode: EditorMode(editing: place).rawValue])
             .navigationTitle(Text(place == nil ? .placeEditorTitleNew : .placeEditorTitleEdit))
             .sheet(item: $paywall) { trigger in
                 PaywallView(trigger: trigger)
@@ -109,8 +111,9 @@ struct PlaceEditorView: View {
                 }
             }
             .sheet(isPresented: $isPickingLocation) {
-                PlacePickerMapView(initialCoordinate: coordinate) { picked, suggestedName in
+                PlacePickerMapView(initialCoordinate: coordinate) { picked, suggestedName, pickedFrom in
                     coordinate = picked
+                    source = pickedFrom
                     if name.isEmpty, let suggestedName {
                         name = suggestedName
                     }
@@ -180,7 +183,7 @@ struct PlaceEditorView: View {
                 longitude: coordinate.longitude,
                 radiusMeters: radiusMeters,
                 category: category
-            ))
+            ), source: source)
             if let limit {
                 paywall = limit.trigger
                 return

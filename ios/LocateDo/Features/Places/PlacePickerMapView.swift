@@ -6,7 +6,7 @@ struct PlacePickerMapView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationProvider.self) private var locationProvider
 
-    let onPick: (CLLocationCoordinate2D, String?) -> Void
+    let onPick: (CLLocationCoordinate2D, String?, PlaceSource) -> Void
 
     @State private var position: MapCameraPosition
     @State private var query = ""
@@ -24,6 +24,7 @@ struct PlacePickerMapView: View {
 
     private struct Selection {
         let coordinate: CLLocationCoordinate2D
+        let source: PlaceSource
         var name: String?
         var address: String?
 
@@ -32,10 +33,13 @@ struct PlacePickerMapView: View {
         }
     }
 
-    init(initialCoordinate: CLLocationCoordinate2D?, onPick: @escaping (CLLocationCoordinate2D, String?) -> Void) {
+    init(
+        initialCoordinate: CLLocationCoordinate2D?,
+        onPick: @escaping (CLLocationCoordinate2D, String?, PlaceSource) -> Void
+    ) {
         self.onPick = onPick
         if let initialCoordinate {
-            _selection = State(initialValue: Selection(coordinate: initialCoordinate))
+            _selection = State(initialValue: Selection(coordinate: initialCoordinate, source: .map))
             _position = State(initialValue: .region(Self.region(around: initialCoordinate)))
         } else {
             _position = State(initialValue: .userLocation(fallback: .automatic))
@@ -67,10 +71,11 @@ struct PlacePickerMapView: View {
                 }
                 .onTapGesture { point in
                     if let tapped = proxy.convert(point, from: .local) {
-                        select(tapped, name: nil, address: nil)
+                        select(tapped, source: .map, name: nil, address: nil)
                     }
                 }
             }
+            .trackScreen(.placePicker)
             .searchable(text: $query, prompt: Text(.placePickerSearchPlaceholder))
             .onSubmit(of: .search) {
                 Task {
@@ -103,7 +108,7 @@ struct PlacePickerMapView: View {
                 ToolbarItem(placement: .bottomBar) {
                     Button(.placePickerUseCurrentLocation, systemImage: "location") {
                         if let current = locationProvider.location {
-                            select(current.coordinate, name: nil, address: nil)
+                            select(current.coordinate, source: .currentLocation, name: nil, address: nil)
                         }
                     }
                     .disabled(locationProvider.location == nil)
@@ -115,7 +120,7 @@ struct PlacePickerMapView: View {
     private var resultList: some View {
         List(results, id: \.self) { item in
             Button {
-                select(item.location.coordinate, name: item.name, address: item.address?.shortAddress)
+                select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress)
             } label: {
                 VStack(alignment: .leading) {
                     Text(item.name ?? "")
@@ -183,8 +188,8 @@ struct PlacePickerMapView: View {
         }
     }
 
-    private func select(_ coordinate: CLLocationCoordinate2D, name: String?, address: String?) {
-        selection = Selection(coordinate: coordinate, name: name, address: address)
+    private func select(_ coordinate: CLLocationCoordinate2D, source: PlaceSource, name: String?, address: String?) {
+        selection = Selection(coordinate: coordinate, source: source, name: name, address: address)
         detent = cardDetent
         withAnimation {
             position = .region(Self.region(around: coordinate))
@@ -212,7 +217,7 @@ struct PlacePickerMapView: View {
         guard let confirmed else {
             return
         }
-        onPick(confirmed.coordinate, confirmed.name)
+        onPick(confirmed.coordinate, confirmed.name, confirmed.source)
         dismiss()
     }
 

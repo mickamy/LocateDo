@@ -28,6 +28,7 @@ struct NearbyView: View {
                         .syncRefreshable()
                 }
             }
+            .trackScreen(.home)
             .navigationTitle(Text(.tabHome))
             .maintenanceBanner()
             .toolbar {

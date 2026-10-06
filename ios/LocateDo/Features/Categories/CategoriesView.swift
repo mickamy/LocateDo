@@ -37,6 +37,7 @@ struct CategoriesView: View {
                 }
             }
         }
+        .trackScreen(.categories)
         .navigationTitle(Text(.categoryTitle))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

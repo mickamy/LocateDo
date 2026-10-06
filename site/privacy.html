@@ -54,7 +54,7 @@
   <p class="lang"><a href="privacy-ja.html" hreflang="ja">日本語</a></p>
 
   <h1>StopBy Privacy Policy</h1>
-  <p class="meta">Effective October 5, 2026</p>
+  <p class="meta">Effective October 6, 2026</p>
 
   <p>StopBy (ちかメモ in Japanese) is a to-do app that reminds you of things to do when you arrive at a place, and lets a household share those lists. This policy explains what information the app handles, what stays on your device, what is sent to our servers, and what is shared with other companies.</p>
 
@@ -89,19 +89,22 @@
   <p>Arrival reminders are local notifications created on your device. If you are signed in, our servers may send silent push notifications through Apple to your devices; these carry no content and only tell the app to sync.</p>
 
   <h2>Subscriptions</h2>
-  <p>StopBy Pro is an optional subscription sold through the App Store. Apple handles the payment; we never see your payment details. We use RevenueCat, Inc. to verify purchases and track subscription status. RevenueCat receives your App Store receipt, your account identifier, and device information, and processes them under the <a href="https://www.revenuecat.com/privacy">RevenueCat Privacy Policy</a>.</p>
+  <p>StopBy Pro is an optional subscription sold through the App Store. Apple handles the payment; we never see your payment details. We use RevenueCat, Inc. to verify purchases and track subscription status. RevenueCat receives your App Store receipt, your account identifier, device information, and the app's Firebase app-instance identifier, and processes them under the <a href="https://www.revenuecat.com/privacy">RevenueCat Privacy Policy</a>. On our behalf, RevenueCat also sends subscription events (a trial starting, a trial converting, a renewal, a cancellation, an expiration, or a billing problem, with the price and currency) to Google Firebase Analytics, tied to that app-instance identifier.</p>
 
   <h2>Usage analytics</h2>
   <p>To understand whether StopBy is useful, the app sends a small amount of usage data to Google Firebase Analytics.</p>
   <table>
     <tr><th>What is sent</th><th>Why</th></tr>
-    <tr><td>That an arrival reminder was shown or opened, and how many open to-dos it listed</td><td>To measure whether reminders fire and help</td></tr>
-    <tr><td>That the sharing button, a paywall, or an invitation was used, and from which screen</td><td>To decide what to improve</td></tr>
-    <tr><td>That a subscription was purchased, and whether it was yearly or monthly</td><td>To understand which plans people choose</td></tr>
+    <tr><td>That an arrival reminder was shown or opened, how long it took to open, how many open to-dos it listed, and the place's category and reminder radius</td><td>To measure whether reminders fire and help</td></tr>
+    <tr><td>Which screens you open; when you add, delete, or complete a place or to-do, with how many you have, how long the item existed, the place's category and radius, how it was picked on the map, and whether a to-do was completed shortly after its arrival reminder</td><td>To understand how StopBy is used and what to improve</td></tr>
+    <tr><td>Once a day: how many places, open to-dos, and custom categories you have, how many to-dos you completed in the past week, how many people share your household, your plan, whether you are signed in, whether location (and precise location) and notifications are allowed, and how many days ago you installed the app</td><td>To see which patterns of use keep StopBy useful</td></tr>
+    <tr><td>Onboarding results and changes to the location permission</td><td>To see where reminders stop working</td></tr>
+    <tr><td>That a paywall was shown or closed, that a purchase was started, canceled, failed, or completed, that purchases were restored, and whether the plan was yearly or monthly</td><td>To understand which plans people choose</td></tr>
+    <tr><td>Subscription events sent by RevenueCat, as described under Subscriptions</td><td>To understand whether subscriptions work for people</td></tr>
     <tr><td>An app-instance identifier (Apple's identifier for vendor), device model, iOS version, app version, language, and an approximate country derived by Google from your network address</td><td>Standard Firebase Analytics data used to count users and sessions</td></tr>
   </table>
   <p>The names of your places, their coordinates, your to-do titles, your display name, and your precise location are not included in any analytics event. StopBy does not use the advertising identifier (IDFA) and does not track you across other apps or websites.</p>
-  <p>Google processes this data on our behalf under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and retains event-level data according to Firebase's data-retention settings (two months by default). Aggregated statistics may be kept longer.</p>
+  <p>Google processes this data on our behalf under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and retains event-level data for 14 months. We also export the same event data to Google BigQuery for our own analysis and keep it there no longer than 14 months. Aggregated statistics may be kept longer.</p>
 
   <h2>Who else receives data</h2>
   <ul>
@@ -109,7 +112,7 @@
     <li>Google (Firebase Analytics): usage analytics as described above.</li>
     <li>RevenueCat: subscription verification as described above.</li>
     <li>Amazon Web Services: hosts our servers, our database backups (encrypted at rest), and our server logs in the United States.</li>
-    <li>Cloudflare: routes traffic to our servers and serves this website.</li>
+    <li>Cloudflare: routes traffic to our servers and serves this website. Cloudflare Web Analytics counts page views on this website without cookies or personal identifiers.</li>
   </ul>
   <p>We do not sell your data, we do not show ads, and we do not share data with anyone else except when required by law.</p>
 
