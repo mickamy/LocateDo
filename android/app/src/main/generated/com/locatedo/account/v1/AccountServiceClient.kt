@@ -75,4 +75,21 @@ public class AccountServiceClient(
     ),
   )
 
+
+  /**
+   *  Re-reads the caller's subscription and updates their household plan in the background.
+   *  Call it after linking the purchase SDK to the user, since a purchase made before
+   *  signing in sends no webhook naming the user.
+   */
+  override suspend fun syncEntitlement(request: SyncEntitlementRequest, headers: Headers): ResponseMessage<SyncEntitlementResponse> = client.unary(
+    request,
+    headers,
+    MethodSpec(
+    "locatedo.account.v1.AccountService/SyncEntitlement",
+      com.locatedo.account.v1.SyncEntitlementRequest::class,
+      com.locatedo.account.v1.SyncEntitlementResponse::class,
+      StreamType.UNARY,
+    ),
+  )
+
 }

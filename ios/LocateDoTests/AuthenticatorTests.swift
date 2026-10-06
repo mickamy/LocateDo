@@ -293,6 +293,13 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         return ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountResponse()))
     }
 
+    func syncEntitlement(
+        request: Locatedo_Account_V1_SyncEntitlementRequest,
+        headers: Connect.Headers
+    ) async -> ResponseMessage<Locatedo_Account_V1_SyncEntitlementResponse> {
+        ResponseMessage(result: .success(Locatedo_Account_V1_SyncEntitlementResponse()))
+    }
+
     func signOut(
         request: Locatedo_Account_V1_SignOutRequest,
         headers: Connect.Headers

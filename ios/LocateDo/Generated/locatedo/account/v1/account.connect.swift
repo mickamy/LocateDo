@@ -26,6 +26,12 @@ internal protocol Locatedo_Account_V1_AccountServiceClientInterface: Sendable {
 
     @available(iOS 13, *)
     func `deleteAccount`(request: Locatedo_Account_V1_DeleteAccountRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse>
+
+    /// Re-reads the caller's subscription and updates their household plan in the background.
+    /// Call it after linking the purchase SDK to the user, since a purchase made before
+    /// signing in sends no webhook naming the user.
+    @available(iOS 13, *)
+    func `syncEntitlement`(request: Locatedo_Account_V1_SyncEntitlementRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_SyncEntitlementResponse>
 }
 
 /// Concrete implementation of `Locatedo_Account_V1_AccountServiceClientInterface`.
@@ -61,6 +67,11 @@ internal final class Locatedo_Account_V1_AccountServiceClient: Locatedo_Account_
         return await self.client.unary(path: "/locatedo.account.v1.AccountService/DeleteAccount", idempotencyLevel: .unknown, request: request, headers: headers)
     }
 
+    @available(iOS 13, *)
+    internal func `syncEntitlement`(request: Locatedo_Account_V1_SyncEntitlementRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Locatedo_Account_V1_SyncEntitlementResponse> {
+        return await self.client.unary(path: "/locatedo.account.v1.AccountService/SyncEntitlement", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
     internal enum Metadata {
         internal enum Methods {
             internal static let signInWithApple = Connect.MethodSpec(name: "SignInWithApple", service: "locatedo.account.v1.AccountService", type: .unary)
@@ -68,6 +79,7 @@ internal final class Locatedo_Account_V1_AccountServiceClient: Locatedo_Account_
             internal static let refreshToken = Connect.MethodSpec(name: "RefreshToken", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let signOut = Connect.MethodSpec(name: "SignOut", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let deleteAccount = Connect.MethodSpec(name: "DeleteAccount", service: "locatedo.account.v1.AccountService", type: .unary)
+            internal static let syncEntitlement = Connect.MethodSpec(name: "SyncEntitlement", service: "locatedo.account.v1.AccountService", type: .unary)
         }
     }
 }
