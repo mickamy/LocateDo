@@ -54,13 +54,13 @@
   <p class="lang"><a href="privacy-ja.html" hreflang="ja">日本語</a></p>
 
   <h1>StopBy Privacy Policy</h1>
-  <p class="meta">Effective October 6, 2026</p>
+  <p class="meta">Effective October 7, 2026</p>
 
-  <p>StopBy (ちかメモ in Japanese) is a to-do app that reminds you of things to do when you arrive at a place, and lets a household share those lists. This policy explains what information the app handles, what stays on your device, what is sent to our servers, and what is shared with other companies.</p>
+  <p>StopBy (ちかメモ in Japanese) is a to-do app for iPhone and Android that reminds you of things to do when you arrive at a place, and lets a household share those lists. This policy explains what information the apps handle, what stays on your device, what is sent to our servers, and what is shared with other companies. It covers both the iOS app and the Android app; where they differ, it says so.</p>
 
   <h2>Your current location</h2>
-  <p>StopBy uses your location to show how far away your places are and to notice when you arrive at one. Arrival detection runs inside iOS on your device, using Apple's geofencing. To work while the app is closed, it asks for the "Always" location permission.</p>
-  <p>Your current location is never sent to us or to anyone else, and it is not stored as a history. The only location data that can leave your device is the map point of a place you chose to save, as described under "Accounts and sync". You can change or revoke the location permission at any time in Settings &gt; Privacy &amp; Security &gt; Location Services.</p>
+  <p>StopBy uses your location to show how far away your places are and to notice when you arrive at one. Arrival detection runs on your device: iOS uses Apple's geofencing, and Android uses the geofencing in Google Play services. To work while the app is closed, it asks for the "Always" location permission on iOS, or "Allow all the time" on Android.</p>
+  <p>Your current location is never sent to us or to anyone else, and it is not stored as a history. The only location data that can leave your device is the map point of a place you chose to save, as described under "Accounts and sync" and "Maps and place search". You can change or revoke the location permission at any time in Settings &gt; Privacy &amp; Security &gt; Location Services on iOS, or in Settings &gt; Apps &gt; StopBy &gt; Permissions on Android.</p>
 
   <h2>Data on your device</h2>
   <p>Everything you create in StopBy is stored on your device:</p>
@@ -72,24 +72,27 @@
   <p>Until you sign in, this data exists only on your device, and deleting the app deletes it.</p>
 
   <h2>Accounts and sync</h2>
-  <p>You can use StopBy without an account. If you sign in with Apple, we create an account for you and your places, to-dos, and categories are uploaded to and kept in sync with servers operated by us. These servers run on Amazon Web Services in the United States (Oregon), so if you live outside the United States, your data is transferred there.</p>
+  <p>You can use StopBy without an account. If you sign in with Apple (on iOS) or with Google (on Android), we create an account for you and your places, to-dos, and categories are uploaded to and kept in sync with servers operated by us. These servers run on Amazon Web Services in the United States (Oregon), so if you live outside the United States, your data is transferred there.</p>
   <table>
     <tr><th>What we store on our servers</th><th>Why</th></tr>
-    <tr><td>The identifier Apple assigns to your account for StopBy, and the name you choose to share at sign-in (if any). We do not store your email address, including Apple's relay address.</td><td>To recognize you when you sign in again</td></tr>
-    <tr><td>A token from Apple, stored encrypted</td><td>To revoke your Sign in with Apple session when you delete your account</td></tr>
+    <tr><td>The identifier Apple or Google assigns to your account for StopBy, and the name you choose to share at sign-in (if any). We do not store your email address, including Apple's relay address.</td><td>To recognize you when you sign in again</td></tr>
+    <tr><td>A token from Apple, stored encrypted (Sign in with Apple only)</td><td>To revoke your Sign in with Apple session when you delete your account</td></tr>
     <tr><td>Your places, to-dos, categories, and the household they belong to</td><td>To sync them across your devices and with your household</td></tr>
     <tr><td>Session tokens for your devices</td><td>To keep you signed in without asking again</td></tr>
-    <tr><td>A push notification token for each of your devices</td><td>To tell your other devices that something changed (see "Notifications")</td></tr>
+    <tr><td>A push notification token (iOS) or a Firebase installation identifier (Android) for each of your devices</td><td>To tell your other devices that something changed (see "Notifications")</td></tr>
   </table>
 
   <h2>Family sharing</h2>
   <p>If you create or join a household, the other members of that household can see all places, to-dos, and categories in it, including who added or completed each to-do and the display names of the members. Invitations are single-use links that expire after 72 hours. The owner of a household can remove members, and any member can leave. When you leave or are removed, the shared data stays with the household and is removed from your device.</p>
 
   <h2>Notifications</h2>
-  <p>Arrival reminders are local notifications created on your device. If you are signed in, our servers may send silent push notifications through Apple to your devices; these carry no content and only tell the app to sync.</p>
+  <p>Arrival reminders are local notifications created on your device. If you are signed in, our servers may send silent push notifications to your devices, through Apple on iOS and through Google's Firebase Cloud Messaging on Android; these carry no content and only tell the app to sync.</p>
+
+  <h2>Maps and place search</h2>
+  <p>On iOS, the map and the place search come from Apple Maps, which is part of iOS. On Android, they come from Google Maps Platform: to draw the map and suggest places, the app sends Google the area of the map you are looking at, the text you type when searching for a place, and the place you pick. Google processes this under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>. We do not receive the searches themselves; only the place you save reaches our servers, and only if you are signed in.</p>
 
   <h2>Subscriptions</h2>
-  <p>StopBy Pro is an optional subscription sold through the App Store. Apple handles the payment; we never see your payment details. We use RevenueCat, Inc. to verify purchases and track subscription status. RevenueCat receives your App Store receipt, your account identifier, device information, and the app's Firebase app-instance identifier, and processes them under the <a href="https://www.revenuecat.com/privacy">RevenueCat Privacy Policy</a>. On our behalf, RevenueCat also sends subscription events (a trial starting, a trial converting, a renewal, a cancellation, an expiration, or a billing problem, with the price and currency) to Google Firebase Analytics, tied to that app-instance identifier.</p>
+  <p>StopBy Pro is an optional subscription sold through the App Store or Google Play. Apple or Google handles the payment; we never see your payment details. We use RevenueCat, Inc. to verify purchases and track subscription status. RevenueCat receives your App Store receipt or Google Play purchase token, your account identifier, device information, and the app's Firebase app-instance identifier, and processes them under the <a href="https://www.revenuecat.com/privacy">RevenueCat Privacy Policy</a>. On our behalf, RevenueCat also sends subscription events (a trial starting, a trial converting, a renewal, a cancellation, an expiration, or a billing problem, with the price and currency) to Google Firebase Analytics, tied to that app-instance identifier.</p>
 
   <h2>Usage analytics</h2>
   <p>To understand whether StopBy is useful, the app sends a small amount of usage data to Google Firebase Analytics.</p>
@@ -101,15 +104,18 @@
     <tr><td>Onboarding results and changes to the location permission</td><td>To see where reminders stop working</td></tr>
     <tr><td>That a paywall was shown or closed, that a purchase was started, canceled, failed, or completed, that purchases were restored, and whether the plan was yearly or monthly</td><td>To understand which plans people choose</td></tr>
     <tr><td>Subscription events sent by RevenueCat, as described under Subscriptions</td><td>To understand whether subscriptions work for people</td></tr>
-    <tr><td>An app-instance identifier (Apple's identifier for vendor), device model, iOS version, app version, language, and an approximate country derived by Google from your network address</td><td>Standard Firebase Analytics data used to count users and sessions</td></tr>
+    <tr><td>An app-instance identifier (Apple's identifier for vendor on iOS, a Firebase installation identifier on Android), device model, operating system version, app version, language, and an approximate country derived by Google from your network address</td><td>Standard Firebase Analytics data used to count users and sessions</td></tr>
   </table>
-  <p>The names of your places, their coordinates, your to-do titles, your display name, and your precise location are not included in any analytics event. StopBy does not use the advertising identifier (IDFA) and does not track you across other apps or websites.</p>
+  <p>The names of your places, their coordinates, your to-do titles, your display name, and your precise location are not included in any analytics event. StopBy does not use the advertising identifier (IDFA on iOS, the advertising ID on Android) and does not track you across other apps or websites.</p>
   <p>Google processes this data on our behalf under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and retains event-level data for 14 months. We also export the same event data to Google BigQuery for our own analysis and keep it there no longer than 14 months. Aggregated statistics may be kept longer.</p>
+
+  <h2>Crash reports</h2>
+  <p>If the app crashes, or runs into an error that would silently lose data or a reminder, a report is sent to Google Firebase Crashlytics: where in the app it happened, the app version, the operating system version, the device model, free memory and storage, and the time. Reports contain no account identifier, no location, and none of your places or to-dos. Google processes them under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and retains them for 90 days.</p>
 
   <h2>Who else receives data</h2>
   <ul>
-    <li>Apple: Sign in with Apple, App Store purchases, and push notification delivery.</li>
-    <li>Google (Firebase Analytics): usage analytics as described above.</li>
+    <li>Apple: Sign in with Apple, App Store purchases, push notification delivery, and maps on iOS.</li>
+    <li>Google: Sign in with Google, Google Play purchases, push notification delivery, maps and place search on Android, and Firebase Analytics and Crashlytics on both platforms, as described above.</li>
     <li>RevenueCat: subscription verification as described above.</li>
     <li>Amazon Web Services: hosts our servers, our database backups (encrypted at rest), and our server logs in the United States.</li>
     <li>Cloudflare: routes traffic to our servers and serves this website. Cloudflare Web Analytics counts page views on this website without cookies or personal identifiers.</li>
@@ -121,15 +127,15 @@
     <li>Data on your device is deleted when you delete the app.</li>
     <li>Data on our servers is kept while your account exists. You can delete your account from Settings in the app; this removes your account, your devices, and, if you are the household owner, the household and everything in it. Database backups are taken daily and removed within 70 days.</li>
     <li>Server logs, which include account and household identifiers and details of each request, are kept for 30 days to operate the service and keep it secure.</li>
-    <li>Analytics data is retained by Google as described above. To ask us to delete analytics data associated with your app instance, contact us at the address below.</li>
+    <li>Analytics data is retained by Google as described above, and crash reports for 90 days. To ask us to delete analytics data associated with your app instance, contact us at the address below.</li>
   </ul>
 
   <h2>Your choices</h2>
   <ul>
-    <li>Location: change the permission at any time in iOS Settings. Without "Always", reminders only work while the app is open.</li>
-    <li>Notifications: turn them off in iOS Settings.</li>
+    <li>Location: change the permission at any time in iOS or Android Settings. Without "Always" (iOS) or "Allow all the time" (Android), reminders only work while the app is open.</li>
+    <li>Notifications: turn them off in iOS or Android Settings.</li>
     <li>Sync and sharing: use the app without signing in, or delete your account to stop syncing.</li>
-    <li>Subscriptions: manage or cancel in your Apple ID settings.</li>
+    <li>Subscriptions: manage or cancel in your Apple ID settings or in Google Play.</li>
   </ul>
 
   <h2>Children</h2>
