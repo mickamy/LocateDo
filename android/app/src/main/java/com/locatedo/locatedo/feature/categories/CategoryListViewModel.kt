@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -36,7 +37,7 @@ class CategoryListViewModel @Inject constructor(
         draggedOrder,
     ) { categories, places, order ->
         val counts = places.groupingBy { it.categoryId }.eachCount()
-        val ordered = if (order == null) categories else categories.sortedBy { category -> order.indexOf(category.id).takeIf { it >= 0 } ?: Int.MAX_VALUE }
+        val ordered = if (order == null) categories else categories.inOrder(order)
         CategoryListUiState(
             isLoading = false,
             items = ordered.map { CategoryListItem(it, counts[it.id] ?: 0) },
@@ -54,7 +55,7 @@ class CategoryListViewModel @Inject constructor(
     }
 
     fun move(from: Int, to: Int) {
-        val ids = uiState.value.items.map { it.category.id }.toMutableList()
+        val ids = (draggedOrder.value ?: uiState.value.items.map { it.category.id }).toMutableList()
         if (from !in ids.indices || to !in ids.indices || from == to) {
             return
         }
@@ -63,16 +64,16 @@ class CategoryListViewModel @Inject constructor(
     }
 
     fun commitOrder() {
-        if (draggedOrder.value == null) {
-            return
-        }
-        val ordered = uiState.value.items.map { it.category }
+        val order = draggedOrder.value ?: return
         viewModelScope.launch {
-            categoryRepository.reorder(ordered)
+            categoryRepository.reorder(categoryRepository.observeAll().first().inOrder(order))
         }
     }
 
     suspend fun delete(id: UUID): Boolean = categoryRepository.delete(id)
+
+    private fun List<Category>.inOrder(order: List<UUID>): List<Category> =
+        sortedBy { category -> order.indexOf(category.id).takeIf { it >= 0 } ?: Int.MAX_VALUE }
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

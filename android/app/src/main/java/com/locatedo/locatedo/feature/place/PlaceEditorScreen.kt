@@ -134,7 +134,11 @@ fun PlaceEditorScreen(
             }
 
             SectionTitle(stringResource(R.string.place_editor_radius_label))
-            RadiusSlider(meters = draft.radiusMeters, onChange = viewModel::setRadius)
+            RadiusSlider(
+                meters = draft.radiusMeters,
+                onChange = viewModel::setRadius,
+                label = stringResource(R.string.place_editor_radius_label),
+            )
 
             SectionTitle(stringResource(R.string.place_editor_category_label))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

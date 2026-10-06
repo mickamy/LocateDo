@@ -30,6 +30,8 @@
     <string name="category_last_one">Keep at least one category.</string>
     <string name="category_life">Life</string>
     <string name="category_manage">Edit Categories</string>
+    <string name="category_move_down">Move down</string>
+    <string name="category_move_up">Move up</string>
     <string name="category_name">Name</string>
     <string name="category_name_placeholder">e.g., Pharmacy</string>
     <string name="category_new_title">New Category</string>

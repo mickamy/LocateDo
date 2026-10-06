@@ -228,6 +228,8 @@ category:
       one: "{count:int} place will become uncategorized."
       other: "{count:int} places will become uncategorized."
   last_one: "Keep at least one category."
+  move_up: "Move up"
+  move_down: "Move down"
   color_blue: "Blue"
   color_green: "Green"
   color_orange: "Orange"

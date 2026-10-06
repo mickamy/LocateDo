@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -43,6 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -92,7 +95,7 @@ fun CategoriesScreen(
         },
     ) { padding ->
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize().padding(padding)) {
-            items(uiState.items, key = { it.category.id }) { item ->
+            itemsIndexed(uiState.items, key = { _, item -> item.category.id }) { index, item ->
                 val isDragging = reorder.draggingKey == item.category.id
                 CategoryRow(
                     item = item,
@@ -103,6 +106,22 @@ fun CategoriesScreen(
                     isDragging = isDragging,
                     handleModifier = Modifier.dragToReorderHandle(reorder, item.category.id),
                     onClick = { editing = item.category },
+                    onMoveUp = if (index == 0) {
+                        null
+                    } else {
+                        {
+                            viewModel.move(index, index - 1)
+                            viewModel.commitOrder()
+                        }
+                    },
+                    onMoveDown = if (index == uiState.items.lastIndex) {
+                        null
+                    } else {
+                        {
+                            viewModel.move(index, index + 1)
+                            viewModel.commitOrder()
+                        }
+                    },
                     onDelete = {
                         val deleted = viewModel.delete(item.category.id)
                         if (!deleted) {
@@ -132,12 +151,17 @@ private fun CategoryRow(
     isDragging: Boolean,
     handleModifier: Modifier,
     onClick: () -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
     onDelete: suspend () -> Boolean,
 ) {
     val scope = rememberCoroutineScope()
     val dismissState = rememberSwipeToDismissBoxState()
     var isConfirmingDelete by remember { mutableStateOf(false) }
     val name = categoryName(item.category)
+    val moveUpLabel = stringResource(R.string.category_move_up)
+    val moveDownLabel = stringResource(R.string.category_move_down)
+    val deleteLabel = stringResource(R.string.common_delete)
 
     fun delete() {
         scope.launch {
@@ -147,9 +171,28 @@ private fun CategoryRow(
         }
     }
 
+    fun requestDelete() {
+        if (item.placeCount == 0) {
+            delete()
+        } else {
+            isConfirmingDelete = true
+        }
+    }
+
     fun keep() {
         isConfirmingDelete = false
         scope.launch { dismissState.reset() }
+    }
+
+    // Dragging and swiping have no accessibility equivalent, so the row offers them as actions.
+    val accessibilityActions = buildList {
+        if (onMoveUp != null) {
+            add(CustomAccessibilityAction(moveUpLabel) { onMoveUp(); true })
+        }
+        if (onMoveDown != null) {
+            add(CustomAccessibilityAction(moveDownLabel) { onMoveDown(); true })
+        }
+        add(CustomAccessibilityAction(deleteLabel) { requestDelete(); true })
     }
 
     SwipeToDismissBox(
@@ -157,13 +200,7 @@ private fun CategoryRow(
         modifier = modifier,
         backgroundContent = { SwipeToDeleteBackground() },
         enableDismissFromStartToEnd = false,
-        onDismiss = {
-            if (item.placeCount == 0) {
-                delete()
-            } else {
-                isConfirmingDelete = true
-            }
-        },
+        onDismiss = { requestDelete() },
     ) {
         Surface(
             tonalElevation = if (isDragging) 4.dp else 0.dp,
@@ -171,7 +208,9 @@ private fun CategoryRow(
         ) {
             ListItem(
                 headlineContent = { Text(name) },
-                modifier = Modifier.clickable(onClick = onClick),
+                modifier = Modifier
+                    .clickable(onClick = onClick)
+                    .semantics { customActions = accessibilityActions },
                 leadingContent = { CategoryBadge(icon = item.category.icon, color = item.category.color, size = 36.dp) },
                 trailingContent = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

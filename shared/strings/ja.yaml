@@ -222,6 +222,8 @@ category:
     plural:
       other: "{count} 件の場所が未分類になります。"
   last_one: "カテゴリは 1 つ以上必要です。"
+  move_up: "上に移動"
+  move_down: "下に移動"
   color_blue: "青"
   color_green: "緑"
   color_orange: "オレンジ"

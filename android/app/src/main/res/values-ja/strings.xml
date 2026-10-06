@@ -29,6 +29,8 @@
     <string name="category_last_one">カテゴリは 1 つ以上必要です。</string>
     <string name="category_life">生活</string>
     <string name="category_manage">カテゴリを編集</string>
+    <string name="category_move_down">下に移動</string>
+    <string name="category_move_up">上に移動</string>
     <string name="category_name">名前</string>
     <string name="category_name_placeholder">例: ドラッグストア</string>
     <string name="category_new_title">新しいカテゴリ</string>

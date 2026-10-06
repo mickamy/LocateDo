@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
@@ -67,25 +66,9 @@ object CategoryStyle {
         "gray" to Color(0xFF757575),
     )
 
-    // Hues for the stock map marker; gray has no hue, so it stays the marker's default red.
-    private val hues: Map<String, Float> = mapOf(
-        "blue" to BitmapDescriptorFactory.HUE_AZURE,
-        "green" to BitmapDescriptorFactory.HUE_GREEN,
-        "orange" to BitmapDescriptorFactory.HUE_ORANGE,
-        "red" to BitmapDescriptorFactory.HUE_RED,
-        "pink" to BitmapDescriptorFactory.HUE_ROSE,
-        "purple" to BitmapDescriptorFactory.HUE_VIOLET,
-        "teal" to BitmapDescriptorFactory.HUE_CYAN,
-        "yellow" to BitmapDescriptorFactory.HUE_YELLOW,
-        "brown" to BitmapDescriptorFactory.HUE_ORANGE,
-        "gray" to BitmapDescriptorFactory.HUE_RED,
-    )
-
     fun icon(key: String?): ImageVector = symbols[key] ?: Icons.Filled.Place
 
     fun tint(key: String?): Color = tints[key] ?: tints.getValue("gray")
-
-    fun markerHue(key: String?): Float = hues[key] ?: BitmapDescriptorFactory.HUE_RED
 }
 
 // Built-in categories are named by the translations; custom ones carry their own name.

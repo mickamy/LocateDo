@@ -145,7 +145,6 @@ private fun LocationSection(
 ) {
     val context = LocalContext.current
     val backgroundOption = remember(context) { context.packageManager.backgroundPermissionOptionLabel.toString() }
-    SectionHeader(stringResource(R.string.settings_location_title))
     ListItem(
         headlineContent = { Text(stringResource(R.string.settings_location_title)) },
         leadingContent = { Icon(Icons.Filled.LocationOn, contentDescription = null) },
@@ -170,7 +169,6 @@ private fun LocationSection(
 
 @Composable
 private fun NotificationSection(auth: NotificationAuth, onAllow: () -> Unit, onOpenSettings: () -> Unit) {
-    SectionHeader(stringResource(R.string.settings_notifications_title))
     ListItem(
         headlineContent = { Text(stringResource(R.string.settings_notifications_title)) },
         leadingContent = { Icon(Icons.Filled.Notifications, contentDescription = null) },
@@ -197,6 +195,7 @@ private fun DefaultRadiusSection(meters: Double, onSave: (Double) -> Unit) {
     RadiusSlider(
         meters = radius,
         onChange = { radius = it },
+        label = stringResource(R.string.settings_default_radius_label),
         modifier = Modifier.padding(horizontal = 16.dp),
         onChangeFinished = { onSave(radius) },
     )

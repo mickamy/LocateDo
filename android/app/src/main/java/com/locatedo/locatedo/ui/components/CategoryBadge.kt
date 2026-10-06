@@ -10,9 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.locatedo.locatedo.core.common.CategoryStyle
 
-// The category's icon on a filled circle of its color, as the markers will be.
+// The category's icon on a filled circle of its color.
 @Composable
 fun CategoryBadge(icon: String?, color: String?, size: Dp, modifier: Modifier = Modifier) {
     Box(
@@ -27,5 +28,18 @@ fun CategoryBadge(icon: String?, color: String?, size: Dp, modifier: Modifier = 
             modifier = Modifier.size(size * 0.55f),
             tint = Color.White,
         )
+    }
+}
+
+// The badge with a white rim, drawn onto the map as the place's marker (anchored at its center).
+@Composable
+fun CategoryMarker(icon: String?, color: String?) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .background(Color.White, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        CategoryBadge(icon = icon, color = color, size = 30.dp)
     }
 }

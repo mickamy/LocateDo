@@ -12,3 +12,7 @@ settings.location.android_needs_always:
   platforms: [android]
 permission.android_background:
   platforms: [android]
+category.move_up:
+  platforms: [android]
+category.move_down:
+  platforms: [android]
