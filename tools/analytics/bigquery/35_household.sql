@@ -1,4 +1,4 @@
--- Q5: whether sharing households stay longer and pay more often.
+-- Whether sharing households stay longer and pay more often.
 -- Split by blocked_by_plan: those owners paid but could not invite until the server caught up, so they undercount sharing.
 SELECT
   LEAST(COALESCE(max_household_members, 1), 3) AS household_members,

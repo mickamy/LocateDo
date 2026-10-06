@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Register LocateDo's GA4 custom definitions and set 14-month data retention (docs/analytics-plan.md A6).
+"""Register LocateDo's GA4 custom definitions and set 14-month data retention.
 
 Usage: python3 tools/analytics/ga4_setup.py [property_id] [service_account_key.json]
 

@@ -1,4 +1,4 @@
--- Q4: who hits the free limits, how soon, and how far they get through the paywall.
+-- Who hits the free limits, how soon, and how far they get through the paywall.
 WITH first_limit AS (
   SELECT
     user_pseudo_id,

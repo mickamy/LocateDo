@@ -1,4 +1,4 @@
--- Q2: whether arrival reminders get opened and lead to to-dos being checked off, by month.
+-- Whether arrival reminders get opened and lead to to-dos being checked off, by month.
 SELECT
   DATE_TRUNC(event_date, MONTH) AS month,
   COUNTIF(event_name = 'arrival_notified') AS reminders,

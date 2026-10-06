@@ -1,4 +1,4 @@
--- Q6: share of users active in the last 30 days who opened each screen at least once.
+-- Share of users active in the last 30 days who opened each screen at least once.
 WITH recent AS (
   SELECT *
   FROM `__PROJECT__.__DATASET__.events`
