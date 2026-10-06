@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
 }
 
 android {
@@ -63,6 +64,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // Robolectric's API 36 image reaches into FileDescriptor internals that the JDK hides from other modules.
+        unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
+    }
     lint {
         warningsAsErrors = true
         // The string resources come from shared/strings; which ones a build uses is not lint's call.
@@ -76,6 +82,10 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -97,6 +107,12 @@ dependencies {
     implementation(libs.connect.kotlin.google.javalite.ext)
     implementation(libs.protobuf.javalite)
     implementation(libs.protobuf.kotlin.lite)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.datastore.preferences)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.robolectric)
 }
