@@ -79,12 +79,12 @@ func TestClient_Wake(t *testing.T) {
 	client := fake.client(t)
 
 	// act
-	err := client.Wake(t.Context(), "device-token", now)
+	err := client.Wake(t.Context(), "installation-1", now)
 
 	// assert
 	require.NoError(t, err)
 	sent := fake.lastMessage()
-	assert.Equal(t, "device-token", sent.Message.Token)
+	assert.Equal(t, "installation-1", sent.Message.Fid)
 	assert.Equal(t, map[string]string{"reason": "sync"}, sent.Message.Data)
 	assert.Equal(t, "normal", sent.Message.Android.Priority)
 	assert.Equal(t, "Bearer access-token-1", fake.lastAuthorization())
@@ -108,7 +108,7 @@ func TestClient_Wake_reusesTheAccessTokenUntilItExpires(t *testing.T) {
 	assert.Equal(t, "Bearer access-token-2", fake.lastAuthorization())
 }
 
-func TestClient_Wake_unregisteredToken(t *testing.T) {
+func TestClient_Wake_unregisteredInstallation(t *testing.T) {
 	t.Parallel()
 
 	// arrange
@@ -146,7 +146,7 @@ func TestClient_Wake_notConfigured(t *testing.T) {
 	client := fcm.NewClient(fcm.Config{BaseURL: fake.srv.URL, TokenURL: fake.srv.URL + "/token"}, fake.srv.Client())
 
 	// act
-	err := client.Wake(t.Context(), "device-token", now)
+	err := client.Wake(t.Context(), "installation-1", now)
 
 	// assert
 	require.NoError(t, err)
@@ -156,7 +156,7 @@ func TestClient_Wake_notConfigured(t *testing.T) {
 
 type sentMessage struct {
 	Message struct {
-		Token   string            `json:"token"`
+		Fid     string            `json:"fid"`
 		Data    map[string]string `json:"data"`
 		Android struct {
 			Priority string `json:"priority"`
@@ -224,7 +224,7 @@ func (f *fakeFCM) serveSend(w http.ResponseWriter, r *http.Request) {
 	f.message = &sent
 	f.mu.Unlock()
 
-	switch sent.Message.Token {
+	switch sent.Message.Fid {
 	case "stale":
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND",` +

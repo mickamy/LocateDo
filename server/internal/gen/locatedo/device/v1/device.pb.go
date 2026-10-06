@@ -121,10 +121,12 @@ func (ApnsEnvironment) EnumDescriptor() ([]byte, []int) {
 }
 
 type RegisterDeviceRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Platform        Platform               `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
-	PushToken       string                 `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
-	ApnsEnvironment ApnsEnvironment        `protobuf:"varint,3,opt,name=apns_environment,json=apnsEnvironment,proto3,enum=locatedo.device.v1.ApnsEnvironment" json:"apns_environment,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Platform Platform               `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
+	// What the push service targets: the APNs device token on iOS, the Firebase
+	// installation ID on Android.
+	PushToken       string          `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
+	ApnsEnvironment ApnsEnvironment `protobuf:"varint,3,opt,name=apns_environment,json=apnsEnvironment,proto3,enum=locatedo.device.v1.ApnsEnvironment" json:"apns_environment,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }

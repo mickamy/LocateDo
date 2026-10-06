@@ -425,7 +425,7 @@ func (x *RefreshTokenResponse) GetHouseholdId() string {
 type SignOutRequest struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	RefreshToken string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	// Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+	// Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
 	Device        *SignOutRequest_Device `protobuf:"bytes,2,opt,name=device,proto3" json:"device,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -584,9 +584,10 @@ func (*DeleteAccountResponse) Descriptor() ([]byte, []int) {
 }
 
 type SignOutRequest_Device struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Platform      v1.Platform            `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
-	PushToken     string                 `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Platform v1.Platform            `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
+	// The value the device registered: an APNs device token or a Firebase installation ID.
+	PushToken     string `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

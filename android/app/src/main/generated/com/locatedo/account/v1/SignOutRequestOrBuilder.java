@@ -24,7 +24,7 @@ public interface SignOutRequestOrBuilder extends
 
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -33,7 +33,7 @@ public interface SignOutRequestOrBuilder extends
   boolean hasDevice();
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>

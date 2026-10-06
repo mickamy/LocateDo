@@ -7,7 +7,7 @@ import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.auth.Session
 import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakeDeviceService
-import com.locatedo.locatedo.testing.FakePushTokenSource
+import com.locatedo.locatedo.testing.FakeInstallationIdSource
 import com.locatedo.locatedo.testing.InMemorySessionStore
 import java.time.Clock
 import java.time.Instant
@@ -26,19 +26,19 @@ import org.robolectric.RobolectricTestRunner
 class DeviceRegistrationTest {
     private val now = Instant.parse("2026-10-06T00:00:00Z")
     private val devices = FakeDeviceService()
-    private val source = FakePushTokenSource("fcm-token")
+    private val source = FakeInstallationIdSource("installation-1")
     private val session = Session(UUID.fromString(FakeAccountService.USER_ID), "access", now.plusSeconds(3600), "refresh")
 
     @Test
-    fun registersTheTokenOnceSignedIn() = runTest {
+    fun registersTheInstallationOnceSignedIn() = runTest {
         val registration = registration(InMemorySessionStore(session))
 
         registration.registerIfSignedIn()
 
         val request = devices.registered.single()
         assertEquals(Platform.PLATFORM_ANDROID, request.platform)
-        assertEquals("fcm-token", request.pushToken)
-        assertEquals("fcm-token", registration.pushToken.value)
+        assertEquals("installation-1", request.pushToken)
+        assertEquals("installation-1", registration.installationId.value)
     }
 
     @Test
@@ -46,20 +46,20 @@ class DeviceRegistrationTest {
         val registration = registration(InMemorySessionStore())
 
         registration.registerIfSignedIn()
-        registration.received("fresh-token")
+        registration.received("installation-2")
 
         assertTrue(devices.registered.isEmpty())
-        assertEquals("fresh-token", registration.pushToken.value)
+        assertEquals("installation-2", registration.installationId.value)
     }
 
     @Test
-    fun aNewTokenReplacesTheOldOne() = runTest {
+    fun aChangedIdReplacesTheOldOne() = runTest {
         val registration = registration(InMemorySessionStore(session))
         registration.registerIfSignedIn()
 
-        registration.received("fresh-token")
+        registration.received("installation-2")
 
-        assertEquals(listOf("fcm-token", "fresh-token"), devices.registered.map { it.pushToken })
+        assertEquals(listOf("installation-1", "installation-2"), devices.registered.map { it.pushToken })
     }
 
     @Test
@@ -73,8 +73,8 @@ class DeviceRegistrationTest {
     }
 
     @Test
-    fun withoutATokenNothingIsSent() = runTest {
-        source.token = null
+    fun withoutAnIdNothingIsSent() = runTest {
+        source.installationId = null
         val registration = registration(InMemorySessionStore(session))
 
         registration.registerIfSignedIn()

@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.push
 
 import android.util.Log
 import com.connectrpc.ConnectException
+import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
 import com.locatedo.device.v1.DeviceServiceClientInterface
 import com.locatedo.device.v1.Platform
@@ -20,18 +21,18 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.tasks.await
 
-interface PushTokenSource {
-    suspend fun token(): String?
+interface InstallationIdSource {
+    suspend fun installationId(): String?
 }
 
-// Firebase is absent from builds without google-services.json, which is a missing token, not a crash.
-// Registration tokens are deprecated in favor of installation ids, which the server does not target yet.
-class FirebasePushTokenSource @Inject constructor() : PushTokenSource {
-    @Suppress("DEPRECATION")
-    override suspend fun token(): String? = try {
-        FirebaseMessaging.getInstance().token.await()
+// Registers the installation with FCM and reads its id. Firebase is absent from builds without
+// google-services.json, which is a missing id, not a crash.
+class FirebaseInstallationIdSource @Inject constructor() : InstallationIdSource {
+    override suspend fun installationId(): String? = try {
+        FirebaseMessaging.getInstance().register().await()
+        FirebaseInstallations.getInstance().id.await()
     } catch (e: Exception) {
-        Log.w(TAG, "Could not get the FCM token", e)
+        Log.w(TAG, "Could not register with FCM", e)
         null
     }
 
@@ -40,19 +41,20 @@ class FirebasePushTokenSource @Inject constructor() : PushTokenSource {
     }
 }
 
-// Tells the server which device to wake once the user is signed in; the token is refreshed by the messaging service.
+// Tells the server which installation to wake once the user is signed in; the messaging service reports the id at
+// startup and whenever it changes.
 @Singleton
 class DeviceRegistration @Inject constructor(
     private val devices: DeviceServiceClientInterface,
     private val authenticator: Authenticator,
-    private val tokenSource: PushTokenSource,
+    private val source: InstallationIdSource,
 ) {
-    private val _pushToken = MutableStateFlow<String?>(null)
+    private val _installationId = MutableStateFlow<String?>(null)
 
-    val pushToken: StateFlow<String?> = _pushToken
+    val installationId: StateFlow<String?> = _installationId
 
-    suspend fun received(token: String) {
-        _pushToken.value = token
+    suspend fun received(installationId: String) {
+        _installationId.value = installationId
         registerIfSignedIn()
     }
 
@@ -60,20 +62,20 @@ class DeviceRegistration @Inject constructor(
         if (authenticator.current() == null) {
             return
         }
-        val token = _pushToken.value ?: tokenSource.token()?.also { _pushToken.value = it } ?: return
+        val id = _installationId.value ?: source.installationId()?.also { _installationId.value = it } ?: return
         try {
             authenticator.authorized {
                 devices.registerDevice(
                     registerDeviceRequest {
                         platform = Platform.PLATFORM_ANDROID
-                        pushToken = token
+                        pushToken = id
                     },
                 )
             }
         } catch (e: ConnectException) {
-            Log.w(TAG, "Could not register the push token", e)
+            Log.w(TAG, "Could not register the installation", e)
         } catch (e: SignedOutException) {
-            Log.w(TAG, "Could not register the push token", e)
+            Log.w(TAG, "Could not register the installation", e)
         }
     }
 
@@ -98,5 +100,5 @@ class PushMessages @Inject constructor() {
 @InstallIn(SingletonComponent::class)
 abstract class PushModule {
     @Binds
-    abstract fun pushTokenSource(source: FirebasePushTokenSource): PushTokenSource
+    abstract fun installationIdSource(source: FirebaseInstallationIdSource): InstallationIdSource
 }

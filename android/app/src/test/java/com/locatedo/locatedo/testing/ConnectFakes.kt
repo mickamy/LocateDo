@@ -34,7 +34,7 @@ import com.locatedo.household.v1.createHouseholdResponse
 import com.locatedo.household.v1.household
 import com.locatedo.locatedo.core.auth.Session
 import com.locatedo.locatedo.core.auth.SessionStore
-import com.locatedo.locatedo.core.push.PushTokenSource
+import com.locatedo.locatedo.core.push.InstallationIdSource
 import com.locatedo.locatedo.core.sync.toTimestamp
 import java.time.Instant
 import kotlinx.coroutines.delay
@@ -156,6 +156,6 @@ class InMemorySessionStore(var session: Session? = null) : SessionStore {
     }
 }
 
-class FakePushTokenSource(var token: String? = null) : PushTokenSource {
-    override suspend fun token(): String? = token
+class FakeInstallationIdSource(var installationId: String? = null) : InstallationIdSource {
+    override suspend fun installationId(): String? = installationId
 }

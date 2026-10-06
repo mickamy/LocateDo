@@ -48,7 +48,7 @@ public object SignOutRequestKt {
 
     /**
      * ```
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * ```
      *
      * `.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];`
@@ -62,7 +62,7 @@ public object SignOutRequestKt {
       }
     /**
      * ```
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * ```
      *
      * `.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];`
@@ -72,7 +72,7 @@ public object SignOutRequestKt {
     }
     /**
      * ```
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * ```
      *
      * `.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];`
@@ -132,6 +132,10 @@ public object SignOutRequestKt {
       }
 
       /**
+       * ```
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * ```
+       *
        * `string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }`
        */
       public var pushToken: kotlin.String
@@ -142,6 +146,10 @@ public object SignOutRequestKt {
           _builder.pushToken = value
         }
       /**
+       * ```
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * ```
+       *
        * `string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }`
        */
       public fun clearPushToken() {

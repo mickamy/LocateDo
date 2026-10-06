@@ -134,10 +134,10 @@ class AccountManager @Inject constructor(
         authenticator.current()?.let { session ->
             val request = signOutRequest {
                 refreshToken = session.refreshToken
-                deviceRegistration.pushToken.value?.let { token ->
+                deviceRegistration.installationId.value?.let { id ->
                     device = SignOutRequestKt.device {
                         platform = Platform.PLATFORM_ANDROID
-                        pushToken = token
+                        pushToken = id
                     }
                 }
             }

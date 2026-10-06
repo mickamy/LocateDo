@@ -24,7 +24,7 @@ import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakeDeviceService
 import com.locatedo.locatedo.testing.FakeHouseholdService
-import com.locatedo.locatedo.testing.FakePushTokenSource
+import com.locatedo.locatedo.testing.FakeInstallationIdSource
 import com.locatedo.locatedo.testing.InMemorySessionStore
 import com.locatedo.locatedo.testing.sessionProto
 import com.locatedo.locatedo.testing.success
@@ -104,7 +104,7 @@ class AccountManagerTest {
         val state = syncState.get()
         assertEquals(created?.id, state.householdId.toString())
         assertEquals(42L, state.cursor)
-        assertEquals("the device is registered once the household exists", listOf("fcm-token"), devices.registered.map { it.pushToken })
+        assertEquals("the device is registered once the household exists", listOf("installation-1"), devices.registered.map { it.pushToken })
         assertEquals(true, preferences.data.first().hasCompletedOnboarding)
     }
 
@@ -209,7 +209,7 @@ class AccountManagerTest {
 
         val signOut = account.signOuts.single()
         assertEquals("refresh", signOut.refreshToken)
-        assertEquals("fcm-token", signOut.device.pushToken)
+        assertEquals("installation-1", signOut.device.pushToken)
         assertFalse(manager.isSignedIn())
         assertNull(sessionStore.session)
         assertTrue(places.observeAll().first().isEmpty())
@@ -279,7 +279,7 @@ class AccountManagerTest {
         val preferences = testPreferences(folder.root, backgroundScope)
         preferences.setCompletedOnboarding(true)
         val authenticator = Authenticator(sessionStore, account, AccessTokenStore(), fixedClock, this)
-        val registration = DeviceRegistration(devices, authenticator, FakePushTokenSource("fcm-token"))
+        val registration = DeviceRegistration(devices, authenticator, FakeInstallationIdSource("installation-1"))
         val manager = AccountManager(
             account = account,
             household = household,

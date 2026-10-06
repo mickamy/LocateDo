@@ -204,7 +204,7 @@ nonisolated struct Locatedo_Account_V1_SignOutRequest: Sendable {
 
   var refreshToken: String = String()
 
-  /// Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+  /// Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
   var device: Locatedo_Account_V1_SignOutRequest.Device {
     get {_device ?? Locatedo_Account_V1_SignOutRequest.Device()}
     set {_device = newValue}
@@ -223,6 +223,7 @@ nonisolated struct Locatedo_Account_V1_SignOutRequest: Sendable {
 
     var platform: Locatedo_Device_V1_Platform = .unspecified
 
+    /// The value the device registered: an APNs device token or a Firebase installation ID.
     var pushToken: String = String()
 
     var unknownFields = SwiftProtobuf.UnknownStorage()

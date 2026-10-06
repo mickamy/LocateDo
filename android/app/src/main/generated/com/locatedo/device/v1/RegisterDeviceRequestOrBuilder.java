@@ -22,11 +22,21 @@ public interface RegisterDeviceRequestOrBuilder extends
   com.locatedo.device.v1.Platform getPlatform();
 
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    * @return The pushToken.
    */
   java.lang.String getPushToken();
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    * @return The bytes for pushToken.
    */

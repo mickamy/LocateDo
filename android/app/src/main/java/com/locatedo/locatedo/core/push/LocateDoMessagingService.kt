@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.core.push
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -26,13 +27,13 @@ interface PushEntryPoint {
     }
 }
 
+// Registration goes through installation ids (onRegistered); the lint check still asks for the deprecated onNewToken.
+@SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class LocateDoMessagingService : FirebaseMessagingService() {
-    // Registration tokens are deprecated in favor of installation ids, which the server does not target yet.
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onNewToken(token: String) {
+    override fun onRegistered(installationId: String) {
         val graph = PushEntryPoint.from(this)
         graph.applicationScope().launch {
-            graph.deviceRegistration().received(token)
+            graph.deviceRegistration().received(installationId)
         }
     }
 

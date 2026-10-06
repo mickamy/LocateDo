@@ -33,13 +33,14 @@ const (
 	maxResponseBytes = 1 << 16
 )
 
-// ErrUnregistered means the registration token is no longer valid for this
-// app; the caller should forget it.
-var ErrUnregistered = errors.New("fcm: registration token is no longer valid")
+// ErrUnregistered means the installation is no longer registered with FCM;
+// the caller should forget it.
+var ErrUnregistered = errors.New("fcm: installation is no longer registered")
 
 type Pusher interface {
-	// Wake sends a data message that lets the app pull in the background.
-	Wake(ctx context.Context, token string, now time.Time) error
+	// Wake sends the installation a data message that lets the app pull in
+	// the background.
+	Wake(ctx context.Context, installationID string, now time.Time) error
 }
 
 var _ Pusher = Client{}
@@ -108,10 +109,10 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 	return Client{cfg: cfg, http: httpClient, token: &accessToken{}}
 }
 
-func (c Client) Wake(ctx context.Context, token string, now time.Time) error {
+func (c Client) Wake(ctx context.Context, installationID string, now time.Time) error {
 	account := c.cfg.ServiceAccount
 	if account == nil {
-		logger.Debug(ctx, "fcm is not configured; dropping push", "token", token)
+		logger.Debug(ctx, "fcm is not configured; dropping push", "installation_id", installationID)
 		return nil
 	}
 	bearer, err := c.token.get(ctx, c, now)
@@ -121,7 +122,7 @@ func (c Client) Wake(ctx context.Context, token string, now time.Time) error {
 
 	body, err := json.Marshal(map[string]any{
 		"message": map[string]any{
-			"token":   token,
+			"fid":     installationID,
 			"data":    map[string]string{"reason": "sync"},
 			"android": map[string]string{"priority": "normal"},
 		},

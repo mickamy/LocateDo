@@ -68,6 +68,7 @@ message SignOutRequest {
       defined_only: true
       not_in: [0]
     }];
+    // The value the device registered: an APNs device token or a Firebase installation ID.
     string push_token = 2 [(buf.validate.field).string = {
       min_len: 1
       max_len: 4096
@@ -75,7 +76,7 @@ message SignOutRequest {
   }
 
   string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
-  // Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+  // Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
   Device device = 2;
 }
 

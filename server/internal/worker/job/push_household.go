@@ -20,8 +20,9 @@ import (
 
 // PushHousehold delivers outbox.KindPushHousehold, which the sync triggers
 // enqueue: it wakes every member's device, over APNs or FCM, so it pulls.
-// Tokens the push service no longer accepts are forgotten; any other failure
-// retries the whole message, and the extra pushes it repeats are harmless.
+// Registrations the push service no longer accepts are forgotten; any other
+// failure retries the whole message, and the extra pushes it repeats are
+// harmless.
 type PushHousehold struct {
 	_          di.Infra          `di:"embed"`
 	transactor tx.Transactor     `di:""`
@@ -86,7 +87,7 @@ func (j PushHousehold) wake(
 		case err == nil:
 			tally.woken++
 		case errors.Is(err, apns.ErrUnregistered), errors.Is(err, fcm.ErrUnregistered):
-			logger.Info(ctx, "forgetting a device token the push service rejected",
+			logger.Info(ctx, "forgetting a device registration the push service rejected",
 				"user_id", d.UserID, "platform", platform, "error", err)
 			if err := j.forget(ctx, platform, d.PushToken); err != nil {
 				tally.failed = append(tally.failed, err)

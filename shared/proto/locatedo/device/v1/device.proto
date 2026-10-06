@@ -25,6 +25,8 @@ message RegisterDeviceRequest {
     defined_only: true
     not_in: [0]
   }];
+  // What the push service targets: the APNs device token on iOS, the Firebase
+  // installation ID on Android.
   string push_token = 2 [(buf.validate.field).string = {
     min_len: 1
     max_len: 4096
