@@ -95,11 +95,27 @@ fun categoryName(category: Category?): String {
         return stringResource(R.string.category_none)
     }
     category.name?.let { return it }
-    return when (category.builtin) {
-        BuiltinCategory.SHOPPING -> stringResource(R.string.category_shopping)
-        BuiltinCategory.WORK -> stringResource(R.string.category_work)
-        BuiltinCategory.LIFE -> stringResource(R.string.category_life)
-        BuiltinCategory.OTHER -> stringResource(R.string.category_other)
-        null -> ""
-    }
+    return category.builtin?.let { builtinCategoryName(it) } ?: ""
+}
+
+@Composable
+fun builtinCategoryName(builtin: BuiltinCategory): String = when (builtin) {
+    BuiltinCategory.SHOPPING -> stringResource(R.string.category_shopping)
+    BuiltinCategory.WORK -> stringResource(R.string.category_work)
+    BuiltinCategory.LIFE -> stringResource(R.string.category_life)
+    BuiltinCategory.OTHER -> stringResource(R.string.category_other)
+}
+
+@Composable
+fun categoryColorName(key: String): String = when (key) {
+    "blue" -> stringResource(R.string.category_color_blue)
+    "green" -> stringResource(R.string.category_color_green)
+    "orange" -> stringResource(R.string.category_color_orange)
+    "red" -> stringResource(R.string.category_color_red)
+    "pink" -> stringResource(R.string.category_color_pink)
+    "purple" -> stringResource(R.string.category_color_purple)
+    "teal" -> stringResource(R.string.category_color_teal)
+    "yellow" -> stringResource(R.string.category_color_yellow)
+    "brown" -> stringResource(R.string.category_color_brown)
+    else -> stringResource(R.string.category_color_gray)
 }

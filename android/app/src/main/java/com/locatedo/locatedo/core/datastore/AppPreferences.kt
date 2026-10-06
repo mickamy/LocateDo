@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.map
 
 data class UserPreferences(
     val hasCompletedOnboarding: Boolean = false,
+    val hasRequestedLocation: Boolean = false,
+    val hasRequestedNotifications: Boolean = false,
     val hasPromptedAlwaysLocation: Boolean = false,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
 )
@@ -21,6 +23,8 @@ data class UserPreferences(
 class AppPreferences @Inject constructor(private val dataStore: DataStore<Preferences>) {
     private object Keys {
         val completedOnboarding = booleanPreferencesKey("completedOnboarding")
+        val requestedLocation = booleanPreferencesKey("requestedLocation")
+        val requestedNotifications = booleanPreferencesKey("requestedNotifications")
         val promptedAlwaysLocation = booleanPreferencesKey("promptedAlwaysLocation")
         val defaultRadiusMeters = doublePreferencesKey("defaultRadiusMeters")
     }
@@ -29,6 +33,8 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val radius = preferences[Keys.defaultRadiusMeters]
         UserPreferences(
             hasCompletedOnboarding = preferences[Keys.completedOnboarding] ?: false,
+            hasRequestedLocation = preferences[Keys.requestedLocation] ?: false,
+            hasRequestedNotifications = preferences[Keys.requestedNotifications] ?: false,
             hasPromptedAlwaysLocation = preferences[Keys.promptedAlwaysLocation] ?: false,
             defaultRadiusMeters = if (radius != null && radius in Place.RADIUS_RANGE) {
                 radius
@@ -42,6 +48,14 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         dataStore.edit { it[Keys.completedOnboarding] = completed }
     }
 
+    suspend fun setRequestedLocation(requested: Boolean) {
+        dataStore.edit { it[Keys.requestedLocation] = requested }
+    }
+
+    suspend fun setRequestedNotifications(requested: Boolean) {
+        dataStore.edit { it[Keys.requestedNotifications] = requested }
+    }
+
     suspend fun setPromptedAlwaysLocation(prompted: Boolean) {
         dataStore.edit { it[Keys.promptedAlwaysLocation] = prompted }
     }
@@ -53,6 +67,8 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
     suspend fun reset() {
         dataStore.edit {
             it.remove(Keys.completedOnboarding)
+            it.remove(Keys.requestedLocation)
+            it.remove(Keys.requestedNotifications)
             it.remove(Keys.promptedAlwaysLocation)
             it.remove(Keys.defaultRadiusMeters)
         }

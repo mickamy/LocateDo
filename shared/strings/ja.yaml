@@ -67,6 +67,7 @@ always_prompt:
   description: "アプリを閉じている間も到着に気づくには、位置情報を「常に許可」にする必要があります。あとから設定で変更できます。"
   allow: "「常に許可」にする"
   later: "あとで"
+  android_choose: "次の画面で「{option}」を選んでください。"
 settings:
   location:
     title: "位置情報"
@@ -75,6 +76,7 @@ settings:
     denied: "許可されていません"
     not_determined: "未設定"
     needs_always: "アプリを閉じている間も到着をお知らせするには「常に許可」が必要です。"
+    android_needs_always: "アプリを閉じている間も到着をお知らせするには「{option}」が必要です。"
     allow: "位置情報を許可"
   notifications:
     title: "通知"
@@ -233,6 +235,7 @@ category:
 permission:
   when_in_use: "近くの場所と、そこまでの距離を表示するために位置情報を使います。"
   always: "場所に着いたときにお知らせするため、バックグラウンドでも位置情報が必要です。"
+  android_background: "ちかメモは、アプリを閉じているときや使っていないときも場所に着いたらお知らせするため、バックグラウンドで位置情報を取得します。"
 session_ended:
   title: "サインアウトしました"
   message: "別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。"

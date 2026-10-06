@@ -14,6 +14,10 @@ import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.permissions.LocationAuth
+import com.locatedo.locatedo.core.permissions.NotificationAuth
+import com.locatedo.locatedo.core.permissions.Permissions
+import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.places.PlaceCandidate
 import com.locatedo.locatedo.core.places.PlacePrediction
 import com.locatedo.locatedo.core.places.PlacesRepository
@@ -59,19 +63,66 @@ class FakePlaceRepository : PlaceRepository {
 
 class FakeCategoryRepository : CategoryRepository {
     val state = MutableStateFlow<List<Category>>(emptyList())
+    val added = mutableListOf<Category>()
+    val updated = mutableListOf<Category>()
+    val reordered = mutableListOf<List<Category>>()
 
     override fun observeAll(): Flow<List<Category>> = state
+
     override suspend fun ensureBuiltins() = Unit
-    override suspend fun add(category: Category) = Unit
-    override suspend fun update(category: Category) = Unit
-    override suspend fun delete(id: UUID): Boolean = true
-    override suspend fun reorder(categories: List<Category>) = Unit
+
+    override suspend fun add(category: Category) {
+        added += category
+        state.value = state.value + category.copy(sortOrder = state.value.size)
+    }
+
+    override suspend fun update(category: Category) {
+        updated += category
+        state.value = state.value.map { if (it.id == category.id) category else it }
+    }
+
+    override suspend fun delete(id: UUID): Boolean {
+        if (state.value.size <= 1) {
+            return false
+        }
+        state.value = state.value.filter { it.id != id }
+        return true
+    }
+
+    override suspend fun reorder(categories: List<Category>) {
+        reordered += categories
+        state.value = categories.mapIndexed { index, category -> category.copy(sortOrder = index) }
+    }
 }
 
 class FakeLocationRepository(var coordinate: Coordinate? = null) : LocationRepository {
     override fun hasForegroundPermission(): Boolean = coordinate != null
     override fun hasPrecisePermission(): Boolean = coordinate != null
     override suspend fun lastCoordinate(): Coordinate? = coordinate
+}
+
+class FakePermissionsRepository(
+    location: LocationAuth = LocationAuth.NOT_DETERMINED,
+    notifications: NotificationAuth = NotificationAuth.NOT_DETERMINED,
+) : PermissionsRepository {
+    val state = MutableStateFlow(Permissions(location, notifications))
+    var refreshCount = 0
+    var locationRequested = false
+    var notificationsRequested = false
+
+    override fun observe(): Flow<Permissions> = state
+
+    override fun refresh() {
+        refreshCount += 1
+    }
+
+    override suspend fun markLocationRequested() {
+        locationRequested = true
+    }
+
+    override suspend fun markNotificationsRequested() {
+        notificationsRequested = true
+    }
 }
 
 class FakeTodoRepository : TodoRepository {

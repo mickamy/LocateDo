@@ -6,6 +6,7 @@ import android.icu.util.Measure
 import android.icu.util.MeasureUnit
 import android.icu.util.ULocale
 import java.util.Locale
+import kotlin.math.roundToInt
 
 // Short road-style distances in the locale's system, like iOS's `.road` usage: "330 ft", "1.2 mi", "100 m", "1.5 km".
 object DistanceFormatting {
@@ -37,5 +38,5 @@ object DistanceFormatting {
     private fun numberFormat(locale: Locale): android.icu.text.NumberFormat =
         android.icu.text.NumberFormat.getInstance(ULocale.forLocale(locale)).apply { maximumFractionDigits = 1 }
 
-    private fun Double.roundToTens(): Double = Math.round(this / 10.0) * 10.0
+    private fun Double.roundToTens(): Double = (this / 10.0).roundToInt() * 10.0
 }

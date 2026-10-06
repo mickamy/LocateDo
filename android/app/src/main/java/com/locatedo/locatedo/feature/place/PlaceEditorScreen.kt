@@ -2,7 +2,6 @@ package com.locatedo.locatedo.feature.place
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +14,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -23,7 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -33,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -48,14 +47,10 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
-import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Coordinate
-import com.locatedo.locatedo.core.model.Place
-import kotlin.math.roundToInt
-
-private const val RADIUS_STEP_METERS = 50f
+import com.locatedo.locatedo.ui.components.RadiusSlider
 
 // Google Maps' "add a place" form: a full page with the save action in the top bar.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +58,8 @@ private const val RADIUS_STEP_METERS = 50f
 fun PlaceEditorScreen(
     viewModel: PlaceEditorViewModel,
     onChooseOnMap: () -> Unit,
-    onSaved: () -> Unit,
+    onManageCategories: () -> Unit,
+    onSaved: (isNew: Boolean) -> Unit,
     onCancel: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,7 +70,7 @@ fun PlaceEditorScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                PlaceEditorEvent.Saved -> onSaved()
+                is PlaceEditorEvent.Saved -> onSaved(event.isNew)
                 is PlaceEditorEvent.LimitReached -> snackbarHostState.showSnackbar(limitMessage)
                 PlaceEditorEvent.LocationChosen -> Unit
             }
@@ -138,19 +134,7 @@ fun PlaceEditorScreen(
             }
 
             SectionTitle(stringResource(R.string.place_editor_radius_label))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Slider(
-                    value = draft.radiusMeters.toFloat(),
-                    onValueChange = { value ->
-                        viewModel.setRadius(((value / RADIUS_STEP_METERS).roundToInt() * RADIUS_STEP_METERS).toDouble())
-                    },
-                    modifier = Modifier.weight(1f),
-                    valueRange = Place.RADIUS_RANGE.start.toFloat()..Place.RADIUS_RANGE.endInclusive.toFloat(),
-                    steps = ((Place.RADIUS_RANGE.endInclusive - Place.RADIUS_RANGE.start) / RADIUS_STEP_METERS).toInt() - 1,
-                )
-                Spacer(Modifier.width(16.dp))
-                Text(DistanceFormatting.string(draft.radiusMeters), style = MaterialTheme.typography.bodyLarge)
-            }
+            RadiusSlider(meters = draft.radiusMeters, onChange = viewModel::setRadius)
 
             SectionTitle(stringResource(R.string.place_editor_category_label))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -173,6 +157,13 @@ fun PlaceEditorScreen(
                         selected = draft.categoryId == null,
                         onClick = { viewModel.setCategory(null) },
                         label = { Text(categoryName(null)) },
+                    )
+                }
+                item {
+                    AssistChip(
+                        onClick = onManageCategories,
+                        label = { Text(stringResource(R.string.category_manage)) },
+                        leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
                     )
                 }
             }

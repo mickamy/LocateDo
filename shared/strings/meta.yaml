@@ -6,3 +6,9 @@ permission.always:
   infoplist: NSLocationAlwaysAndWhenInUseUsageDescription
 home.my_location:
   platforms: [android]
+always_prompt.android_choose:
+  platforms: [android]
+settings.location.android_needs_always:
+  platforms: [android]
+permission.android_background:
+  platforms: [android]

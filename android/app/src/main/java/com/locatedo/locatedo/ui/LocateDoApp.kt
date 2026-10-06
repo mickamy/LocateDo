@@ -2,6 +2,7 @@ package com.locatedo.locatedo.ui
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,10 +15,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -26,13 +29,17 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
+import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
+import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
 import com.locatedo.locatedo.feature.place.PlaceSearchScreen
 import com.locatedo.locatedo.feature.settings.SettingsScreen
 import com.locatedo.locatedo.feature.todos.TodoListScreen
+import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
@@ -51,7 +58,21 @@ private val tabs = listOf(
 private val tabKeys = tabs.map { it.key }
 
 @Composable
-fun LocateDoApp() {
+fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
+    val appState by appViewModel.uiState.collectAsStateWithLifecycle()
+
+    when {
+        appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
+        !appState.hasCompletedOnboarding -> OnboardingScreen()
+        else -> Tabs(onPlaceAdded = appViewModel::placeAdded)
+    }
+    if (appState.isExplainingAlwaysLocation) {
+        AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
+    }
+}
+
+@Composable
+private fun Tabs(onPlaceAdded: () -> Unit) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
@@ -113,7 +134,12 @@ fun LocateDoApp() {
                         },
                     )
                 }
-                entry<SettingsKey> { SettingsScreen() }
+                entry<SettingsKey> {
+                    SettingsScreen(onOpenCategories = { backStack.add(CategoriesKey) })
+                }
+                entry<CategoriesKey> {
+                    CategoriesScreen(onBack = { backStack.removeLastOrNull() })
+                }
                 entry<PlaceSearchKey> {
                     PlaceSearchScreen(
                         viewModel = placeEditor,
@@ -138,7 +164,13 @@ fun LocateDoApp() {
                     PlaceEditorScreen(
                         viewModel = placeEditor,
                         onChooseOnMap = { backStack.add(PlacePickKey) },
-                        onSaved = { backStack.leaveFlow() },
+                        onManageCategories = { backStack.add(CategoriesKey) },
+                        onSaved = { isNew ->
+                            backStack.leaveFlow()
+                            if (isNew) {
+                                onPlaceAdded()
+                            }
+                        },
                         onCancel = { backStack.leaveFlow() },
                     )
                 }

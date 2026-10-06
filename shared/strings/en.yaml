@@ -69,6 +69,7 @@ always_prompt:
   description: "To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
   allow: "Allow “Always”"
   later: "Not now"
+  android_choose: "On the next screen, choose “{option}”."
 settings:
   location:
     title: "Location"
@@ -77,6 +78,7 @@ settings:
     denied: "Not allowed"
     not_determined: "Not asked yet"
     needs_always: "Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed."
+    android_needs_always: "Arrival reminders need “{option}” so StopBy can notice when you arrive while it is closed."
     allow: "Allow location"
   notifications:
     title: "Notifications"
@@ -239,6 +241,7 @@ category:
 permission:
   when_in_use: "StopBy uses your location to show the places near you and the distance to them."
   always: "StopBy needs your location in the background to remind you when you arrive at a place."
+  android_background: "StopBy collects location data in the background to remind you when you arrive at a place, even when the app is closed or not in use."
 session_ended:
   title: "Signed Out"
   message: "Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed."

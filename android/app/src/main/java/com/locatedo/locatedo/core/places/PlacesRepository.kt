@@ -51,7 +51,7 @@ class GooglePlacesRepository @Inject constructor(@param:ApplicationContext priva
             .setSessionToken(token)
             .apply {
                 if (near != null) {
-                    setLocationBias(CircularBounds.newInstance(LatLng(near.latitude, near.longitude), SEARCH_RADIUS_METERS))
+                    locationBias = CircularBounds.newInstance(LatLng(near.latitude, near.longitude), SEARCH_RADIUS_METERS)
                 }
             }
             .build()

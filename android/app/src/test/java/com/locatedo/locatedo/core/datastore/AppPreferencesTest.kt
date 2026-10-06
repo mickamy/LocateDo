@@ -27,11 +27,19 @@ class AppPreferencesTest {
         val preferences = preferences()
 
         preferences.setCompletedOnboarding(true)
+        preferences.setRequestedLocation(true)
+        preferences.setRequestedNotifications(true)
         preferences.setPromptedAlwaysLocation(true)
         preferences.setDefaultRadiusMeters(250.0)
 
         assertEquals(
-            UserPreferences(hasCompletedOnboarding = true, hasPromptedAlwaysLocation = true, defaultRadiusMeters = 250.0),
+            UserPreferences(
+                hasCompletedOnboarding = true,
+                hasRequestedLocation = true,
+                hasRequestedNotifications = true,
+                hasPromptedAlwaysLocation = true,
+                defaultRadiusMeters = 250.0,
+            ),
             preferences.data.first(),
         )
     }
@@ -49,6 +57,9 @@ class AppPreferencesTest {
     fun resetClearsEverything() = runTest {
         val preferences = preferences()
         preferences.setCompletedOnboarding(true)
+        preferences.setRequestedLocation(true)
+        preferences.setRequestedNotifications(true)
+        preferences.setPromptedAlwaysLocation(true)
         preferences.setDefaultRadiusMeters(250.0)
 
         preferences.reset()
