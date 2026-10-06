@@ -127,6 +127,8 @@ nonisolated enum Analytics {
     static func logScreen(_ screen: AnalyticsScreen, parameters: AnalyticsParameters = [:]) {
         var values = firebaseParameters(parameters) ?? [:]
         values[AnalyticsParameterScreenName] = screen.rawValue
+        // Left out, Firebase fills in the SwiftUI hosting controller class, which is over its 100-character limit.
+        values[AnalyticsParameterScreenClass] = screen.rawValue
         send(AnalyticsEventScreenView, parameters: values)
     }
 
