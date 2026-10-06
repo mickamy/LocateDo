@@ -33,14 +33,17 @@ final class Entitlements {
         }
     }
 
-    func logIn(userID: UUID) async {
+    @discardableResult
+    func logIn(userID: UUID) async -> Bool {
         guard let source else {
-            return
+            return false
         }
         do {
             subscription = try await source.logIn(ProtoInput.id(userID))
+            return true
         } catch {
             logger.error("RevenueCat logIn failed: \(error, privacy: .public)")
+            return false
         }
     }
 

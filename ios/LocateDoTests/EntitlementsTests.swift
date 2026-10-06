@@ -102,6 +102,7 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
         var subscription: ProSubscription?
         var loggedIn: [String] = []
         var cancelsPurchase = false
+        var failsLogIn = false
     }
 
     private let state: Mutex<State>
@@ -118,6 +119,10 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
         state.withLock { $0.loggedIn }
     }
 
+    func failLogIns() {
+        state.withLock { $0.failsLogIn = true }
+    }
+
     func setHasPro(_ hasPro: Bool) {
         state.withLock { $0.subscription = Self.subscription(hasPro: hasPro) }
     }
@@ -130,7 +135,10 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
     }
 
     func logIn(_ appUserID: String) async throws -> ProSubscription? {
-        state.withLock { state in
+        try state.withLock { state in
+            if state.failsLogIn {
+                throw URLError(.notConnectedToInternet)
+            }
             state.loggedIn.append(appUserID)
             return state.subscription
         }

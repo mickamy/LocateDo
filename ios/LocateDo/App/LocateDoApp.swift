@@ -126,10 +126,8 @@ struct LocateDoApp: App {
         geofence.start()
         network.start()
         entitlements.start()
-        if let userID = authenticator.session?.userID {
-            Task { [entitlements] in
-                await entitlements.logIn(userID: userID)
-            }
+        Task { [account, entitlements] in
+            await account.linkPurchases(entitlements)
         }
     }
 
@@ -165,11 +163,9 @@ struct LocateDoApp: App {
             await entitlements.logOut()
             await geofence.sync()
         }
-        account.onHouseholdReady = { [authenticator, devices, sync, geofence, entitlements] in
+        account.onHouseholdReady = { [weak account, devices, sync, geofence, entitlements] in
             Task {
-                if let userID = authenticator.session?.userID {
-                    await entitlements.logIn(userID: userID)
-                }
+                await account?.linkPurchases(entitlements)
                 await devices.registerIfSignedIn()
                 await sync.sync()
                 await geofence.sync()
