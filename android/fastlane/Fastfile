@@ -1,0 +1,73 @@
+default_platform(:android)
+skip_docs
+
+ROOT = File.expand_path("..", __dir__)
+
+platform :android do
+  desc "Build the Staging APK and distribute it through Firebase App Distribution"
+  lane :firebase do
+    require_build_inputs(build_type: "staging", keystore: "staging")
+    build(task: "assemble", build_type: "Staging", version_code: number_of_commits)
+    # Without a service account the plugin falls back to the Firebase CLI login (local runs).
+    credentials = ENV["FIREBASE_SERVICE_CREDENTIALS_CONTENT"].to_s
+    firebase_app_distribution(
+      app: ENV.fetch("ANDROID_FIREBASE_APP_ID"),
+      android_artifact_type: "APK",
+      android_artifact_path: lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH],
+      service_credentials_json_data: credentials.empty? ? nil : credentials.unpack1("m"),
+      groups: ENV["FIREBASE_TESTER_GROUPS"],
+      release_notes: changelog
+    )
+  end
+
+  desc "Build the Release AAB and upload it to the internal testing track on Google Play"
+  lane :beta do
+    require_build_inputs(build_type: "release", keystore: "upload")
+    json_key = ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON").unpack1("m")
+    version_code = google_play_track_version_codes(track: "internal", json_key_data: json_key).max.to_i + 1
+    build(task: "bundle", build_type: "Release", version_code: version_code)
+    upload_to_play_store(
+      track: "internal",
+      json_key_data: json_key,
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      mapping: lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH],
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  # Play's API cannot upload to an app that has no build yet, so the first AAB goes up through Play Console.
+  desc "Build the Release AAB without uploading it"
+  lane :build_release do
+    require_build_inputs(build_type: "release", keystore: "upload")
+    build(task: "bundle", build_type: "Release", version_code: 1)
+    UI.success("Wrote #{lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]}")
+  end
+
+  # Gradle builds without these too, but signs with the debug key or leaves the Firebase config out.
+  private_lane :require_build_inputs do |options|
+    keystore = File.join(ROOT, "credentials/#{options.fetch(:keystore)}.jks")
+    UI.user_error!("Missing #{keystore}") unless File.exist?(keystore)
+    config = File.join(ROOT, "app/src/#{options.fetch(:build_type)}/google-services.json")
+    UI.user_error!("Missing #{config}") unless File.exist?(config)
+  end
+
+  private_lane :build do |options|
+    gradle(
+      project_dir: ROOT,
+      task: options.fetch(:task),
+      build_type: options.fetch(:build_type),
+      properties: { "LOCATEDO_VERSION_CODE" => options.fetch(:version_code) }
+    )
+  end
+
+  private_lane :changelog do
+    changelog_from_git_commits(
+      commits_count: 10,
+      pretty: "- %s",
+      merge_commit_filtering: "exclude_merges"
+    )
+  end
+end

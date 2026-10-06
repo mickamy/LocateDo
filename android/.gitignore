@@ -14,3 +14,8 @@
 .cxx
 local.properties
 /credentials
+
+# fastlane
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output
