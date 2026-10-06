@@ -22,6 +22,12 @@ struct AnalyticsTests {
         #expect(Analytics.firebaseParameters([:]) == nil)
     }
 
+    @Test func purchaseErrorsAreReportedByDomainAndCode() {
+        let error = NSError(domain: "RevenueCat.ErrorCode", code: 2)
+
+        #expect(PaywallAnalytics.reason(for: error) == "RevenueCat.ErrorCode:2")
+    }
+
     @Test func editorsReportWhetherTheyCreateOrEdit() {
         #expect(EditorMode(editing: nil) == .new)
         #expect(EditorMode(editing: Place(name: "Store", latitude: 35.0, longitude: 139.0)) == .edit)

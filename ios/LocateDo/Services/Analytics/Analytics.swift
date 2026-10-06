@@ -17,6 +17,11 @@ nonisolated enum AnalyticsEvent: String {
     case inviteAccepted = "invite_accepted"
     case paywallShown = "paywall_shown"
     case paywallPurchased = "paywall_purchased"
+    case paywallDismissed = "paywall_dismissed"
+    case purchaseStarted = "purchase_started"
+    case purchaseCancelled = "purchase_cancelled"
+    case purchaseFailed = "purchase_failed"
+    case restoreCompleted = "restore_completed"
 }
 
 nonisolated enum AnalyticsParameter: String {
@@ -43,6 +48,8 @@ nonisolated enum AnalyticsParameter: String {
     case plan
     case preciseLocation = "precise_location"
     case radiusM = "radius_m"
+    case reason
+    case result
     case signedIn = "signed_in"
     case source
     case step
@@ -130,6 +137,13 @@ nonisolated enum Analytics {
         // Left out, Firebase fills in the SwiftUI hosting controller class, which is over its 100-character limit.
         values[AnalyticsParameterScreenClass] = screen.rawValue
         send(AnalyticsEventScreenView, parameters: values)
+    }
+
+    static func appInstanceID() -> String? {
+        guard FirebaseApp.app() != nil else {
+            return nil
+        }
+        return FirebaseAnalytics.Analytics.appInstanceID()
     }
 
     static func setUserProperty(_ value: String?, for property: AnalyticsUserProperty) {

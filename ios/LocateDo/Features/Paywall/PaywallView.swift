@@ -28,6 +28,8 @@ struct PaywallView: View {
     @State private var isRestoring = false
     @State private var isShowingRestored = false
     @State private var failure: LocalizedStringResource?
+    @State private var openedAt = Date()
+    @State private var hasSubscribed = false
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "billing")
 
@@ -57,8 +59,13 @@ struct PaywallView: View {
         }
         .trackScreen(.paywall)
         .task {
-            Analytics.log(.paywallShown, parameters: [.trigger: trigger.rawValue])
+            analytics.shown()
             await loadPlans()
+        }
+        .onDisappear {
+            if !hasSubscribed {
+                analytics.dismissed(openedAt: openedAt)
+            }
         }
         .onChange(of: entitlements.hasEntitlement) {
             if entitlements.hasEntitlement && !isRestoring && !isShowingRestored {
@@ -200,6 +207,10 @@ struct PaywallView: View {
         return .paywallSubscribe
     }
 
+    private var analytics: PaywallAnalytics {
+        PaywallAnalytics(trigger: trigger)
+    }
+
     private var planName: String {
         switch selected {
         case .annual: "annual"
@@ -225,16 +236,17 @@ struct PaywallView: View {
         failure = nil
         isWorking = true
         defer { isWorking = false }
+        analytics.purchaseStarted(plan: planName)
         do {
             if try await entitlements.purchase(selected) {
-                Analytics.log(.paywallPurchased, parameters: [
-                    .trigger: trigger.rawValue,
-                    .plan: planName,
-                    .daysSinceInstall: InstallDate.daysSinceInstall(defaults: .standard, now: .now)
-                ])
+                hasSubscribed = true
+                analytics.purchased(plan: planName)
+            } else {
+                analytics.purchaseCancelled(plan: planName)
             }
         } catch {
             logger.error("Purchase failed: \(error, privacy: .public)")
+            analytics.purchaseFailed(plan: planName, error: error)
             failure = .paywallFailed
         }
     }
@@ -246,13 +258,18 @@ struct PaywallView: View {
         do {
             try await entitlements.restore()
             if entitlements.hasEntitlement {
+                hasSubscribed = true
+                analytics.restoreCompleted(.restored)
                 isShowingRestored = true
             } else {
+                analytics.restoreCompleted(.nothing)
                 failure = .paywallNothingToRestore
             }
         } catch {
             logger.error("Restore failed: \(error, privacy: .public)")
+            analytics.restoreCompleted(.failed, error: error)
             failure = .paywallFailed
         }
     }
+
 }
