@@ -65,6 +65,14 @@ data class TodoEntity(
     val updatedAt: Long,
 )
 
+@Entity(tableName = "sync_state")
+data class SyncStateEntity(
+    @PrimaryKey val id: Int = 1,
+    val householdId: String?,
+    val cursor: Long,
+    val plan: String,
+)
+
 data class PlaceAndTodos(
     @Embedded val place: PlaceEntity,
     @Relation(parentColumn = "id", entityColumn = "placeId")

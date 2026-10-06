@@ -18,3 +18,19 @@ category.move_down:
   platforms: [android]
 notification.channel_arrivals:
   platforms: [android]
+settings.account.android_signed_in:
+  platforms: [android]
+settings.account.android_description:
+  platforms: [android]
+settings.account.android_sign_in:
+  platforms: [android]
+settings.account.benefits.android_privacy_message:
+  platforms: [android]
+settings.account.android_sign_out_confirm_message:
+  platforms: [android]
+settings.account.android_sign_out_unsynced_message:
+  platforms: [android]
+settings.account.android_replace_confirm_title:
+  platforms: [android]
+settings.account.android_replace_confirm_message:
+  platforms: [android]

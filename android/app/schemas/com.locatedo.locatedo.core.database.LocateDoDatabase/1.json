@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a5ee5ab5b36c48cfda0f19169f1bdf98",
+    "identityHash": "6a4d757bed4a8d066133a9eec4d43141",
     "entities": [
       {
         "tableName": "categories",
@@ -225,11 +225,46 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "sync_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `householdId` TEXT, `cursor` INTEGER NOT NULL, `plan` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "householdId",
+            "columnName": "householdId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cursor",
+            "columnName": "cursor",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plan",
+            "columnName": "plan",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a5ee5ab5b36c48cfda0f19169f1bdf98')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6a4d757bed4a8d066133a9eec4d43141')"
     ]
   }
 }

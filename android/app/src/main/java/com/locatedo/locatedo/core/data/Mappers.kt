@@ -3,11 +3,14 @@ package com.locatedo.locatedo.core.data
 import com.locatedo.locatedo.core.database.CategoryEntity
 import com.locatedo.locatedo.core.database.PlaceAndTodos
 import com.locatedo.locatedo.core.database.PlaceEntity
+import com.locatedo.locatedo.core.database.SyncStateEntity
 import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
 import java.time.Instant
 import java.util.UUID
@@ -81,4 +84,16 @@ internal fun Category.asEntity() = CategoryEntity(
     color = color,
     sortOrder = sortOrder,
     updatedAt = updatedAt.toEpochMilli(),
+)
+
+internal fun SyncStateEntity.asModel() = SyncState(
+    householdId = householdId?.let(UUID::fromString),
+    cursor = cursor,
+    plan = if (plan == "pro") Plan.PRO else Plan.FREE,
+)
+
+internal fun SyncState.asEntity() = SyncStateEntity(
+    householdId = householdId?.toString(),
+    cursor = cursor,
+    plan = if (plan == Plan.PRO) "pro" else "free",
 )

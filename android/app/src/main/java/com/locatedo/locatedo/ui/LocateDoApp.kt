@@ -30,6 +30,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
@@ -40,6 +41,7 @@ import com.locatedo.locatedo.feature.place.PlacePickScreen
 import com.locatedo.locatedo.feature.place.PlaceSearchScreen
 import com.locatedo.locatedo.feature.settings.SettingsScreen
 import com.locatedo.locatedo.feature.todos.TodoListScreen
+import com.locatedo.locatedo.ui.navigation.AccountKey
 import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
@@ -130,6 +132,7 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?) {
                             placeEditor.start(placeId)
                             backStack.add(PlaceEditorKey)
                         },
+                        onOpenAccount = { backStack.add(AccountKey) },
                     )
                 }
                 entry<TodosKey> {
@@ -145,10 +148,16 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?) {
                     )
                 }
                 entry<SettingsKey> {
-                    SettingsScreen(onOpenCategories = { backStack.add(CategoriesKey) })
+                    SettingsScreen(
+                        onOpenAccount = { backStack.add(AccountKey) },
+                        onOpenCategories = { backStack.add(CategoriesKey) },
+                    )
                 }
                 entry<CategoriesKey> {
                     CategoriesScreen(onBack = { backStack.removeLastOrNull() })
+                }
+                entry<AccountKey> {
+                    AccountScreen(onBack = { backStack.removeLastOrNull() })
                 }
                 entry<PlaceSearchKey> {
                     PlaceSearchScreen(

@@ -79,3 +79,12 @@ enum class PlaceSource(val key: String) {
 }
 
 data class Coordinate(val latitude: Double, val longitude: Double)
+
+enum class Plan { FREE, PRO }
+
+// Where this device stands with the server: the household it belongs to and the last version it pulled.
+data class SyncState(
+    val householdId: UUID? = null,
+    val cursor: Long = 0,
+    val plan: Plan = Plan.FREE,
+)

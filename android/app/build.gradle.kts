@@ -51,6 +51,7 @@ android {
             applicationIdSuffix = ".dev"
             // 10.0.2.2 is the emulator's alias for the host machine.
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"15768665811-butqb8dsgllkm9e4ni0fo8sld9jepv7u.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status-stg.json\"")
             buildConfigField("String", "REVENUECAT_API_KEY", "\"test_lqvPOSuItMaeQPmgcTBlMFVumra\"")
         }
@@ -61,6 +62,7 @@ android {
             }
             signingConfig = signingConfigs.findByName("upload")
             buildConfigField("String", "API_BASE_URL", "\"https://api.locatedo.com\"")
+            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"44680780234-p6sv8ec4o0p7aomkh7nt0eqb6gpan6ir.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status.json\"")
             // The Play Store key is created in RevenueCat once the Play app exists.
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
@@ -71,6 +73,7 @@ android {
             matchingFallbacks += "release"
             signingConfig = signingConfigs.findByName("staging") ?: signingConfigs.getByName("debug")
             buildConfigField("String", "API_BASE_URL", "\"https://api-stg.locatedo.com\"")
+            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"238700922224-1o8tu24ov85js2tumk4gn7abik3tre2f.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status-stg.json\"")
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
         }
@@ -83,6 +86,7 @@ android {
     // Connect clients and messages from shared/proto (`cd shared/proto && buf generate`).
     sourceSets.getByName("main") {
         java.directories.add("src/main/generated")
+        kotlin.directories.add("src/main/generated")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -155,6 +159,11 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

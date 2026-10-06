@@ -15,6 +15,9 @@ data object SettingsKey : NavKey
 @Serializable
 data object CategoriesKey : NavKey
 
+@Serializable
+data object AccountKey : NavKey
+
 // The add / edit flow: search, pick on the map, then the form. Its draft lives in PlaceEditorViewModel.
 @Serializable
 data object PlaceSearchKey : NavKey

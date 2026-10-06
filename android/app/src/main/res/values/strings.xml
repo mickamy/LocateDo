@@ -143,6 +143,14 @@
     <string name="settings_about_privacy_policy">Privacy Policy</string>
     <string name="settings_about_title">About</string>
     <string name="settings_about_version">Version</string>
+    <string name="settings_account_android_description">Sign in with Google to keep your places and to-dos in your account.</string>
+    <string name="settings_account_android_replace_confirm_message">This account already has places and to-dos. The places and to-dos on this phone will be replaced with the account’s.</string>
+    <string name="settings_account_android_replace_confirm_title">Replace data on this phone?</string>
+    <string name="settings_account_android_sign_in">Sign in with Google</string>
+    <string name="settings_account_android_sign_out_confirm_message">Places and to-dos on this phone will be removed. They come back when you sign in again.</string>
+    <string name="settings_account_android_sign_out_unsynced_message">Some changes haven’t been synced yet and will be lost. Places and to-dos on this phone will be removed.</string>
+    <string name="settings_account_android_signed_in">Signed in with Google</string>
+    <string name="settings_account_benefits_android_privacy_message">Your location never leaves this phone, and we don’t ask for your email.</string>
     <string name="settings_account_benefits_privacy_message">Your location never leaves this iPhone, and we don’t ask for your email.</string>
     <string name="settings_account_benefits_privacy_title">Your location stays private</string>
     <string name="settings_account_benefits_share_message">Add places and to-dos together and get reminded when you arrive.</string>

@@ -30,6 +30,9 @@ interface PlaceDao {
 
     @Query("UPDATE places SET lastNotifiedAt = :at WHERE id = :id")
     suspend fun setLastNotifiedAt(id: String, at: Long?)
+
+    @Query("DELETE FROM places")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -48,6 +51,9 @@ interface TodoDao {
 
     @Query("DELETE FROM todos WHERE id IN (:ids)")
     suspend fun delete(ids: List<String>)
+
+    @Query("DELETE FROM todos")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -69,4 +75,25 @@ interface CategoryDao {
 
     @Query("DELETE FROM categories WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT COUNT(*) FROM categories WHERE builtin IS NULL")
+    suspend fun countCustom(): Int
+
+    @Query("DELETE FROM categories")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface SyncStateDao {
+    @Query("SELECT * FROM sync_state WHERE id = 1")
+    fun observe(): Flow<SyncStateEntity?>
+
+    @Query("SELECT * FROM sync_state WHERE id = 1")
+    suspend fun get(): SyncStateEntity?
+
+    @Upsert
+    suspend fun upsert(state: SyncStateEntity)
+
+    @Query("DELETE FROM sync_state")
+    suspend fun clear()
 }

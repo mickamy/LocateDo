@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
@@ -54,6 +55,7 @@ import com.locatedo.locatedo.ui.components.RadiusSlider
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    onOpenAccount: () -> Unit,
     onOpenCategories: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -83,6 +85,21 @@ fun SettingsScreen(
             if (uiState.isLoading) {
                 return@Scaffold
             }
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_account_title)) },
+                modifier = Modifier.clickable(onClick = onOpenAccount),
+                supportingContent = {
+                    val status = if (uiState.isSignedIn) {
+                        R.string.settings_account_android_signed_in
+                    } else {
+                        R.string.settings_account_not_signed_in
+                    }
+                    Text(stringResource(status))
+                },
+                leadingContent = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+            )
+            HorizontalDivider()
             LocationSection(
                 auth = uiState.location,
                 onAllow = {

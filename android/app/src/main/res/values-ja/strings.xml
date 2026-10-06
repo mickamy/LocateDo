@@ -139,6 +139,14 @@
     <string name="settings_about_privacy_policy">プライバシーポリシー</string>
     <string name="settings_about_title">このアプリについて</string>
     <string name="settings_about_version">バージョン</string>
+    <string name="settings_account_android_description">Google でサインインすると、場所と TODO をアカウントに保存できます。</string>
+    <string name="settings_account_android_replace_confirm_message">このアカウントにはすでに場所と TODO があります。この端末の場所と TODO はアカウントのデータに置き換わります。</string>
+    <string name="settings_account_android_replace_confirm_title">この端末のデータを置き換えますか？</string>
+    <string name="settings_account_android_sign_in">Google でサインイン</string>
+    <string name="settings_account_android_sign_out_confirm_message">この端末の場所と TODO は消えます。もう一度サインインすると戻ります。</string>
+    <string name="settings_account_android_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この端末の場所と TODO は消えます。</string>
+    <string name="settings_account_android_signed_in">Google でサインイン中</string>
+    <string name="settings_account_benefits_android_privacy_message">現在地がこの端末の外に出ることはありません。メールアドレスもいただきません。</string>
     <string name="settings_account_benefits_privacy_message">現在地がこの iPhone の外に出ることはありません。メールアドレスもいただきません。</string>
     <string name="settings_account_benefits_privacy_title">位置情報は端末の中だけ</string>
     <string name="settings_account_benefits_share_message">家族と一緒に場所と TODO を追加し、着いたときにお知らせを受け取れます。</string>

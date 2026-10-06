@@ -90,8 +90,11 @@ settings:
   account:
     title: "Account"
     signed_in: "Signed in with Apple"
+    android_signed_in: "Signed in with Google"
     not_signed_in: "Not signed in"
     description: "Sign in with Apple to keep your places and to-dos in your account."
+    android_description: "Sign in with Google to keep your places and to-dos in your account."
+    android_sign_in: "Sign in with Google"
     benefits:
       sync_title: "Keep your lists"
       sync_message: "Your places and to-dos stay with your account, even when you change phones."
@@ -99,6 +102,7 @@ settings:
       share_message: "Add places and to-dos together and get reminded when you arrive."
       privacy_title: "Your location stays private"
       privacy_message: "Your location never leaves this iPhone, and we don’t ask for your email."
+      android_privacy_message: "Your location never leaves this phone, and we don’t ask for your email."
     sign_in_failed: "Couldn’t sign in. Try again."
     delete: "Delete account"
     delete_confirm_title: "Delete your account?"
@@ -108,8 +112,12 @@ settings:
     sign_out_confirm_title: "Sign out?"
     sign_out_confirm_message: "Places and to-dos on this iPhone will be removed. They come back when you sign in again."
     sign_out_unsynced_message: "Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed."
+    android_sign_out_confirm_message: "Places and to-dos on this phone will be removed. They come back when you sign in again."
+    android_sign_out_unsynced_message: "Some changes haven’t been synced yet and will be lost. Places and to-dos on this phone will be removed."
     replace_confirm_title: "Replace data on this iPhone?"
     replace_confirm_message: "This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s."
+    android_replace_confirm_title: "Replace data on this phone?"
+    android_replace_confirm_message: "This account already has places and to-dos. The places and to-dos on this phone will be replaced with the account’s."
     replace: "Replace"
   open_settings: "Open Settings"
   default_radius:

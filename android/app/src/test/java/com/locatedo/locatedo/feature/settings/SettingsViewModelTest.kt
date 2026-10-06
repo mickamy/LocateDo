@@ -1,8 +1,12 @@
 package com.locatedo.locatedo.feature.settings
 
+import com.locatedo.locatedo.core.api.AccessTokenStore
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
+import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakePermissionsRepository
+import com.locatedo.locatedo.testing.InMemorySessionStore
 import com.locatedo.locatedo.testing.testPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +17,9 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -77,7 +84,14 @@ class SettingsViewModelTest {
     }
 
     private fun TestScope.viewModel(preferences: com.locatedo.locatedo.core.datastore.AppPreferences): SettingsViewModel {
-        val viewModel = SettingsViewModel(preferences, permissions)
+        val authenticator = Authenticator(
+            InMemorySessionStore(),
+            FakeAccountService(),
+            AccessTokenStore(),
+            Clock.fixed(Instant.parse("2026-10-06T00:00:00Z"), ZoneOffset.UTC),
+            this,
+        )
+        val viewModel = SettingsViewModel(preferences, permissions, authenticator)
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

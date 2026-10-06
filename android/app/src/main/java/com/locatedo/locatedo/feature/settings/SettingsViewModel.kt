@@ -2,6 +2,7 @@ package com.locatedo.locatedo.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.permissions.LocationAuth
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 
 data class SettingsUiState(
     val isLoading: Boolean = true,
+    val isSignedIn: Boolean = false,
     val location: LocationAuth = LocationAuth.NOT_DETERMINED,
     val notifications: NotificationAuth = NotificationAuth.NOT_DETERMINED,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
@@ -26,10 +28,16 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val preferences: AppPreferences,
     private val permissions: PermissionsRepository,
+    authenticator: Authenticator,
 ) : ViewModel() {
-    val uiState: StateFlow<SettingsUiState> = combine(preferences.data, permissions.observe()) { stored, granted ->
+    val uiState: StateFlow<SettingsUiState> = combine(
+        preferences.data,
+        permissions.observe(),
+        authenticator.session,
+    ) { stored, granted, session ->
         SettingsUiState(
             isLoading = false,
+            isSignedIn = session != null,
             location = granted.location,
             notifications = granted.notifications,
             defaultRadiusMeters = stored.defaultRadiusMeters,

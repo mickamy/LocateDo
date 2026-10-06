@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.locatedo.locatedo.core.database.CategoryDao
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.database.PlaceDao
+import com.locatedo.locatedo.core.database.SyncStateDao
 import com.locatedo.locatedo.core.database.TodoDao
 import dagger.Module
 import dagger.Provides
@@ -29,4 +30,7 @@ object DatabaseModule {
 
     @Provides
     fun categoryDao(database: LocateDoDatabase): CategoryDao = database.categoryDao()
+
+    @Provides
+    fun syncStateDao(database: LocateDoDatabase): SyncStateDao = database.syncStateDao()
 }

@@ -76,6 +76,7 @@ private val detailPeekHeight = 360.dp
 fun HomeScreen(
     onAddPlace: () -> Unit,
     onEditPlace: (UUID) -> Unit,
+    onOpenAccount: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -189,7 +190,7 @@ fun HomeScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .align(Alignment.TopCenter),
                     onSearch = onAddPlace,
-                    onAccount = {},
+                    onAccount = onOpenAccount,
                 )
             }
             FloatingActionButton(
