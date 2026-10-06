@@ -82,23 +82,6 @@ fun AccountScreen(
         }
     }
 
-    if (uiState.needsReplaceConfirmation) {
-        AlertDialog(
-            onDismissRequest = viewModel::cancelReplacingLocalData,
-            title = { Text(stringResource(R.string.settings_account_android_replace_confirm_title)) },
-            text = { Text(stringResource(R.string.settings_account_android_replace_confirm_message)) },
-            confirmButton = {
-                TextButton(onClick = viewModel::confirmReplacingLocalData) {
-                    Text(stringResource(R.string.settings_account_replace))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::cancelReplacingLocalData) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            },
-        )
-    }
     if (uiState.isConfirmingSignOut) {
         AlertDialog(
             onDismissRequest = viewModel::dismissSignOut,
