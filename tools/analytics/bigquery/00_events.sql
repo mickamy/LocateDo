@@ -22,6 +22,7 @@ SELECT
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'notification_auth') AS notification_auth,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'reason') AS reason,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'result') AS result,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'household_plan') AS household_plan,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'place_count') AS place_count,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'open_todo_count') AS open_todo_count,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'completed_todo_count_7d') AS completed_todo_count_7d,
