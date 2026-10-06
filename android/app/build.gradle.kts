@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -49,6 +50,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".dev"
+            manifestPlaceholders["CRASHLYTICS_COLLECTION_ENABLED"] = "false"
             // 10.0.2.2 is the emulator's alias for the host machine.
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"15768665811-butqb8dsgllkm9e4ni0fo8sld9jepv7u.apps.googleusercontent.com\"")
@@ -61,6 +63,7 @@ android {
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
             signingConfig = signingConfigs.findByName("upload")
+            manifestPlaceholders["CRASHLYTICS_COLLECTION_ENABLED"] = "true"
             buildConfigField("String", "API_BASE_URL", "\"https://api.locatedo.com\"")
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"44680780234-p6sv8ec4o0p7aomkh7nt0eqb6gpan6ir.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status.json\"")
@@ -164,6 +167,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.crashlytics)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
