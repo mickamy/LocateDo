@@ -14,6 +14,7 @@ final class LocalWrites {
     @ObservationIgnored var daysSinceInstall: () -> Int = {
         InstallDate.daysSinceInstall(defaults: .standard, now: .now)
     }
+    @ObservationIgnored private(set) var lastArrivalOpen: ArrivalOpen?
 
     init(context: ModelContext, isSignedIn: @escaping () -> Bool, onQueued: @escaping () -> Void = {}) {
         self.context = context
@@ -93,8 +94,15 @@ final class LocalWrites {
             todo.complete(at: now)
         }
         commit([.completion(of: todo)])
+        if todo.isCompleted {
+            logCompletion(of: todo, now: now)
+        }
         updateCountProperties()
         return nil
+    }
+
+    func arrivalOpened(placeID: UUID, at now: Date = .now) {
+        lastArrivalOpen = ArrivalOpen(placeID: placeID, openedAt: now)
     }
 
     func setAssignee(_ assigneeID: UUID?, of todo: Todo, now: Date = .now) {
@@ -171,6 +179,19 @@ final class LocalWrites {
 
     private func count<T: PersistentModel>(_ descriptor: FetchDescriptor<T>) -> Int {
         (try? context.fetchCount(descriptor)) ?? 0
+    }
+
+    private func logCompletion(of todo: Todo, now: Date) {
+        var via = CompletionVia.app
+        if let lastArrivalOpen {
+            via = lastArrivalOpen.via(completingAt: todo.place?.id, now: now)
+        }
+        let ageHours = Int(now.timeIntervalSince(todo.createdAt) / 3_600)
+        analytics.log(.todoCompleted, parameters: [
+            .via: via.rawValue,
+            .ageHours: max(ageHours, 0),
+            .openTodoCount: count(Self.openTodos)
+        ])
     }
 
     func logLimitReached(_ limit: FreeLimit) {

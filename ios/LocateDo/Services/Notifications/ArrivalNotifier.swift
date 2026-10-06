@@ -5,6 +5,7 @@ import UserNotifications
 @Observable
 final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
+    @ObservationIgnored var onOpened: (UUID) -> Void = { _ in }
 
     private let router: AppRouter
     private let center = UNUserNotificationCenter.current()
@@ -67,6 +68,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
            let placeID = UUID(uuidString: raw) {
             Analytics.log(.arrivalOpened)
             Task { @MainActor in
+                onOpened(placeID)
                 router.open(placeID: placeID)
             }
         }

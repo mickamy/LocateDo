@@ -10,6 +10,7 @@ nonisolated enum AnalyticsEvent: String {
     case placeAdded = "place_added"
     case placeDeleted = "place_deleted"
     case todoAdded = "todo_added"
+    case todoCompleted = "todo_completed"
     case shareTapped = "share_tapped"
     case inviteAccepted = "invite_accepted"
     case paywallShown = "paywall_shown"
@@ -18,6 +19,7 @@ nonisolated enum AnalyticsEvent: String {
 
 nonisolated enum AnalyticsParameter: String {
     case ageDays = "age_days"
+    case ageHours = "age_hours"
     case assigned
     case category
     case completedTodoCount7d = "completed_todo_count_7d"
@@ -38,6 +40,7 @@ nonisolated enum AnalyticsParameter: String {
     case signedIn = "signed_in"
     case source
     case trigger
+    case via
 }
 
 nonisolated enum AnalyticsUserProperty: String {

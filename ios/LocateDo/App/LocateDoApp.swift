@@ -85,6 +85,9 @@ struct LocateDoApp: App {
             writes.logLimitReached(limit)
             router.pendingPaywall = limit.trigger
         }
+        notifier.onOpened = { [writes] placeID in
+            writes.arrivalOpened(placeID: placeID)
+        }
         geofence.onArrival = { [sync] in
             await sync.sync()
         }

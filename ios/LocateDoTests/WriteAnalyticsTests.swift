@@ -116,6 +116,50 @@ struct WriteAnalyticsTests {
         #expect(fixture.recorder.userProperties[.openTodoCount] == "0")
     }
 
+    @Test func completingATodoInTheAppSaysSo() throws {
+        let fixture = try Fixture()
+        let createdAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let milk = Todo(title: "Milk", place: place, now: createdAt)
+        fixture.writes.add(milk)
+        fixture.writes.add(Todo(title: "Eggs", place: place))
+
+        fixture.writes.toggleCompletion(milk, now: createdAt.addingTimeInterval(26 * 3_600))
+
+        let values = try fixture.recorder.values(of: .todoCompleted)
+        #expect(values["via"] as? String == "app")
+        #expect(values["age_hours"] as? Int == 26)
+        #expect(values["open_todo_count"] as? Int == 1)
+    }
+
+    @Test func completingRightAfterOpeningTheArrivalNotificationCountsForIt() throws {
+        let fixture = try Fixture()
+        let openedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let milk = Todo(title: "Milk", place: place)
+        fixture.writes.add(milk)
+
+        fixture.writes.arrivalOpened(placeID: place.id, at: openedAt)
+        fixture.writes.toggleCompletion(milk, now: openedAt.addingTimeInterval(5 * 60))
+
+        #expect(try fixture.recorder.values(of: .todoCompleted)["via"] as? String == "notification")
+    }
+
+    @Test func reopeningATodoIsNotACompletion() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let milk = Todo(title: "Milk", place: place)
+        fixture.writes.add(milk)
+        fixture.writes.toggleCompletion(milk)
+
+        fixture.writes.toggleCompletion(milk)
+
+        #expect(fixture.recorder.names.filter { $0 == .todoCompleted }.count == 1)
+    }
+
     private struct Fixture {
         let container: ModelContainer
         let context: ModelContext
@@ -155,5 +199,35 @@ private final class RecordingAnalytics: AnalyticsSink {
 
     func setUserProperty(_ value: String?, for property: AnalyticsUserProperty) {
         userProperties[property] = value
+    }
+}
+
+struct ArrivalOpenTests {
+    private let openedAt = Date(timeIntervalSince1970: 1_800_000_000)
+    private let placeID = UUID.v7()
+
+    @Test func countsCompletionsAtTheNotifiedPlaceWithinTheWindow() {
+        let open = ArrivalOpen(placeID: placeID, openedAt: openedAt)
+
+        #expect(open.via(completingAt: placeID, now: openedAt.addingTimeInterval(ArrivalOpen.window)) == .notification)
+    }
+
+    @Test func laterCompletionsAreFromTheApp() {
+        let open = ArrivalOpen(placeID: placeID, openedAt: openedAt)
+
+        #expect(open.via(completingAt: placeID, now: openedAt.addingTimeInterval(ArrivalOpen.window + 1)) == .app)
+    }
+
+    @Test func completionsAtAnotherPlaceAreFromTheApp() {
+        let open = ArrivalOpen(placeID: placeID, openedAt: openedAt)
+
+        #expect(open.via(completingAt: .v7(), now: openedAt.addingTimeInterval(60)) == .app)
+        #expect(open.via(completingAt: nil, now: openedAt.addingTimeInterval(60)) == .app)
+    }
+
+    @Test func aClockSetBackDoesNotCount() {
+        let open = ArrivalOpen(placeID: placeID, openedAt: openedAt)
+
+        #expect(open.via(completingAt: placeID, now: openedAt.addingTimeInterval(-60)) == .app)
     }
 }
