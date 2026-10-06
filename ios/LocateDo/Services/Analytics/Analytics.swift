@@ -7,6 +7,8 @@ nonisolated enum AnalyticsEvent: String {
     case arrivalOpened = "arrival_opened"
     case dailyState = "daily_state"
     case limitReached = "limit_reached"
+    case locationAuthChanged = "location_auth_changed"
+    case onboardingCompleted = "onboarding_completed"
     case placeAdded = "place_added"
     case placeDeleted = "place_deleted"
     case todoAdded = "todo_added"
@@ -25,8 +27,11 @@ nonisolated enum AnalyticsParameter: String {
     case completedTodoCount7d = "completed_todo_count_7d"
     case customCategoryCount = "custom_category_count"
     case daysSinceInstall = "days_since_install"
+    case durationS = "duration_s"
+    case from
     case householdMembers = "household_members"
     case kind
+    case latencyS = "latency_s"
     case locationAuth = "location_auth"
     case notificationAuth = "notification_auth"
     case openTodoCount = "open_todo_count"
@@ -39,6 +44,7 @@ nonisolated enum AnalyticsParameter: String {
     case radiusM = "radius_m"
     case signedIn = "signed_in"
     case source
+    case to
     case trigger
     case via
 }

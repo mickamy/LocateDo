@@ -156,3 +156,19 @@ nonisolated enum DailyStateSchedule {
         return "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)"
     }
 }
+
+nonisolated enum LocationAuthHistory {
+    static let key = "lastReportedLocationAuth"
+
+    static func change(
+        to current: DailyState.LocationAuth,
+        defaults: UserDefaults
+    ) -> (from: DailyState.LocationAuth, to: DailyState.LocationAuth)? {
+        let previous = defaults.string(forKey: key).flatMap(DailyState.LocationAuth.init(rawValue:))
+        defaults.set(current.rawValue, forKey: key)
+        guard let previous, previous != current else {
+            return nil
+        }
+        return (previous, current)
+    }
+}

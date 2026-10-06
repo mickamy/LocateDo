@@ -33,6 +33,9 @@ enum DailyStateReporter {
                 .error("Could not read the daily state: \(error, privacy: .public)")
             return
         }
+        if let change = LocationAuthHistory.change(to: state.locationAuth, defaults: defaults) {
+            Analytics.log(.locationAuthChanged, parameters: [.from: change.from.rawValue, .to: change.to.rawValue])
+        }
         for (property, value) in state.userProperties {
             Analytics.setUserProperty(value, for: property)
         }

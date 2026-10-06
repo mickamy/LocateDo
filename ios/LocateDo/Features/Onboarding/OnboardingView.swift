@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @Environment(ArrivalNotifier.self) private var notifier
     @State private var step: Step = .intro
     @State private var isRequesting = false
+    @State private var startedAt = Date()
 
     var body: some View {
         VStack(spacing: 20) {
@@ -119,6 +120,11 @@ struct OnboardingView: View {
     }
 
     private func finish() {
+        Analytics.log(.onboardingCompleted, parameters: [
+            .locationAuth: DailyState.LocationAuth(locationProvider.authorizationStatus).rawValue,
+            .notificationAuth: DailyState.NotificationAuth(notifier.authorizationStatus).rawValue,
+            .durationS: max(Int(Date().timeIntervalSince(startedAt)), 0)
+        ])
         preferences.hasCompletedOnboarding = true
     }
 }

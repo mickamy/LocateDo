@@ -226,7 +226,11 @@ struct PaywallView: View {
         defer { isWorking = false }
         do {
             if try await entitlements.purchase(selected) {
-                Analytics.log(.paywallPurchased, parameters: [.trigger: trigger.rawValue, .plan: planName])
+                Analytics.log(.paywallPurchased, parameters: [
+                    .trigger: trigger.rawValue,
+                    .plan: planName,
+                    .daysSinceInstall: InstallDate.daysSinceInstall(defaults: .standard, now: .now)
+                ])
             }
         } catch {
             logger.error("Purchase failed: \(error, privacy: .public)")

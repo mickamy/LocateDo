@@ -66,7 +66,8 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     ) {
         if let raw = response.notification.request.content.userInfo[Self.placeIDKey] as? String,
            let placeID = UUID(uuidString: raw) {
-            Analytics.log(.arrivalOpened)
+            let latency = Date().timeIntervalSince(response.notification.date)
+            Analytics.log(.arrivalOpened, parameters: [.latencyS: max(Int(latency), 0)])
             Task { @MainActor in
                 onOpened(placeID)
                 router.open(placeID: placeID)

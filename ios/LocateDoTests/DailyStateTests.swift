@@ -152,3 +152,30 @@ struct DailyStateScheduleTests {
         return defaults
     }
 }
+
+struct LocationAuthHistoryTests {
+    @Test func theFirstReadingIsNotAChange() throws {
+        let defaults = try makeDefaults()
+
+        #expect(LocationAuthHistory.change(to: .always, defaults: defaults) == nil)
+        #expect(LocationAuthHistory.change(to: .always, defaults: defaults) == nil)
+    }
+
+    @Test func aDowngradeIsReportedOnce() throws {
+        let defaults = try makeDefaults()
+        _ = LocationAuthHistory.change(to: .always, defaults: defaults)
+
+        let change = try #require(LocationAuthHistory.change(to: .whenInUse, defaults: defaults))
+
+        #expect(change.from == .always)
+        #expect(change.to == .whenInUse)
+        #expect(LocationAuthHistory.change(to: .whenInUse, defaults: defaults) == nil)
+    }
+
+    private func makeDefaults() throws -> UserDefaults {
+        let suite = "LocationAuthHistoryTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defaults.removePersistentDomain(forName: suite)
+        return defaults
+    }
+}
