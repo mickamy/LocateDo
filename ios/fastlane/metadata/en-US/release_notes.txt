@@ -1,1 +1,1 @@
-We updated how StopBy measures app usage, so we can tell what to improve next. Place names, locations, and to-do text are never sent. See the privacy policy for details.
+
