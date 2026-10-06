@@ -3,6 +3,12 @@ package com.locatedo.locatedo.core.data
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.sync.Write
+import com.locatedo.locatedo.core.sync.WriteQueue
+import com.locatedo.locatedo.core.sync.toInstant
+import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testSession
+import java.util.UUID
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -20,13 +26,15 @@ class RoomTodoRepositoryTest {
     private lateinit var places: RoomPlaceRepository
     private lateinit var repository: RoomTodoRepository
     private val proStatus = FakeProStatus()
+    private val authenticator = fakeAuthenticator()
     private val store: Place = place("Store")
 
     @Before
     fun setUp() = runTest {
         database = inMemoryDatabase()
-        places = RoomPlaceRepository(database, database.placeDao(), proStatus, fixedClock)
-        repository = RoomTodoRepository(database, database.todoDao(), proStatus, fixedClock)
+        val queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
+        places = RoomPlaceRepository(database, database.placeDao(), proStatus, queue, fixedClock)
+        repository = RoomTodoRepository(database, database.todoDao(), proStatus, queue, fixedClock)
         places.add(store)
     }
 
@@ -88,5 +96,48 @@ class RoomTodoRepositoryTest {
         repository.delete(listOf(milk.id))
 
         assertEquals(listOf(eggs), repository.observeAll().first())
+    }
+
+    @Test
+    fun togglingCompletionQueuesTheCompletionEachTime() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+
+        repository.setCompleted(milk.id, true)
+        repository.setCompleted(milk.id, false)
+
+        val completions = database.queuedWrites().filterIsInstance<Write.SetTodoCompletion>().map { it.request }
+        assertEquals(listOf(milk.id.toString(), milk.id.toString()), completions.map { it.id })
+        assertEquals(listOf(true, false), completions.map { it.hasCompletedAt() })
+        assertEquals(fixedNow, completions[0].completedAt.toInstant())
+    }
+
+    @Test
+    fun updatingQueuesAPutWithTheAssignee() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+        val assignee = UUID.randomUUID()
+
+        repository.update(milk.copy(assigneeId = assignee))
+
+        val put = database.queuedWrites().last() as Write.PutTodo
+        assertEquals(assignee.toString(), put.input.assigneeId)
+    }
+
+    @Test
+    fun deletingSeveralTodosQueuesADeleteForEach() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id)
+        val bread = todo("Bread", store.id)
+        repository.add(milk)
+        repository.add(bread)
+
+        repository.delete(listOf(milk.id, bread.id))
+
+        val deletes = database.queuedWrites().filterIsInstance<Write.DeleteTodo>().map { it.request.id }
+        assertEquals(listOf(milk.id.toString(), bread.id.toString()), deletes)
+        assertEquals(listOf(1L, 2L, 3L, 4L), database.pendingWriteDao().all().map { it.sequence })
     }
 }

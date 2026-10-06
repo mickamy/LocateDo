@@ -6,6 +6,8 @@ import com.locatedo.locatedo.core.database.TodoDao
 import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.sync.Write
+import com.locatedo.locatedo.core.sync.WriteQueue
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
@@ -28,6 +30,7 @@ class RoomTodoRepository @Inject constructor(
     private val database: LocateDoDatabase,
     private val todoDao: TodoDao,
     private val proStatus: ProStatus,
+    private val queue: WriteQueue,
     private val clock: Clock,
 ) : TodoRepository {
     override fun observeAll(): Flow<List<Todo>> =
@@ -38,11 +41,16 @@ class RoomTodoRepository @Inject constructor(
             return@withTransaction FreeLimit.OPEN_TODOS
         }
         todoDao.upsert(todo.asEntity())
+        queue.enqueue(Write.put(todo))
         null
     }
 
     override suspend fun update(todo: Todo) {
-        todoDao.upsert(todo.copy(updatedAt = clock.instant()).asEntity())
+        database.withTransaction {
+            val updated = todo.copy(updatedAt = clock.instant())
+            todoDao.upsert(updated.asEntity())
+            queue.enqueue(Write.put(updated))
+        }
     }
 
     // Reopening counts against the free limit just like adding, so the server and the device agree.
@@ -52,13 +60,18 @@ class RoomTodoRepository @Inject constructor(
         if (reopening && openLimitReached()) {
             return@withTransaction FreeLimit.OPEN_TODOS
         }
-        val now = clock.instant().toEpochMilli()
-        todoDao.upsert(todo.copy(completedAt = if (completed) now else null, updatedAt = now))
+        val now = clock.instant()
+        val completedAt = if (completed) now else null
+        todoDao.upsert(todo.copy(completedAt = completedAt?.toEpochMilli(), updatedAt = now.toEpochMilli()))
+        queue.enqueue(Write.completion(id, completedAt))
         null
     }
 
     override suspend fun delete(ids: List<UUID>) {
-        todoDao.delete(ids.map(UUID::toString))
+        database.withTransaction {
+            todoDao.delete(ids.map(UUID::toString))
+            queue.enqueue(ids.map { Write.deleteTodo(it) })
+        }
     }
 
     private suspend fun openLimitReached(): Boolean =

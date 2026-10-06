@@ -24,6 +24,8 @@ import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.sync.InitialUpload
+import com.locatedo.locatedo.core.sync.WriteQueue
+import com.locatedo.locatedo.core.sync.toModel
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
@@ -52,6 +54,7 @@ class AccountManager @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val syncState: SyncStateRepository,
     private val localData: LocalData,
+    private val queue: WriteQueue,
     private val deviceRegistration: DeviceRegistration,
     private val preferences: AppPreferences,
     private val clock: Clock,
@@ -122,13 +125,12 @@ class AccountManager @Inject constructor(
         )
         val response = authenticator.authorized { household.createHousehold(request) }
         val created = runCatching { UUID.fromString(response.household.id) }.getOrNull() ?: householdId
-        syncState.set(SyncState(householdId = created, cursor = response.cursor, plan = planOf(response.household.plan)))
+        syncState.set(SyncState(householdId = created, cursor = response.cursor, plan = response.household.plan.toModel()))
         pendingHouseholdId = null
         householdReady()
     }
 
-    // Pending writes arrive with sync; until then nothing can be unsynced.
-    suspend fun hasUnsyncedWrites(): Boolean = false
+    suspend fun hasUnsyncedWrites(): Boolean = !queue.isEmpty()
 
     suspend fun signOut() = working {
         authenticator.current()?.let { session ->
@@ -195,9 +197,7 @@ class AccountManager @Inject constructor(
         }
     }
 
-    companion object {
-        private const val TAG = "Account"
-
-        fun planOf(plan: com.locatedo.household.v1.Plan): Plan = if (plan == com.locatedo.household.v1.Plan.PLAN_PRO) Plan.PRO else Plan.FREE
+    private companion object {
+        const val TAG = "Account"
     }
 }

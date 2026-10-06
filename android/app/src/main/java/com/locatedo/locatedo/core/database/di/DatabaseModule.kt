@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.locatedo.locatedo.core.database.CategoryDao
 import com.locatedo.locatedo.core.database.LocateDoDatabase
+import com.locatedo.locatedo.core.database.MembershipDao
+import com.locatedo.locatedo.core.database.PendingWriteDao
 import com.locatedo.locatedo.core.database.PlaceDao
 import com.locatedo.locatedo.core.database.SyncStateDao
 import com.locatedo.locatedo.core.database.TodoDao
@@ -33,4 +35,10 @@ object DatabaseModule {
 
     @Provides
     fun syncStateDao(database: LocateDoDatabase): SyncStateDao = database.syncStateDao()
+
+    @Provides
+    fun membershipDao(database: LocateDoDatabase): MembershipDao = database.membershipDao()
+
+    @Provides
+    fun pendingWriteDao(database: LocateDoDatabase): PendingWriteDao = database.pendingWriteDao()
 }

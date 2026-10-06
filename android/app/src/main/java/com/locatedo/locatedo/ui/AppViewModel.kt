@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
+import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
+import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,11 +32,15 @@ class AppViewModel @Inject constructor(
     private val preferences: AppPreferences,
     private val permissions: PermissionsRepository,
     selectionRequests: PlaceSelectionRequests,
+    sync: SyncEngine,
 ) : ViewModel() {
     private val isExplainingAlwaysLocation = MutableStateFlow(false)
 
     // A place asked for from outside the home tab (a notification tap); the tabs switch to home so it can be shown.
     val pendingPlace: StateFlow<UUID?> = selectionRequests.pending
+
+    // A queued write the server refused on the free plan; the row is already gone, the user gets told why.
+    val limitRejected: Flow<FreeLimit> = sync.limitRejected
 
     val uiState: StateFlow<AppUiState> = combine(preferences.data, isExplainingAlwaysLocation) { stored, explaining ->
         AppUiState(

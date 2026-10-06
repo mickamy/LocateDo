@@ -13,10 +13,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -30,6 +33,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
@@ -50,6 +54,7 @@ import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
+import kotlinx.coroutines.flow.Flow
 
 private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
@@ -69,7 +74,7 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     when {
         appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
         !appState.hasCompletedOnboarding -> OnboardingScreen()
-        else -> Tabs(onPlaceAdded = appViewModel::placeAdded, pendingPlace = pendingPlace)
+        else -> Tabs(onPlaceAdded = appViewModel::placeAdded, pendingPlace = pendingPlace, limitRejected = appViewModel.limitRejected)
     }
     if (appState.isExplainingAlwaysLocation) {
         AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
@@ -77,12 +82,15 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?) {
+private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?, limitRejected: Flow<FreeLimit>) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val placeLimitMessage = stringResource(R.string.paywall_reason_places)
+    val todoLimitMessage = stringResource(R.string.paywall_reason_todos)
 
     LaunchedEffect(pendingPlace) {
         if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
@@ -90,9 +98,19 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?) {
             backStack.add(HomeKey)
         }
     }
+    LaunchedEffect(Unit) {
+        limitRejected.collect { limit ->
+            val message = when (limit) {
+                FreeLimit.PLACES -> placeLimitMessage
+                FreeLimit.OPEN_TODOS -> todoLimitMessage
+            }
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (current in tabKeys) {
                 NavigationBar {

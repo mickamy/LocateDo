@@ -7,6 +7,8 @@ import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.sync.Write
+import com.locatedo.locatedo.core.sync.WriteKind
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -16,8 +18,11 @@ val fixedNow: Instant = Instant.parse("2026-10-06T00:00:00Z")
 val fixedClock: Clock = Clock.fixed(fixedNow, ZoneOffset.UTC)
 
 class FakeProStatus(var pro: Boolean = false) : ProStatus {
-    override fun isPro(): Boolean = pro
+    override suspend fun isPro(): Boolean = pro
 }
+
+suspend fun LocateDoDatabase.queuedWrites(): List<Write> =
+    pendingWriteDao().all().map { Write.decode(checkNotNull(WriteKind.fromKey(it.kind)), it.payload) }
 
 fun inMemoryDatabase(): LocateDoDatabase =
     Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), LocateDoDatabase::class.java).build()

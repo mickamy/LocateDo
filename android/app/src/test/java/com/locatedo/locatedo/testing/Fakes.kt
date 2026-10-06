@@ -24,11 +24,13 @@ import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.places.PlaceCandidate
 import com.locatedo.locatedo.core.places.PlacePrediction
 import com.locatedo.locatedo.core.places.PlacesRepository
+import com.locatedo.locatedo.core.sync.SyncEngine
 import java.io.File
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
@@ -191,6 +193,18 @@ class FakeTodoRepository : TodoRepository {
     override suspend fun delete(ids: List<UUID>) {
         deleted += ids
         state.value = state.value.filter { it.id !in ids }
+    }
+}
+
+class FakeSyncEngine : SyncEngine {
+    override val limitRejected = MutableSharedFlow<FreeLimit>()
+    override val removed = MutableSharedFlow<Unit>()
+    var syncs = 0
+
+    override fun start() = Unit
+
+    override suspend fun sync() {
+        syncs += 1
     }
 }
 

@@ -3,6 +3,7 @@ package com.locatedo.locatedo.core.geofence
 import android.content.Context
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.notifications.ArrivalHandler
+import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -15,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 interface GeofenceEntryPoint {
     fun arrivalHandler(): ArrivalHandler
     fun geofenceSync(): GeofenceSync
+    fun syncEngine(): SyncEngine
 
     @ApplicationScope
     fun applicationScope(): CoroutineScope

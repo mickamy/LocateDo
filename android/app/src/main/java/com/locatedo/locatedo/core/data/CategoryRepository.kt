@@ -7,6 +7,8 @@ import com.locatedo.locatedo.core.database.CategoryEntity
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
+import com.locatedo.locatedo.core.sync.Write
+import com.locatedo.locatedo.core.sync.WriteQueue
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
@@ -29,6 +31,7 @@ interface CategoryRepository {
 class RoomCategoryRepository @Inject constructor(
     private val database: LocateDoDatabase,
     private val categoryDao: CategoryDao,
+    private val queue: WriteQueue,
     private val clock: Clock,
 ) : CategoryRepository {
     override fun observeAll(): Flow<List<Category>> =
@@ -55,11 +58,17 @@ class RoomCategoryRepository @Inject constructor(
 
     override suspend fun add(category: Category) = database.withTransaction {
         val next = (categoryDao.maxSortOrder() ?: -1) + 1
-        categoryDao.upsert(category.copy(sortOrder = next).asEntity())
+        val added = category.copy(sortOrder = next)
+        categoryDao.upsert(added.asEntity())
+        queue.enqueue(Write.put(added))
     }
 
     override suspend fun update(category: Category) {
-        categoryDao.upsert(category.copy(updatedAt = clock.instant()).asEntity())
+        database.withTransaction {
+            val updated = category.copy(updatedAt = clock.instant())
+            categoryDao.upsert(updated.asEntity())
+            queue.enqueue(Write.put(updated))
+        }
     }
 
     override suspend fun delete(id: UUID): Boolean = database.withTransaction {
@@ -67,15 +76,18 @@ class RoomCategoryRepository @Inject constructor(
             return@withTransaction false
         }
         categoryDao.delete(id.toString())
+        queue.enqueue(Write.deleteCategory(id))
         true
     }
 
     override suspend fun reorder(categories: List<Category>) = database.withTransaction {
         val now = clock.instant()
-        categories.forEachIndexed { index, category ->
-            if (category.sortOrder != index) {
-                categoryDao.upsert(category.copy(sortOrder = index, updatedAt = now).asEntity())
-            }
+        val moved = categories.mapIndexedNotNull { index, category ->
+            if (category.sortOrder == index) null else category.copy(sortOrder = index, updatedAt = now)
         }
+        for (category in moved) {
+            categoryDao.upsert(category.asEntity())
+        }
+        queue.enqueue(moved.map { Write.put(it) })
     }
 }

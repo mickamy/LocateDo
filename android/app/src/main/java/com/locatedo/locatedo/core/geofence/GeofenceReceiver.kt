@@ -35,6 +35,8 @@ class GeofenceReceiver : BroadcastReceiver() {
             } finally {
                 result.finish()
             }
+            // The user is about to open the list; fetch what the other members changed first.
+            graph.syncEngine().sync()
         }
     }
 

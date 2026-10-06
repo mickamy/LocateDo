@@ -7,10 +7,13 @@ import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.testing.FakeArrivalNotifier
 import com.locatedo.locatedo.testing.FakePlaceRepository
+import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testSession
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -21,7 +24,8 @@ class ArrivalHandlerTest {
     private val now = Instant.parse("2026-10-06T00:00:00Z")
     private val places = FakePlaceRepository()
     private val notifier = FakeArrivalNotifier()
-    private val handler = ArrivalHandler(places, notifier, Clock.fixed(now, ZoneOffset.UTC))
+    private val authenticator = fakeAuthenticator()
+    private val handler = ArrivalHandler(places, notifier, authenticator, Clock.fixed(now, ZoneOffset.UTC))
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0000, longitude = 139.0, createdAt = now)
     private val office = Place(id = uuidV7(now), name = "Office", latitude = 35.0100, longitude = 139.0, createdAt = now)
     private val here = Coordinate(35.0001, 139.0)
@@ -63,6 +67,26 @@ class ArrivalHandlerTest {
         handler.arrived(listOf(store.id), near = here)
 
         assertTrue(notifier.notified.isEmpty())
+    }
+
+    @Test
+    fun todosAssignedToSomeoneElseAreLeftOutOnceSignedIn() = runTest {
+        authenticator.signIn(testSession)
+        val other = UUID.randomUUID()
+        places.state.value = listOf(
+            PlaceWithTodos(
+                store,
+                listOf(
+                    todo("Milk", store).copy(assigneeId = other),
+                    todo("Bread", store).copy(assigneeId = testSession.userId),
+                    todo("Eggs", store),
+                ),
+            ),
+        )
+
+        handler.arrived(listOf(store.id), near = here)
+
+        assertEquals(listOf("Bread", "Eggs"), notifier.notified.single().second)
     }
 
     @Test

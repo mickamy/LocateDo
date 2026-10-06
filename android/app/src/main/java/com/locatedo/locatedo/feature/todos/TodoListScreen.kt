@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -24,6 +26,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,29 +87,43 @@ fun TodoListScreen(
                 FilterChipFor(TodoFilter.OPEN, R.string.todo_filter_open, uiState.filter, viewModel::setFilter)
                 FilterChipFor(TodoFilter.DONE, R.string.todo_filter_done, uiState.filter, viewModel::setFilter)
             }
-            when (uiState.emptyState) {
-                TodoListEmptyState.NO_PLACES -> EmptyState(
-                    title = R.string.todo_list_no_places_title,
-                    message = R.string.todo_list_no_places_message,
-                    action = R.string.home_add_place,
-                    onAction = onAddPlace,
-                )
-                TodoListEmptyState.NO_TODOS -> EmptyState(
-                    title = R.string.todo_list_empty_title,
-                    message = R.string.todo_list_empty_message,
-                    action = R.string.todo_editor_title,
-                    onAction = { isAddingTodo = true },
-                )
-                TodoListEmptyState.NO_MATCHES -> EmptyState(title = R.string.todo_list_filter_empty)
-                null -> TodoGroups(
-                    groups = uiState.groups,
-                    onOpenPlace = { placeId ->
-                        viewModel.requestPlace(placeId)
-                        onOpenPlace()
-                    },
-                    onToggle = viewModel::setTodoCompleted,
-                    onDelete = viewModel::deleteTodo,
-                )
+            // Pulling down syncs, as on iOS; without an account there is nothing to pull.
+            val content: @Composable () -> Unit = {
+                when (uiState.emptyState) {
+                    TodoListEmptyState.NO_PLACES -> EmptyState(
+                        title = R.string.todo_list_no_places_title,
+                        message = R.string.todo_list_no_places_message,
+                        action = R.string.home_add_place,
+                        onAction = onAddPlace,
+                    )
+                    TodoListEmptyState.NO_TODOS -> EmptyState(
+                        title = R.string.todo_list_empty_title,
+                        message = R.string.todo_list_empty_message,
+                        action = R.string.todo_editor_title,
+                        onAction = { isAddingTodo = true },
+                    )
+                    TodoListEmptyState.NO_MATCHES -> EmptyState(title = R.string.todo_list_filter_empty)
+                    null -> TodoGroups(
+                        groups = uiState.groups,
+                        onOpenPlace = { placeId ->
+                            viewModel.requestPlace(placeId)
+                            onOpenPlace()
+                        },
+                        onToggle = viewModel::setTodoCompleted,
+                        onDelete = viewModel::deleteTodo,
+                    )
+                }
+            }
+            if (uiState.isSignedIn) {
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    content()
+                }
+            } else {
+                content()
             }
         }
     }
@@ -163,6 +180,7 @@ private fun EmptyState(title: Int, message: Int? = null, action: Int? = null, on
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -21,6 +21,7 @@ import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.push.DeviceRegistration
+import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakeDeviceService
 import com.locatedo.locatedo.testing.FakeHouseholdService
@@ -30,6 +31,8 @@ import com.locatedo.locatedo.testing.sessionProto
 import com.locatedo.locatedo.testing.success
 import com.locatedo.locatedo.testing.testPreferences
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -60,20 +63,32 @@ class AccountManagerTest {
     private lateinit var categories: RoomCategoryRepository
     private lateinit var syncState: RoomSyncStateRepository
     private lateinit var localData: LocalData
+    private lateinit var queue: WriteQueue
     private val account = FakeAccountService()
     private val household = FakeHouseholdService()
     private val devices = FakeDeviceService()
     private val sessionStore = InMemorySessionStore()
+    private val authenticator = Authenticator(sessionStore, account, AccessTokenStore(), fixedClock, CoroutineScope(Dispatchers.Unconfined))
     private val householdId = "0199bd00-0000-7000-8000-0000000000aa"
 
     @Before
     fun setUp() {
         database = inMemoryDatabase()
-        places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), fixedClock)
-        todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), fixedClock)
-        categories = RoomCategoryRepository(database, database.categoryDao(), fixedClock)
+        queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
+        places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, fixedClock)
+        todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, fixedClock)
+        categories = RoomCategoryRepository(database, database.categoryDao(), queue, fixedClock)
         syncState = RoomSyncStateRepository(database.syncStateDao())
-        localData = LocalData(database, database.placeDao(), database.todoDao(), database.categoryDao(), database.syncStateDao(), categories)
+        localData = LocalData(
+            database,
+            database.placeDao(),
+            database.todoDao(),
+            database.categoryDao(),
+            database.membershipDao(),
+            database.pendingWriteDao(),
+            database.syncStateDao(),
+            categories,
+        )
     }
 
     @After
@@ -275,10 +290,26 @@ class AccountManagerTest {
         assertFalse(preferences.data.first().hasCompletedOnboarding)
     }
 
+    @Test
+    fun unsyncedWritesAreTheQueuedOnes() = runTest {
+        categories.ensureBuiltins()
+        account.signInResponse = success(signInResponse(householdId = null))
+        val (manager, _) = manager()
+        manager.signInWithGoogle("google-id-token", "0123456789abcdef")
+        assertFalse(manager.hasUnsyncedWrites())
+
+        places.add(place("Store"))
+
+        assertTrue(manager.hasUnsyncedWrites())
+
+        manager.signOut()
+
+        assertFalse(manager.hasUnsyncedWrites())
+    }
+
     private suspend fun TestScope.manager(): Pair<AccountManager, AppPreferences> {
         val preferences = testPreferences(folder.root, backgroundScope)
         preferences.setCompletedOnboarding(true)
-        val authenticator = Authenticator(sessionStore, account, AccessTokenStore(), fixedClock, this)
         val registration = DeviceRegistration(devices, authenticator, FakeInstallationIdSource("installation-1"))
         val manager = AccountManager(
             account = account,
@@ -289,6 +320,7 @@ class AccountManagerTest {
             categoryRepository = categories,
             syncState = syncState,
             localData = localData,
+            queue = queue,
             deviceRegistration = registration,
             preferences = preferences,
             clock = fixedClock,

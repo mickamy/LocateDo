@@ -2,6 +2,7 @@ package com.locatedo.locatedo.feature.todos
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
@@ -10,6 +11,7 @@ import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
@@ -42,6 +44,8 @@ data class TodoListUiState(
     val hasPlaces: Boolean = false,
     val hasTodos: Boolean = false,
     val groups: List<TodoGroup> = emptyList(),
+    val isSignedIn: Boolean = false,
+    val isRefreshing: Boolean = false,
 ) {
     val emptyState: TodoListEmptyState?
         get() = when {
@@ -63,8 +67,11 @@ class TodoListViewModel @Inject constructor(
     categoryRepository: CategoryRepository,
     private val todoRepository: TodoRepository,
     private val selectionRequests: PlaceSelectionRequests,
+    authenticator: Authenticator,
+    private val sync: SyncEngine,
 ) : ViewModel() {
     private val filter = MutableStateFlow(TodoFilter.OPEN)
+    private val isRefreshing = MutableStateFlow(false)
     private val _events = MutableSharedFlow<TodoListEvent>()
 
     val events: SharedFlow<TodoListEvent> = _events
@@ -73,13 +80,17 @@ class TodoListViewModel @Inject constructor(
         placeRepository.observeAllWithTodos(),
         categoryRepository.observeAll(),
         filter,
-    ) { places, categories, filter ->
+        authenticator.session,
+        isRefreshing,
+    ) { places, categories, filter, session, refreshing ->
         val byId = categories.associateBy { it.id }
         TodoListUiState(
             isLoading = false,
             filter = filter,
             hasPlaces = places.isNotEmpty(),
             hasTodos = places.any { it.todos.isNotEmpty() },
+            isSignedIn = session != null,
+            isRefreshing = refreshing,
             groups = places.mapNotNull { entry ->
                 val todos = when (filter) {
                     TodoFilter.ALL -> entry.openTodos + entry.completedTodosNewestFirst
@@ -93,6 +104,17 @@ class TodoListViewModel @Inject constructor(
 
     fun setFilter(filter: TodoFilter) {
         this.filter.value = filter
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            try {
+                sync.sync()
+            } finally {
+                isRefreshing.value = false
+            }
+        }
     }
 
     fun setTodoCompleted(todoId: UUID, completed: Boolean) {

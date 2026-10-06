@@ -8,6 +8,8 @@ import com.locatedo.locatedo.core.database.PlaceEntity
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.sync.Write
+import com.locatedo.locatedo.core.sync.WriteQueue
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
@@ -33,6 +35,7 @@ class RoomPlaceRepository @Inject constructor(
     private val database: LocateDoDatabase,
     private val placeDao: PlaceDao,
     private val proStatus: ProStatus,
+    private val queue: WriteQueue,
     private val clock: Clock,
 ) : PlaceRepository {
     override fun observeAll(): Flow<List<Place>> =
@@ -50,15 +53,23 @@ class RoomPlaceRepository @Inject constructor(
             return@withTransaction FreeLimit.PLACES
         }
         placeDao.upsert(place.asEntity())
+        queue.enqueue(Write.put(place))
         null
     }
 
     override suspend fun update(place: Place) {
-        placeDao.upsert(place.copy(updatedAt = clock.instant()).asEntity())
+        database.withTransaction {
+            val updated = place.copy(updatedAt = clock.instant())
+            placeDao.upsert(updated.asEntity())
+            queue.enqueue(Write.put(updated))
+        }
     }
 
     override suspend fun delete(id: UUID) {
-        placeDao.delete(id.toString())
+        database.withTransaction {
+            placeDao.delete(id.toString())
+            queue.enqueue(Write.deletePlace(id))
+        }
     }
 
     override suspend fun markNotified(id: UUID, at: Instant) {

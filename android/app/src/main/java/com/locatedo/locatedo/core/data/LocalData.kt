@@ -3,6 +3,8 @@ package com.locatedo.locatedo.core.data
 import androidx.room.withTransaction
 import com.locatedo.locatedo.core.database.CategoryDao
 import com.locatedo.locatedo.core.database.LocateDoDatabase
+import com.locatedo.locatedo.core.database.MembershipDao
+import com.locatedo.locatedo.core.database.PendingWriteDao
 import com.locatedo.locatedo.core.database.PlaceDao
 import com.locatedo.locatedo.core.database.SyncStateDao
 import com.locatedo.locatedo.core.database.TodoDao
@@ -16,6 +18,8 @@ class LocalData @Inject constructor(
     private val placeDao: PlaceDao,
     private val todoDao: TodoDao,
     private val categoryDao: CategoryDao,
+    private val membershipDao: MembershipDao,
+    private val pendingWriteDao: PendingWriteDao,
     private val syncStateDao: SyncStateDao,
     private val categories: CategoryRepository,
 ) {
@@ -26,6 +30,8 @@ class LocalData @Inject constructor(
         todoDao.deleteAll()
         placeDao.deleteAll()
         categoryDao.deleteAll()
+        membershipDao.deleteAll()
+        pendingWriteDao.deleteAll()
     }
 
     suspend fun reset() = database.withTransaction {

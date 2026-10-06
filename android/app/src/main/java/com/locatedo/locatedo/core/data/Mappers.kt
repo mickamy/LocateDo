@@ -1,12 +1,15 @@
 package com.locatedo.locatedo.core.data
 
 import com.locatedo.locatedo.core.database.CategoryEntity
+import com.locatedo.locatedo.core.database.MembershipEntity
 import com.locatedo.locatedo.core.database.PlaceAndTodos
 import com.locatedo.locatedo.core.database.PlaceEntity
 import com.locatedo.locatedo.core.database.SyncStateEntity
 import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
+import com.locatedo.locatedo.core.model.MemberRole
+import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.PlaceWithTodos
@@ -84,6 +87,14 @@ internal fun Category.asEntity() = CategoryEntity(
     color = color,
     sortOrder = sortOrder,
     updatedAt = updatedAt.toEpochMilli(),
+)
+
+internal fun MembershipEntity.asModel() = Membership(
+    userId = UUID.fromString(userId),
+    role = MemberRole.fromKey(role),
+    displayName = displayName,
+    joinedAt = Instant.ofEpochMilli(joinedAt),
+    updatedAt = Instant.ofEpochMilli(updatedAt),
 )
 
 internal fun SyncStateEntity.asModel() = SyncState(

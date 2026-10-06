@@ -8,7 +8,10 @@ import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
+import com.locatedo.locatedo.testing.FakeSyncEngine
 import com.locatedo.locatedo.testing.FakeTodoRepository
+import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testSession
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,7 +23,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -118,8 +123,21 @@ class TodoListViewModelTest {
     }
 
     private fun TestScope.viewModel(): TodoListViewModel {
-        val viewModel = TodoListViewModel(places, categories, todos, requests)
+        val viewModel = TodoListViewModel(places, categories, todos, requests, fakeAuthenticator(), FakeSyncEngine())
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
+    }
+
+    @Test
+    fun pullingToRefreshSyncsOnceSignedIn() = runTest(dispatcher) {
+        val sync = FakeSyncEngine()
+        val viewModel = TodoListViewModel(places, categories, todos, requests, fakeAuthenticator(testSession), sync)
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        assertTrue(viewModel.uiState.value.isSignedIn)
+
+        viewModel.refresh()
+
+        assertEquals(1, sync.syncs)
+        assertFalse(viewModel.uiState.value.isRefreshing)
     }
 }

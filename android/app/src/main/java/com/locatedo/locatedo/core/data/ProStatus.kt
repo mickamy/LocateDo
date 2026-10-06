@@ -1,12 +1,14 @@
 package com.locatedo.locatedo.core.data
 
+import com.locatedo.locatedo.core.database.SyncStateDao
+import com.locatedo.locatedo.core.model.Plan
 import javax.inject.Inject
 
 interface ProStatus {
-    fun isPro(): Boolean
+    suspend fun isPro(): Boolean
 }
 
-// Stands in until billing lands and the RevenueCat-backed status replaces it.
-class FreeProStatus @Inject constructor() : ProStatus {
-    override fun isPro(): Boolean = false
+// The household plan the last pull reported; billing adds the RevenueCat entitlement on top of it.
+class SyncStateProStatus @Inject constructor(private val syncStateDao: SyncStateDao) : ProStatus {
+    override suspend fun isPro(): Boolean = syncStateDao.get()?.asModel()?.plan == Plan.PRO
 }

@@ -9,6 +9,7 @@ import com.locatedo.household.v1.initialTodo
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.place.v1.PlaceInput
 import com.locatedo.place.v1.placeInput
@@ -21,6 +22,9 @@ import kotlin.math.roundToInt
 fun Instant.toTimestamp(): Timestamp = Timestamp.newBuilder().setSeconds(epochSecond).setNanos(nano).build()
 
 fun Timestamp.toInstant(): Instant = Instant.ofEpochSecond(seconds, nanos.toLong())
+
+fun com.locatedo.household.v1.Plan.toModel(): Plan =
+    if (this == com.locatedo.household.v1.Plan.PLAN_PRO) Plan.PRO else Plan.FREE
 
 // The request shapes of the write RPCs, built from the local models.
 object ProtoInput {

@@ -17,6 +17,11 @@ import com.locatedo.account.v1.SignOutRequest
 import com.locatedo.account.v1.SignOutResponse
 import com.locatedo.account.v1.refreshTokenResponse
 import com.locatedo.account.v1.session
+import com.locatedo.category.v1.CategoryServiceClientInterface
+import com.locatedo.category.v1.DeleteCategoryRequest
+import com.locatedo.category.v1.DeleteCategoryResponse
+import com.locatedo.category.v1.PutCategoryRequest
+import com.locatedo.category.v1.PutCategoryResponse
 import com.locatedo.device.v1.DeviceServiceClientInterface
 import com.locatedo.device.v1.RegisterDeviceRequest
 import com.locatedo.device.v1.RegisterDeviceResponse
@@ -32,11 +37,34 @@ import com.locatedo.household.v1.RemoveMemberRequest
 import com.locatedo.household.v1.RemoveMemberResponse
 import com.locatedo.household.v1.createHouseholdResponse
 import com.locatedo.household.v1.household
+import com.locatedo.locatedo.core.api.AccessTokenStore
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.auth.Session
 import com.locatedo.locatedo.core.auth.SessionStore
+import com.locatedo.locatedo.core.data.fixedClock
+import com.locatedo.locatedo.core.data.fixedNow
 import com.locatedo.locatedo.core.push.InstallationIdSource
 import com.locatedo.locatedo.core.sync.toTimestamp
+import com.locatedo.place.v1.DeletePlaceRequest
+import com.locatedo.place.v1.DeletePlaceResponse
+import com.locatedo.place.v1.PlaceServiceClientInterface
+import com.locatedo.place.v1.PutPlaceRequest
+import com.locatedo.place.v1.PutPlaceResponse
+import com.locatedo.sync.v1.PullRequest
+import com.locatedo.sync.v1.PullResponse
+import com.locatedo.sync.v1.SyncServiceClientInterface
+import com.locatedo.sync.v1.pullResponse
+import com.locatedo.todo.v1.DeleteTodoRequest
+import com.locatedo.todo.v1.DeleteTodoResponse
+import com.locatedo.todo.v1.PutTodoRequest
+import com.locatedo.todo.v1.PutTodoResponse
+import com.locatedo.todo.v1.SetTodoCompletionRequest
+import com.locatedo.todo.v1.SetTodoCompletionResponse
+import com.locatedo.todo.v1.TodoServiceClientInterface
 import java.time.Instant
+import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 
 fun <T> success(message: T): ResponseMessage<T> = ResponseMessage.Success(message, emptyMap(), emptyMap())
@@ -141,6 +169,83 @@ class FakeDeviceService : DeviceServiceClientInterface {
         registered += request
         failure?.let { return failure(it) }
         return success(RegisterDeviceResponse.getDefaultInstance())
+    }
+}
+
+val testSession = Session(UUID.fromString(FakeAccountService.USER_ID), "access", fixedNow.plusSeconds(3600), "refresh")
+
+// Restores on an unconfined scope, so the signed-in or signed-out state is ready without a test scheduler.
+fun fakeAuthenticator(session: Session? = null, account: AccountServiceClientInterface = FakeAccountService()): Authenticator =
+    Authenticator(InMemorySessionStore(session), account, AccessTokenStore(), fixedClock, CoroutineScope(Dispatchers.Unconfined))
+
+class FakeWriteServices : PlaceServiceClientInterface, TodoServiceClientInterface, CategoryServiceClientInterface {
+    val sent = mutableListOf<String>()
+    val householdIds = mutableListOf<String>()
+    private val failures = ArrayDeque<Code>()
+
+    // Each code answers one call, in order; later calls succeed.
+    fun fail(vararg codes: Code) {
+        failures.clear()
+        failures.addAll(codes)
+    }
+
+    override suspend fun putPlace(request: PutPlaceRequest, headers: Headers): ResponseMessage<PutPlaceResponse> =
+        respond("putPlace", request.householdId, PutPlaceResponse.getDefaultInstance())
+
+    override suspend fun deletePlace(request: DeletePlaceRequest, headers: Headers): ResponseMessage<DeletePlaceResponse> =
+        respond("deletePlace", null, DeletePlaceResponse.getDefaultInstance())
+
+    override suspend fun putTodo(request: PutTodoRequest, headers: Headers): ResponseMessage<PutTodoResponse> =
+        respond("putTodo", request.householdId, PutTodoResponse.getDefaultInstance())
+
+    override suspend fun setTodoCompletion(request: SetTodoCompletionRequest, headers: Headers): ResponseMessage<SetTodoCompletionResponse> =
+        respond("setTodoCompletion", null, SetTodoCompletionResponse.getDefaultInstance())
+
+    override suspend fun deleteTodo(request: DeleteTodoRequest, headers: Headers): ResponseMessage<DeleteTodoResponse> =
+        respond("deleteTodo", null, DeleteTodoResponse.getDefaultInstance())
+
+    override suspend fun putCategory(request: PutCategoryRequest, headers: Headers): ResponseMessage<PutCategoryResponse> =
+        respond("putCategory", request.householdId, PutCategoryResponse.getDefaultInstance())
+
+    override suspend fun deleteCategory(request: DeleteCategoryRequest, headers: Headers): ResponseMessage<DeleteCategoryResponse> =
+        respond("deleteCategory", null, DeleteCategoryResponse.getDefaultInstance())
+
+    private fun <T> respond(name: String, householdId: String?, message: T): ResponseMessage<T> {
+        sent += name
+        if (householdId != null) {
+            householdIds += householdId
+        }
+        val code = failures.removeFirstOrNull() ?: return success(message)
+        return failure(code)
+    }
+}
+
+class FakeSyncService : SyncServiceClientInterface {
+    val cursors = mutableListOf<Long>()
+    val householdIds = mutableListOf<String>()
+    private val pages = ArrayDeque<PullResponse>()
+    private var failAfterPages: Int? = null
+    private var failureCode = Code.UNAVAILABLE
+
+    fun respond(vararg responses: PullResponse) {
+        pages.clear()
+        pages.addAll(responses)
+    }
+
+    fun fail(afterPages: Int, code: Code = Code.UNAVAILABLE) {
+        failAfterPages = afterPages
+        failureCode = code
+    }
+
+    // Once the pages run out, an empty page echoes the cursor back.
+    override suspend fun pull(request: PullRequest, headers: Headers): ResponseMessage<PullResponse> {
+        cursors += request.cursor
+        householdIds += request.householdId
+        val failAfter = failAfterPages
+        if (failAfter != null && cursors.size > failAfter) {
+            return failure(failureCode)
+        }
+        return success(pages.removeFirstOrNull() ?: pullResponse { cursor = request.cursor })
     }
 }
 

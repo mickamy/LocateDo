@@ -73,6 +73,25 @@ data class SyncStateEntity(
     val plan: String,
 )
 
+@Entity(tableName = "memberships")
+data class MembershipEntity(
+    @PrimaryKey val userId: String,
+    val role: String,
+    val displayName: String,
+    val joinedAt: Long,
+    val updatedAt: Long,
+)
+
+// Not a data class: a ByteArray payload has no structural equality to offer.
+@Entity(tableName = "pending_writes")
+class PendingWriteEntity(
+    @PrimaryKey(autoGenerate = true) val sequence: Long = 0,
+    val kind: String,
+    val payload: ByteArray,
+    val createdAt: Long,
+    val attempts: Int = 0,
+)
+
 data class PlaceAndTodos(
     @Embedded val place: PlaceEntity,
     @Relation(parentColumn = "id", entityColumn = "placeId")

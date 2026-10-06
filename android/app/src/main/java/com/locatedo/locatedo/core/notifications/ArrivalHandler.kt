@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.core.notifications
 
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.common.Nearby
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.model.Coordinate
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.first
 class ArrivalHandler @Inject constructor(
     private val placeRepository: PlaceRepository,
     private val notifier: ArrivalNotifier,
+    private val authenticator: Authenticator,
     private val clock: Clock,
 ) {
     // Overlapping fences (a station, a mall) fire together; only the nearest place that has something to do is announced.
@@ -27,8 +29,7 @@ class ArrivalHandler @Inject constructor(
     }
 
     private suspend fun notify(entry: PlaceWithTodos): Boolean {
-        // The signed-in member arrives with sync; until then every open to-do counts.
-        val todos = NotificationPolicy.notifiableTodos(entry.openTodos, userId = null)
+        val todos = NotificationPolicy.notifiableTodos(entry.openTodos, userId = authenticator.current()?.userId)
         val now = clock.instant()
         if (!NotificationPolicy.shouldNotify(todos.size, entry.place.lastNotifiedAt, now)) {
             return false
