@@ -98,6 +98,7 @@ final class GeofenceMonitor {
             }
         } catch {
             logger.error("Event stream ended: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "geofence.events")
         }
     }
 

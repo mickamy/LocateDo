@@ -219,6 +219,7 @@ final class LocalWrites {
             try context.save()
         } catch {
             logger.error("Could not save a local write: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "sync.local_write")
             return
         }
         if queues {

@@ -144,7 +144,8 @@ struct HouseholdManagerTests {
                 account: FakeAccountService(),
                 household: household,
                 authenticator: authenticator,
-                context: context
+                context: context,
+                resetsOffscreen: false
             )
             let sync = SyncEngine(
                 places: services,

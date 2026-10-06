@@ -145,6 +145,7 @@ home:
     title: "No places yet"
     message: "Add a place to get reminded when you arrive."
   add_place: "Add a place"
+  my_location: "My location"
 map:
   empty:
     message: "Places you add appear here."

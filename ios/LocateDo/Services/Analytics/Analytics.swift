@@ -125,6 +125,7 @@ nonisolated enum Analytics {
             return
         }
         FirebaseApp.configure(options: options)
+        CrashReporting.configure(configuration: configuration)
     }
 
     static func log(_ event: AnalyticsEvent, parameters: AnalyticsParameters = [:]) {

@@ -17,7 +17,12 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if appStatus.requiresUpdate {
+            if account.isResettingLocalData {
+                ProgressView()
+                    .task {
+                        account.screenDidClear()
+                    }
+            } else if appStatus.requiresUpdate {
                 UpdateRequiredView()
                     .task(id: scenePhase) {
                         await refreshAppStatus()

@@ -71,3 +71,11 @@ enum class FreeLimit(val max: Int) {
     PLACES(3),
     OPEN_TODOS(15),
 }
+
+enum class PlaceSource(val key: String) {
+    SEARCH("search"),
+    MAP("map"),
+    CURRENT_LOCATION("current_location"),
+}
+
+data class Coordinate(val latitude: Double, val longitude: Double)

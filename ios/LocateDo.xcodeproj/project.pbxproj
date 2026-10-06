@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BC7A1D03075000000D47174 /* FirebaseCrashlytics */; };
 		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
 		3BF1AEC43071100000D47174 /* Connect in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC23071100000D47174 /* Connect */; };
 		3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC33071100000D47174 /* SwiftProtobuf */; };
@@ -77,6 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */,
+				3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */,
 				3BFCD2D53072600A00811294 /* RevenueCat in Frameworks */,
 				3BF1AEC43071100000D47174 /* Connect in Frameworks */,
 				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
@@ -150,6 +152,7 @@
 			name = LocateDo;
 			packageProductDependencies = (
 				3BF1AEBE3071100000D47174 /* FirebaseAnalytics */,
+				3BC7A1D03075000000D47174 /* FirebaseCrashlytics */,
 				3BF1AEC23071100000D47174 /* Connect */,
 				3BF1AEC33071100000D47174 /* SwiftProtobuf */,
 				3BFCD2D43072600A00811294 /* RevenueCat */,
@@ -830,6 +833,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3BC7A1D03075000000D47174 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
 		3BF1AEBE3071100000D47174 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

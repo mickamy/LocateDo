@@ -48,6 +48,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             try await center.add(request)
         } catch {
             logger.error("Could not schedule the arrival notification: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "notifications.arrival")
         }
     }
 

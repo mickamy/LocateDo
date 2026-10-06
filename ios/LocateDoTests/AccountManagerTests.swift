@@ -19,12 +19,7 @@ struct AccountManagerTests {
         try fixture.context.save()
         fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: nil)))
 
-        try await fixture.manager.signInWithApple(
-            identityToken: "identity",
-            authorizationCode: "code",
-            nonce: "nonce-0123456789abcdef",
-            displayName: "Taro"
-        )
+        try await Self.signIn(fixture, displayName: "Taro")
 
         let sent = try #require(fixture.account.lastSignIn)
         #expect(sent.identityToken == "identity")
@@ -49,12 +44,7 @@ struct AccountManagerTests {
         let householdID = "0199bd00-0000-7000-8000-0000000000aa"
         fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: householdID)))
 
-        try await fixture.manager.signInWithApple(
-            identityToken: "identity",
-            authorizationCode: "code",
-            nonce: "nonce-0123456789abcdef",
-            displayName: nil
-        )
+        try await Self.signIn(fixture)
 
         #expect(fixture.household.createCalls == 0)
         #expect(fixture.account.lastSignIn?.hasDisplayName == false)
@@ -169,12 +159,12 @@ struct AccountManagerTests {
         #expect(fixture.resets.value == 0)
     }
 
-    private static func signIn(_ fixture: Fixture) async throws {
+    private static func signIn(_ fixture: Fixture, displayName: String? = nil) async throws {
         try await fixture.manager.signInWithApple(
             identityToken: "identity",
             authorizationCode: "code",
             nonce: "nonce-0123456789abcdef",
-            displayName: nil
+            displayName: displayName
         )
     }
 
@@ -184,12 +174,7 @@ struct AccountManagerTests {
         fixture.household.failNext()
 
         await #expect(throws: ConnectError.self) {
-            try await fixture.manager.signInWithApple(
-                identityToken: "identity",
-                authorizationCode: "code",
-                nonce: "nonce-0123456789abcdef",
-                displayName: nil
-            )
+            try await Self.signIn(fixture)
         }
         let firstID = try #require(fixture.household.lastCreate?.id)
         #expect(try SyncState.current(in: fixture.context).householdID == nil)
@@ -204,12 +189,7 @@ struct AccountManagerTests {
     @Test func deletingTheAccountResetsLocalData() async throws {
         let fixture = try Fixture()
         fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: nil)))
-        try await fixture.manager.signInWithApple(
-            identityToken: "identity",
-            authorizationCode: "code",
-            nonce: "nonce-0123456789abcdef",
-            displayName: nil
-        )
+        try await Self.signIn(fixture)
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         fixture.context.insert(place)
         fixture.context.insert(Todo(title: "Milk", place: place))
@@ -225,6 +205,27 @@ struct AccountManagerTests {
         #expect(try fixture.context.fetch(FetchDescriptor<SyncState>()).isEmpty)
         #expect(try fixture.context.fetch(FetchDescriptor<PendingWrite>()).isEmpty)
         #expect(try fixture.context.fetchCount(FetchDescriptor<PlaceCategory>()) == BuiltinCategory.allCases.count)
+        #expect(fixture.resets.value == 1)
+    }
+
+    @Test func localDataIsResetOnlyAfterTheScreenClears() async throws {
+        let fixture = try Fixture(resetsOffscreen: true)
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: nil)))
+        try await Self.signIn(fixture)
+        fixture.context.insert(Place(name: "Store", latitude: 35.0, longitude: 139.0))
+        try fixture.context.save()
+
+        let deletion = Task { try await fixture.manager.deleteAccount() }
+        while !fixture.manager.isResettingLocalData {
+            await Task.yield()
+        }
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Place>()) == 1)
+
+        fixture.manager.screenDidClear()
+        try await deletion.value
+
+        #expect(!fixture.manager.isResettingLocalData)
+        #expect(try fixture.context.fetch(FetchDescriptor<Place>()).isEmpty)
         #expect(fixture.resets.value == 1)
     }
 
@@ -251,7 +252,7 @@ struct AccountManagerTests {
         let signedOut = ResetCounter()
         let manager: AccountManager
 
-        init() throws {
+        init(resetsOffscreen: Bool = false) throws {
             container = try AppModelContainer.make(inMemory: true)
             context = container.mainContext
             let tokens = AccessTokenStore()
@@ -264,7 +265,8 @@ struct AccountManagerTests {
                 account: account,
                 household: household,
                 authenticator: authenticator,
-                context: context
+                context: context,
+                resetsOffscreen: resetsOffscreen
             )
             manager.onLocalDataReset = { resets.increment() }
             manager.onHouseholdReady = { ready.increment() }
