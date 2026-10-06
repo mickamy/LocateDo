@@ -103,6 +103,8 @@ nonisolated struct Locatedo_Device_V1_RegisterDeviceRequest: Sendable {
 
   var platform: Locatedo_Device_V1_Platform = .unspecified
 
+  /// What the push service targets: the APNs device token on iOS, the Firebase
+  /// installation ID on Android.
   var pushToken: String = String()
 
   var apnsEnvironment: Locatedo_Device_V1_ApnsEnvironment = .unspecified

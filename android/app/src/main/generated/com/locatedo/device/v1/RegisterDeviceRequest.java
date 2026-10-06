@@ -63,6 +63,11 @@ public  final class RegisterDeviceRequest extends
   public static final int PUSH_TOKEN_FIELD_NUMBER = 2;
   private java.lang.String pushToken_;
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    * @return The pushToken.
    */
@@ -71,6 +76,11 @@ public  final class RegisterDeviceRequest extends
     return pushToken_;
   }
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    * @return The bytes for pushToken.
    */
@@ -80,6 +90,11 @@ public  final class RegisterDeviceRequest extends
     return com.google.protobuf.ByteString.copyFromUtf8(pushToken_);
   }
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    * @param value The pushToken to set.
    */
@@ -90,6 +105,11 @@ public  final class RegisterDeviceRequest extends
     pushToken_ = value;
   }
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    */
   private void clearPushToken() {
@@ -97,6 +117,11 @@ public  final class RegisterDeviceRequest extends
     pushToken_ = getDefaultInstance().getPushToken();
   }
   /**
+   * <pre>
+   * What the push service targets: the APNs device token on iOS, the Firebase
+   * installation ID on Android.
+   * </pre>
+   *
    * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
    * @param value The bytes for pushToken to set.
    */
@@ -295,6 +320,11 @@ public  final class RegisterDeviceRequest extends
     }
 
     /**
+     * <pre>
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return The pushToken.
      */
@@ -303,6 +333,11 @@ public  final class RegisterDeviceRequest extends
       return instance.getPushToken();
     }
     /**
+     * <pre>
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return The bytes for pushToken.
      */
@@ -312,6 +347,11 @@ public  final class RegisterDeviceRequest extends
       return instance.getPushTokenBytes();
     }
     /**
+     * <pre>
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @param value The pushToken to set.
      * @return This builder for chaining.
@@ -323,6 +363,11 @@ public  final class RegisterDeviceRequest extends
       return this;
     }
     /**
+     * <pre>
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return This builder for chaining.
      */
@@ -332,6 +377,11 @@ public  final class RegisterDeviceRequest extends
       return this;
     }
     /**
+     * <pre>
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @param value The bytes for pushToken to set.
      * @return This builder for chaining.

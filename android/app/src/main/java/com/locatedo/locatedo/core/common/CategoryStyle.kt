@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
@@ -67,25 +66,9 @@ object CategoryStyle {
         "gray" to Color(0xFF757575),
     )
 
-    // Hues for the stock map marker; gray has no hue, so it stays the marker's default red.
-    private val hues: Map<String, Float> = mapOf(
-        "blue" to BitmapDescriptorFactory.HUE_AZURE,
-        "green" to BitmapDescriptorFactory.HUE_GREEN,
-        "orange" to BitmapDescriptorFactory.HUE_ORANGE,
-        "red" to BitmapDescriptorFactory.HUE_RED,
-        "pink" to BitmapDescriptorFactory.HUE_ROSE,
-        "purple" to BitmapDescriptorFactory.HUE_VIOLET,
-        "teal" to BitmapDescriptorFactory.HUE_CYAN,
-        "yellow" to BitmapDescriptorFactory.HUE_YELLOW,
-        "brown" to BitmapDescriptorFactory.HUE_ORANGE,
-        "gray" to BitmapDescriptorFactory.HUE_RED,
-    )
-
     fun icon(key: String?): ImageVector = symbols[key] ?: Icons.Filled.Place
 
     fun tint(key: String?): Color = tints[key] ?: tints.getValue("gray")
-
-    fun markerHue(key: String?): Float = hues[key] ?: BitmapDescriptorFactory.HUE_RED
 }
 
 // Built-in categories are named by the translations; custom ones carry their own name.
@@ -95,11 +78,27 @@ fun categoryName(category: Category?): String {
         return stringResource(R.string.category_none)
     }
     category.name?.let { return it }
-    return when (category.builtin) {
-        BuiltinCategory.SHOPPING -> stringResource(R.string.category_shopping)
-        BuiltinCategory.WORK -> stringResource(R.string.category_work)
-        BuiltinCategory.LIFE -> stringResource(R.string.category_life)
-        BuiltinCategory.OTHER -> stringResource(R.string.category_other)
-        null -> ""
-    }
+    return category.builtin?.let { builtinCategoryName(it) } ?: ""
+}
+
+@Composable
+fun builtinCategoryName(builtin: BuiltinCategory): String = when (builtin) {
+    BuiltinCategory.SHOPPING -> stringResource(R.string.category_shopping)
+    BuiltinCategory.WORK -> stringResource(R.string.category_work)
+    BuiltinCategory.LIFE -> stringResource(R.string.category_life)
+    BuiltinCategory.OTHER -> stringResource(R.string.category_other)
+}
+
+@Composable
+fun categoryColorName(key: String): String = when (key) {
+    "blue" -> stringResource(R.string.category_color_blue)
+    "green" -> stringResource(R.string.category_color_green)
+    "orange" -> stringResource(R.string.category_color_orange)
+    "red" -> stringResource(R.string.category_color_red)
+    "pink" -> stringResource(R.string.category_color_pink)
+    "purple" -> stringResource(R.string.category_color_purple)
+    "teal" -> stringResource(R.string.category_color_teal)
+    "yellow" -> stringResource(R.string.category_color_yellow)
+    "brown" -> stringResource(R.string.category_color_brown)
+    else -> stringResource(R.string.category_color_gray)
 }

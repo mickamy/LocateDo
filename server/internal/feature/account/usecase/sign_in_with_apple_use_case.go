@@ -62,7 +62,7 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 	var session model.Session
 	var householdID *uuid.UUID
 	if err := uc.transactor.WithTx(ctx, func(tx tx.Tx) error {
-		user, newUser, err := uc.findOrCreate(ctx, tx, identity.Subject, in.DisplayName)
+		user, newUser, err := findOrCreateUser(ctx, uc.users.Bind(tx), model.ProviderApple, identity.Subject, in.DisplayName)
 		if err != nil {
 			return err
 		}
@@ -78,42 +78,10 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 		}
 		session.NewUser = newUser
 
-		m, err := uc.memberships.Bind(tx).FindByUser(ctx, user.ID)
-		if errors.Is(err, aerrors.ErrNotFound) {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("find membership: %w", err)
-		}
-		householdID = &m.HouseholdID
-		return nil
+		householdID, err = householdOf(ctx, uc.memberships.Bind(tx), user.ID)
+		return err
 	}); err != nil {
 		return SignInWithAppleOutput{}, fmt.Errorf("sign in with apple: %w", err)
 	}
 	return SignInWithAppleOutput{Session: session, HouseholdID: householdID}, nil
-}
-
-func (uc SignInWithApple) findOrCreate(
-	ctx context.Context,
-	tx tx.Tx,
-	subject, displayName string,
-) (model.User, bool, error) {
-	users := uc.users.Bind(tx)
-
-	user, err := users.FindByIdentity(ctx, model.ProviderApple, subject)
-	if err == nil {
-		return user, false, nil
-	}
-	if !errors.Is(err, aerrors.ErrNotFound) {
-		return model.User{}, false, fmt.Errorf("find user: %w", err)
-	}
-
-	user, err = users.Create(ctx, displayName)
-	if err != nil {
-		return model.User{}, false, fmt.Errorf("create user: %w", err)
-	}
-	if err := users.AddIdentity(ctx, user.ID, model.ProviderApple, subject); err != nil {
-		return model.User{}, false, fmt.Errorf("add identity: %w", err)
-	}
-	return user, true, nil
 }

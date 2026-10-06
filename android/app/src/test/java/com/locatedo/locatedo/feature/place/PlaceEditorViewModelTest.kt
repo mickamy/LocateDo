@@ -142,7 +142,7 @@ class PlaceEditorViewModelTest {
         assertEquals(200.0, saved.radiusMeters, 0.0)
         assertEquals(shopping.id, saved.categoryId)
         assertEquals(now, saved.createdAt)
-        assertEquals(PlaceEditorEvent.Saved, events.last())
+        assertEquals(PlaceEditorEvent.Saved(isNew = true), events.last())
     }
 
     @Test
@@ -174,7 +174,7 @@ class PlaceEditorViewModelTest {
 
         assertEquals("Supermarket", places.updated.single().name)
         assertEquals(stored.id, places.updated.single().id)
-        assertEquals(PlaceEditorEvent.Saved, events.last())
+        assertEquals(PlaceEditorEvent.Saved(isNew = false), events.last())
     }
 
     @Test

@@ -1,0 +1,62 @@
+name: android-firebase
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "android/**"
+      - ".github/workflows/android-firebase.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-firebase
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  firebase:
+    name: fastlane firebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: android-stg
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+        working-directory: android
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          install_args: java
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          working-directory: android
+          bundler-cache: true
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        with:
+          validate-wrappers: true
+      - name: Write the Firebase config, keystore, and Maps key
+        run: |
+          mkdir -p app/src/staging credentials
+          printf '%s' "${GOOGLE_SERVICES_JSON:?}" | base64 --decode > app/src/staging/google-services.json
+          printf '%s' "${KEYSTORE:?}" | base64 --decode > credentials/staging.jks
+          if [ -n "$MAPS_API_KEY" ]; then
+            printf 'MAPS_API_KEY=%s\n' "$MAPS_API_KEY" > local.properties
+          fi
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY }}
+      - run: bundle exec fastlane firebase
+        env:
+          CI: "true"
+          ORG_GRADLE_PROJECT_LOCATEDO_STAGING_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_FIREBASE_APP_ID: ${{ vars.ANDROID_FIREBASE_APP_ID }}
+          FIREBASE_SERVICE_CREDENTIALS_CONTENT: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS_CONTENT }}
+          FIREBASE_TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS }}

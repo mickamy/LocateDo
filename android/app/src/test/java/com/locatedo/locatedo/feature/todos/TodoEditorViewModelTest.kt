@@ -4,8 +4,10 @@ import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakeTodoRepository
+import java.util.UUID
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -73,6 +75,19 @@ class TodoEditorViewModelTest {
     }
 
     @Test
+    fun anAssigneeIsSavedWithTheTodo() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val assignee = UUID.randomUUID()
+        viewModel.start(store.id)
+        viewModel.setTitle("Milk")
+        viewModel.setAssignee(assignee)
+
+        viewModel.save()
+
+        assertEquals(assignee, todos.added.single().assigneeId)
+    }
+
+    @Test
     fun theFreeLimitIsReported() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
@@ -87,7 +102,7 @@ class TodoEditorViewModelTest {
     }
 
     private fun TestScope.viewModel(): TodoEditorViewModel {
-        val viewModel = TodoEditorViewModel(todos, places, Clock.fixed(now, ZoneOffset.UTC))
+        val viewModel = TodoEditorViewModel(todos, places, FakeMembershipRepository(), Clock.fixed(now, ZoneOffset.UTC))
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

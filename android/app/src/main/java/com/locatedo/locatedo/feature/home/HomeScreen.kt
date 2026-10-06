@@ -43,30 +43,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
-import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.feature.todos.TodoEditorSheet
+import com.locatedo.locatedo.ui.components.CategoryMarker
 import java.util.UUID
 
 private const val PLACE_ZOOM = 14f
 private val sheetPeekHeight = 96.dp
+private val emptyPeekHeight = 260.dp
 private val detailPeekHeight = 360.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,6 +76,7 @@ private val detailPeekHeight = 360.dp
 fun HomeScreen(
     onAddPlace: () -> Unit,
     onEditPlace: (UUID) -> Unit,
+    onOpenSharing: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -118,9 +121,16 @@ fun HomeScreen(
         }
     }
 
+    // The collapsed sheet shows one summary line, the whole empty state, or the top of a place's details.
+    val peekHeight = when {
+        selected != null -> detailPeekHeight
+        !uiState.isLoading && uiState.places.isEmpty() -> emptyPeekHeight
+        else -> sheetPeekHeight
+    }
+
     BottomSheetScaffold(
         scaffoldState = rememberBottomSheetScaffoldState(),
-        sheetPeekHeight = if (selected != null) detailPeekHeight else sheetPeekHeight,
+        sheetPeekHeight = peekHeight,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         sheetContent = {
             if (selected != null) {
@@ -132,6 +142,8 @@ fun HomeScreen(
                     onDelete = { placeToDelete = selected.place },
                     onToggleTodo = viewModel::setTodoCompleted,
                     onDeleteTodo = viewModel::deleteTodo,
+                    members = uiState.members,
+                    onAssignTodo = viewModel::setAssignee,
                 )
             } else {
                 HomeSheet(uiState = uiState, onAddPlace = onAddPlace, onSelect = viewModel::select)
@@ -149,15 +161,19 @@ fun HomeScreen(
                 for (entry in uiState.places) {
                     val place = entry.place
                     val category = uiState.categories[place.categoryId]
-                    Marker(
+                    MarkerComposable(
+                        category?.icon.orEmpty(),
+                        category?.color.orEmpty(),
                         state = rememberUpdatedMarkerState(position = LatLng(place.latitude, place.longitude)),
                         title = place.name,
-                        icon = BitmapDescriptorFactory.defaultMarker(CategoryStyle.markerHue(category?.color)),
+                        anchor = Offset(0.5f, 0.5f),
                         onClick = {
                             viewModel.select(place.id)
                             true
                         },
-                    )
+                    ) {
+                        CategoryMarker(icon = category?.icon, color = category?.color)
+                    }
                 }
                 selected?.place?.let { place ->
                     Circle(
@@ -176,7 +192,7 @@ fun HomeScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .align(Alignment.TopCenter),
                     onSearch = onAddPlace,
-                    onAccount = {},
+                    onAccount = onOpenSharing,
                 )
             }
             FloatingActionButton(
@@ -236,7 +252,7 @@ private fun SearchBar(modifier: Modifier = Modifier, onSearch: () -> Unit, onAcc
     ) {
         Row(
             modifier = Modifier
-                .clickable(onClick = onSearch)
+                .clickable(onClick = onSearch, role = Role.Button)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -249,10 +265,10 @@ private fun SearchBar(modifier: Modifier = Modifier, onSearch: () -> Unit, onAcc
             )
             Icon(
                 Icons.Filled.AccountCircle,
-                contentDescription = stringResource(R.string.settings_account_title),
+                contentDescription = stringResource(R.string.sharing_title),
                 modifier = Modifier
                     .size(32.dp)
-                    .clickable(onClick = onAccount),
+                    .clickable(onClick = onAccount, role = Role.Button),
                 tint = MaterialTheme.colorScheme.primary,
             )
         }

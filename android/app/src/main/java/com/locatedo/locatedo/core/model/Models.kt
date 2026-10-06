@@ -79,3 +79,29 @@ enum class PlaceSource(val key: String) {
 }
 
 data class Coordinate(val latitude: Double, val longitude: Double)
+
+enum class MemberRole(val key: String) {
+    OWNER("owner"),
+    MEMBER("member");
+
+    companion object {
+        fun fromKey(key: String): MemberRole = entries.firstOrNull { it.key == key } ?: MEMBER
+    }
+}
+
+data class Membership(
+    val userId: UUID,
+    val role: MemberRole,
+    val displayName: String,
+    val joinedAt: Instant,
+    val updatedAt: Instant,
+)
+
+enum class Plan { FREE, PRO }
+
+// Where this device stands with the server: the household it belongs to and the last version it pulled.
+data class SyncState(
+    val householdId: UUID? = null,
+    val cursor: Long = 0,
+    val plan: Plan = Plan.FREE,
+)

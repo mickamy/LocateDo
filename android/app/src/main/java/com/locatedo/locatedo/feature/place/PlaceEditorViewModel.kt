@@ -69,7 +69,7 @@ data class PlaceEditorUiState(
 
 sealed interface PlaceEditorEvent {
     data object LocationChosen : PlaceEditorEvent
-    data object Saved : PlaceEditorEvent
+    data class Saved(val isNew: Boolean) : PlaceEditorEvent
     data class LimitReached(val limit: FreeLimit) : PlaceEditorEvent
 }
 
@@ -238,7 +238,9 @@ class PlaceEditorViewModel @Inject constructor(
                 )
                 null
             }
-            _events.emit(if (limit == null) PlaceEditorEvent.Saved else PlaceEditorEvent.LimitReached(limit))
+            _events.emit(
+                if (limit == null) PlaceEditorEvent.Saved(isNew = current.placeId == null) else PlaceEditorEvent.LimitReached(limit),
+            )
         }
     }
 

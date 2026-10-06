@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.locatedo.locatedo.dev",
+      "sha256_cert_fingerprints": [
+        "C4:6E:29:E9:78:42:B6:5C:86:F9:B7:D8:2C:1E:61:03:1A:69:1E:22:FC:E1:78:DA:24:68:FA:E9:A6:B5:F0:8E"
+      ]
+    }
+  }
+]

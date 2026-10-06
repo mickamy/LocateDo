@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -24,6 +26,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +42,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
+import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.ui.components.assigneeChoices
+import com.locatedo.locatedo.ui.components.assigneeName
 import java.util.UUID
 
 // Google Maps' saved lists: filter chips on top, one section per place, and a button to add more.
@@ -84,29 +90,45 @@ fun TodoListScreen(
                 FilterChipFor(TodoFilter.OPEN, R.string.todo_filter_open, uiState.filter, viewModel::setFilter)
                 FilterChipFor(TodoFilter.DONE, R.string.todo_filter_done, uiState.filter, viewModel::setFilter)
             }
-            when (uiState.emptyState) {
-                TodoListEmptyState.NO_PLACES -> EmptyState(
-                    title = R.string.todo_list_no_places_title,
-                    message = R.string.todo_list_no_places_message,
-                    action = R.string.home_add_place,
-                    onAction = onAddPlace,
-                )
-                TodoListEmptyState.NO_TODOS -> EmptyState(
-                    title = R.string.todo_list_empty_title,
-                    message = R.string.todo_list_empty_message,
-                    action = R.string.todo_editor_title,
-                    onAction = { isAddingTodo = true },
-                )
-                TodoListEmptyState.NO_MATCHES -> EmptyState(title = R.string.todo_list_filter_empty)
-                null -> TodoGroups(
-                    groups = uiState.groups,
-                    onOpenPlace = { placeId ->
-                        viewModel.requestPlace(placeId)
-                        onOpenPlace()
-                    },
-                    onToggle = viewModel::setTodoCompleted,
-                    onDelete = viewModel::deleteTodo,
-                )
+            // Pulling down syncs, as on iOS; without an account there is nothing to pull.
+            val content: @Composable () -> Unit = {
+                when (uiState.emptyState) {
+                    TodoListEmptyState.NO_PLACES -> EmptyState(
+                        title = R.string.todo_list_no_places_title,
+                        message = R.string.todo_list_no_places_message,
+                        action = R.string.home_add_place,
+                        onAction = onAddPlace,
+                    )
+                    TodoListEmptyState.NO_TODOS -> EmptyState(
+                        title = R.string.todo_list_empty_title,
+                        message = R.string.todo_list_empty_message,
+                        action = R.string.todo_editor_title,
+                        onAction = { isAddingTodo = true },
+                    )
+                    TodoListEmptyState.NO_MATCHES -> EmptyState(title = R.string.todo_list_filter_empty)
+                    null -> TodoGroups(
+                        groups = uiState.groups,
+                        members = uiState.members,
+                        onOpenPlace = { placeId ->
+                            viewModel.requestPlace(placeId)
+                            onOpenPlace()
+                        },
+                        onToggle = viewModel::setTodoCompleted,
+                        onDelete = viewModel::deleteTodo,
+                        onAssign = viewModel::setAssignee,
+                    )
+                }
+            }
+            if (uiState.isSignedIn) {
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    content()
+                }
+            } else {
+                content()
             }
         }
     }
@@ -127,10 +149,13 @@ private fun FilterChipFor(filter: TodoFilter, label: Int, selected: TodoFilter, 
 @Composable
 private fun TodoGroups(
     groups: List<TodoGroup>,
+    members: List<Membership>,
     onOpenPlace: (UUID) -> Unit,
     onToggle: (UUID, Boolean) -> Unit,
     onDelete: (UUID) -> Unit,
+    onAssign: (UUID, UUID?) -> Unit,
 ) {
+    val assignees = assigneeChoices(members)
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         for (group in groups) {
             item(key = "place-${group.place.id}") {
@@ -151,7 +176,14 @@ private fun TodoGroups(
                 }
             }
             items(group.todos, key = { it.id }) { todo ->
-                TodoRow(todo = todo, onToggle = { onToggle(todo.id, it) }, onDelete = { onDelete(todo.id) })
+                TodoRow(
+                    todo = todo,
+                    onToggle = { onToggle(todo.id, it) },
+                    onDelete = { onDelete(todo.id) },
+                    assigneeName = assigneeName(members, todo.assigneeId),
+                    assignees = assignees,
+                    onAssign = { onAssign(todo.id, it) },
+                )
             }
         }
         item { Spacer(Modifier.height(96.dp)) }
@@ -163,6 +195,7 @@ private fun EmptyState(title: Int, message: Int? = null, action: Int? = null, on
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,

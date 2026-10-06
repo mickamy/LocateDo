@@ -7,8 +7,12 @@ import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.testing.FakeCategoryRepository
+import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
+import com.locatedo.locatedo.testing.FakeSyncEngine
 import com.locatedo.locatedo.testing.FakeTodoRepository
+import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testSession
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,7 +24,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -31,6 +37,7 @@ class TodoListViewModelTest {
     private val places = FakePlaceRepository()
     private val categories = FakeCategoryRepository()
     private val todos = FakeTodoRepository()
+    private val memberships = FakeMembershipRepository()
     private val requests = PlaceSelectionRequests()
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
     private val pharmacy = Place(id = uuidV7(now), name = "Pharmacy", latitude = 35.1, longitude = 139.1, createdAt = now)
@@ -118,8 +125,33 @@ class TodoListViewModelTest {
     }
 
     private fun TestScope.viewModel(): TodoListViewModel {
-        val viewModel = TodoListViewModel(places, categories, todos, requests)
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, requests, fakeAuthenticator(), FakeSyncEngine())
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
+    }
+
+    @Test
+    fun assigningWritesTheTodoBack() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
+        val viewModel = viewModel()
+        val assignee = java.util.UUID.randomUUID()
+
+        viewModel.setAssignee(milk.id, assignee)
+
+        assertEquals(assignee, todos.updated.single().assigneeId)
+        assertEquals(milk.id, todos.updated.single().id)
+    }
+
+    @Test
+    fun pullingToRefreshSyncsOnceSignedIn() = runTest(dispatcher) {
+        val sync = FakeSyncEngine()
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, requests, fakeAuthenticator(testSession), sync)
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        assertTrue(viewModel.uiState.value.isSignedIn)
+
+        viewModel.refresh()
+
+        assertEquals(1, sync.syncs)
+        assertFalse(viewModel.uiState.value.isRefreshing)
     }
 }

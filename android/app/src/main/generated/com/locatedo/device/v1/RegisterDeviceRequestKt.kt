@@ -54,6 +54,11 @@ public object RegisterDeviceRequestKt {
     }
 
     /**
+     * ```
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * ```
+     *
      * `string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }`
      */
     public var pushToken: kotlin.String
@@ -64,6 +69,11 @@ public object RegisterDeviceRequestKt {
         _builder.pushToken = value
       }
     /**
+     * ```
+     * What the push service targets: the APNs device token on iOS, the Firebase
+     * installation ID on Android.
+     * ```
+     *
      * `string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }`
      */
     public fun clearPushToken() {

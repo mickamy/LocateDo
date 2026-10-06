@@ -65,15 +65,8 @@ func (uc RefreshToken) Do(ctx context.Context, in RefreshTokenInput) (RefreshTok
 		if err != nil {
 			return err
 		}
-		m, err := uc.memberships.Bind(tx).FindByUser(ctx, current.UserID)
-		if errors.Is(err, aerrors.ErrNotFound) {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("find membership: %w", err)
-		}
-		householdID = &m.HouseholdID
-		return nil
+		householdID, err = householdOf(ctx, uc.memberships.Bind(tx), current.UserID)
+		return err
 	}); err != nil {
 		return RefreshTokenOutput{}, fmt.Errorf("refresh token: %w", err)
 	}

@@ -66,6 +66,26 @@ func NewSignInWithApple(infra di.Infra, lib di.Lib) *SignInWithApple {
 	}
 }
 
+// NewSignInWithGoogle initializes dependencies and constructs SignInWithGoogle.
+func NewSignInWithGoogle(infra di.Infra, lib di.Lib) *SignInWithGoogle {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	users := repository.NewUser(reader)
+	tokens := repository.NewRefreshToken(reader)
+	memberships := repository2.NewMembership(reader)
+	google := infra.Google
+	signer := lib.Signer
+
+	return &SignInWithGoogle{
+		transactor:  transactor,
+		users:       users,
+		tokens:      tokens,
+		memberships: memberships,
+		google:      google,
+		signer:      signer,
+	}
+}
+
 // NewSignOut initializes dependencies and constructs SignOut.
 func NewSignOut(infra di.Infra) *SignOut {
 	transactor := infra.Transactor

@@ -16,12 +16,14 @@ func NewPushHousehold(infra di.Infra) *PushHousehold {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	devices := repository.NewDevice(reader)
-	pusher := infra.APNs
+	apns := infra.APNs
+	fcm := infra.FCM
 
 	return &PushHousehold{
 		transactor: transactor,
 		devices:    devices,
-		pusher:     pusher,
+		apns:       apns,
+		fcm:        fcm,
 	}
 }
 

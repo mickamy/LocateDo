@@ -27,11 +27,19 @@ class AppPreferencesTest {
         val preferences = preferences()
 
         preferences.setCompletedOnboarding(true)
+        preferences.setRequestedLocation(true)
+        preferences.setRequestedNotifications(true)
         preferences.setPromptedAlwaysLocation(true)
         preferences.setDefaultRadiusMeters(250.0)
 
         assertEquals(
-            UserPreferences(hasCompletedOnboarding = true, hasPromptedAlwaysLocation = true, defaultRadiusMeters = 250.0),
+            UserPreferences(
+                hasCompletedOnboarding = true,
+                hasRequestedLocation = true,
+                hasRequestedNotifications = true,
+                hasPromptedAlwaysLocation = true,
+                defaultRadiusMeters = 250.0,
+            ),
             preferences.data.first(),
         )
     }
@@ -46,9 +54,23 @@ class AppPreferencesTest {
     }
 
     @Test
+    fun theGeofenceRecordIsKeptApartFromThePreferences() = runTest {
+        val preferences = preferences()
+
+        preferences.setRegisteredGeofences("a|1.0|2.0|100.0")
+        preferences.reset()
+
+        assertEquals("a|1.0|2.0|100.0", preferences.registeredGeofences.first())
+        assertEquals(UserPreferences(), preferences.data.first())
+    }
+
+    @Test
     fun resetClearsEverything() = runTest {
         val preferences = preferences()
         preferences.setCompletedOnboarding(true)
+        preferences.setRequestedLocation(true)
+        preferences.setRequestedNotifications(true)
+        preferences.setPromptedAlwaysLocation(true)
         preferences.setDefaultRadiusMeters(250.0)
 
         preferences.reset()

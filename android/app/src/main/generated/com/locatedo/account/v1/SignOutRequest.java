@@ -33,11 +33,19 @@ public  final class SignOutRequest extends
     com.locatedo.device.v1.Platform getPlatform();
 
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return The pushToken.
      */
     java.lang.String getPushToken();
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return The bytes for pushToken.
      */
@@ -101,6 +109,10 @@ public  final class SignOutRequest extends
     public static final int PUSH_TOKEN_FIELD_NUMBER = 2;
     private java.lang.String pushToken_;
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return The pushToken.
      */
@@ -109,6 +121,10 @@ public  final class SignOutRequest extends
       return pushToken_;
     }
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @return The bytes for pushToken.
      */
@@ -118,6 +134,10 @@ public  final class SignOutRequest extends
       return com.google.protobuf.ByteString.copyFromUtf8(pushToken_);
     }
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @param value The pushToken to set.
      */
@@ -128,6 +148,10 @@ public  final class SignOutRequest extends
       pushToken_ = value;
     }
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      */
     private void clearPushToken() {
@@ -135,6 +159,10 @@ public  final class SignOutRequest extends
       pushToken_ = getDefaultInstance().getPushToken();
     }
     /**
+     * <pre>
+     * The value the device registered: an APNs device token or a Firebase installation ID.
+     * </pre>
+     *
      * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
      * @param value The bytes for pushToken to set.
      */
@@ -290,6 +318,10 @@ public  final class SignOutRequest extends
       }
 
       /**
+       * <pre>
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * </pre>
+       *
        * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
        * @return The pushToken.
        */
@@ -298,6 +330,10 @@ public  final class SignOutRequest extends
         return instance.getPushToken();
       }
       /**
+       * <pre>
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * </pre>
+       *
        * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
        * @return The bytes for pushToken.
        */
@@ -307,6 +343,10 @@ public  final class SignOutRequest extends
         return instance.getPushTokenBytes();
       }
       /**
+       * <pre>
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * </pre>
+       *
        * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
        * @param value The pushToken to set.
        * @return This builder for chaining.
@@ -318,6 +358,10 @@ public  final class SignOutRequest extends
         return this;
       }
       /**
+       * <pre>
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * </pre>
+       *
        * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
        * @return This builder for chaining.
        */
@@ -327,6 +371,10 @@ public  final class SignOutRequest extends
         return this;
       }
       /**
+       * <pre>
+       * The value the device registered: an APNs device token or a Firebase installation ID.
+       * </pre>
+       *
        * <code>string push_token = 2 [json_name = "pushToken", (.buf.validate.field) = { ... }</code>
        * @param value The bytes for pushToken to set.
        * @return This builder for chaining.
@@ -466,7 +514,7 @@ public  final class SignOutRequest extends
   private com.locatedo.account.v1.SignOutRequest.Device device_;
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -477,7 +525,7 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -488,7 +536,7 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -500,7 +548,7 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -519,7 +567,7 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -677,7 +725,7 @@ public  final class SignOutRequest extends
 
     /**
      * <pre>
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -688,7 +736,7 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -699,7 +747,7 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -711,7 +759,7 @@ public  final class SignOutRequest extends
       }
     /**
      * <pre>
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -724,7 +772,7 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -736,7 +784,7 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>

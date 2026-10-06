@@ -7,6 +7,7 @@ import com.locatedo.locatedo.core.common.Nearby
 import com.locatedo.locatedo.core.common.NearbyPlace
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.data.CategoryRepository
+import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.location.GeocodingRepository
@@ -14,6 +15,7 @@ import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
@@ -49,6 +51,7 @@ data class HomeUiState(
     val nearby: List<NearbyPlace> = emptyList(),
     val categories: Map<UUID, Category> = emptyMap(),
     val selected: PlaceDetail? = null,
+    val members: List<Membership> = emptyList(),
 ) {
     val openTodoCount: Int
         get() = places.sumOf { it.openTodos.size }
@@ -62,6 +65,7 @@ sealed interface HomeEvent {
 class HomeViewModel @Inject constructor(
     private val placeRepository: PlaceRepository,
     categoryRepository: CategoryRepository,
+    membershipRepository: MembershipRepository,
     private val todoRepository: TodoRepository,
     private val locationRepository: LocationRepository,
     private val geocodingRepository: GeocodingRepository,
@@ -77,15 +81,16 @@ class HomeViewModel @Inject constructor(
         placeRepository.observeAllWithTodos(),
         categoryRepository.observeAll(),
         selectedId,
-        addresses,
-        currentCoordinate,
-    ) { places, categories, selected, addresses, here ->
+        combine(addresses, currentCoordinate) { addresses, here -> addresses to here },
+        membershipRepository.observeAll(),
+    ) { places, categories, selected, (addresses, here), members ->
         val byId = categories.associateBy { it.id }
         HomeUiState(
             isLoading = false,
             places = places,
             nearby = Nearby.sort(places, here),
             categories = byId,
+            members = members,
             selected = places.firstOrNull { it.place.id == selected }?.let { entry ->
                 PlaceDetail(
                     place = entry.place,
@@ -149,6 +154,13 @@ class HomeViewModel @Inject constructor(
     fun deleteTodo(todoId: UUID) {
         viewModelScope.launch {
             todoRepository.delete(listOf(todoId))
+        }
+    }
+
+    fun setAssignee(todoId: UUID, userId: UUID?) {
+        viewModelScope.launch {
+            val todo = uiState.value.places.flatMap { it.todos }.firstOrNull { it.id == todoId } ?: return@launch
+            todoRepository.update(todo.copy(assigneeId = userId))
         }
     }
 

@@ -17,6 +17,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
 	devicev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/device/v1"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
+	"github.com/mickamy/LocateDo/internal/infra/google"
 	"github.com/mickamy/LocateDo/internal/server"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -118,6 +119,68 @@ func TestAccount_SignInWithApple_invalidToken(t *testing.T) {
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 }
 
+func TestAccount_SignInWithGoogle(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	client := newClient(t)
+
+	// act
+	signedIn, err := client.SignInWithGoogle(t.Context(), connect.NewRequest(&accountv1.SignInWithGoogleRequest{
+		IdToken: "google:google-sub",
+		Nonce:   "0123456789abcdef",
+	}))
+
+	// assert
+	require.NoError(t, err)
+	session := signedIn.Msg.GetSession()
+	assert.True(t, session.GetNewUser())
+	assert.Nil(t, signedIn.Msg.HouseholdId)
+	refreshed, err := client.RefreshToken(t.Context(), connect.NewRequest(&accountv1.RefreshTokenRequest{
+		RefreshToken: session.GetRefreshToken(),
+	}))
+	require.NoError(t, err)
+	assert.Equal(t, session.GetUserId(), refreshed.Msg.GetSession().GetUserId())
+}
+
+func TestAccount_SignInWithGoogle_rejects(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		req  *accountv1.SignInWithGoogleRequest
+		code connect.Code
+	}{
+		{
+			name: "forged token",
+			req:  &accountv1.SignInWithGoogleRequest{IdToken: "forged", Nonce: "0123456789abcdef"},
+			code: connect.CodeUnauthenticated,
+		},
+		{
+			name: "short nonce",
+			req:  &accountv1.SignInWithGoogleRequest{IdToken: "google:sub", Nonce: "short"},
+			code: connect.CodeInvalidArgument,
+		},
+		{
+			name: "no token",
+			req:  &accountv1.SignInWithGoogleRequest{Nonce: "0123456789abcdef"},
+			code: connect.CodeInvalidArgument,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := newClient(t)
+
+			_, err := client.SignInWithGoogle(t.Context(), connect.NewRequest(tt.req))
+
+			assert.Equal(t, tt.code, connect.CodeOf(err))
+		})
+	}
+}
+
 func TestAccount_DeleteAccount_requiresToken(t *testing.T) {
 	t.Parallel()
 
@@ -133,6 +196,7 @@ func newClient(t *testing.T) accountv1connect.AccountServiceClient {
 
 	infra := tdb.New(t).Infra()
 	infra.Apple = fakeApple{}
+	infra.Google = fakeGoogle{}
 	lib := di.MustNewLib(di.NewConfig())
 	cfg := di.Config{App: config.App{Env: config.EnvTest}}
 
@@ -161,4 +225,17 @@ func (fakeApple) ExchangeCode(_ context.Context, code string, _ time.Time) (stri
 
 func (fakeApple) Revoke(context.Context, string, time.Time) error {
 	return nil
+}
+
+// fakeGoogle accepts id tokens of the form "google:<subject>".
+type fakeGoogle struct{}
+
+var _ google.Auth = fakeGoogle{}
+
+func (fakeGoogle) VerifyIDToken(_ context.Context, raw, _ string, _ time.Time) (google.Identity, error) {
+	subject, ok := strings.CutPrefix(raw, "google:")
+	if !ok {
+		return google.Identity{}, google.ErrInvalidToken
+	}
+	return google.Identity{Subject: subject, Name: "Google User"}, nil
 }

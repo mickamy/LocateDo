@@ -18,6 +18,7 @@ import (
 	dmodel "github.com/mickamy/LocateDo/internal/feature/device/model"
 	drepository "github.com/mickamy/LocateDo/internal/feature/device/repository"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
+	"github.com/mickamy/LocateDo/internal/infra/google"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -37,6 +38,13 @@ func fakedApple(d tdb.DB) (di.Infra, *fakeApple) {
 	infra := d.Infra()
 	infra.Apple = fake
 	return infra, fake
+}
+
+// fakedGoogle returns the wiring with the Google client replaced by a fake.
+func fakedGoogle(d tdb.DB) di.Infra {
+	infra := d.Infra()
+	infra.Google = fakeGoogle{}
+	return infra
 }
 
 func newLib() di.Lib {
@@ -79,6 +87,23 @@ func signInInput(subject, displayName string) usecase.SignInWithAppleInput {
 		Nonce:             "raw-nonce",
 		DisplayName:       displayName,
 	}
+}
+
+func googleInput(subject string) usecase.SignInWithGoogleInput {
+	return usecase.SignInWithGoogleInput{IDToken: "google:" + subject, Nonce: "0123456789abcdef"}
+}
+
+// fakeGoogle accepts id tokens of the form "google:<subject>" and names every user "Google User".
+type fakeGoogle struct{}
+
+var _ google.Auth = fakeGoogle{}
+
+func (fakeGoogle) VerifyIDToken(_ context.Context, raw, nonce string, _ time.Time) (google.Identity, error) {
+	subject, ok := strings.CutPrefix(raw, "google:")
+	if !ok || nonce == "" {
+		return google.Identity{}, google.ErrInvalidToken
+	}
+	return google.Identity{Subject: subject, Name: "Google User"}, nil
 }
 
 // fakeApple accepts identity tokens of the form "identity:<subject>" and

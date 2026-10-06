@@ -2,22 +2,31 @@ package com.locatedo.locatedo.ui
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -26,19 +35,32 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.feature.account.AccountScreen
+import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
+import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
+import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
 import com.locatedo.locatedo.feature.place.PlaceSearchScreen
 import com.locatedo.locatedo.feature.settings.SettingsScreen
+import com.locatedo.locatedo.feature.sharing.AcceptInviteScreen
+import com.locatedo.locatedo.feature.sharing.SharingScreen
 import com.locatedo.locatedo.feature.todos.TodoListScreen
+import com.locatedo.locatedo.ui.navigation.AcceptInviteKey
+import com.locatedo.locatedo.ui.navigation.AccountKey
+import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
+import com.locatedo.locatedo.ui.navigation.SharingKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
+import java.util.UUID
+import kotlinx.coroutines.flow.Flow
 
 private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
@@ -51,15 +73,95 @@ private val tabs = listOf(
 private val tabKeys = tabs.map { it.key }
 
 @Composable
-fun LocateDoApp() {
+fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
+    val appState by appViewModel.uiState.collectAsStateWithLifecycle()
+    val pendingPlace by appViewModel.pendingPlace.collectAsStateWithLifecycle()
+    val pendingInvite by appViewModel.pendingInvite.collectAsStateWithLifecycle()
+
+    when {
+        appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
+        !appState.hasCompletedOnboarding -> OnboardingScreen()
+        else -> Tabs(
+            onPlaceAdded = appViewModel::placeAdded,
+            pendingPlace = pendingPlace,
+            pendingInvite = pendingInvite,
+            onInviteConsumed = appViewModel::inviteConsumed,
+            limitRejected = appViewModel.limitRejected,
+        )
+    }
+    if (appState.isExplainingAlwaysLocation) {
+        AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
+    }
+    appState.notice?.let { notice ->
+        NoticeDialog(notice = notice, onDismiss = appViewModel::dismissNotice)
+    }
+}
+
+@Composable
+private fun NoticeDialog(notice: AppNotice, onDismiss: () -> Unit) {
+    val title = when (notice) {
+        AppNotice.REMOVED -> R.string.removed_title
+        AppNotice.SESSION_ENDED -> R.string.session_ended_title
+    }
+    val message = when (notice) {
+        AppNotice.REMOVED -> R.string.removed_android_message
+        AppNotice.SESSION_ENDED -> R.string.session_ended_android_message
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(title)) },
+        text = { Text(stringResource(message)) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.common_ok))
+            }
+        },
+    )
+}
+
+@Composable
+private fun Tabs(
+    onPlaceAdded: () -> Unit,
+    pendingPlace: UUID?,
+    pendingInvite: String?,
+    onInviteConsumed: (String) -> Unit,
+    limitRejected: Flow<FreeLimit>,
+) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val placeLimitMessage = stringResource(R.string.paywall_reason_places)
+    val todoLimitMessage = stringResource(R.string.paywall_reason_todos)
+
+    LaunchedEffect(pendingPlace) {
+        if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
+            backStack.clear()
+            backStack.add(HomeKey)
+        }
+    }
+    LaunchedEffect(pendingInvite) {
+        if (pendingInvite != null) {
+            backStack.leaveFlow()
+            backStack.add(AcceptInviteKey(pendingInvite))
+            onInviteConsumed(pendingInvite)
+        }
+    }
+    LaunchedEffect(Unit) {
+        limitRejected.collect { limit ->
+            val message = when (limit) {
+                FreeLimit.PLACES -> placeLimitMessage
+                FreeLimit.OPEN_TODOS -> todoLimitMessage
+            }
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (current in tabKeys) {
                 NavigationBar {
@@ -99,6 +201,7 @@ fun LocateDoApp() {
                             placeEditor.start(placeId)
                             backStack.add(PlaceEditorKey)
                         },
+                        onOpenSharing = { backStack.add(SharingKey) },
                     )
                 }
                 entry<TodosKey> {
@@ -113,7 +216,32 @@ fun LocateDoApp() {
                         },
                     )
                 }
-                entry<SettingsKey> { SettingsScreen() }
+                entry<SettingsKey> {
+                    SettingsScreen(
+                        onOpenAccount = { backStack.add(AccountKey) },
+                        onOpenSharing = { backStack.add(SharingKey) },
+                        onOpenCategories = { backStack.add(CategoriesKey) },
+                    )
+                }
+                entry<CategoriesKey> {
+                    CategoriesScreen(onBack = { backStack.removeLastOrNull() })
+                }
+                entry<AccountKey> {
+                    AccountScreen(onBack = { backStack.removeLastOrNull() })
+                }
+                entry<SharingKey> {
+                    SharingScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        onAcceptInvite = { backStack.add(AcceptInviteKey()) },
+                    )
+                }
+                entry<AcceptInviteKey> { key ->
+                    AcceptInviteScreen(
+                        token = key.token,
+                        onBack = { backStack.removeLastOrNull() },
+                        onJoined = { backStack.removeLastOrNull() },
+                    )
+                }
                 entry<PlaceSearchKey> {
                     PlaceSearchScreen(
                         viewModel = placeEditor,
@@ -138,7 +266,13 @@ fun LocateDoApp() {
                     PlaceEditorScreen(
                         viewModel = placeEditor,
                         onChooseOnMap = { backStack.add(PlacePickKey) },
-                        onSaved = { backStack.leaveFlow() },
+                        onManageCategories = { backStack.add(CategoriesKey) },
+                        onSaved = { isNew ->
+                            backStack.leaveFlow()
+                            if (isNew) {
+                                onPlaceAdded()
+                            }
+                        },
                         onCancel = { backStack.leaveFlow() },
                     )
                 }

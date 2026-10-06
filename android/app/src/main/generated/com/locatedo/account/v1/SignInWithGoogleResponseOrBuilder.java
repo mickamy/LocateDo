@@ -20,4 +20,33 @@ public interface SignInWithGoogleResponseOrBuilder extends
    * @return The session.
    */
   com.locatedo.account.v1.Session getSession();
+
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @return Whether the householdId field is set.
+   */
+  boolean hasHouseholdId();
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @return The householdId.
+   */
+  java.lang.String getHouseholdId();
+  /**
+   * <pre>
+   * Set when the user already belongs to a household; the device adopts it instead of creating one.
+   * </pre>
+   *
+   * <code>optional string household_id = 2 [json_name = "householdId"];</code>
+   * @return The bytes for householdId.
+   */
+  com.google.protobuf.ByteString
+      getHouseholdIdBytes();
 }

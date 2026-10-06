@@ -115,6 +115,8 @@ nonisolated struct Locatedo_Account_V1_SignInWithGoogleRequest: Sendable {
 
   var idToken: String = String()
 
+  var nonce: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -134,11 +136,22 @@ nonisolated struct Locatedo_Account_V1_SignInWithGoogleResponse: Sendable {
   /// Clears the value of `session`. Subsequent reads from it will return its default value.
   mutating func clearSession() {self._session = nil}
 
+  /// Set when the user already belongs to a household; the device adopts it instead of creating one.
+  var householdID: String {
+    get {_householdID ?? String()}
+    set {_householdID = newValue}
+  }
+  /// Returns true if `householdID` has been explicitly set.
+  var hasHouseholdID: Bool {self._householdID != nil}
+  /// Clears the value of `householdID`. Subsequent reads from it will return its default value.
+  mutating func clearHouseholdID() {self._householdID = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _session: Locatedo_Account_V1_Session? = nil
+  fileprivate var _householdID: String? = nil
 }
 
 nonisolated struct Locatedo_Account_V1_RefreshTokenRequest: Sendable {
@@ -191,7 +204,7 @@ nonisolated struct Locatedo_Account_V1_SignOutRequest: Sendable {
 
   var refreshToken: String = String()
 
-  /// Set when the device holds a push token; its registration is removed if it belongs to the token's owner.
+  /// Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
   var device: Locatedo_Account_V1_SignOutRequest.Device {
     get {_device ?? Locatedo_Account_V1_SignOutRequest.Device()}
     set {_device = newValue}
@@ -210,6 +223,7 @@ nonisolated struct Locatedo_Account_V1_SignOutRequest: Sendable {
 
     var platform: Locatedo_Device_V1_Platform = .unspecified
 
+    /// The value the device registered: an APNs device token or a Firebase installation ID.
     var pushToken: String = String()
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -400,7 +414,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleResponse: SwiftProtobuf
 
 nonisolated extension Locatedo_Account_V1_SignInWithGoogleRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SignInWithGoogleRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}id_token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}id_token\0\u{1}nonce\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -409,6 +423,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithGoogleRequest: SwiftProtobuf
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.idToken) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.nonce) }()
       default: break
       }
     }
@@ -418,11 +433,15 @@ nonisolated extension Locatedo_Account_V1_SignInWithGoogleRequest: SwiftProtobuf
     if !self.idToken.isEmpty {
       try visitor.visitSingularStringField(value: self.idToken, fieldNumber: 1)
     }
+    if !self.nonce.isEmpty {
+      try visitor.visitSingularStringField(value: self.nonce, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Locatedo_Account_V1_SignInWithGoogleRequest, rhs: Locatedo_Account_V1_SignInWithGoogleRequest) -> Bool {
     if lhs.idToken != rhs.idToken {return false}
+    if lhs.nonce != rhs.nonce {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -430,7 +449,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithGoogleRequest: SwiftProtobuf
 
 nonisolated extension Locatedo_Account_V1_SignInWithGoogleResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SignInWithGoogleResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}session\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}session\0\u{3}household_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -439,6 +458,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithGoogleResponse: SwiftProtobu
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._session) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._householdID) }()
       default: break
       }
     }
@@ -452,11 +472,15 @@ nonisolated extension Locatedo_Account_V1_SignInWithGoogleResponse: SwiftProtobu
     try { if let v = self._session {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
+    try { if let v = self._householdID {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Locatedo_Account_V1_SignInWithGoogleResponse, rhs: Locatedo_Account_V1_SignInWithGoogleResponse) -> Bool {
     if lhs._session != rhs._session {return false}
+    if lhs._householdID != rhs._householdID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

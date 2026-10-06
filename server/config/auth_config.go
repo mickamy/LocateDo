@@ -23,3 +23,16 @@ type Apple struct {
 func ParseApple() Apple {
 	return parse[Apple]()
 }
+
+// Google is optional in development: without a client id, Google sign-in is
+// refused. The client id is the web client of the Firebase project, which is
+// what the Android app asks Credential Manager for and what the id token's
+// audience names.
+type Google struct {
+	BaseURL  string `env:"GOOGLE_BASE_URL"  envDefault:"https://www.googleapis.com"`
+	ClientID string `env:"GOOGLE_CLIENT_ID"`
+}
+
+func ParseGoogle() Google {
+	return parse[Google]()
+}

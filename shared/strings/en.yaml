@@ -17,6 +17,7 @@ common:
 sharing:
   title: "Share with family"
   sign_in_message: "Sign in with Apple to share places and to-dos with your family."
+  android_sign_in_message: "Sign in with Google to share places and to-dos with your family."
   pro_required: "Sharing with family is a Pro feature."
   members: "Members"
   owner: "Owner"
@@ -27,6 +28,7 @@ sharing:
   leave: "Leave Sharing"
   leave_confirm_title: "Leave sharing?"
   leave_confirm_message: "Places and to-dos on this iPhone will be removed, and you’ll start over on your own."
+  android_leave_confirm_message: "Places and to-dos on this phone will be removed, and you’ll start over on your own."
   failed: "Couldn’t update sharing. Try again."
   invite: "Invite Someone"
   invite_message: "Join me on StopBy to share places and to-dos. This link works for 72 hours:"
@@ -34,8 +36,10 @@ sharing:
   accept: "Accept an Invite"
   intro_title: "Use it together"
   intro_message: "Sign in with Apple to share places and to-dos with your family."
+  android_intro_message: "Sign in with Google to share places and to-dos with your family."
   benefit_lists_title: "One list for everyone"
   benefit_lists_message: "Places and to-dos anyone adds show up on everyone’s iPhone."
+  android_benefit_lists_message: "Places and to-dos anyone adds show up on everyone’s phone."
   benefit_assign_title: "The right person gets reminded"
   benefit_assign_message: "Assign a to-do and only that person is reminded when they arrive."
   benefit_plan_title: "One plan covers everyone"
@@ -48,6 +52,7 @@ sharing:
       one: "{count:int} person sharing"
       other: "{count:int} people sharing"
   shared_header_message: "Places and to-dos anyone adds reach everyone’s iPhone."
+  android_shared_header_message: "Places and to-dos anyone adds reach everyone’s phone."
   member_header_title: "You’re in {name}’s household"
   member_header_message: "Places and to-dos are shared with everyone in this household."
   seats_left:
@@ -69,6 +74,7 @@ always_prompt:
   description: "To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
   allow: "Allow “Always”"
   later: "Not now"
+  android_choose: "On the next screen, choose “{option}”."
 settings:
   location:
     title: "Location"
@@ -77,6 +83,7 @@ settings:
     denied: "Not allowed"
     not_determined: "Not asked yet"
     needs_always: "Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed."
+    android_needs_always: "Arrival reminders need “{option}” so StopBy can notice when you arrive while it is closed."
     allow: "Allow location"
   notifications:
     title: "Notifications"
@@ -88,8 +95,11 @@ settings:
   account:
     title: "Account"
     signed_in: "Signed in with Apple"
+    android_signed_in: "Signed in with Google"
     not_signed_in: "Not signed in"
     description: "Sign in with Apple to keep your places and to-dos in your account."
+    android_description: "Sign in with Google to keep your places and to-dos in your account."
+    android_sign_in: "Sign in with Google"
     benefits:
       sync_title: "Keep your lists"
       sync_message: "Your places and to-dos stay with your account, even when you change phones."
@@ -97,6 +107,7 @@ settings:
       share_message: "Add places and to-dos together and get reminded when you arrive."
       privacy_title: "Your location stays private"
       privacy_message: "Your location never leaves this iPhone, and we don’t ask for your email."
+      android_privacy_message: "Your location never leaves this phone, and we don’t ask for your email."
     sign_in_failed: "Couldn’t sign in. Try again."
     delete: "Delete account"
     delete_confirm_title: "Delete your account?"
@@ -106,8 +117,12 @@ settings:
     sign_out_confirm_title: "Sign out?"
     sign_out_confirm_message: "Places and to-dos on this iPhone will be removed. They come back when you sign in again."
     sign_out_unsynced_message: "Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed."
+    android_sign_out_confirm_message: "Places and to-dos on this phone will be removed. They come back when you sign in again."
+    android_sign_out_unsynced_message: "Some changes haven’t been synced yet and will be lost. Places and to-dos on this phone will be removed."
     replace_confirm_title: "Replace data on this iPhone?"
     replace_confirm_message: "This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s."
+    android_replace_confirm_title: "Replace data on this phone?"
+    android_replace_confirm_message: "This account already has places and to-dos. The places and to-dos on this phone will be replaced with the account’s."
     replace: "Replace"
   open_settings: "Open Settings"
   default_radius:
@@ -196,6 +211,7 @@ todo:
     open: "Open"
     done: "Done"
 notification:
+  channel_arrivals: "Arrival reminders"
   arrived_title: "You’re at {place}"
   more:
     plural:
@@ -226,6 +242,8 @@ category:
       one: "{count:int} place will become uncategorized."
       other: "{count:int} places will become uncategorized."
   last_one: "Keep at least one category."
+  move_up: "Move up"
+  move_down: "Move down"
   color_blue: "Blue"
   color_green: "Green"
   color_orange: "Orange"
@@ -239,16 +257,21 @@ category:
 permission:
   when_in_use: "StopBy uses your location to show the places near you and the distance to them."
   always: "StopBy needs your location in the background to remind you when you arrive at a place."
+  android_background: "StopBy collects location data in the background to remind you when you arrive at a place, even when the app is closed or not in use."
 session_ended:
   title: "Signed Out"
   message: "Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed."
+  android_message: "Your account was deleted on another device or your sign-in expired, so the data on this phone was removed."
 removed:
   title: "Removed from Sharing"
   message: "You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own."
+  android_message: "You were removed from the shared household, so the data on this phone was removed and you’re starting over on your own."
 invite:
   title: "Join a Household"
   link_placeholder: "Invite link"
   message: "You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it."
+  android_message: "You’ll share places and to-dos with the people in this household. The places and to-dos on this phone are added to it."
+  android_paste: "Paste"
   join: "Join"
   invalid: "This doesn’t look like a StopBy invite link."
   unavailable: "This invite has expired, was already used, or the household is full. Ask for a new one."

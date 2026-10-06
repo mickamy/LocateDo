@@ -1,12 +1,16 @@
 package com.locatedo.locatedo.core.data.di
 
 import com.locatedo.locatedo.core.data.CategoryRepository
-import com.locatedo.locatedo.core.data.FreeProStatus
+import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.ProStatus
 import com.locatedo.locatedo.core.data.RoomCategoryRepository
+import com.locatedo.locatedo.core.data.RoomMembershipRepository
 import com.locatedo.locatedo.core.data.RoomPlaceRepository
+import com.locatedo.locatedo.core.data.RoomSyncStateRepository
 import com.locatedo.locatedo.core.data.RoomTodoRepository
+import com.locatedo.locatedo.core.data.SyncStateProStatus
+import com.locatedo.locatedo.core.data.SyncStateRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import dagger.Binds
 import dagger.Module
@@ -26,5 +30,11 @@ abstract class DataModule {
     abstract fun categoryRepository(repository: RoomCategoryRepository): CategoryRepository
 
     @Binds
-    abstract fun proStatus(status: FreeProStatus): ProStatus
+    abstract fun syncStateRepository(repository: RoomSyncStateRepository): SyncStateRepository
+
+    @Binds
+    abstract fun membershipRepository(repository: RoomMembershipRepository): MembershipRepository
+
+    @Binds
+    abstract fun proStatus(status: SyncStateProStatus): ProStatus
 }

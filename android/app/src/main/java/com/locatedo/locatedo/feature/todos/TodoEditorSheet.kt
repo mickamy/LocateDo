@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.ui.components.AssigneeChoice
+import com.locatedo.locatedo.ui.components.assigneeChoices
 import java.util.UUID
 
 // Google Maps' "save to list" sheet: one field, a picker when the place is not already known, and a save button.
@@ -88,6 +90,10 @@ fun TodoEditorSheet(
                     onSelect = viewModel::setPlace,
                 )
             }
+            val assignees = assigneeChoices(uiState.members)
+            if (assignees.isNotEmpty()) {
+                AssigneePicker(choices = assignees, selectedId = draft.assigneeId, onSelect = viewModel::setAssignee)
+            }
             limitMessage?.let { message ->
                 Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
@@ -126,6 +132,35 @@ private fun PlacePicker(places: List<Pair<UUID, String>>, selectedId: UUID?, onS
                     text = { Text(name) },
                     onClick = {
                         onSelect(id)
+                        isExpanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AssigneePicker(choices: List<AssigneeChoice>, selectedId: UUID?, onSelect: (UUID?) -> Unit) {
+    var isExpanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = isExpanded, onExpandedChange = { isExpanded = it }) {
+        OutlinedTextField(
+            value = choices.firstOrNull { it.userId == selectedId }?.name ?: "",
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            readOnly = true,
+            label = { Text(stringResource(R.string.todo_assignee_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
+        )
+        ExposedDropdownMenu(expanded = isExpanded, onDismissRequest = { isExpanded = false }) {
+            for (choice in choices) {
+                DropdownMenuItem(
+                    text = { Text(choice.name) },
+                    onClick = {
+                        onSelect(choice.userId)
                         isExpanded = false
                     },
                 )

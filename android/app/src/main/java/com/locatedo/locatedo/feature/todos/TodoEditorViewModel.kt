@@ -3,9 +3,11 @@ package com.locatedo.locatedo.feature.todos
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +28,7 @@ data class TodoDraft(
     val title: String = "",
     val placeId: UUID? = null,
     val isPlaceFixed: Boolean = false,
+    val assigneeId: UUID? = null,
 ) {
     val canSave: Boolean
         get() = title.isNotBlank() && placeId != null
@@ -34,6 +37,7 @@ data class TodoDraft(
 data class TodoEditorUiState(
     val draft: TodoDraft = TodoDraft(),
     val places: List<Place> = emptyList(),
+    val members: List<Membership> = emptyList(),
 )
 
 sealed interface TodoEditorEvent {
@@ -45,6 +49,7 @@ sealed interface TodoEditorEvent {
 class TodoEditorViewModel @Inject constructor(
     private val todoRepository: TodoRepository,
     placeRepository: PlaceRepository,
+    membershipRepository: MembershipRepository,
     private val clock: Clock,
 ) : ViewModel() {
     private val draft = MutableStateFlow(TodoDraft())
@@ -52,8 +57,12 @@ class TodoEditorViewModel @Inject constructor(
 
     val events: SharedFlow<TodoEditorEvent> = _events
 
-    val uiState: StateFlow<TodoEditorUiState> = combine(draft, placeRepository.observeAll()) { draft, places ->
-        TodoEditorUiState(draft = draft, places = places)
+    val uiState: StateFlow<TodoEditorUiState> = combine(
+        draft,
+        placeRepository.observeAll(),
+        membershipRepository.observeAll(),
+    ) { draft, places, members ->
+        TodoEditorUiState(draft = draft, places = places, members = members)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), TodoEditorUiState())
 
     // A place given here is fixed (opened from that place); without one the sheet offers a picker.
@@ -65,6 +74,8 @@ class TodoEditorViewModel @Inject constructor(
 
     fun setPlace(placeId: UUID) = draft.update { it.copy(placeId = placeId) }
 
+    fun setAssignee(userId: UUID?) = draft.update { it.copy(assigneeId = userId) }
+
     fun save() {
         val current = draft.value
         val placeId = current.placeId
@@ -73,7 +84,14 @@ class TodoEditorViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val now = clock.instant()
-            val limit = todoRepository.add(Todo(id = uuidV7(now), title = current.title.trim(), placeId = placeId, createdAt = now))
+            val todo = Todo(
+                id = uuidV7(now),
+                title = current.title.trim(),
+                placeId = placeId,
+                assigneeId = current.assigneeId,
+                createdAt = now,
+            )
+            val limit = todoRepository.add(todo)
             _events.emit(if (limit == null) TodoEditorEvent.Saved else TodoEditorEvent.LimitReached(limit))
         }
     }

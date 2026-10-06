@@ -10,14 +10,16 @@ import (
 // NewAccount initializes dependencies and constructs Account.
 func NewAccount(infra di.Infra, lib di.Lib) *Account {
 	signInWithApple := usecase.NewSignInWithApple(infra, lib)
+	signInWithGoogle := usecase.NewSignInWithGoogle(infra, lib)
 	refreshToken := usecase.NewRefreshToken(infra, lib)
 	signOut := usecase.NewSignOut(infra)
 	deleteAccount := usecase.NewDeleteAccount(infra)
 
 	return &Account{
-		signInWithApple: signInWithApple,
-		refreshToken:    refreshToken,
-		signOut:         signOut,
-		deleteAccount:   deleteAccount,
+		signInWithApple:  signInWithApple,
+		signInWithGoogle: signInWithGoogle,
+		refreshToken:     refreshToken,
+		signOut:          signOut,
+		deleteAccount:    deleteAccount,
 	}
 }

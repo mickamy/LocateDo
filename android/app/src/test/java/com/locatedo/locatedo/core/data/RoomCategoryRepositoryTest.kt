@@ -2,6 +2,10 @@ package com.locatedo.locatedo.core.data
 
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.BuiltinCategory
+import com.locatedo.locatedo.core.sync.Write
+import com.locatedo.locatedo.core.sync.WriteQueue
+import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testSession
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -18,11 +22,13 @@ import org.robolectric.RobolectricTestRunner
 class RoomCategoryRepositoryTest {
     private lateinit var database: LocateDoDatabase
     private lateinit var repository: RoomCategoryRepository
+    private val authenticator = fakeAuthenticator()
 
     @Before
     fun setUp() {
         database = inMemoryDatabase()
-        repository = RoomCategoryRepository(database, database.categoryDao(), fixedClock)
+        val queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
+        repository = RoomCategoryRepository(database, database.categoryDao(), queue, fixedClock)
     }
 
     @After
@@ -73,7 +79,7 @@ class RoomCategoryRepositoryTest {
         repository.ensureBuiltins()
         val kids = category("Kids")
         repository.add(kids)
-        val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), fixedClock)
+        val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), WriteQueue(database.pendingWriteDao(), authenticator, fixedClock), fixedClock)
         places.add(place("School").copy(categoryId = kids.id))
 
         assertTrue(repository.delete(kids.id))
@@ -91,5 +97,50 @@ class RoomCategoryRepositoryTest {
         val after = repository.observeAll().first()
         assertEquals(before.reversed().map { it.id }, after.map { it.id })
         assertEquals(listOf(0, 1, 2, 3), after.map { it.sortOrder })
+    }
+
+    @Test
+    fun seedingTheBuiltinsIsNotQueued() = runTest {
+        authenticator.signIn(testSession)
+
+        repository.ensureBuiltins()
+
+        assertTrue(database.queuedWrites().isEmpty())
+    }
+
+    @Test
+    fun aNewCategoryGoesLastAndIsQueued() = runTest {
+        repository.ensureBuiltins()
+        authenticator.signIn(testSession)
+
+        repository.add(category("Gym"))
+
+        val put = database.queuedWrites().single() as Write.PutCategory
+        assertEquals("Gym", put.input.name)
+        assertEquals(BuiltinCategory.entries.size, put.input.sortOrder)
+    }
+
+    @Test
+    fun deletingACategoryQueuesTheDelete() = runTest {
+        repository.ensureBuiltins()
+        authenticator.signIn(testSession)
+        val first = repository.observeAll().first().first()
+
+        assertTrue(repository.delete(first.id))
+
+        val delete = database.queuedWrites().single() as Write.DeleteCategory
+        assertEquals(first.id.toString(), delete.request.id)
+    }
+
+    @Test
+    fun reorderingQueuesOnlyTheCategoriesThatMoved() = runTest {
+        repository.ensureBuiltins()
+        authenticator.signIn(testSession)
+        val categories = repository.observeAll().first()
+
+        repository.reorder(listOf(categories[1], categories[0], categories[2], categories[3]))
+
+        val puts = database.queuedWrites().filterIsInstance<Write.PutCategory>().map { it.input.id to it.input.sortOrder }
+        assertEquals(listOf(categories[1].id.toString() to 0, categories[0].id.toString() to 1), puts)
     }
 }

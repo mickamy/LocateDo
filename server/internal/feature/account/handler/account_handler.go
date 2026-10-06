@@ -20,12 +20,13 @@ import (
 type Account struct {
 	accountv1connect.UnimplementedAccountServiceHandler
 
-	_               di.Infra                 `di:"embed"`
-	_               di.Lib                   `di:"embed"`
-	signInWithApple *usecase.SignInWithApple `di:""`
-	refreshToken    *usecase.RefreshToken    `di:""`
-	signOut         *usecase.SignOut         `di:""`
-	deleteAccount   *usecase.DeleteAccount   `di:""`
+	_                di.Infra                  `di:"embed"`
+	_                di.Lib                    `di:"embed"`
+	signInWithApple  *usecase.SignInWithApple  `di:""`
+	signInWithGoogle *usecase.SignInWithGoogle `di:""`
+	refreshToken     *usecase.RefreshToken     `di:""`
+	signOut          *usecase.SignOut          `di:""`
+	deleteAccount    *usecase.DeleteAccount    `di:""`
 }
 
 var _ accountv1connect.AccountServiceHandler = (*Account)(nil)
@@ -44,6 +45,23 @@ func (h *Account) SignInWithApple(
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&accountv1.SignInWithAppleResponse{
+		Session:     mapper.SessionToAccountv1(out.Session),
+		HouseholdId: ptr.Map(out.HouseholdID, uuid.UUID.String),
+	}), nil
+}
+
+func (h *Account) SignInWithGoogle(
+	ctx context.Context,
+	req *connect.Request[accountv1.SignInWithGoogleRequest],
+) (*connect.Response[accountv1.SignInWithGoogleResponse], error) {
+	out, err := h.signInWithGoogle.Do(ctx, usecase.SignInWithGoogleInput{
+		IDToken: req.Msg.GetIdToken(),
+		Nonce:   req.Msg.GetNonce(),
+	})
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.SignInWithGoogleResponse{
 		Session:     mapper.SessionToAccountv1(out.Session),
 		HouseholdId: ptr.Map(out.HouseholdID, uuid.UUID.String),
 	}), nil

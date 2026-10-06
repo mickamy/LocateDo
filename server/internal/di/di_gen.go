@@ -13,7 +13,9 @@ func NewConfig() Config {
 	database := config.ParseDatabase()
 	auth := config.ParseAuth()
 	apple := config.ParseApple()
+	google := config.ParseGoogle()
 	apNs := config.ParseAPNs()
+	fcm := config.ParseFCM()
 	revenueCat := config.ParseRevenueCat()
 
 	return Config{
@@ -21,7 +23,9 @@ func NewConfig() Config {
 		Database:   database,
 		Auth:       auth,
 		Apple:      apple,
+		Google:     google,
 		APNs:       apNs,
+		FCM:        fcm,
 		RevenueCat: revenueCat,
 	}
 }
@@ -44,8 +48,15 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 	if err != nil {
 		return *new(Infra), err
 	}
+	google := config2.Google
+	google2 := provideGoogle(google)
 	apNs := config2.APNs
 	apNs2, err := provideAPNs(apNs, apple)
+	if err != nil {
+		return *new(Infra), err
+	}
+	fcm := config2.FCM
+	fcm2, err := provideFCM(fcm)
 	if err != nil {
 		return *new(Infra), err
 	}
@@ -58,7 +69,9 @@ func NewInfra(context2 context.Context, config2 Config) (Infra, error) {
 		Transactor:     transactor,
 		ReadTransactor: readTransactor,
 		Apple:          apple2,
+		Google:         google2,
 		APNs:           apNs2,
+		FCM:            fcm2,
 		Entitlements:   entitlements,
 	}, nil
 }

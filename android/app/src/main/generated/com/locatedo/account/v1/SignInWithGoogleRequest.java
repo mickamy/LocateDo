@@ -16,6 +16,7 @@ public  final class SignInWithGoogleRequest extends
     SignInWithGoogleRequestOrBuilder {
   private SignInWithGoogleRequest() {
     idToken_ = "";
+    nonce_ = "";
   }
   public static final int ID_TOKEN_FIELD_NUMBER = 1;
   private java.lang.String idToken_;
@@ -61,6 +62,53 @@ public  final class SignInWithGoogleRequest extends
       com.google.protobuf.ByteString value) {
     checkByteStringIsUtf8(value);
     idToken_ = value.toStringUtf8();
+
+  }
+
+  public static final int NONCE_FIELD_NUMBER = 2;
+  private java.lang.String nonce_;
+  /**
+   * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+   * @return The nonce.
+   */
+  @java.lang.Override
+  public java.lang.String getNonce() {
+    return nonce_;
+  }
+  /**
+   * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+   * @return The bytes for nonce.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getNonceBytes() {
+    return com.google.protobuf.ByteString.copyFromUtf8(nonce_);
+  }
+  /**
+   * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+   * @param value The nonce to set.
+   */
+  private void setNonce(
+      java.lang.String value) {
+    java.util.Objects.requireNonNull(value);
+
+    nonce_ = value;
+  }
+  /**
+   * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+   */
+  private void clearNonce() {
+
+    nonce_ = getDefaultInstance().getNonce();
+  }
+  /**
+   * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+   * @param value The bytes for nonce to set.
+   */
+  private void setNonceBytes(
+      com.google.protobuf.ByteString value) {
+    checkByteStringIsUtf8(value);
+    nonce_ = value.toStringUtf8();
 
   }
 
@@ -210,6 +258,55 @@ public  final class SignInWithGoogleRequest extends
       return this;
     }
 
+    /**
+     * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+     * @return The nonce.
+     */
+    @java.lang.Override
+    public java.lang.String getNonce() {
+      return instance.getNonce();
+    }
+    /**
+     * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for nonce.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getNonceBytes() {
+      return instance.getNonceBytes();
+    }
+    /**
+     * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+     * @param value The nonce to set.
+     * @return This builder for chaining.
+     */
+    public Builder setNonce(
+        java.lang.String value) {
+      copyOnWrite();
+      instance.setNonce(value);
+      return this;
+    }
+    /**
+     * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearNonce() {
+      copyOnWrite();
+      instance.clearNonce();
+      return this;
+    }
+    /**
+     * <code>string nonce = 2 [json_name = "nonce", (.buf.validate.field) = { ... }</code>
+     * @param value The bytes for nonce to set.
+     * @return This builder for chaining.
+     */
+    public Builder setNonceBytes(
+        com.google.protobuf.ByteString value) {
+      copyOnWrite();
+      instance.setNonceBytes(value);
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.account.v1.SignInWithGoogleRequest)
   }
   @java.lang.Override
@@ -227,9 +324,11 @@ public  final class SignInWithGoogleRequest extends
       case BUILD_MESSAGE_INFO: {
           java.lang.Object[] objects = new java.lang.Object[] {
             "idToken_",
+            "nonce_",
           };
           java.lang.String info =
-              "\u0000\u0001\u0000\u0000\u0001\u0001\u0001\u0000\u0000\u0000\u0001\u0208";
+              "\u0000\u0002\u0000\u0000\u0001\u0002\u0002\u0000\u0000\u0000\u0001\u0208\u0002\u0208" +
+              "";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {
