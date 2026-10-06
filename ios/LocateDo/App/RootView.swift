@@ -8,6 +8,11 @@ struct RootView: View {
     @Environment(AccountManager.self) private var account
     @Environment(SyncEngine.self) private var sync
     @Environment(AppStatusStore.self) private var appStatus
+    @Environment(Entitlements.self) private var entitlements
+    @Environment(Authenticator.self) private var authenticator
+    @Environment(LocationProvider.self) private var locationProvider
+    @Environment(ArrivalNotifier.self) private var notifier
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -127,6 +132,13 @@ struct RootView: View {
                     .error("Initial upload failed: \(error, privacy: .public)")
             }
             await sync.sync()
+            await DailyStateReporter.report(
+                context: modelContext,
+                entitlements: entitlements,
+                authenticator: authenticator,
+                locationProvider: locationProvider,
+                notifier: notifier
+            )
         }
     }
 }

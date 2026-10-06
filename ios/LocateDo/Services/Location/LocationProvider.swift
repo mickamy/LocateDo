@@ -37,6 +37,10 @@ final class LocationProvider {
         }
     }
 
+    var hasPreciseLocation: Bool {
+        manager.accuracyAuthorization == .fullAccuracy
+    }
+
     func requestAlwaysAuthorization() {
         if manager.authorizationStatus == .authorizedWhenInUse {
             manager.requestAlwaysAuthorization()
