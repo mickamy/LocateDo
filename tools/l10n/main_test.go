@@ -168,6 +168,40 @@ func TestRun_infoplist(t *testing.T) {
 	}
 }
 
+func TestRun_android(t *testing.T) {
+	t.Parallel()
+
+	src := writeFixture(t, enSrc, jaSrc)
+	outDir := t.TempDir()
+	xcstrings := filepath.Join(outDir, "Localizable.xcstrings")
+	res := filepath.Join(outDir, "res")
+	var discard bytes.Buffer
+
+	args := []string{"generate", "-src", src, "-xcstrings", xcstrings, "-android", res}
+	if err := l10n.Run(args, &discard, &discard); err != nil {
+		t.Fatalf("generate returned error: %v", err)
+	}
+	data, err := os.ReadFile(filepath.Join(res, "values-ja", "strings.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `<item quantity="other">残り %1$d 件</item>`) {
+		t.Errorf("values-ja/strings.xml does not contain the ja plural form:\n%s", data)
+	}
+	data, err = os.ReadFile(filepath.Join(res, "values", "strings.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `<string name="app_name">LocateDo</string>`) {
+		t.Errorf("values/strings.xml does not contain app_name:\n%s", data)
+	}
+
+	args[0] = "check"
+	if err := l10n.Run(args, &discard, &discard); err != nil {
+		t.Errorf("check after generate returned error: %v", err)
+	}
+}
+
 func TestRun_usage(t *testing.T) {
 	t.Parallel()
 

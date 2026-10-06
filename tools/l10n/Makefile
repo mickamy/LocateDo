@@ -2,6 +2,7 @@ BUILD_DIR = bin
 SRC = ../../shared/strings
 XCSTRINGS = ../../ios/LocateDo/Localizable.xcstrings
 INFOPLIST = ../../ios/LocateDo/InfoPlist.xcstrings
+ANDROID_RES = ../../android/app/src/main/res
 
 .PHONY: build \
 		clean \
@@ -36,7 +37,7 @@ lint-fix:
 	golangci-lint run --fix
 
 generate:
-	go run . generate -src $(SRC) -xcstrings $(XCSTRINGS) -infoplist $(INFOPLIST)
+	go run . generate -src $(SRC) -xcstrings $(XCSTRINGS) -infoplist $(INFOPLIST) -android $(ANDROID_RES)
 
 check:
-	go run . check -src $(SRC) -xcstrings $(XCSTRINGS) -infoplist $(INFOPLIST)
+	go run . check -src $(SRC) -xcstrings $(XCSTRINGS) -infoplist $(INFOPLIST) -android $(ANDROID_RES)
