@@ -55,6 +55,7 @@ struct PaywallView: View {
                 }
             }
         }
+        .trackScreen(.paywall)
         .task {
             Analytics.log(.paywallShown, parameters: [.trigger: trigger.rawValue])
             await loadPlans()

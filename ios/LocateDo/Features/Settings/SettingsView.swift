@@ -95,6 +95,7 @@ struct SettingsView: View {
                 DebugSection()
                 #endif
             }
+            .trackScreen(.settings)
             .navigationTitle(Text(.tabSettings))
             .maintenanceBanner()
             .task {

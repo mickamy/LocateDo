@@ -91,6 +91,7 @@ struct PlaceEditorView: View {
                     Text(.placeEditorCategoryLabel)
                 }
             }
+            .trackScreen(.placeEditor, parameters: [.mode: EditorMode(editing: place).rawValue])
             .navigationTitle(Text(place == nil ? .placeEditorTitleNew : .placeEditorTitleEdit))
             .sheet(item: $paywall) { trigger in
                 PaywallView(trigger: trigger)

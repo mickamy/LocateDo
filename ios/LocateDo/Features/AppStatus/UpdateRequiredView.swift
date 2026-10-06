@@ -15,6 +15,7 @@ struct UpdateRequiredView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
         }
+        .trackScreen(.updateRequired)
     }
 }
 

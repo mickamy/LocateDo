@@ -80,6 +80,7 @@ struct AcceptInviteView: View {
                 }
             }
         }
+        .trackScreen(.acceptInvite)
         .navigationTitle(Text(.inviteTitle))
         .navigationBarTitleDisplayMode(.inline)
     }

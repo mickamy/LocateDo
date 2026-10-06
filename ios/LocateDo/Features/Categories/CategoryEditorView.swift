@@ -63,6 +63,7 @@ struct CategoryEditorView: View {
                     Text(.categoryColor)
                 }
             }
+            .trackScreen(.categoryEditor, parameters: [.mode: EditorMode(editing: category).rawValue])
             .navigationTitle(Text(category == nil ? .categoryNewTitle : .categoryEditTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

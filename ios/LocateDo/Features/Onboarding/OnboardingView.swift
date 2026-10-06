@@ -3,7 +3,7 @@ import SwiftUI
 import UserNotifications
 
 struct OnboardingView: View {
-    private enum Step {
+    private enum Step: String {
         case intro
         case notifications
     }
@@ -27,6 +27,9 @@ struct OnboardingView: View {
         }
         .padding(32)
         .animation(.default, value: step)
+        .onChange(of: step, initial: true) {
+            Analytics.logScreen(.onboarding, parameters: [.step: step.rawValue])
+        }
         .onChange(of: locationProvider.authorizationStatus) {
             if step == .intro, isRequesting, locationProvider.authorizationStatus != .notDetermined {
                 advanceToNotifications()

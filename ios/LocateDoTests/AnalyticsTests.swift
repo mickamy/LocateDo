@@ -21,6 +21,11 @@ struct AnalyticsTests {
     @Test func noParametersSendNil() {
         #expect(Analytics.firebaseParameters([:]) == nil)
     }
+
+    @Test func editorsReportWhetherTheyCreateOrEdit() {
+        #expect(EditorMode(editing: nil) == .new)
+        #expect(EditorMode(editing: Place(name: "Store", latitude: 35.0, longitude: 139.0)) == .edit)
+    }
 }
 
 struct InstallDateTests {

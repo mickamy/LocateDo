@@ -27,6 +27,7 @@ struct TodoListView: View {
                         .syncRefreshable()
                 }
             }
+            .trackScreen(.todos)
             .navigationTitle(Text(.tabTodos))
             .maintenanceBanner()
             .toolbar {

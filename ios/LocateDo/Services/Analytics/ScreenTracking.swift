@@ -1,5 +1,18 @@
 import SwiftUI
 
+nonisolated enum EditorMode: String {
+    case new
+    case edit
+
+    init(editing existing: AnyObject?) {
+        if existing == nil {
+            self = .new
+        } else {
+            self = .edit
+        }
+    }
+}
+
 private struct ScreenTracking: ViewModifier {
     let screen: AnalyticsScreen
     let parameters: AnalyticsParameters

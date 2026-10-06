@@ -75,6 +75,7 @@ struct PlacePickerMapView: View {
                     }
                 }
             }
+            .trackScreen(.placePicker)
             .searchable(text: $query, prompt: Text(.placePickerSearchPlaceholder))
             .onSubmit(of: .search) {
                 Task {
