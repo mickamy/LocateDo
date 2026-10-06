@@ -33,12 +33,12 @@ final class RevenueCatEntitlementSource: EntitlementSource {
 
     init(apiKey: String) {
         Purchases.configure(withAPIKey: apiKey)
-        // Lets RevenueCat's Firebase integration send subscription events to the same Analytics user.
-        Purchases.shared.attribution.setFirebaseAppInstanceID(Analytics.appInstanceID())
+        Self.attachAnalyticsID()
     }
 
     func logIn(_ appUserID: String) async throws -> ProSubscription? {
         let (info, _) = try await Purchases.shared.logIn(appUserID)
+        Self.attachAnalyticsID()
         return Self.subscription(in: info)
     }
 
@@ -46,7 +46,9 @@ final class RevenueCatEntitlementSource: EntitlementSource {
         if Purchases.shared.isAnonymous {
             return try await refresh()
         }
-        return Self.subscription(in: try await Purchases.shared.logOut())
+        let info = try await Purchases.shared.logOut()
+        Self.attachAnalyticsID()
+        return Self.subscription(in: info)
     }
 
     func refresh() async throws -> ProSubscription? {
@@ -105,6 +107,11 @@ final class RevenueCatEntitlementSource: EntitlementSource {
 
     func restore() async throws -> ProSubscription? {
         Self.subscription(in: try await Purchases.shared.restorePurchases())
+    }
+
+    // Attributes belong to the current App User ID; without it the Firebase integration skips the user.
+    private static func attachAnalyticsID() {
+        Purchases.shared.attribution.setFirebaseAppInstanceID(Analytics.appInstanceID())
     }
 
     private static func subscription(in info: CustomerInfo) -> ProSubscription? {
