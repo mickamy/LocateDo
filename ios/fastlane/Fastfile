@@ -7,6 +7,8 @@ DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
 PROJECT = "LocateDo.xcodeproj"
 # One build folder for every UI-test lane, so later runs and other languages only build what changed.
 UI_TEST_DERIVED_DATA = File.expand_path("../build/ui-tests/DerivedData", __dir__)
+# Archives build here so the Crashlytics upload-symbols tool from the SPM checkout has a fixed path.
+ARCHIVE_DERIVED_DATA = File.expand_path("../build/archive/DerivedData", __dir__)
 
 def simulator_udid(device)
   devices = JSON.parse(`xcrun simctl list devices available --json`)["devices"]
@@ -184,6 +186,7 @@ platform :ios do
       build_number: build_number
     )
     upload_to_testflight(changelog: changelog)
+    upload_dsyms(configuration: "Release")
   end
 
   desc "Build a Staging Ad Hoc archive and distribute it through Firebase App Distribution"
@@ -207,6 +210,7 @@ platform :ios do
       groups: ENV["FIREBASE_TESTER_GROUPS"],
       release_notes: changelog
     )
+    upload_dsyms(configuration: "Staging")
   end
 
   # Rewrites only the MARKETING_VERSION lines: saving through the xcodeproj gem would reformat Xcode 27's project.
@@ -456,7 +460,16 @@ platform :ios do
       export_method: options[:export_method],
       export_options: { provisioningProfiles: { app_identifier => profile_name } },
       output_directory: "build",
+      derived_data_path: ARCHIVE_DERIVED_DATA,
       xcargs: "CURRENT_PROJECT_VERSION=#{options[:build_number]}"
+    )
+  end
+
+  private_lane :upload_dsyms do |options|
+    upload_symbols_to_crashlytics(
+      dsym_path: lane_context[SharedValues::DSYM_OUTPUT_PATH],
+      gsp_path: File.expand_path("../LocateDo/Firebase/GoogleService-Info-#{options.fetch(:configuration)}.plist", __dir__),
+      binary_path: File.join(ARCHIVE_DERIVED_DATA, "SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols")
     )
   end
 

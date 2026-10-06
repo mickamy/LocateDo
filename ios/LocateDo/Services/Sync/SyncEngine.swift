@@ -218,6 +218,7 @@ final class SyncEngine {
             }
         } catch {
             logger.error("Could not read the write queue: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "sync.queue")
         }
     }
 
@@ -228,6 +229,7 @@ final class SyncEngine {
             write = try head.decoded()
         } catch {
             logger.error("Dropping an unreadable \(kind, privacy: .public) write: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "sync.unreadable_write")
             return true
         }
         do {
@@ -237,6 +239,7 @@ final class SyncEngine {
             switch Self.failure(for: error) {
             case .drop:
                 logger.error("Dropping a rejected \(kind, privacy: .public) write: \(error, privacy: .public)")
+                CrashReporting.record(error, site: "sync.rejected_write")
                 return true
             case .keep:
                 if (error as? ConnectError)?.code == .failedPrecondition && !isPro() {
@@ -261,6 +264,7 @@ final class SyncEngine {
             }
         } catch {
             logger.error("Could not undo a rejected write: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "sync.undo_rejected")
         }
         return true
     }
