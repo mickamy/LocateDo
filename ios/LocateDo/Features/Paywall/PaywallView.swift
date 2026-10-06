@@ -56,7 +56,7 @@ struct PaywallView: View {
             }
         }
         .task {
-            Analytics.log(.paywallShown, parameters: ["trigger": trigger.rawValue])
+            Analytics.log(.paywallShown, parameters: [.trigger: trigger.rawValue])
             await loadPlans()
         }
         .onChange(of: entitlements.hasEntitlement) {
@@ -226,7 +226,7 @@ struct PaywallView: View {
         defer { isWorking = false }
         do {
             if try await entitlements.purchase(selected) {
-                Analytics.log(.paywallPurchased, parameters: ["trigger": trigger.rawValue, "plan": planName])
+                Analytics.log(.paywallPurchased, parameters: [.trigger: trigger.rawValue, .plan: planName])
             }
         } catch {
             logger.error("Purchase failed: \(error, privacy: .public)")

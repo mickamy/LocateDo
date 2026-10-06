@@ -12,7 +12,7 @@ struct SharingButton<Label: View>: View {
 
     var body: some View {
         Button {
-            Analytics.log(.shareTapped, parameters: ["source": source.rawValue])
+            Analytics.log(.shareTapped, parameters: [.source: source.rawValue])
             isPresented = true
         } label: {
             label()

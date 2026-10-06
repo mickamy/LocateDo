@@ -114,6 +114,7 @@ struct LocateDoApp: App {
         }
         if !Self.isRunningTests {
             Analytics.configure()
+            InstallDate.record(defaults: .standard, now: .now)
             geofence.start()
             network.start()
             entitlements.start()
