@@ -142,6 +142,7 @@ home:
     title: "場所がまだありません"
     message: "場所を追加すると、着いたときにお知らせします。"
   add_place: "場所を追加"
+  my_location: "現在地"
 map:
   empty:
     message: "追加した場所がここに表示されます。"

@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.secrets)
 }
 
 android {
@@ -20,6 +22,8 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        // The secrets plugin fills this per app variant; the unit-test manifest merge only sees this default.
+        manifestPlaceholders["MAPS_API_KEY"] = ""
     }
 
     // One build type per server environment, matching the iOS Debug / Staging / Release configurations.
@@ -88,6 +92,12 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+// MAPS_API_KEY comes from local.properties (not committed); CI and clean checkouts fall back to the defaults file.
+secrets {
+    defaultPropertiesFileName = "local.defaults.properties"
+    ignoreList.add("sdk.*")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -97,11 +107,19 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
     implementation(libs.connect.kotlin)
     implementation(libs.connect.kotlin.okhttp)
     implementation(libs.connect.kotlin.google.javalite.ext)

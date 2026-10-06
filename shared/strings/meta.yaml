@@ -4,3 +4,5 @@ permission.when_in_use:
   infoplist: NSLocationWhenInUseUsageDescription
 permission.always:
   infoplist: NSLocationAlwaysAndWhenInUseUsageDescription
+home.my_location:
+  platforms: [android]

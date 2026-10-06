@@ -51,6 +51,7 @@
     <string name="home_add_place">Add a place</string>
     <string name="home_empty_message">Add a place to get reminded when you arrive.</string>
     <string name="home_empty_title">No places yet</string>
+    <string name="home_my_location">My location</string>
     <plurals name="home_open_summary">
         <item quantity="one">%1$d open to-do</item>
         <item quantity="other">%1$d open to-dos</item>
