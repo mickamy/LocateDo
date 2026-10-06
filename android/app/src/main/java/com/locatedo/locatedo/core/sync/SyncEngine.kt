@@ -40,6 +40,9 @@ interface SyncEngine {
 
     fun start()
 
+    // Sends the queue and stops there.
+    suspend fun drain()
+
     // Sends the queue, then pulls what changed on the server.
     suspend fun sync()
 }
@@ -91,7 +94,7 @@ class DefaultSyncEngine @Inject constructor(
         }.also { scheduled = it }
     }
 
-    suspend fun drain() = run(pulling = false)
+    override suspend fun drain() = run(pulling = false)
 
     override suspend fun sync() = run(pulling = true)
 

@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.data.CategoryRepository
+import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.sync.SyncEngine
@@ -46,6 +48,7 @@ data class TodoListUiState(
     val groups: List<TodoGroup> = emptyList(),
     val isSignedIn: Boolean = false,
     val isRefreshing: Boolean = false,
+    val members: List<Membership> = emptyList(),
 ) {
     val emptyState: TodoListEmptyState?
         get() = when {
@@ -65,6 +68,7 @@ sealed interface TodoListEvent {
 class TodoListViewModel @Inject constructor(
     placeRepository: PlaceRepository,
     categoryRepository: CategoryRepository,
+    membershipRepository: MembershipRepository,
     private val todoRepository: TodoRepository,
     private val selectionRequests: PlaceSelectionRequests,
     authenticator: Authenticator,
@@ -80,9 +84,9 @@ class TodoListViewModel @Inject constructor(
         placeRepository.observeAllWithTodos(),
         categoryRepository.observeAll(),
         filter,
-        authenticator.session,
-        isRefreshing,
-    ) { places, categories, filter, session, refreshing ->
+        combine(authenticator.session, isRefreshing) { session, refreshing -> session to refreshing },
+        membershipRepository.observeAll(),
+    ) { places, categories, filter, (session, refreshing), members ->
         val byId = categories.associateBy { it.id }
         TodoListUiState(
             isLoading = false,
@@ -91,6 +95,7 @@ class TodoListViewModel @Inject constructor(
             hasTodos = places.any { it.todos.isNotEmpty() },
             isSignedIn = session != null,
             isRefreshing = refreshing,
+            members = members,
             groups = places.mapNotNull { entry ->
                 val todos = when (filter) {
                     TodoFilter.ALL -> entry.openTodos + entry.completedTodosNewestFirst
@@ -127,6 +132,13 @@ class TodoListViewModel @Inject constructor(
     fun deleteTodo(todoId: UUID) {
         viewModelScope.launch {
             todoRepository.delete(listOf(todoId))
+        }
+    }
+
+    fun setAssignee(todoId: UUID, userId: UUID?) {
+        viewModelScope.launch {
+            val todo = uiState.value.groups.flatMap { it.todos }.firstOrNull { it.id == todoId } ?: return@launch
+            todoRepository.update(todo.copy(assigneeId = userId))
         }
     }
 

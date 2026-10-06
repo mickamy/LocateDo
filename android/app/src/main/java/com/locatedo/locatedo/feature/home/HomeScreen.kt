@@ -76,7 +76,7 @@ private val detailPeekHeight = 360.dp
 fun HomeScreen(
     onAddPlace: () -> Unit,
     onEditPlace: (UUID) -> Unit,
-    onOpenAccount: () -> Unit,
+    onOpenSharing: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -142,6 +142,8 @@ fun HomeScreen(
                     onDelete = { placeToDelete = selected.place },
                     onToggleTodo = viewModel::setTodoCompleted,
                     onDeleteTodo = viewModel::deleteTodo,
+                    members = uiState.members,
+                    onAssignTodo = viewModel::setAssignee,
                 )
             } else {
                 HomeSheet(uiState = uiState, onAddPlace = onAddPlace, onSelect = viewModel::select)
@@ -190,7 +192,7 @@ fun HomeScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .align(Alignment.TopCenter),
                     onSearch = onAddPlace,
-                    onAccount = onOpenAccount,
+                    onAccount = onOpenSharing,
                 )
             }
             FloatingActionButton(
@@ -263,7 +265,7 @@ private fun SearchBar(modifier: Modifier = Modifier, onSearch: () -> Unit, onAcc
             )
             Icon(
                 Icons.Filled.AccountCircle,
-                contentDescription = stringResource(R.string.settings_account_title),
+                contentDescription = stringResource(R.string.sharing_title),
                 modifier = Modifier
                     .size(32.dp)
                     .clickable(onClick = onAccount, role = Role.Button),

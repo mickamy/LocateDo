@@ -2,7 +2,9 @@ package com.locatedo.locatedo.testing
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.locatedo.locatedo.core.data.CategoryRepository
+import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
+import com.locatedo.locatedo.core.data.SyncStateRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.geofence.GeofenceRegion
@@ -13,8 +15,10 @@ import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.permissions.LocationAuth
@@ -24,6 +28,8 @@ import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.places.PlaceCandidate
 import com.locatedo.locatedo.core.places.PlacePrediction
 import com.locatedo.locatedo.core.places.PlacesRepository
+import com.locatedo.locatedo.core.sharing.HouseholdManager
+import com.locatedo.locatedo.core.sharing.Invite
 import com.locatedo.locatedo.core.sync.SyncEngine
 import java.io.File
 import java.time.Instant
@@ -164,6 +170,7 @@ class FakePermissionsRepository(
 class FakeTodoRepository : TodoRepository {
     val state = MutableStateFlow<List<Todo>>(emptyList())
     val added = mutableListOf<Todo>()
+    val updated = mutableListOf<Todo>()
     val deleted = mutableListOf<UUID>()
     var limit: FreeLimit? = null
 
@@ -177,6 +184,7 @@ class FakeTodoRepository : TodoRepository {
     }
 
     override suspend fun update(todo: Todo) {
+        updated += todo
         state.value = state.value.map { if (it.id == todo.id) todo else it }
     }
 
@@ -200,11 +208,72 @@ class FakeSyncEngine : SyncEngine {
     override val limitRejected = MutableSharedFlow<FreeLimit>()
     override val removed = MutableSharedFlow<Unit>()
     var syncs = 0
+    var drains = 0
 
     override fun start() = Unit
 
+    override suspend fun drain() {
+        drains += 1
+    }
+
     override suspend fun sync() {
         syncs += 1
+    }
+}
+
+class FakeMembershipRepository : MembershipRepository {
+    val state = MutableStateFlow<List<Membership>>(emptyList())
+
+    override fun observeAll(): Flow<List<Membership>> = state
+}
+
+class FakeSyncStateRepository(initial: SyncState = SyncState()) : SyncStateRepository {
+    val state = MutableStateFlow(initial)
+
+    override fun observe(): Flow<SyncState> = state
+
+    override suspend fun get(): SyncState = state.value
+
+    override suspend fun set(state: SyncState) {
+        this.state.value = state
+    }
+
+    override suspend fun clear() {
+        state.value = SyncState()
+    }
+}
+
+class FakeHouseholdManager : HouseholdManager {
+    override val isWorking = MutableStateFlow(false)
+    val removed = mutableListOf<UUID>()
+    val accepted = mutableListOf<String>()
+    var leaves = 0
+    var removals = 0
+    var invite = Invite("https://locatedo.com/i/invite-token-0123456789", Instant.EPOCH)
+    var failure: Exception? = null
+
+    override suspend fun remove(userId: UUID) {
+        failure?.let { throw it }
+        removed += userId
+    }
+
+    override suspend fun leave() {
+        failure?.let { throw it }
+        leaves += 1
+    }
+
+    override suspend fun createInvite(): Invite {
+        failure?.let { throw it }
+        return invite
+    }
+
+    override suspend fun accept(token: String) {
+        failure?.let { throw it }
+        accepted += token
+    }
+
+    override suspend fun handleRemoval() {
+        removals += 1
     }
 }
 

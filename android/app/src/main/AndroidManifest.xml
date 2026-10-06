@@ -32,6 +32,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="locatedo.com" />
+                <data android:host="www.locatedo.com" />
+                <data android:pathPrefix="/i/" />
+            </intent-filter>
         </activity>
         <service
             android:name=".core.push.LocateDoMessagingService"

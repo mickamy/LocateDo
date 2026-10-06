@@ -34,3 +34,21 @@ settings.account.android_replace_confirm_title:
   platforms: [android]
 settings.account.android_replace_confirm_message:
   platforms: [android]
+sharing.android_sign_in_message:
+  platforms: [android]
+sharing.android_leave_confirm_message:
+  platforms: [android]
+sharing.android_intro_message:
+  platforms: [android]
+sharing.android_benefit_lists_message:
+  platforms: [android]
+sharing.android_shared_header_message:
+  platforms: [android]
+invite.android_message:
+  platforms: [android]
+invite.android_paste:
+  platforms: [android]
+session_ended.android_message:
+  platforms: [android]
+removed.android_message:
+  platforms: [android]

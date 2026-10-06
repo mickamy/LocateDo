@@ -35,8 +35,12 @@ import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.categoryName
+import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.feature.todos.TodoRow
+import com.locatedo.locatedo.ui.components.AssigneeChoice
+import com.locatedo.locatedo.ui.components.assigneeChoices
+import com.locatedo.locatedo.ui.components.assigneeName
 import java.util.UUID
 
 // Google Maps' place sheet: a header, a row of action chips, then the content; here the content is the to-dos.
@@ -49,7 +53,10 @@ fun PlaceDetailSheet(
     onDelete: () -> Unit,
     onToggleTodo: (UUID, Boolean) -> Unit,
     onDeleteTodo: (UUID) -> Unit,
+    members: List<Membership> = emptyList(),
+    onAssignTodo: (UUID, UUID?) -> Unit = { _, _ -> },
 ) {
+    val assignees = assigneeChoices(members)
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(start = 24.dp, end = 8.dp),
@@ -120,17 +127,38 @@ fun PlaceDetailSheet(
             )
         }
         for (todo in detail.openTodos) {
-            TodoRow(todo = todo, onToggle = { onToggleTodo(todo.id, it) }, onDelete = { onDeleteTodo(todo.id) })
+            TodoRow(
+                todo = todo,
+                onToggle = { onToggleTodo(todo.id, it) },
+                onDelete = { onDeleteTodo(todo.id) },
+                assigneeName = assigneeName(members, todo.assigneeId),
+                assignees = assignees,
+                onAssign = { onAssignTodo(todo.id, it) },
+            )
         }
         if (detail.completedTodos.isNotEmpty()) {
-            CompletedTodos(todos = detail.completedTodos, onToggle = onToggleTodo, onDelete = onDeleteTodo)
+            CompletedTodos(
+                todos = detail.completedTodos,
+                members = members,
+                assignees = assignees,
+                onToggle = onToggleTodo,
+                onDelete = onDeleteTodo,
+                onAssign = onAssignTodo,
+            )
         }
         Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun CompletedTodos(todos: List<Todo>, onToggle: (UUID, Boolean) -> Unit, onDelete: (UUID) -> Unit) {
+private fun CompletedTodos(
+    todos: List<Todo>,
+    members: List<Membership>,
+    assignees: List<AssigneeChoice>,
+    onToggle: (UUID, Boolean) -> Unit,
+    onDelete: (UUID) -> Unit,
+    onAssign: (UUID, UUID?) -> Unit,
+) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = Modifier
@@ -149,7 +177,14 @@ private fun CompletedTodos(todos: List<Todo>, onToggle: (UUID, Boolean) -> Unit,
     }
     if (isExpanded) {
         for (todo in todos) {
-            TodoRow(todo = todo, onToggle = { onToggle(todo.id, it) }, onDelete = { onDelete(todo.id) })
+            TodoRow(
+                todo = todo,
+                onToggle = { onToggle(todo.id, it) },
+                onDelete = { onDelete(todo.id) },
+                assigneeName = assigneeName(members, todo.assigneeId),
+                assignees = assignees,
+                onAssign = { onAssign(todo.id, it) },
+            )
         }
     }
 }

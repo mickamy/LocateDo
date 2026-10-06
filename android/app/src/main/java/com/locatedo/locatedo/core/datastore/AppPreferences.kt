@@ -18,6 +18,8 @@ data class UserPreferences(
     val hasRequestedNotifications: Boolean = false,
     val hasPromptedAlwaysLocation: Boolean = false,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
+    val hasPendingRemovedNotice: Boolean = false,
+    val hasPendingSessionEndedNotice: Boolean = false,
 )
 
 @Singleton
@@ -29,6 +31,8 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val promptedAlwaysLocation = booleanPreferencesKey("promptedAlwaysLocation")
         val defaultRadiusMeters = doublePreferencesKey("defaultRadiusMeters")
         val registeredGeofences = stringPreferencesKey("registeredGeofences")
+        val pendingRemovedNotice = booleanPreferencesKey("pendingRemovedNotice")
+        val pendingSessionEndedNotice = booleanPreferencesKey("pendingSessionEndedNotice")
     }
 
     // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
@@ -46,6 +50,8 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             } else {
                 Place.DEFAULT_RADIUS_METERS
             },
+            hasPendingRemovedNotice = preferences[Keys.pendingRemovedNotice] ?: false,
+            hasPendingSessionEndedNotice = preferences[Keys.pendingSessionEndedNotice] ?: false,
         )
     }
 
@@ -71,6 +77,15 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setRegisteredGeofences(encoded: String) {
         dataStore.edit { it[Keys.registeredGeofences] = encoded }
+    }
+
+    // Set when local data was wiped behind the user's back; the next screen explains why, then clears it.
+    suspend fun setPendingRemovedNotice(pending: Boolean) {
+        dataStore.edit { it[Keys.pendingRemovedNotice] = pending }
+    }
+
+    suspend fun setPendingSessionEndedNotice(pending: Boolean) {
+        dataStore.edit { it[Keys.pendingSessionEndedNotice] = pending }
     }
 
     suspend fun reset() {

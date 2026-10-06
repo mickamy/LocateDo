@@ -63,6 +63,8 @@
     <string name="home_permission_banner_location_denied">Allow location access in Settings to get reminders.</string>
     <string name="home_permission_banner_notifications">Allow notifications to get reminders.</string>
     <string name="invite_already_member">You’re already in this household.</string>
+    <string name="invite_android_message">You’ll share places and to-dos with the people in this household. The places and to-dos on this phone are added to it.</string>
+    <string name="invite_android_paste">Paste</string>
     <string name="invite_failed">Couldn’t join. Try again.</string>
     <string name="invite_invalid">This doesn’t look like a StopBy invite link.</string>
     <string name="invite_join">Join</string>
@@ -136,8 +138,10 @@
     <string name="place_picker_title">Choose a location</string>
     <string name="place_picker_use_current_location">Use current location</string>
     <string name="place_picker_use_this_location">Use this location</string>
+    <string name="removed_android_message">You were removed from the shared household, so the data on this phone was removed and you’re starting over on your own.</string>
     <string name="removed_message">You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own.</string>
     <string name="removed_title">Removed from Sharing</string>
+    <string name="session_ended_android_message">Your account was deleted on another device or your sign-in expired, so the data on this phone was removed.</string>
     <string name="session_ended_message">Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed.</string>
     <string name="session_ended_title">Signed Out</string>
     <string name="settings_about_privacy_policy">Privacy Policy</string>
@@ -205,6 +209,11 @@
     <string name="settings_pro_trial">%1$s (free trial)</string>
     <string name="settings_pro_upgrade">Upgrade to Pro</string>
     <string name="sharing_accept">Accept an Invite</string>
+    <string name="sharing_android_benefit_lists_message">Places and to-dos anyone adds show up on everyone’s phone.</string>
+    <string name="sharing_android_intro_message">Sign in with Google to share places and to-dos with your family.</string>
+    <string name="sharing_android_leave_confirm_message">Places and to-dos on this phone will be removed, and you’ll start over on your own.</string>
+    <string name="sharing_android_shared_header_message">Places and to-dos anyone adds reach everyone’s phone.</string>
+    <string name="sharing_android_sign_in_message">Sign in with Google to share places and to-dos with your family.</string>
     <string name="sharing_benefit_assign_message">Assign a to-do and only that person is reminded when they arrive.</string>
     <string name="sharing_benefit_assign_title">The right person gets reminded</string>
     <string name="sharing_benefit_lists_message">Places and to-dos anyone adds show up on everyone’s iPhone.</string>

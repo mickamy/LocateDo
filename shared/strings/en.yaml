@@ -17,6 +17,7 @@ common:
 sharing:
   title: "Share with family"
   sign_in_message: "Sign in with Apple to share places and to-dos with your family."
+  android_sign_in_message: "Sign in with Google to share places and to-dos with your family."
   pro_required: "Sharing with family is a Pro feature."
   members: "Members"
   owner: "Owner"
@@ -27,6 +28,7 @@ sharing:
   leave: "Leave Sharing"
   leave_confirm_title: "Leave sharing?"
   leave_confirm_message: "Places and to-dos on this iPhone will be removed, and you’ll start over on your own."
+  android_leave_confirm_message: "Places and to-dos on this phone will be removed, and you’ll start over on your own."
   failed: "Couldn’t update sharing. Try again."
   invite: "Invite Someone"
   invite_message: "Join me on StopBy to share places and to-dos. This link works for 72 hours:"
@@ -34,8 +36,10 @@ sharing:
   accept: "Accept an Invite"
   intro_title: "Use it together"
   intro_message: "Sign in with Apple to share places and to-dos with your family."
+  android_intro_message: "Sign in with Google to share places and to-dos with your family."
   benefit_lists_title: "One list for everyone"
   benefit_lists_message: "Places and to-dos anyone adds show up on everyone’s iPhone."
+  android_benefit_lists_message: "Places and to-dos anyone adds show up on everyone’s phone."
   benefit_assign_title: "The right person gets reminded"
   benefit_assign_message: "Assign a to-do and only that person is reminded when they arrive."
   benefit_plan_title: "One plan covers everyone"
@@ -48,6 +52,7 @@ sharing:
       one: "{count:int} person sharing"
       other: "{count:int} people sharing"
   shared_header_message: "Places and to-dos anyone adds reach everyone’s iPhone."
+  android_shared_header_message: "Places and to-dos anyone adds reach everyone’s phone."
   member_header_title: "You’re in {name}’s household"
   member_header_message: "Places and to-dos are shared with everyone in this household."
   seats_left:
@@ -256,13 +261,17 @@ permission:
 session_ended:
   title: "Signed Out"
   message: "Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed."
+  android_message: "Your account was deleted on another device or your sign-in expired, so the data on this phone was removed."
 removed:
   title: "Removed from Sharing"
   message: "You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own."
+  android_message: "You were removed from the shared household, so the data on this phone was removed and you’re starting over on your own."
 invite:
   title: "Join a Household"
   link_placeholder: "Invite link"
   message: "You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it."
+  android_message: "You’ll share places and to-dos with the people in this household. The places and to-dos on this phone are added to it."
+  android_paste: "Paste"
   join: "Join"
   invalid: "This doesn’t look like a StopBy invite link."
   unavailable: "This invite has expired, was already used, or the household is full. Ask for a new one."

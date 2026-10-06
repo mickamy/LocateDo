@@ -36,6 +36,7 @@ import com.locatedo.household.v1.Plan
 import com.locatedo.household.v1.RemoveMemberRequest
 import com.locatedo.household.v1.RemoveMemberResponse
 import com.locatedo.household.v1.createHouseholdResponse
+import com.locatedo.household.v1.createInviteResponse
 import com.locatedo.household.v1.household
 import com.locatedo.locatedo.core.api.AccessTokenStore
 import com.locatedo.locatedo.core.auth.Authenticator
@@ -132,6 +133,12 @@ class FakeHouseholdService : HouseholdServiceClientInterface {
     var lastCreate: CreateHouseholdRequest? = null
     var createCalls = 0
     var failNextCreate = false
+    var inviteToken = "invite-token-0123456789"
+    var inviteExpiresAt: Instant = Instant.ofEpochSecond(1_800_000_000)
+    val acceptedTokens = mutableListOf<String>()
+    var acceptResponse: ResponseMessage<AcceptInviteResponse> = failure(Code.UNIMPLEMENTED)
+    val removed = mutableListOf<RemoveMemberRequest>()
+    var failRemove = false
 
     override suspend fun createHousehold(request: CreateHouseholdRequest, headers: Headers): ResponseMessage<CreateHouseholdResponse> {
         lastCreate = request
@@ -152,13 +159,25 @@ class FakeHouseholdService : HouseholdServiceClientInterface {
     }
 
     override suspend fun createInvite(request: CreateInviteRequest, headers: Headers): ResponseMessage<CreateInviteResponse> =
-        failure(Code.UNIMPLEMENTED)
+        success(
+            createInviteResponse {
+                token = inviteToken
+                expiresAt = inviteExpiresAt.toTimestamp()
+            },
+        )
 
-    override suspend fun acceptInvite(request: AcceptInviteRequest, headers: Headers): ResponseMessage<AcceptInviteResponse> =
-        failure(Code.UNIMPLEMENTED)
+    override suspend fun acceptInvite(request: AcceptInviteRequest, headers: Headers): ResponseMessage<AcceptInviteResponse> {
+        acceptedTokens += request.token
+        return acceptResponse
+    }
 
-    override suspend fun removeMember(request: RemoveMemberRequest, headers: Headers): ResponseMessage<RemoveMemberResponse> =
-        failure(Code.UNIMPLEMENTED)
+    override suspend fun removeMember(request: RemoveMemberRequest, headers: Headers): ResponseMessage<RemoveMemberResponse> {
+        removed += request
+        if (failRemove) {
+            return failure(Code.UNAVAILABLE)
+        }
+        return success(RemoveMemberResponse.getDefaultInstance())
+    }
 }
 
 class FakeDeviceService : DeviceServiceClientInterface {

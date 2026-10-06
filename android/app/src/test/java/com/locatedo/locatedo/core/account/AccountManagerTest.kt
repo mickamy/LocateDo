@@ -210,6 +210,7 @@ class AccountManagerTest {
         assertNull(syncState.get().householdId)
         assertEquals(BuiltinCategory.entries.size, categories.observeAll().first().size)
         assertTrue(preferences.data.first().hasCompletedOnboarding)
+        assertTrue(preferences.data.first().hasPendingSessionEndedNotice)
     }
 
     @Test

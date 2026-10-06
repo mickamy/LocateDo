@@ -12,6 +12,7 @@ import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeGeocodingRepository
 import com.locatedo.locatedo.testing.FakeLocationRepository
+import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakeTodoRepository
 import java.time.Instant
@@ -39,6 +40,7 @@ class HomeViewModelTest {
     private val places = FakePlaceRepository()
     private val categories = FakeCategoryRepository()
     private val todos = FakeTodoRepository()
+    private val memberships = FakeMembershipRepository()
     private val location = FakeLocationRepository(coordinate = Coordinate(35.6896, 139.7006))
     private val geocoding = FakeGeocodingRepository(GeocodedPlace(name = null, address = "1 Main St"))
     private val requests = PlaceSelectionRequests()
@@ -61,7 +63,7 @@ class HomeViewModelTest {
     @Test
     fun startsLoadingThenShowsPlacesWithTheirCategories() = runTest(dispatcher) {
         places.state.value = emptyList()
-        val viewModel = HomeViewModel(places, categories, todos, location, geocoding, requests)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests)
         assertTrue(viewModel.uiState.value.isLoading)
 
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
@@ -160,7 +162,7 @@ class HomeViewModelTest {
     }
 
     private fun TestScope.viewModel(): HomeViewModel {
-        val viewModel = HomeViewModel(places, categories, todos, location, geocoding, requests)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests)
         subscribe(viewModel)
         return viewModel
     }

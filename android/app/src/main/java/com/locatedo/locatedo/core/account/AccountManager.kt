@@ -170,6 +170,7 @@ class AccountManager @Inject constructor(
     suspend fun endSession() {
         pendingAdoption.value = null
         localData.reset()
+        preferences.setPendingSessionEndedNotice(true)
     }
 
     suspend fun join(householdId: UUID, plan: Plan) {

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,7 +46,10 @@ import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
 import com.locatedo.locatedo.feature.place.PlaceSearchScreen
 import com.locatedo.locatedo.feature.settings.SettingsScreen
+import com.locatedo.locatedo.feature.sharing.AcceptInviteScreen
+import com.locatedo.locatedo.feature.sharing.SharingScreen
 import com.locatedo.locatedo.feature.todos.TodoListScreen
+import com.locatedo.locatedo.ui.navigation.AcceptInviteKey
 import com.locatedo.locatedo.ui.navigation.AccountKey
 import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
@@ -52,6 +57,7 @@ import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
+import com.locatedo.locatedo.ui.navigation.SharingKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -70,19 +76,57 @@ private val tabKeys = tabs.map { it.key }
 fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     val appState by appViewModel.uiState.collectAsStateWithLifecycle()
     val pendingPlace by appViewModel.pendingPlace.collectAsStateWithLifecycle()
+    val pendingInvite by appViewModel.pendingInvite.collectAsStateWithLifecycle()
 
     when {
         appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
         !appState.hasCompletedOnboarding -> OnboardingScreen()
-        else -> Tabs(onPlaceAdded = appViewModel::placeAdded, pendingPlace = pendingPlace, limitRejected = appViewModel.limitRejected)
+        else -> Tabs(
+            onPlaceAdded = appViewModel::placeAdded,
+            pendingPlace = pendingPlace,
+            pendingInvite = pendingInvite,
+            onInviteConsumed = appViewModel::inviteConsumed,
+            limitRejected = appViewModel.limitRejected,
+        )
     }
     if (appState.isExplainingAlwaysLocation) {
         AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
     }
+    appState.notice?.let { notice ->
+        NoticeDialog(notice = notice, onDismiss = appViewModel::dismissNotice)
+    }
 }
 
 @Composable
-private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?, limitRejected: Flow<FreeLimit>) {
+private fun NoticeDialog(notice: AppNotice, onDismiss: () -> Unit) {
+    val title = when (notice) {
+        AppNotice.REMOVED -> R.string.removed_title
+        AppNotice.SESSION_ENDED -> R.string.session_ended_title
+    }
+    val message = when (notice) {
+        AppNotice.REMOVED -> R.string.removed_android_message
+        AppNotice.SESSION_ENDED -> R.string.session_ended_android_message
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(title)) },
+        text = { Text(stringResource(message)) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.common_ok))
+            }
+        },
+    )
+}
+
+@Composable
+private fun Tabs(
+    onPlaceAdded: () -> Unit,
+    pendingPlace: UUID?,
+    pendingInvite: String?,
+    onInviteConsumed: (String) -> Unit,
+    limitRejected: Flow<FreeLimit>,
+) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
@@ -96,6 +140,13 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?, limitRejected: F
         if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
             backStack.clear()
             backStack.add(HomeKey)
+        }
+    }
+    LaunchedEffect(pendingInvite) {
+        if (pendingInvite != null) {
+            backStack.leaveFlow()
+            backStack.add(AcceptInviteKey(pendingInvite))
+            onInviteConsumed(pendingInvite)
         }
     }
     LaunchedEffect(Unit) {
@@ -150,7 +201,7 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?, limitRejected: F
                             placeEditor.start(placeId)
                             backStack.add(PlaceEditorKey)
                         },
-                        onOpenAccount = { backStack.add(AccountKey) },
+                        onOpenSharing = { backStack.add(SharingKey) },
                     )
                 }
                 entry<TodosKey> {
@@ -168,6 +219,7 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?, limitRejected: F
                 entry<SettingsKey> {
                     SettingsScreen(
                         onOpenAccount = { backStack.add(AccountKey) },
+                        onOpenSharing = { backStack.add(SharingKey) },
                         onOpenCategories = { backStack.add(CategoriesKey) },
                     )
                 }
@@ -176,6 +228,19 @@ private fun Tabs(onPlaceAdded: () -> Unit, pendingPlace: UUID?, limitRejected: F
                 }
                 entry<AccountKey> {
                     AccountScreen(onBack = { backStack.removeLastOrNull() })
+                }
+                entry<SharingKey> {
+                    SharingScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        onAcceptInvite = { backStack.add(AcceptInviteKey()) },
+                    )
+                }
+                entry<AcceptInviteKey> { key ->
+                    AcceptInviteScreen(
+                        token = key.token,
+                        onBack = { backStack.removeLastOrNull() },
+                        onJoined = { backStack.removeLastOrNull() },
+                    )
                 }
                 entry<PlaceSearchKey> {
                     PlaceSearchScreen(

@@ -42,6 +42,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
+import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.ui.components.assigneeChoices
+import com.locatedo.locatedo.ui.components.assigneeName
 import java.util.UUID
 
 // Google Maps' saved lists: filter chips on top, one section per place, and a button to add more.
@@ -105,12 +108,14 @@ fun TodoListScreen(
                     TodoListEmptyState.NO_MATCHES -> EmptyState(title = R.string.todo_list_filter_empty)
                     null -> TodoGroups(
                         groups = uiState.groups,
+                        members = uiState.members,
                         onOpenPlace = { placeId ->
                             viewModel.requestPlace(placeId)
                             onOpenPlace()
                         },
                         onToggle = viewModel::setTodoCompleted,
                         onDelete = viewModel::deleteTodo,
+                        onAssign = viewModel::setAssignee,
                     )
                 }
             }
@@ -144,10 +149,13 @@ private fun FilterChipFor(filter: TodoFilter, label: Int, selected: TodoFilter, 
 @Composable
 private fun TodoGroups(
     groups: List<TodoGroup>,
+    members: List<Membership>,
     onOpenPlace: (UUID) -> Unit,
     onToggle: (UUID, Boolean) -> Unit,
     onDelete: (UUID) -> Unit,
+    onAssign: (UUID, UUID?) -> Unit,
 ) {
+    val assignees = assigneeChoices(members)
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         for (group in groups) {
             item(key = "place-${group.place.id}") {
@@ -168,7 +176,14 @@ private fun TodoGroups(
                 }
             }
             items(group.todos, key = { it.id }) { todo ->
-                TodoRow(todo = todo, onToggle = { onToggle(todo.id, it) }, onDelete = { onDelete(todo.id) })
+                TodoRow(
+                    todo = todo,
+                    onToggle = { onToggle(todo.id, it) },
+                    onDelete = { onDelete(todo.id) },
+                    assigneeName = assigneeName(members, todo.assigneeId),
+                    assignees = assignees,
+                    onAssign = { onAssign(todo.id, it) },
+                )
             }
         }
         item { Spacer(Modifier.height(96.dp)) }

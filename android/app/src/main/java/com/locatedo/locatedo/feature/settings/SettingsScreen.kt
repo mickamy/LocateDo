@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
@@ -56,6 +57,7 @@ import com.locatedo.locatedo.ui.components.RadiusSlider
 @Composable
 fun SettingsScreen(
     onOpenAccount: () -> Unit,
+    onOpenSharing: () -> Unit,
     onOpenCategories: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -97,6 +99,13 @@ fun SettingsScreen(
                     Text(stringResource(status))
                 },
                 leadingContent = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+            )
+            HorizontalDivider()
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.sharing_title)) },
+                modifier = Modifier.clickable(onClick = onOpenSharing),
+                leadingContent = { Icon(Icons.Filled.Group, contentDescription = null) },
                 trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
             )
             HorizontalDivider()

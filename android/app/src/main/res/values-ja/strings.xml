@@ -60,6 +60,8 @@
     <string name="home_permission_banner_location_denied">お知らせを受け取るには、設定で位置情報を許可してください。</string>
     <string name="home_permission_banner_notifications">お知らせを受け取るには、通知を許可してください。</string>
     <string name="invite_already_member">すでにこの世帯に参加しています。</string>
+    <string name="invite_android_message">この世帯の人と、場所と TODO を共有します。この端末の場所と TODO は、その世帯にまとめられます。</string>
+    <string name="invite_android_paste">貼り付け</string>
     <string name="invite_failed">参加できませんでした。もう一度お試しください。</string>
     <string name="invite_invalid">ちかメモの招待リンクではないようです。</string>
     <string name="invite_join">参加する</string>
@@ -132,8 +134,10 @@
     <string name="place_picker_title">位置を選択</string>
     <string name="place_picker_use_current_location">現在地を使う</string>
     <string name="place_picker_use_this_location">この位置にする</string>
+    <string name="removed_android_message">共有している世帯から外されたため、この端末のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_message">共有している世帯から外されたため、この iPhone のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_title">共有から外れました</string>
+    <string name="session_ended_android_message">別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この端末のデータを消去しました。</string>
     <string name="session_ended_message">別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。</string>
     <string name="session_ended_title">サインアウトしました</string>
     <string name="settings_about_privacy_policy">プライバシーポリシー</string>
@@ -201,6 +205,11 @@
     <string name="settings_pro_trial">%1$s（無料お試し中）</string>
     <string name="settings_pro_upgrade">Pro にする</string>
     <string name="sharing_accept">招待を受ける</string>
+    <string name="sharing_android_benefit_lists_message">誰かが足した場所や TODO が、全員の端末にすぐ届きます。</string>
+    <string name="sharing_android_intro_message">Google でサインインすると、家族と場所や TODO を共有できます。</string>
+    <string name="sharing_android_leave_confirm_message">この端末の場所と TODO は消え、ひとりで使う状態に戻ります。</string>
+    <string name="sharing_android_shared_header_message">誰かが足した場所や TODO が、全員の端末に届きます。</string>
+    <string name="sharing_android_sign_in_message">家族と場所や TODO を共有するには、Google でサインインしてください。</string>
     <string name="sharing_benefit_assign_message">TODO に担当を決めると、着いたときにその人にだけ知らせます。</string>
     <string name="sharing_benefit_assign_title">着いた人に、その人の用事を</string>
     <string name="sharing_benefit_lists_message">誰かが足した場所や TODO が、全員の iPhone にすぐ届きます。</string>

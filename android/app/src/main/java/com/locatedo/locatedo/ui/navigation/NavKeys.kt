@@ -18,6 +18,13 @@ data object CategoriesKey : NavKey
 @Serializable
 data object AccountKey : NavKey
 
+@Serializable
+data object SharingKey : NavKey
+
+// A token arrives with an opened invite link; from the sharing screen the field starts empty.
+@Serializable
+data class AcceptInviteKey(val token: String? = null) : NavKey
+
 // The add / edit flow: search, pick on the map, then the form. Its draft lives in PlaceEditorViewModel.
 @Serializable
 data object PlaceSearchKey : NavKey

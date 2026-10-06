@@ -7,6 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
+import com.locatedo.locatedo.core.sharing.InviteLink
+import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.ui.LocateDoApp
 import com.locatedo.locatedo.ui.theme.LocateDoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -17,10 +19,13 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject lateinit var selectionRequests: PlaceSelectionRequests
 
+    @Inject lateinit var inviteRequests: InviteRequests
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         openRequestedPlace(intent)
+        openInviteLink(intent)
         setContent {
             LocateDoTheme {
                 LocateDoApp()
@@ -31,6 +36,15 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         openRequestedPlace(intent)
+        openInviteLink(intent)
+    }
+
+    // An invite link through App Links; the data is cleared so a recreated activity does not offer it twice.
+    private fun openInviteLink(intent: Intent?) {
+        val link = intent?.data ?: return
+        intent.data = null
+        val token = InviteLink.token(link.toString()) ?: return
+        inviteRequests.request(token)
     }
 
     // An arrival notification carries its place; the extra is cleared so a recreated activity does not reopen it.

@@ -13,6 +13,7 @@ import com.locatedo.locatedo.core.geofence.GeofenceSync
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.push.PushMessages
+import com.locatedo.locatedo.core.sharing.HouseholdManager
 import com.locatedo.locatedo.core.sync.NetworkMonitor
 import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.HiltAndroidApp
@@ -39,6 +40,8 @@ class LocateDoApplication : Application() {
     @Inject lateinit var pushMessages: PushMessages
 
     @Inject lateinit var networkMonitor: NetworkMonitor
+
+    @Inject lateinit var householdManager: HouseholdManager
 
     @Inject @ApplicationScope lateinit var applicationScope: CoroutineScope
 
@@ -88,13 +91,7 @@ class LocateDoApplication : Application() {
             accountManager.householdReady.collect { syncEngine.sync() }
         }
         applicationScope.launch {
-            syncEngine.removed.collect {
-                try {
-                    accountManager.startOver()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Could not start over after being removed from the household", e)
-                }
-            }
+            syncEngine.removed.collect { householdManager.handleRemoval() }
         }
     }
 

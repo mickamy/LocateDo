@@ -17,6 +17,7 @@ common:
 sharing:
   title: "家族と共有"
   sign_in_message: "家族と場所や TODO を共有するには、Apple でサインインしてください。"
+  android_sign_in_message: "家族と場所や TODO を共有するには、Google でサインインしてください。"
   pro_required: "家族との共有は Pro の機能です。"
   members: "メンバー"
   owner: "オーナー"
@@ -27,6 +28,7 @@ sharing:
   leave: "共有から抜ける"
   leave_confirm_title: "共有から抜けますか？"
   leave_confirm_message: "この iPhone の場所と TODO は消え、ひとりで使う状態に戻ります。"
+  android_leave_confirm_message: "この端末の場所と TODO は消え、ひとりで使う状態に戻ります。"
   failed: "共有の設定を変更できませんでした。もう一度お試しください。"
   invite: "招待する"
   invite_message: "ちかメモで場所と TODO を一緒に使いましょう。このリンクから参加できます（72 時間有効）："
@@ -34,8 +36,10 @@ sharing:
   accept: "招待を受ける"
   intro_title: "家族と一緒に使う"
   intro_message: "Apple でサインインすると、家族と場所や TODO を共有できます。"
+  android_intro_message: "Google でサインインすると、家族と場所や TODO を共有できます。"
   benefit_lists_title: "みんなで同じリスト"
   benefit_lists_message: "誰かが足した場所や TODO が、全員の iPhone にすぐ届きます。"
+  android_benefit_lists_message: "誰かが足した場所や TODO が、全員の端末にすぐ届きます。"
   benefit_assign_title: "着いた人に、その人の用事を"
   benefit_assign_message: "TODO に担当を決めると、着いたときにその人にだけ知らせます。"
   benefit_plan_title: "1 つの契約で全員が使える"
@@ -47,6 +51,7 @@ sharing:
     plural:
       other: "{count} 人で共有しています"
   shared_header_message: "誰かが足した場所や TODO が、全員の iPhone に届きます。"
+  android_shared_header_message: "誰かが足した場所や TODO が、全員の端末に届きます。"
   member_header_title: "{name} さんの世帯に参加しています"
   member_header_message: "この世帯の全員と、場所と TODO を共有しています。"
   seats_left:
@@ -250,13 +255,17 @@ permission:
 session_ended:
   title: "サインアウトしました"
   message: "別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。"
+  android_message: "別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この端末のデータを消去しました。"
 removed:
   title: "共有から外れました"
   message: "共有している世帯から外されたため、この iPhone のデータを消去し、ひとりで使う状態に戻りました。"
+  android_message: "共有している世帯から外されたため、この端末のデータを消去し、ひとりで使う状態に戻りました。"
 invite:
   title: "世帯に参加"
   link_placeholder: "招待リンク"
   message: "この世帯の人と、場所と TODO を共有します。この iPhone の場所と TODO は、その世帯にまとめられます。"
+  android_message: "この世帯の人と、場所と TODO を共有します。この端末の場所と TODO は、その世帯にまとめられます。"
+  android_paste: "貼り付け"
   join: "参加する"
   invalid: "ちかメモの招待リンクではないようです。"
   unavailable: "この招待は期限切れか、すでに使われているか、世帯が満員です。新しい招待をもらってください。"
