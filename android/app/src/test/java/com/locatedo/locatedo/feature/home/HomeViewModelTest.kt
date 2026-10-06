@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.feature.home
 
+import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.model.Category
@@ -40,6 +41,7 @@ class HomeViewModelTest {
     private val todos = FakeTodoRepository()
     private val location = FakeLocationRepository(coordinate = Coordinate(35.6896, 139.7006))
     private val geocoding = FakeGeocodingRepository(GeocodedPlace(name = null, address = "1 Main St"))
+    private val requests = PlaceSelectionRequests()
     private val grocery = Category(id = uuidV7(now), name = "Grocery", icon = "cart", color = "green", sortOrder = 0, updatedAt = now)
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.6580, longitude = 139.7016, categoryId = grocery.id, createdAt = now)
     private val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
@@ -59,7 +61,7 @@ class HomeViewModelTest {
     @Test
     fun startsLoadingThenShowsPlacesWithTheirCategories() = runTest(dispatcher) {
         places.state.value = emptyList()
-        val viewModel = HomeViewModel(places, categories, todos, location, geocoding)
+        val viewModel = HomeViewModel(places, categories, todos, location, geocoding, requests)
         assertTrue(viewModel.uiState.value.isLoading)
 
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
@@ -135,8 +137,30 @@ class HomeViewModelTest {
         assertEquals(emptyList<PlaceWithTodos>(), places.state.value)
     }
 
+    @Test
+    fun nearbyPlacesAreOrderedByDistanceOnceLocated() = runTest(dispatcher) {
+        val pharmacy = Place(id = uuidV7(now), name = "Pharmacy", latitude = 35.6890, longitude = 139.7000, createdAt = now)
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk)), PlaceWithTodos(pharmacy, emptyList()))
+        val viewModel = viewModel()
+
+        viewModel.locateMe()
+
+        assertEquals(listOf("Pharmacy", "Store"), viewModel.uiState.value.nearby.map { it.entry.place.name })
+        assertTrue((viewModel.uiState.value.nearby.first().distanceMeters ?: Double.MAX_VALUE) < 200)
+    }
+
+    @Test
+    fun aPendingSelectionRequestOpensThePlace() = runTest(dispatcher) {
+        requests.request(store.id)
+
+        val viewModel = viewModel()
+
+        assertEquals(store, viewModel.uiState.value.selected?.place)
+        assertNull(requests.pending.value)
+    }
+
     private fun TestScope.viewModel(): HomeViewModel {
-        val viewModel = HomeViewModel(places, categories, todos, location, geocoding)
+        val viewModel = HomeViewModel(places, categories, todos, location, geocoding, requests)
         subscribe(viewModel)
         return viewModel
     }

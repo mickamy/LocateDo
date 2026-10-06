@@ -1,24 +1,165 @@
 package com.locatedo.locatedo.feature.todos
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.common.CategoryStyle
+import java.util.UUID
 
-// Placeholder until the to-do list lands; it only shows the empty state.
+// Google Maps' saved lists: filter chips on top, one section per place, and a button to add more.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodoListScreen() {
+fun TodoListScreen(
+    onAddPlace: () -> Unit,
+    onOpenPlace: () -> Unit,
+    viewModel: TodoListViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var isAddingTodo by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val limitMessage = stringResource(R.string.paywall_reason_todos)
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is TodoListEvent.LimitReached -> snackbarHostState.showSnackbar(limitMessage)
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_todos)) }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            if (uiState.hasPlaces) {
+                ExtendedFloatingActionButton(
+                    onClick = { isAddingTodo = true },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.todo_editor_title)) },
+                )
+            }
+        },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChipFor(TodoFilter.ALL, R.string.todo_filter_all, uiState.filter, viewModel::setFilter)
+                FilterChipFor(TodoFilter.OPEN, R.string.todo_filter_open, uiState.filter, viewModel::setFilter)
+                FilterChipFor(TodoFilter.DONE, R.string.todo_filter_done, uiState.filter, viewModel::setFilter)
+            }
+            when (uiState.emptyState) {
+                TodoListEmptyState.NO_PLACES -> EmptyState(
+                    title = R.string.todo_list_no_places_title,
+                    message = R.string.todo_list_no_places_message,
+                    action = R.string.home_add_place,
+                    onAction = onAddPlace,
+                )
+                TodoListEmptyState.NO_TODOS -> EmptyState(
+                    title = R.string.todo_list_empty_title,
+                    message = R.string.todo_list_empty_message,
+                    action = R.string.todo_editor_title,
+                    onAction = { isAddingTodo = true },
+                )
+                TodoListEmptyState.NO_MATCHES -> EmptyState(title = R.string.todo_list_filter_empty)
+                null -> TodoGroups(
+                    groups = uiState.groups,
+                    onOpenPlace = { placeId ->
+                        viewModel.requestPlace(placeId)
+                        onOpenPlace()
+                    },
+                    onToggle = viewModel::setTodoCompleted,
+                    onDelete = viewModel::deleteTodo,
+                )
+            }
+        }
+    }
+    if (isAddingTodo) {
+        TodoEditorSheet(placeId = null, onDismiss = { isAddingTodo = false })
+    }
+}
+
+@Composable
+private fun FilterChipFor(filter: TodoFilter, label: Int, selected: TodoFilter, onSelect: (TodoFilter) -> Unit) {
+    FilterChip(
+        selected = selected == filter,
+        onClick = { onSelect(filter) },
+        label = { Text(stringResource(label)) },
+    )
+}
+
+@Composable
+private fun TodoGroups(
+    groups: List<TodoGroup>,
+    onOpenPlace: (UUID) -> Unit,
+    onToggle: (UUID, Boolean) -> Unit,
+    onDelete: (UUID) -> Unit,
+) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        for (group in groups) {
+            item(key = "place-${group.place.id}") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenPlace(group.place.id) }
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        CategoryStyle.icon(group.category?.icon),
+                        contentDescription = null,
+                        tint = CategoryStyle.tint(group.category?.color),
+                    )
+                    Text(group.place.name, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            items(group.todos, key = { it.id }) { todo ->
+                TodoRow(todo = todo, onToggle = { onToggle(todo.id, it) }, onDelete = { onDelete(todo.id) })
+            }
+        }
+        item { Spacer(Modifier.height(96.dp)) }
+    }
+}
+
+@Composable
+private fun EmptyState(title: Int, message: Int? = null, action: Int? = null, onAction: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -26,13 +167,21 @@ fun TodoListScreen() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(stringResource(R.string.todo_list_no_places_title), style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.todo_list_no_places_message),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+        if (message != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(message),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+        if (action != null) {
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onAction) {
+                Text(stringResource(action))
+            }
+        }
     }
 }

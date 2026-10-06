@@ -3,6 +3,9 @@ package com.locatedo.locatedo.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.common.Geo
+import com.locatedo.locatedo.core.common.Nearby
+import com.locatedo.locatedo.core.common.NearbyPlace
+import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
@@ -43,6 +46,7 @@ data class PlaceDetail(
 data class HomeUiState(
     val isLoading: Boolean = true,
     val places: List<PlaceWithTodos> = emptyList(),
+    val nearby: List<NearbyPlace> = emptyList(),
     val categories: Map<UUID, Category> = emptyMap(),
     val selected: PlaceDetail? = null,
 ) {
@@ -61,6 +65,7 @@ class HomeViewModel @Inject constructor(
     private val todoRepository: TodoRepository,
     private val locationRepository: LocationRepository,
     private val geocodingRepository: GeocodingRepository,
+    private val selectionRequests: PlaceSelectionRequests,
 ) : ViewModel() {
     private val selectedId = MutableStateFlow<UUID?>(null)
     private val addresses = MutableStateFlow<Map<UUID, String?>>(emptyMap())
@@ -79,6 +84,7 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             isLoading = false,
             places = places,
+            nearby = Nearby.sort(places, here),
             categories = byId,
             selected = places.firstOrNull { it.place.id == selected }?.let { entry ->
                 PlaceDetail(
@@ -96,6 +102,17 @@ class HomeViewModel @Inject constructor(
     val cameraTargets: SharedFlow<Coordinate> = _cameraTargets
 
     val events: SharedFlow<HomeEvent> = _events
+
+    init {
+        viewModelScope.launch {
+            selectionRequests.pending.collect { placeId ->
+                if (placeId != null) {
+                    select(placeId)
+                    selectionRequests.consume(placeId)
+                }
+            }
+        }
+    }
 
     fun hasLocationPermission(): Boolean = locationRepository.hasForegroundPermission()
 

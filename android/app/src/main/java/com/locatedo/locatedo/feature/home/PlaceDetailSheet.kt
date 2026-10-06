@@ -1,14 +1,11 @@
 package com.locatedo.locatedo.feature.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,15 +18,10 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,13 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.feature.todos.TodoRow
 import java.util.UUID
 
 // Google Maps' place sheet: a header, a row of action chips, then the content; here the content is the to-dos.
@@ -159,42 +151,5 @@ private fun CompletedTodos(todos: List<Todo>, onToggle: (UUID, Boolean) -> Unit,
         for (todo in todos) {
             TodoRow(todo = todo, onToggle = { onToggle(todo.id, it) }, onDelete = { onDelete(todo.id) })
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TodoRow(todo: Todo, onToggle: (Boolean) -> Unit, onDelete: () -> Unit) {
-    SwipeToDismissBox(
-        state = rememberSwipeToDismissBoxState(),
-        backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.errorContainer)
-                    .padding(horizontal = 24.dp),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                Icon(
-                    Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.common_delete),
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
-        },
-        enableDismissFromStartToEnd = false,
-        onDismiss = { onDelete() },
-    ) {
-        ListItem(
-            headlineContent = {
-                Text(
-                    text = todo.title,
-                    textDecoration = if (todo.isCompleted) TextDecoration.LineThrough else null,
-                    color = if (todo.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                )
-            },
-            modifier = Modifier.padding(start = 8.dp),
-            leadingContent = { Checkbox(checked = todo.isCompleted, onCheckedChange = onToggle) },
-        )
     }
 }

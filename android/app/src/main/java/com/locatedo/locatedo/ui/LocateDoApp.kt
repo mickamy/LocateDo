@@ -101,7 +101,18 @@ fun LocateDoApp() {
                         },
                     )
                 }
-                entry<TodosKey> { TodoListScreen() }
+                entry<TodosKey> {
+                    TodoListScreen(
+                        onAddPlace = {
+                            placeEditor.start(placeId = null)
+                            backStack.add(PlaceSearchKey)
+                        },
+                        onOpenPlace = {
+                            backStack.clear()
+                            backStack.add(HomeKey)
+                        },
+                    )
+                }
                 entry<SettingsKey> { SettingsScreen() }
                 entry<PlaceSearchKey> {
                     PlaceSearchScreen(

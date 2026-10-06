@@ -1,0 +1,125 @@
+package com.locatedo.locatedo.feature.todos
+
+import com.locatedo.locatedo.core.common.PlaceSelectionRequests
+import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.testing.FakeCategoryRepository
+import com.locatedo.locatedo.testing.FakePlaceRepository
+import com.locatedo.locatedo.testing.FakeTodoRepository
+import java.time.Instant
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class TodoListViewModelTest {
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val now = Instant.parse("2026-10-06T00:00:00Z")
+    private val places = FakePlaceRepository()
+    private val categories = FakeCategoryRepository()
+    private val todos = FakeTodoRepository()
+    private val requests = PlaceSelectionRequests()
+    private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
+    private val pharmacy = Place(id = uuidV7(now), name = "Pharmacy", latitude = 35.1, longitude = 139.1, createdAt = now)
+    private val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
+    private val bread = Todo(id = uuidV7(now), title = "Bread", placeId = store.id, createdAt = now.plusSeconds(1), completedAt = now.plusSeconds(60))
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(dispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun withoutPlacesTheListAsksForAPlace() = runTest(dispatcher) {
+        val viewModel = viewModel()
+
+        assertEquals(TodoListEmptyState.NO_PLACES, viewModel.uiState.value.emptyState)
+    }
+
+    @Test
+    fun withPlacesButNoTodosItAsksForATodo() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, emptyList()))
+        val viewModel = viewModel()
+
+        assertEquals(TodoListEmptyState.NO_TODOS, viewModel.uiState.value.emptyState)
+    }
+
+    @Test
+    fun theOpenFilterGroupsOpenTodosByPlace() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk, bread)), PlaceWithTodos(pharmacy, emptyList()))
+        val viewModel = viewModel()
+
+        val state = viewModel.uiState.value
+        assertNull(state.emptyState)
+        assertEquals(listOf("Store"), state.groups.map { it.place.name })
+        assertEquals(listOf("Milk"), state.groups.single().todos.map { it.title })
+    }
+
+    @Test
+    fun theDoneFilterShowsCompletedTodosAndReportsNoMatches() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk, bread)))
+        val viewModel = viewModel()
+
+        viewModel.setFilter(TodoFilter.DONE)
+        assertEquals(listOf("Bread"), viewModel.uiState.value.groups.single().todos.map { it.title })
+
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
+        assertEquals(TodoListEmptyState.NO_MATCHES, viewModel.uiState.value.emptyState)
+    }
+
+    @Test
+    fun theAllFilterListsOpenThenCompleted() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, listOf(bread, milk)))
+        val viewModel = viewModel()
+
+        viewModel.setFilter(TodoFilter.ALL)
+
+        assertEquals(listOf("Milk", "Bread"), viewModel.uiState.value.groups.single().todos.map { it.title })
+    }
+
+    @Test
+    fun reopeningOverTheFreeLimitRaisesAnEvent() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, listOf(bread)))
+        val viewModel = viewModel()
+        val events = mutableListOf<TodoListEvent>()
+        backgroundScope.launch { viewModel.events.collect { events += it } }
+        todos.limit = FreeLimit.OPEN_TODOS
+
+        viewModel.setTodoCompleted(bread.id, completed = false)
+
+        assertEquals(listOf(TodoListEvent.LimitReached(FreeLimit.OPEN_TODOS)), events)
+    }
+
+    @Test
+    fun openingAPlaceLeavesARequestForTheHomeMap() = runTest(dispatcher) {
+        val viewModel = viewModel()
+
+        viewModel.requestPlace(store.id)
+
+        assertEquals(store.id, requests.pending.value)
+    }
+
+    private fun TestScope.viewModel(): TodoListViewModel {
+        val viewModel = TodoListViewModel(places, categories, todos, requests)
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        return viewModel
+    }
+}

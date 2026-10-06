@@ -43,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -135,7 +134,7 @@ fun HomeScreen(
                     onDeleteTodo = viewModel::deleteTodo,
                 )
             } else {
-                HomeSheet(uiState = uiState, onAddPlace = onAddPlace)
+                HomeSheet(uiState = uiState, onAddPlace = onAddPlace, onSelect = viewModel::select)
             }
         },
     ) { padding ->
@@ -261,7 +260,7 @@ private fun SearchBar(modifier: Modifier = Modifier, onSearch: () -> Unit, onAcc
 }
 
 @Composable
-private fun HomeSheet(uiState: HomeUiState, onAddPlace: () -> Unit) {
+private fun HomeSheet(uiState: HomeUiState, onAddPlace: () -> Unit, onSelect: (UUID) -> Unit) {
     if (uiState.isLoading) {
         Spacer(Modifier.height(sheetPeekHeight))
         return
@@ -270,11 +269,7 @@ private fun HomeSheet(uiState: HomeUiState, onAddPlace: () -> Unit) {
         EmptyPlaces(onAddPlace = onAddPlace)
         return
     }
-    Text(
-        text = pluralStringResource(R.plurals.home_open_summary, uiState.openTodoCount, uiState.openTodoCount),
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-        style = MaterialTheme.typography.titleMedium,
-    )
+    NearbyList(uiState = uiState, onSelect = onSelect)
 }
 
 @Composable
