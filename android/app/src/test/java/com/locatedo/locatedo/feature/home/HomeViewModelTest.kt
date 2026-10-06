@@ -1,22 +1,16 @@
 package com.locatedo.locatedo.feature.home
 
 import com.locatedo.locatedo.core.common.uuidV7
-import com.locatedo.locatedo.core.data.CategoryRepository
-import com.locatedo.locatedo.core.data.PlaceRepository
-import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.Category
-import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
-import android.location.Location
+import com.locatedo.locatedo.testing.FakeCategoryRepository
+import com.locatedo.locatedo.testing.FakeLocationRepository
+import com.locatedo.locatedo.testing.FakePlaceRepository
 import java.time.Instant
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -63,33 +57,4 @@ class HomeViewModelTest {
         assertEquals(grocery, state.categories[grocery.id])
         assertEquals(1, state.openTodoCount)
     }
-}
-
-private class FakePlaceRepository : PlaceRepository {
-    val state = MutableStateFlow<List<PlaceWithTodos>>(emptyList())
-
-    override fun observeAll(): Flow<List<Place>> = state.map { entries -> entries.map { it.place } }
-    override fun observeAllWithTodos(): Flow<List<PlaceWithTodos>> = state
-    override fun observeWithTodos(id: UUID): Flow<PlaceWithTodos?> = state.map { entries -> entries.firstOrNull { it.place.id == id } }
-    override suspend fun add(place: Place): FreeLimit? = null
-    override suspend fun update(place: Place) = Unit
-    override suspend fun delete(id: UUID) = Unit
-    override suspend fun markNotified(id: UUID, at: Instant) = Unit
-}
-
-private class FakeCategoryRepository : CategoryRepository {
-    val state = MutableStateFlow<List<Category>>(emptyList())
-
-    override fun observeAll(): Flow<List<Category>> = state
-    override suspend fun ensureBuiltins() = Unit
-    override suspend fun add(category: Category) = Unit
-    override suspend fun update(category: Category) = Unit
-    override suspend fun delete(id: UUID): Boolean = true
-    override suspend fun reorder(categories: List<Category>) = Unit
-}
-
-private class FakeLocationRepository : LocationRepository {
-    override fun hasForegroundPermission(): Boolean = false
-    override fun hasPrecisePermission(): Boolean = false
-    override suspend fun lastLocation(): Location? = null
 }

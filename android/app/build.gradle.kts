@@ -120,6 +120,7 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation(libs.places)
     implementation(libs.connect.kotlin)
     implementation(libs.connect.kotlin.okhttp)
     implementation(libs.connect.kotlin.google.javalite.ext)

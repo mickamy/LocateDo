@@ -11,3 +11,13 @@ data object TodosKey : NavKey
 
 @Serializable
 data object SettingsKey : NavKey
+
+// The add / edit flow: search, pick on the map, then the form. Its draft lives in PlaceEditorViewModel.
+@Serializable
+data object PlaceSearchKey : NavKey
+
+@Serializable
+data object PlacePickKey : NavKey
+
+@Serializable
+data object PlaceEditorKey : NavKey

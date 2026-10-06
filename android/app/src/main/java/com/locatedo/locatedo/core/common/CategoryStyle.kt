@@ -17,9 +17,14 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.model.BuiltinCategory
+import com.locatedo.locatedo.core.model.Category
 
 // Maps the app-defined `icon` / `color` keys shared with iOS and the server to Material symbols and colors.
 object CategoryStyle {
@@ -81,4 +86,20 @@ object CategoryStyle {
     fun tint(key: String?): Color = tints[key] ?: tints.getValue("gray")
 
     fun markerHue(key: String?): Float = hues[key] ?: BitmapDescriptorFactory.HUE_RED
+}
+
+// Built-in categories are named by the translations; custom ones carry their own name.
+@Composable
+fun categoryName(category: Category?): String {
+    if (category == null) {
+        return stringResource(R.string.category_none)
+    }
+    category.name?.let { return it }
+    return when (category.builtin) {
+        BuiltinCategory.SHOPPING -> stringResource(R.string.category_shopping)
+        BuiltinCategory.WORK -> stringResource(R.string.category_work)
+        BuiltinCategory.LIFE -> stringResource(R.string.category_life)
+        BuiltinCategory.OTHER -> stringResource(R.string.category_other)
+        null -> ""
+    }
 }

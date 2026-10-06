@@ -61,7 +61,7 @@ private val sheetPeekHeight = 96.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
     val requestPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -87,7 +87,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         scaffoldState = rememberBottomSheetScaffoldState(),
         sheetPeekHeight = sheetPeekHeight,
         sheetContent = {
-            HomeSheet(uiState = uiState, onAddPlace = {})
+            HomeSheet(uiState = uiState, onAddPlace = onAddPlace)
         },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -112,7 +112,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .align(Alignment.TopCenter),
-                onSearch = {},
+                onSearch = onAddPlace,
                 onAccount = {},
             )
             FloatingActionButton(
