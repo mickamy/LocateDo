@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.feature.home
 
 import android.Manifest
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -21,14 +22,18 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -55,15 +61,29 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
+import com.locatedo.locatedo.core.common.zoomForRadius
+import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.feature.todos.TodoEditorSheet
+import java.util.UUID
 
 private const val PLACE_ZOOM = 14f
 private val sheetPeekHeight = 96.dp
+private val detailPeekHeight = 360.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    onAddPlace: () -> Unit,
+    onEditPlace: (UUID) -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selected = uiState.selected
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
+    var placeToDelete by remember { mutableStateOf<Place?>(null) }
+    var isAddingTodo by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val todoLimitMessage = stringResource(R.string.paywall_reason_todos)
     val requestPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         hasLocationPermission = viewModel.hasLocationPermission()
         if (hasLocationPermission) {
@@ -72,6 +92,9 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
     }
     val cameraPositionState = rememberCameraPositionState()
 
+    BackHandler(enabled = selected != null) {
+        viewModel.clearSelection()
+    }
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             viewModel.locateMe()
@@ -79,15 +102,41 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
     }
     LaunchedEffect(Unit) {
         viewModel.cameraTargets.collect { target ->
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(target, PLACE_ZOOM))
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), PLACE_ZOOM))
+        }
+    }
+    LaunchedEffect(selected?.place?.id) {
+        val place = selected?.place ?: return@LaunchedEffect
+        cameraPositionState.animate(
+            CameraUpdateFactory.newLatLngZoom(LatLng(place.latitude, place.longitude), zoomForRadius(place.radiusMeters)),
+        )
+    }
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is HomeEvent.LimitReached -> snackbarHostState.showSnackbar(todoLimitMessage)
+            }
         }
     }
 
     BottomSheetScaffold(
         scaffoldState = rememberBottomSheetScaffoldState(),
-        sheetPeekHeight = sheetPeekHeight,
+        sheetPeekHeight = if (selected != null) detailPeekHeight else sheetPeekHeight,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         sheetContent = {
-            HomeSheet(uiState = uiState, onAddPlace = onAddPlace)
+            if (selected != null) {
+                PlaceDetailSheet(
+                    detail = selected,
+                    onClose = viewModel::clearSelection,
+                    onAddTodo = { isAddingTodo = true },
+                    onEdit = { onEditPlace(selected.place.id) },
+                    onDelete = { placeToDelete = selected.place },
+                    onToggleTodo = viewModel::setTodoCompleted,
+                    onDeleteTodo = viewModel::deleteTodo,
+                )
+            } else {
+                HomeSheet(uiState = uiState, onAddPlace = onAddPlace)
+            }
         },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -96,6 +145,7 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
                 uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false),
+                onMapClick = { viewModel.clearSelection() },
             ) {
                 for (entry in uiState.places) {
                     val place = entry.place
@@ -104,17 +154,32 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
                         state = rememberUpdatedMarkerState(position = LatLng(place.latitude, place.longitude)),
                         title = place.name,
                         icon = BitmapDescriptorFactory.defaultMarker(CategoryStyle.markerHue(category?.color)),
+                        onClick = {
+                            viewModel.select(place.id)
+                            true
+                        },
+                    )
+                }
+                selected?.place?.let { place ->
+                    Circle(
+                        center = LatLng(place.latitude, place.longitude),
+                        radius = place.radiusMeters,
+                        fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        strokeColor = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 2f,
                     )
                 }
             }
-            SearchBar(
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .align(Alignment.TopCenter),
-                onSearch = onAddPlace,
-                onAccount = {},
-            )
+            if (selected == null) {
+                SearchBar(
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .align(Alignment.TopCenter),
+                    onSearch = onAddPlace,
+                    onAccount = {},
+                )
+            }
             FloatingActionButton(
                 onClick = {
                     if (hasLocationPermission) {
@@ -132,6 +197,32 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
                 Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.home_my_location))
             }
         }
+    }
+
+    placeToDelete?.let { place ->
+        AlertDialog(
+            onDismissRequest = { placeToDelete = null },
+            title = { Text(stringResource(R.string.place_detail_delete_confirm_title, place.name)) },
+            text = { Text(stringResource(R.string.place_detail_delete_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deletePlace(place.id)
+                        placeToDelete = null
+                    },
+                ) {
+                    Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { placeToDelete = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+        )
+    }
+    if (isAddingTodo && selected != null) {
+        TodoEditorSheet(placeId = selected.place.id, onDismiss = { isAddingTodo = false })
     }
 }
 

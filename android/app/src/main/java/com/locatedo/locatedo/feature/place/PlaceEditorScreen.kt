@@ -50,14 +50,12 @@ import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.categoryName
+import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.Place
-import kotlin.math.log2
 import kotlin.math.roundToInt
 
 private const val RADIUS_STEP_METERS = 50f
-private const val PREVIEW_BASE_ZOOM = 16.0
-private const val PREVIEW_BASE_RADIUS_METERS = 100.0
 
 // Google Maps' "add a place" form: a full page with the save action in the top bar.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -197,7 +195,7 @@ private fun LocationPreview(coordinate: Coordinate, radiusMeters: Double) {
     val target = coordinate.toLatLng()
     val cameraPositionState = rememberCameraPositionState()
     LaunchedEffect(target, radiusMeters) {
-        cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(target, zoomFor(radiusMeters)))
+        cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(target, zoomForRadius(radiusMeters)))
     }
     GoogleMap(
         modifier = Modifier
@@ -226,7 +224,3 @@ private fun LocationPreview(coordinate: Coordinate, radiusMeters: Double) {
         )
     }
 }
-
-// Keeps the circle at roughly the same size on screen whatever the radius.
-private fun zoomFor(radiusMeters: Double): Float =
-    (PREVIEW_BASE_ZOOM - log2(radiusMeters / PREVIEW_BASE_RADIUS_METERS)).toFloat()

@@ -1,9 +1,9 @@
 package com.locatedo.locatedo.testing
 
-import android.location.Location
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
+import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.location.GeocodingRepository
@@ -13,6 +13,7 @@ import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.places.PlaceCandidate
 import com.locatedo.locatedo.core.places.PlacePrediction
 import com.locatedo.locatedo.core.places.PlacesRepository
@@ -67,10 +68,45 @@ class FakeCategoryRepository : CategoryRepository {
     override suspend fun reorder(categories: List<Category>) = Unit
 }
 
-class FakeLocationRepository : LocationRepository {
-    override fun hasForegroundPermission(): Boolean = false
-    override fun hasPrecisePermission(): Boolean = false
-    override suspend fun lastLocation(): Location? = null
+class FakeLocationRepository(var coordinate: Coordinate? = null) : LocationRepository {
+    override fun hasForegroundPermission(): Boolean = coordinate != null
+    override fun hasPrecisePermission(): Boolean = coordinate != null
+    override suspend fun lastCoordinate(): Coordinate? = coordinate
+}
+
+class FakeTodoRepository : TodoRepository {
+    val state = MutableStateFlow<List<Todo>>(emptyList())
+    val added = mutableListOf<Todo>()
+    val deleted = mutableListOf<UUID>()
+    var limit: FreeLimit? = null
+
+    override fun observeAll(): Flow<List<Todo>> = state
+
+    override suspend fun add(todo: Todo): FreeLimit? {
+        limit?.let { return it }
+        added += todo
+        state.value = state.value + todo
+        return null
+    }
+
+    override suspend fun update(todo: Todo) {
+        state.value = state.value.map { if (it.id == todo.id) todo else it }
+    }
+
+    override suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit? {
+        if (!completed) {
+            limit?.let { return it }
+        }
+        state.value = state.value.map {
+            if (it.id == id) it.copy(completedAt = if (completed) Instant.EPOCH else null) else it
+        }
+        return null
+    }
+
+    override suspend fun delete(ids: List<UUID>) {
+        deleted += ids
+        state.value = state.value.filter { it.id !in ids }
+    }
 }
 
 class FakePlacesRepository : PlacesRepository {

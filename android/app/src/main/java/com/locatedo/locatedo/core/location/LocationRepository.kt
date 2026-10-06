@@ -3,10 +3,10 @@ package com.locatedo.locatedo.core.location
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.LocationServices
+import com.locatedo.locatedo.core.model.Coordinate
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,7 +19,7 @@ import kotlinx.coroutines.tasks.await
 interface LocationRepository {
     fun hasForegroundPermission(): Boolean
     fun hasPrecisePermission(): Boolean
-    suspend fun lastLocation(): Location?
+    suspend fun lastCoordinate(): Coordinate?
 }
 
 @Singleton
@@ -31,17 +31,18 @@ class FusedLocationRepository @Inject constructor(@param:ApplicationContext priv
 
     override fun hasPrecisePermission(): Boolean = granted(Manifest.permission.ACCESS_FINE_LOCATION)
 
-    override suspend fun lastLocation(): Location? {
+    override suspend fun lastCoordinate(): Coordinate? {
         if (!hasForegroundPermission()) {
             return null
         }
-        return try {
+        val location = try {
             client.lastLocation.await()
         } catch (e: SecurityException) {
             null
         } catch (e: ApiException) {
             null
         }
+        return location?.let { Coordinate(it.latitude, it.longitude) }
     }
 
     private fun granted(permission: String): Boolean =

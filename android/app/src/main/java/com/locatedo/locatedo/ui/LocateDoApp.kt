@@ -95,6 +95,10 @@ fun LocateDoApp() {
                             placeEditor.start(placeId = null)
                             backStack.add(PlaceSearchKey)
                         },
+                        onEditPlace = { placeId ->
+                            placeEditor.start(placeId)
+                            backStack.add(PlaceEditorKey)
+                        },
                     )
                 }
                 entry<TodosKey> { TodoListScreen() }

@@ -122,7 +122,7 @@ class PlaceEditorViewModel @Inject constructor(
                     return@collect
                 }
                 isSearching.value = true
-                val near = draft.value.coordinate ?: locationRepository.lastLocation()?.let { Coordinate(it.latitude, it.longitude) }
+                val near = draft.value.coordinate ?: locationRepository.lastCoordinate()
                 predictions.value = placesRepository.autocomplete(text, near)
                 isSearching.value = false
             }
@@ -174,13 +174,11 @@ class PlaceEditorViewModel @Inject constructor(
         }
     }
 
-    suspend fun lastKnownCoordinate(): Coordinate? =
-        locationRepository.lastLocation()?.let { Coordinate(it.latitude, it.longitude) }
+    suspend fun lastKnownCoordinate(): Coordinate? = locationRepository.lastCoordinate()
 
     fun useCurrentLocation() {
         viewModelScope.launch {
-            val location = locationRepository.lastLocation() ?: return@launch
-            val coordinate = Coordinate(location.latitude, location.longitude)
+            val coordinate = locationRepository.lastCoordinate() ?: return@launch
             val geocoded = geocodingRepository.reverse(coordinate)
             choose(coordinate, geocoded?.name, geocoded?.address, PlaceSource.CURRENT_LOCATION)
         }
