@@ -27,6 +27,7 @@ type Account struct {
 	refreshToken     *usecase.RefreshToken     `di:""`
 	signOut          *usecase.SignOut          `di:""`
 	deleteAccount    *usecase.DeleteAccount    `di:""`
+	syncEntitlement  *usecase.SyncEntitlement  `di:""`
 }
 
 var _ accountv1connect.AccountServiceHandler = (*Account)(nil)
@@ -110,4 +111,18 @@ func (h *Account) DeleteAccount(
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&accountv1.DeleteAccountResponse{}), nil
+}
+
+func (h *Account) SyncEntitlement(
+	ctx context.Context,
+	_ *connect.Request[accountv1.SyncEntitlementRequest],
+) (*connect.Response[accountv1.SyncEntitlementResponse], error) {
+	userID, err := caller.UserID(ctx)
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+	if err := h.syncEntitlement.Do(ctx, usecase.SyncEntitlementInput{UserID: userID}); err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.SyncEntitlementResponse{}), nil
 }

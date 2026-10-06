@@ -14,6 +14,7 @@ func NewAccount(infra di.Infra, lib di.Lib) *Account {
 	refreshToken := usecase.NewRefreshToken(infra, lib)
 	signOut := usecase.NewSignOut(infra)
 	deleteAccount := usecase.NewDeleteAccount(infra)
+	syncEntitlement := usecase.NewSyncEntitlement(infra)
 
 	return &Account{
 		signInWithApple:  signInWithApple,
@@ -21,5 +22,6 @@ func NewAccount(infra di.Infra, lib di.Lib) *Account {
 		refreshToken:     refreshToken,
 		signOut:          signOut,
 		deleteAccount:    deleteAccount,
+		syncEntitlement:  syncEntitlement,
 	}
 }
