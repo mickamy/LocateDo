@@ -1,3 +1,4 @@
+import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,6 +9,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -20,10 +22,27 @@ android {
         applicationId = "com.locatedo.locatedo"
         minSdk = 31
         targetSdk = 37
-        versionCode = 1
+        // fastlane passes the build number; local builds stay at 1.
+        versionCode = providers.gradleProperty("LOCATEDO_VERSION_CODE").orNull?.toInt() ?: 1
         versionName = "1.0"
         // The secrets plugin fills this per app variant; the unit-test manifest merge only sees this default.
         manifestPlaceholders["MAPS_API_KEY"] = ""
+    }
+
+    // credentials/upload.jks signs what goes to Play (Play App Signing re-signs it); credentials/staging.jks signs the
+    // Firebase App Distribution builds. Neither is committed; the passwords come from Gradle properties.
+    signingConfigs {
+        for (name in listOf("staging", "upload")) {
+            val keystore = rootProject.file("credentials/$name.jks")
+            if (keystore.exists()) {
+                create(name) {
+                    storeFile = keystore
+                    storePassword = providers.gradleProperty("LOCATEDO_${name.uppercase()}_KEYSTORE_PASSWORD").orNull
+                    keyAlias = name
+                    keyPassword = storePassword
+                }
+            }
+        }
     }
 
     // One build type per server environment, matching the iOS Debug / Staging / Release configurations.
@@ -40,6 +59,7 @@ android {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
+            signingConfig = signingConfigs.findByName("upload")
             buildConfigField("String", "API_BASE_URL", "\"https://api.locatedo.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status.json\"")
             // The Play Store key is created in RevenueCat once the Play app exists.
@@ -49,7 +69,7 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".stg"
             matchingFallbacks += "release"
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("staging") ?: signingConfigs.getByName("debug")
             buildConfigField("String", "API_BASE_URL", "\"https://api-stg.locatedo.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status-stg.json\"")
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
@@ -96,6 +116,12 @@ room {
 secrets {
     defaultPropertiesFileName = "local.defaults.properties"
     ignoreList.add("sdk.*")
+}
+
+// google-services.json goes in src/{debug,staging,release}/ (not committed); clean checkouts and android-ci build
+// without it, and the deploy workflows write it from secrets.
+googleServices {
+    missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN
 }
 
 dependencies {

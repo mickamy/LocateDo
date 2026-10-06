@@ -16,6 +16,7 @@ mapsCompose = "9.0.0"
 playServicesMaps = "20.0.0"
 playServicesLocation = "21.4.0"
 secrets = "2.0.1"
+googleServices = "4.5.0"
 places = "6.0.2"
 hiltLifecycleViewmodelCompose = "1.4.0"
 coroutines = "1.11.0"
@@ -73,3 +74,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
