@@ -1,7 +1,7 @@
 StopBy reminds you of to-dos when you arrive at a place you saved, such as "buy milk" at the grocery store, and lets a household share those lists. It is for adults and families who run everyday errands; it has no social, content-discovery, or messaging features.
 
 SCREEN RECORDINGS (physical iPhone, latest iOS 26, the submitted build)
-Full flow from launch: onboarding and permissions, saving a place and a to-do, Sign in with Apple, the StopBy Pro paywall and a sandbox purchase, family sharing (invite, join on a second iPhone, remove / leave), and account deletion: VIDEO_URL
+Full flow from launch: onboarding and permissions, saving a place and a to-do, Sign in with Apple, the StopBy Pro paywall and a sandbox purchase, family sharing up to sending an invite, and account deletion: VIDEO_URL
 Arrival reminder on a real walk (it fires when the iPhone physically enters a saved place's radius): ARRIVAL_VIDEO_URL
 
 LOCATION ("ALWAYS" PERMISSION)
