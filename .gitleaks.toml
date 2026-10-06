@@ -3,8 +3,12 @@ title = "LocateDo"
 [extend]
 useDefault = true
 
-[[allowlists]]
-description = "Files that only contain placeholders or generated code"
+# Single-table form: gitleaks-action pins gitleaks 8.24, which does not read [[allowlists]].
+[allowlist]
+description = "Placeholders, generated code, and test fixtures"
+regexes = [
+  '''^0123456789abcdef$''',
+]
 paths = [
   '''\.gitleaks\.toml$''',
   '''\.env\.example$''',
