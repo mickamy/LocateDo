@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 // Google Maps' search: the field is the title, suggestions fill the page, and two shortcuts sit on top.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +41,7 @@ fun PlaceSearchScreen(
     onLocationChosen: () -> Unit,
     onBack: () -> Unit,
 ) {
+    TrackScreen(AnalyticsScreen.PLACE_SEARCH)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusRequester = remember { FocusRequester() }
 

@@ -1,5 +1,7 @@
 package com.locatedo.locatedo.feature.todos
 
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
@@ -32,6 +34,7 @@ class TodoEditorViewModelTest {
     private val now = Instant.parse("2026-10-06T00:00:00Z")
     private val todos = FakeTodoRepository()
     private val places = FakePlaceRepository()
+    private val paywalls = PaywallRequests()
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
 
     @Before
@@ -88,7 +91,7 @@ class TodoEditorViewModelTest {
     }
 
     @Test
-    fun theFreeLimitIsReported() = runTest(dispatcher) {
+    fun theFreeLimitOpensThePaywallAndKeepsTheSheet() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
         todos.limit = FreeLimit.OPEN_TODOS
@@ -97,12 +100,13 @@ class TodoEditorViewModelTest {
 
         viewModel.save()
 
-        assertEquals(listOf(TodoEditorEvent.LimitReached(FreeLimit.OPEN_TODOS)), events)
+        assertEquals(PaywallTrigger.TODO_LIMIT, paywalls.pending.value)
+        assertTrue(events.isEmpty())
         assertTrue(todos.added.isEmpty())
     }
 
     private fun TestScope.viewModel(): TodoEditorViewModel {
-        val viewModel = TodoEditorViewModel(todos, places, FakeMembershipRepository(), Clock.fixed(now, ZoneOffset.UTC))
+        val viewModel = TodoEditorViewModel(todos, places, FakeMembershipRepository(), paywalls, Clock.fixed(now, ZoneOffset.UTC))
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

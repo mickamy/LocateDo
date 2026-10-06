@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 enum class AccountFailure { SIGN_IN, DELETE }
 
 data class AccountScreenState(
+    val isLoading: Boolean = true,
     val isSignedIn: Boolean = false,
     val isWorking: Boolean = false,
     val needsReplaceConfirmation: Boolean = false,
@@ -37,6 +38,7 @@ class AccountViewModel @Inject constructor(private val accountManager: AccountMa
 
     val uiState: StateFlow<AccountScreenState> = combine(accountManager.uiState, local) { account, local ->
         AccountScreenState(
+            isLoading = false,
             isSignedIn = account.isSignedIn,
             isWorking = account.isWorking,
             needsReplaceConfirmation = account.needsReplaceConfirmation,

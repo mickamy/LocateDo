@@ -1,4 +1,4 @@
--- Q1: how much people set up in their first three days, against whether they are still around later.
+-- How much people set up in their first three days, against whether they are still around later.
 SELECT
   LEAST(places_added_first_3_days, 4) AS places_added_first_3_days,
   LEAST(todos_added_first_3_days, 10) AS todos_added_first_3_days,

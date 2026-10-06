@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.core.data
 
 import androidx.room.withTransaction
+import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.database.TodoDao
 import com.locatedo.locatedo.core.database.TodoEntity
@@ -31,18 +32,31 @@ class RoomTodoRepository @Inject constructor(
     private val todoDao: TodoDao,
     private val proStatus: ProStatus,
     private val queue: WriteQueue,
+    private val analytics: WriteAnalytics,
     private val clock: Clock,
 ) : TodoRepository {
+    // What a completion write found and did, so the analytics can be sent once the transaction is over.
+    private class Completion(val before: TodoEntity, val limit: FreeLimit?)
+
     override fun observeAll(): Flow<List<Todo>> =
         todoDao.observeAll().map { todos -> todos.map(TodoEntity::asModel) }
 
-    override suspend fun add(todo: Todo): FreeLimit? = database.withTransaction {
-        if (openLimitReached()) {
-            return@withTransaction FreeLimit.OPEN_TODOS
+    override suspend fun add(todo: Todo): FreeLimit? {
+        val limit = database.withTransaction {
+            if (openLimitReached()) {
+                return@withTransaction FreeLimit.OPEN_TODOS
+            }
+            todoDao.upsert(todo.asEntity())
+            queue.enqueue(Write.put(todo))
+            null
         }
-        todoDao.upsert(todo.asEntity())
-        queue.enqueue(Write.put(todo))
-        null
+        if (limit != null) {
+            analytics.limitReached(limit)
+            return limit
+        }
+        analytics.todoAdded(todo, todoDao.countOpen(), todoDao.countOpen(todo.placeId.toString()))
+        reportCounts()
+        return null
     }
 
     override suspend fun update(todo: Todo) {
@@ -54,17 +68,28 @@ class RoomTodoRepository @Inject constructor(
     }
 
     // Reopening counts against the free limit just like adding, so the server and the device agree.
-    override suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit? = database.withTransaction {
-        val todo = todoDao.get(id.toString()) ?: return@withTransaction null
-        val reopening = !completed && todo.completedAt != null
-        if (reopening && openLimitReached()) {
-            return@withTransaction FreeLimit.OPEN_TODOS
+    override suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit? {
+        val completion = database.withTransaction {
+            val todo = todoDao.get(id.toString()) ?: return@withTransaction null
+            val reopening = !completed && todo.completedAt != null
+            if (reopening && openLimitReached()) {
+                return@withTransaction Completion(todo, FreeLimit.OPEN_TODOS)
+            }
+            val now = clock.instant()
+            val completedAt = if (completed) now else null
+            todoDao.upsert(todo.copy(completedAt = completedAt?.toEpochMilli(), updatedAt = now.toEpochMilli()))
+            queue.enqueue(Write.completion(id, completedAt))
+            Completion(todo, null)
+        } ?: return null
+        if (completion.limit != null) {
+            analytics.limitReached(completion.limit)
+            return completion.limit
         }
-        val now = clock.instant()
-        val completedAt = if (completed) now else null
-        todoDao.upsert(todo.copy(completedAt = completedAt?.toEpochMilli(), updatedAt = now.toEpochMilli()))
-        queue.enqueue(Write.completion(id, completedAt))
-        null
+        if (completed && completion.before.completedAt == null) {
+            analytics.todoCompleted(completion.before.asModel(), todoDao.countOpen())
+        }
+        reportCounts()
+        return null
     }
 
     override suspend fun delete(ids: List<UUID>) {
@@ -72,8 +97,13 @@ class RoomTodoRepository @Inject constructor(
             todoDao.delete(ids.map(UUID::toString))
             queue.enqueue(ids.map { Write.deleteTodo(it) })
         }
+        reportCounts()
     }
 
     private suspend fun openLimitReached(): Boolean =
         !proStatus.isPro() && todoDao.countOpen() >= FreeLimit.OPEN_TODOS.max
+
+    private suspend fun reportCounts() {
+        analytics.countsChanged(database.placeDao().count(), todoDao.countOpen())
+    }
 }

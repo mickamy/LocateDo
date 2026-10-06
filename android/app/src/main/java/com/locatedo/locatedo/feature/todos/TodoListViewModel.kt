@@ -3,13 +3,14 @@ package com.locatedo.locatedo.feature.todos
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.model.Category
-import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
@@ -17,9 +18,7 @@ import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -60,10 +59,6 @@ data class TodoListUiState(
         }
 }
 
-sealed interface TodoListEvent {
-    data class LimitReached(val limit: FreeLimit) : TodoListEvent
-}
-
 @HiltViewModel
 class TodoListViewModel @Inject constructor(
     placeRepository: PlaceRepository,
@@ -71,14 +66,12 @@ class TodoListViewModel @Inject constructor(
     membershipRepository: MembershipRepository,
     private val todoRepository: TodoRepository,
     private val selectionRequests: PlaceSelectionRequests,
+    private val paywallRequests: PaywallRequests,
     authenticator: Authenticator,
     private val sync: SyncEngine,
 ) : ViewModel() {
     private val filter = MutableStateFlow(TodoFilter.OPEN)
     private val isRefreshing = MutableStateFlow(false)
-    private val _events = MutableSharedFlow<TodoListEvent>()
-
-    val events: SharedFlow<TodoListEvent> = _events
 
     val uiState: StateFlow<TodoListUiState> = combine(
         placeRepository.observeAllWithTodos(),
@@ -125,7 +118,7 @@ class TodoListViewModel @Inject constructor(
     fun setTodoCompleted(todoId: UUID, completed: Boolean) {
         viewModelScope.launch {
             val limit = todoRepository.setCompleted(todoId, completed) ?: return@launch
-            _events.emit(TodoListEvent.LimitReached(limit))
+            paywallRequests.request(limit.paywallTrigger)
         }
     }
 

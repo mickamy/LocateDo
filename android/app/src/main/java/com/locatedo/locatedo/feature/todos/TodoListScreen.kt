@@ -22,13 +22,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.assigneeChoices
 import com.locatedo.locatedo.ui.components.assigneeName
 import java.util.UUID
@@ -55,22 +54,12 @@ fun TodoListScreen(
     onOpenPlace: () -> Unit,
     viewModel: TodoListViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.TODOS)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isAddingTodo by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val limitMessage = stringResource(R.string.paywall_reason_todos)
-
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is TodoListEvent.LimitReached -> snackbarHostState.showSnackbar(limitMessage)
-            }
-        }
-    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_todos)) }) },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             if (uiState.hasPlaces) {
                 ExtendedFloatingActionButton(

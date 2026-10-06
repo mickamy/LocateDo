@@ -42,10 +42,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.EditorMode
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.builtinCategoryName
 import com.locatedo.locatedo.core.common.categoryColorName
 import com.locatedo.locatedo.core.model.Category
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.CategoryBadge
 
 // Name, then the icon and color grids, with the badge previewing the result.
@@ -56,6 +60,8 @@ fun CategoryEditorSheet(
     onDismiss: () -> Unit,
     viewModel: CategoryEditorViewModel = hiltViewModel(),
 ) {
+    val mode = if (category == null) EditorMode.NEW else EditorMode.EDIT
+    TrackScreen(AnalyticsScreen.CATEGORY_EDITOR, mapOf(AnalyticsParameter.MODE to mode.key))
     val draft by viewModel.draft.collectAsStateWithLifecycle()
     val builtinTitle = category?.builtin?.let { builtinCategoryName(it) }
 

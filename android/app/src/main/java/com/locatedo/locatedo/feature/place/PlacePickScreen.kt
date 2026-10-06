@@ -36,7 +36,9 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.model.Coordinate
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 private const val PICK_ZOOM = 16f
 private val pinSize = 48.dp
@@ -49,6 +51,7 @@ fun PlacePickScreen(
     onLocationChosen: () -> Unit,
     onBack: () -> Unit,
 ) {
+    TrackScreen(AnalyticsScreen.PLACE_PICKER)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val initial = uiState.draft.coordinate
     val cameraPositionState = rememberCameraPositionState {

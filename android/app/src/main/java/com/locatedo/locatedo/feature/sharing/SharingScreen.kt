@@ -57,11 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.model.MemberRole
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
 import com.locatedo.locatedo.feature.account.GoogleSignInButton
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.BenefitRow
 import com.locatedo.locatedo.ui.components.shownName
 
@@ -75,6 +77,9 @@ fun SharingScreen(
     accountViewModel: AccountViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    if (!uiState.isLoading) {
+        TrackScreen(if (uiState.isSignedIn) AnalyticsScreen.SHARING else AnalyticsScreen.SHARING_INTRO)
+    }
     val accountState by accountViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val inviteMessage = stringResource(R.string.sharing_invite_message)
@@ -116,6 +121,7 @@ fun SharingScreen(
             ) {
                 SignedIn(
                     state = uiState,
+                    onUpgrade = viewModel::upgrade,
                     onInvite = viewModel::createInvite,
                     onRemove = { memberToRemove = it },
                     onAcceptInvite = onAcceptInvite,
@@ -180,6 +186,7 @@ private fun shareInvite(context: Context, text: String) {
 @Composable
 private fun SignedIn(
     state: SharingUiState,
+    onUpgrade: () -> Unit,
     onInvite: () -> Unit,
     onRemove: (Membership) -> Unit,
     onAcceptInvite: () -> Unit,
@@ -188,7 +195,7 @@ private fun SignedIn(
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         state.status?.let { status ->
             item(key = "header") {
-                SharingHeader(status = status, state = state, onInvite = onInvite)
+                SharingHeader(status = status, state = state, onUpgrade = onUpgrade, onInvite = onInvite)
             }
         }
         item(key = "members") {
@@ -247,7 +254,7 @@ private fun SignedIn(
 }
 
 @Composable
-private fun SharingHeader(status: SharingStatus, state: SharingUiState, onInvite: () -> Unit) {
+private fun SharingHeader(status: SharingStatus, state: SharingUiState, onUpgrade: () -> Unit, onInvite: () -> Unit) {
     val ownerName = state.owner?.shownName() ?: stringResource(R.string.sharing_unnamed_member)
     val title = when (status) {
         SharingStatus.OWNER_FREE -> stringResource(R.string.sharing_intro_title)
@@ -272,7 +279,12 @@ private fun SharingHeader(status: SharingStatus, state: SharingUiState, onInvite
         Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         when (status) {
-            SharingStatus.OWNER_FREE -> Benefits()
+            SharingStatus.OWNER_FREE -> {
+                Benefits()
+                Button(onClick = onUpgrade, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.settings_pro_upgrade))
+                }
+            }
             SharingStatus.OWNER_ALONE, SharingStatus.OWNER_SHARING -> InviteAction(state = state, onInvite = onInvite)
             SharingStatus.MEMBER -> Unit
         }

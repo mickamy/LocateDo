@@ -51,8 +51,10 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.model.Category
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.CategoryBadge
 import com.locatedo.locatedo.ui.components.SwipeToDeleteBackground
 import com.locatedo.locatedo.ui.components.dragToReorderHandle
@@ -66,6 +68,7 @@ fun CategoriesScreen(
     onBack: () -> Unit,
     viewModel: CategoryListViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.CATEGORIES)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Category?>(null) }
     var isAdding by remember { mutableStateOf(false) }

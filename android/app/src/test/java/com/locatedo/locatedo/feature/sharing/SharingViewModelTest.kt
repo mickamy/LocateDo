@@ -1,5 +1,7 @@
 package com.locatedo.locatedo.feature.sharing
 
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.model.MemberRole
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Plan
@@ -40,6 +42,7 @@ class SharingViewModelTest {
     private val syncState = FakeSyncStateRepository(SyncState(householdId = UUID.randomUUID(), plan = Plan.PRO))
     private val households = FakeHouseholdManager()
     private val sync = FakeSyncEngine()
+    private val paywalls = PaywallRequests()
     private val me = Membership(testSession.userId, MemberRole.OWNER, "Taro", now, now)
     private val other = Membership(UUID.randomUUID(), MemberRole.MEMBER, "Hanako", now, now)
 
@@ -62,12 +65,16 @@ class SharingViewModelTest {
     }
 
     @Test
-    fun anOwnerWithoutProSeesTheProRequirement() = runTest(dispatcher) {
+    fun anOwnerWithoutProSeesTheProRequirementAndCanUpgrade() = runTest(dispatcher) {
         syncState.state.value = SyncState(householdId = UUID.randomUUID(), plan = Plan.FREE)
         memberships.state.value = listOf(me)
         val viewModel = viewModel()
 
         assertEquals(SharingStatus.OWNER_FREE, viewModel.uiState.value.status)
+
+        viewModel.upgrade()
+
+        assertEquals(PaywallTrigger.SHARE, paywalls.pending.value)
     }
 
     @Test
@@ -138,7 +145,7 @@ class SharingViewModelTest {
 
     private fun TestScope.viewModel(signedIn: Boolean = true): SharingViewModel {
         val authenticator = fakeAuthenticator(if (signedIn) testSession else null)
-        val viewModel = SharingViewModel(memberships, syncState, authenticator, households, sync)
+        val viewModel = SharingViewModel(memberships, syncState, authenticator, households, sync, paywalls)
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

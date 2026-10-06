@@ -15,6 +15,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +25,10 @@ interface ArrivalNotifier {
 }
 
 @Singleton
-class AndroidArrivalNotifier @Inject constructor(@param:ApplicationContext private val context: Context) : ArrivalNotifier {
+class AndroidArrivalNotifier @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val clock: Clock,
+) : ArrivalNotifier {
     private val manager = NotificationManagerCompat.from(context)
 
     override fun prepare() {
@@ -43,7 +47,7 @@ class AndroidArrivalNotifier @Inject constructor(@param:ApplicationContext priva
         val contentIntent = PendingIntent.getActivity(
             context,
             place.id.hashCode(),
-            MainActivity.placeIntent(context, place.id),
+            MainActivity.placeIntent(context, place.id, notifiedAt = clock.instant()),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)

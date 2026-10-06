@@ -289,6 +289,7 @@ paywall:
   start_trial: "無料で試す"
   subscribe: "登録する"
   renewal_note: "解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、設定からいつでも解約できます。"
+  android_renewal_note: "解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、Google Play からいつでも解約できます。"
   restore: "購入を復元"
   terms: "利用規約"
   member_message: "世帯のオーナーが Pro にすると使えるようになります。"

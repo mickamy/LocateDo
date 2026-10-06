@@ -2,9 +2,11 @@ package com.locatedo.locatedo.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
+import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
-import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.sharing.InviteRequests
@@ -12,7 +14,6 @@ import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +42,7 @@ class AppViewModel @Inject constructor(
     private val permissions: PermissionsRepository,
     selectionRequests: PlaceSelectionRequests,
     private val inviteRequests: InviteRequests,
+    private val paywallRequests: PaywallRequests,
     sync: SyncEngine,
 ) : ViewModel() {
     private val isExplainingAlwaysLocation = MutableStateFlow(false)
@@ -51,8 +53,8 @@ class AppViewModel @Inject constructor(
     // An invite link opened from outside; the tabs open the join screen with it.
     val pendingInvite: StateFlow<String?> = inviteRequests.pending
 
-    // A queued write the server refused on the free plan; the row is already gone, the user gets told why.
-    val limitRejected: Flow<FreeLimit> = sync.limitRejected
+    // Some screen hit a free limit, or the server refused a queued write; either way the paywall explains.
+    val pendingPaywall: StateFlow<PaywallTrigger?> = paywallRequests.pending
 
     val uiState: StateFlow<AppUiState> = combine(preferences.data, isExplainingAlwaysLocation) { stored, explaining ->
         AppUiState(
@@ -66,6 +68,12 @@ class AppViewModel @Inject constructor(
             },
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AppUiState())
+
+    init {
+        viewModelScope.launch {
+            sync.limitRejected.collect { paywallRequests.request(it.paywallTrigger) }
+        }
+    }
 
     // Offered once, right after the first place is saved, while location is granted for foreground use only.
     fun placeAdded() {
@@ -93,6 +101,8 @@ class AppViewModel @Inject constructor(
     }
 
     fun inviteConsumed(token: String) = inviteRequests.consume(token)
+
+    fun paywallConsumed(trigger: PaywallTrigger) = paywallRequests.consume(trigger)
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

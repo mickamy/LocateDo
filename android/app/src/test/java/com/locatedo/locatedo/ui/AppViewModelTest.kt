@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.ui
 
+import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.sharing.InviteRequests
@@ -46,7 +47,7 @@ class AppViewModelTest {
     fun startsLoadingThenReflectsOnboarding() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         preferences.setCompletedOnboarding(true)
-        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests(), InviteRequests(), FakeSyncEngine())
+        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests(), InviteRequests(), PaywallRequests(), FakeSyncEngine())
         assertTrue(viewModel.uiState.value.isLoading)
 
         subscribe(viewModel)
@@ -59,7 +60,7 @@ class AppViewModelTest {
     @Test
     fun theFirstPlaceOffersAlwaysLocationOnceWhileItIsWhenInUse() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE), PlaceSelectionRequests(), InviteRequests(), FakeSyncEngine())
+        val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE), PlaceSelectionRequests(), InviteRequests(), PaywallRequests(), FakeSyncEngine())
         subscribe(viewModel)
 
         viewModel.placeAdded()
@@ -77,7 +78,7 @@ class AppViewModelTest {
     fun nothingIsOfferedWhenLocationIsAlreadyAlwaysOrNotGranted() = runTest(dispatcher) {
         for (location in listOf(LocationAuth.ALWAYS, LocationAuth.DENIED, LocationAuth.NOT_DETERMINED)) {
             val preferences = testPreferences(folder.newFolder(location.name), backgroundScope)
-            val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = location), PlaceSelectionRequests(), InviteRequests(), FakeSyncEngine())
+            val viewModel = AppViewModel(preferences, FakePermissionsRepository(location = location), PlaceSelectionRequests(), InviteRequests(), PaywallRequests(), FakeSyncEngine())
             subscribe(viewModel)
 
             viewModel.placeAdded()
@@ -92,7 +93,7 @@ class AppViewModelTest {
         val preferences = testPreferences(folder.root, backgroundScope)
         preferences.setCompletedOnboarding(true)
         preferences.setPendingRemovedNotice(true)
-        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests(), InviteRequests(), FakeSyncEngine())
+        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests(), InviteRequests(), PaywallRequests(), FakeSyncEngine())
         subscribe(viewModel)
 
         assertEquals(AppNotice.REMOVED, viewModel.uiState.first { !it.isLoading }.notice)
@@ -108,7 +109,7 @@ class AppViewModelTest {
         val preferences = testPreferences(folder.root, backgroundScope)
         val invites = InviteRequests()
         invites.request("invite-token-0123456789")
-        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests(), invites, FakeSyncEngine())
+        val viewModel = AppViewModel(preferences, FakePermissionsRepository(), PlaceSelectionRequests(), invites, PaywallRequests(), FakeSyncEngine())
 
         assertEquals("invite-token-0123456789", viewModel.pendingInvite.value)
 

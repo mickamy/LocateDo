@@ -47,6 +47,9 @@ const (
 	// AccountServiceDeleteAccountProcedure is the fully-qualified name of the AccountService's
 	// DeleteAccount RPC.
 	AccountServiceDeleteAccountProcedure = "/locatedo.account.v1.AccountService/DeleteAccount"
+	// AccountServiceSyncEntitlementProcedure is the fully-qualified name of the AccountService's
+	// SyncEntitlement RPC.
+	AccountServiceSyncEntitlementProcedure = "/locatedo.account.v1.AccountService/SyncEntitlement"
 )
 
 // AccountServiceClient is a client for the locatedo.account.v1.AccountService service.
@@ -57,6 +60,10 @@ type AccountServiceClient interface {
 	// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
 	SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
+	// Re-reads the caller's subscription and updates their household plan in the background.
+	// Call it after linking the purchase SDK to the user, since a purchase made before
+	// signing in sends no webhook naming the user.
+	SyncEntitlement(context.Context, *connect.Request[v1.SyncEntitlementRequest]) (*connect.Response[v1.SyncEntitlementResponse], error)
 }
 
 // NewAccountServiceClient constructs a client for the locatedo.account.v1.AccountService service.
@@ -100,6 +107,12 @@ func NewAccountServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(accountServiceMethods.ByName("DeleteAccount")),
 			connect.WithClientOptions(opts...),
 		),
+		syncEntitlement: connect.NewClient[v1.SyncEntitlementRequest, v1.SyncEntitlementResponse](
+			httpClient,
+			baseURL+AccountServiceSyncEntitlementProcedure,
+			connect.WithSchema(accountServiceMethods.ByName("SyncEntitlement")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -110,6 +123,7 @@ type accountServiceClient struct {
 	refreshToken     *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
 	signOut          *connect.Client[v1.SignOutRequest, v1.SignOutResponse]
 	deleteAccount    *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
+	syncEntitlement  *connect.Client[v1.SyncEntitlementRequest, v1.SyncEntitlementResponse]
 }
 
 // SignInWithApple calls locatedo.account.v1.AccountService.SignInWithApple.
@@ -137,6 +151,11 @@ func (c *accountServiceClient) DeleteAccount(ctx context.Context, req *connect.R
 	return c.deleteAccount.CallUnary(ctx, req)
 }
 
+// SyncEntitlement calls locatedo.account.v1.AccountService.SyncEntitlement.
+func (c *accountServiceClient) SyncEntitlement(ctx context.Context, req *connect.Request[v1.SyncEntitlementRequest]) (*connect.Response[v1.SyncEntitlementResponse], error) {
+	return c.syncEntitlement.CallUnary(ctx, req)
+}
+
 // AccountServiceHandler is an implementation of the locatedo.account.v1.AccountService service.
 type AccountServiceHandler interface {
 	SignInWithApple(context.Context, *connect.Request[v1.SignInWithAppleRequest]) (*connect.Response[v1.SignInWithAppleResponse], error)
@@ -145,6 +164,10 @@ type AccountServiceHandler interface {
 	// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
 	SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
+	// Re-reads the caller's subscription and updates their household plan in the background.
+	// Call it after linking the purchase SDK to the user, since a purchase made before
+	// signing in sends no webhook naming the user.
+	SyncEntitlement(context.Context, *connect.Request[v1.SyncEntitlementRequest]) (*connect.Response[v1.SyncEntitlementResponse], error)
 }
 
 // NewAccountServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -184,6 +207,12 @@ func NewAccountServiceHandler(svc AccountServiceHandler, opts ...connect.Handler
 		connect.WithSchema(accountServiceMethods.ByName("DeleteAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
+	accountServiceSyncEntitlementHandler := connect.NewUnaryHandler(
+		AccountServiceSyncEntitlementProcedure,
+		svc.SyncEntitlement,
+		connect.WithSchema(accountServiceMethods.ByName("SyncEntitlement")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/locatedo.account.v1.AccountService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AccountServiceSignInWithAppleProcedure:
@@ -196,6 +225,8 @@ func NewAccountServiceHandler(svc AccountServiceHandler, opts ...connect.Handler
 			accountServiceSignOutHandler.ServeHTTP(w, r)
 		case AccountServiceDeleteAccountProcedure:
 			accountServiceDeleteAccountHandler.ServeHTTP(w, r)
+		case AccountServiceSyncEntitlementProcedure:
+			accountServiceSyncEntitlementHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -223,4 +254,8 @@ func (UnimplementedAccountServiceHandler) SignOut(context.Context, *connect.Requ
 
 func (UnimplementedAccountServiceHandler) DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.DeleteAccount is not implemented"))
+}
+
+func (UnimplementedAccountServiceHandler) SyncEntitlement(context.Context, *connect.Request[v1.SyncEntitlementRequest]) (*connect.Response[v1.SyncEntitlementResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.SyncEntitlement is not implemented"))
 }

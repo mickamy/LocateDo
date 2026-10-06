@@ -1,5 +1,7 @@
 package com.locatedo.locatedo.feature.home
 
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.location.GeocodedPlace
@@ -44,6 +46,7 @@ class HomeViewModelTest {
     private val location = FakeLocationRepository(coordinate = Coordinate(35.6896, 139.7006))
     private val geocoding = FakeGeocodingRepository(GeocodedPlace(name = null, address = "1 Main St"))
     private val requests = PlaceSelectionRequests()
+    private val paywalls = PaywallRequests()
     private val grocery = Category(id = uuidV7(now), name = "Grocery", icon = "cart", color = "green", sortOrder = 0, updatedAt = now)
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.6580, longitude = 139.7016, categoryId = grocery.id, createdAt = now)
     private val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
@@ -63,7 +66,7 @@ class HomeViewModelTest {
     @Test
     fun startsLoadingThenShowsPlacesWithTheirCategories() = runTest(dispatcher) {
         places.state.value = emptyList()
-        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls)
         assertTrue(viewModel.uiState.value.isLoading)
 
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
@@ -117,15 +120,13 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun reopeningOverTheFreeLimitRaisesAnEvent() = runTest(dispatcher) {
+    fun reopeningOverTheFreeLimitAsksForThePaywall() = runTest(dispatcher) {
         val viewModel = viewModel()
-        val events = mutableListOf<HomeEvent>()
-        backgroundScope.launch { viewModel.events.collect { events += it } }
         todos.limit = FreeLimit.OPEN_TODOS
 
         viewModel.setTodoCompleted(milk.id, completed = false)
 
-        assertEquals(listOf(HomeEvent.LimitReached(FreeLimit.OPEN_TODOS)), events)
+        assertEquals(PaywallTrigger.TODO_LIMIT, paywalls.pending.value)
     }
 
     @Test
@@ -162,7 +163,7 @@ class HomeViewModelTest {
     }
 
     private fun TestScope.viewModel(): HomeViewModel {
-        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls)
         subscribe(viewModel)
         return viewModel
     }

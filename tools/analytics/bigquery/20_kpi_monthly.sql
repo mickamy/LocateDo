@@ -2,6 +2,7 @@
 -- Retention: users who started in the month and got an arrival reminder 7-13 days later (cohorts at least 14 days old).
 -- Share taps: users who tapped share / users active in the month.
 -- Trial conversion: trials started in the month that later converted (rc_* events come from RevenueCat).
+--   The _unaffected columns leave out users whose sync was held back by a stale server plan (see sync_blocked_weekly).
 -- Paid users: users whose latest subscription event by the end of the month is not an expiration.
 WITH months AS (
   SELECT month
@@ -53,9 +54,12 @@ conversion AS (
   SELECT
     DATE_TRUNC(DATE(t.started_at), MONTH) AS month,
     COUNT(*) AS trials_started,
-    COUNTIF(c.user_pseudo_id IS NOT NULL) AS trials_converted
+    COUNTIF(c.user_pseudo_id IS NOT NULL) AS trials_converted,
+    COUNTIF(NOT COALESCE(u.blocked_by_plan, FALSE)) AS trials_started_unaffected,
+    COUNTIF(c.user_pseudo_id IS NOT NULL AND NOT COALESCE(u.blocked_by_plan, FALSE)) AS trials_converted_unaffected
   FROM trials AS t
   LEFT JOIN converted AS c USING (user_pseudo_id)
+  LEFT JOIN `__PROJECT__.__DATASET__.users` AS u USING (user_pseudo_id)
   GROUP BY month
 ),
 lifecycle AS (
@@ -95,6 +99,9 @@ SELECT
   c.trials_started,
   c.trials_converted,
   SAFE_DIVIDE(c.trials_converted, c.trials_started) AS trial_conversion_rate,
+  c.trials_started_unaffected,
+  c.trials_converted_unaffected,
+  SAFE_DIVIDE(c.trials_converted_unaffected, c.trials_started_unaffected) AS trial_conversion_rate_unaffected,
   COALESCE(p.paid_users, 0) AS paid_users,
   SAFE_DIVIDE(
     COALESCE(p.paid_users, 0) - LAG(COALESCE(p.paid_users, 0)) OVER (ORDER BY m.month),

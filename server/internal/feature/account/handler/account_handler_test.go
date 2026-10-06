@@ -191,6 +191,37 @@ func TestAccount_DeleteAccount_requiresToken(t *testing.T) {
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 }
 
+func TestAccount_SyncEntitlement(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	client := newClient(t)
+	signedIn, err := client.SignInWithApple(t.Context(), connect.NewRequest(&accountv1.SignInWithAppleRequest{
+		IdentityToken:     "identity:apple-sub",
+		AuthorizationCode: "auth-code",
+		Nonce:             "0123456789abcdef",
+	}))
+	require.NoError(t, err)
+	req := connect.NewRequest(&accountv1.SyncEntitlementRequest{})
+	req.Header().Set("Authorization", "Bearer "+signedIn.Msg.GetSession().GetAccessToken())
+
+	// act
+	_, err = client.SyncEntitlement(t.Context(), req)
+
+	// assert
+	require.NoError(t, err)
+}
+
+func TestAccount_SyncEntitlement_requiresToken(t *testing.T) {
+	t.Parallel()
+
+	client := newClient(t)
+
+	_, err := client.SyncEntitlement(t.Context(), connect.NewRequest(&accountv1.SyncEntitlementRequest{}))
+
+	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
+}
+
 func newClient(t *testing.T) accountv1connect.AccountServiceClient {
 	t.Helper()
 

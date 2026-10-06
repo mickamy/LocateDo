@@ -1,10 +1,13 @@
 package com.locatedo.locatedo.core.data
 
+import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteQueue
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testPreferences
 import com.locatedo.locatedo.testing.testSession
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -14,12 +17,17 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class RoomCategoryRepositoryTest {
+    @get:Rule
+    val folder = TemporaryFolder()
+
     private lateinit var database: LocateDoDatabase
     private lateinit var repository: RoomCategoryRepository
     private val authenticator = fakeAuthenticator()
@@ -79,7 +87,9 @@ class RoomCategoryRepositoryTest {
         repository.ensureBuiltins()
         val kids = category("Kids")
         repository.add(kids)
-        val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), WriteQueue(database.pendingWriteDao(), authenticator, fixedClock), fixedClock)
+        val queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
+        val writeAnalytics = WriteAnalytics(FakeAnalytics(), testPreferences(folder.root, backgroundScope), fixedClock)
+        val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
         places.add(place("School").copy(categoryId = kids.id))
 
         assertTrue(repository.delete(kids.id))

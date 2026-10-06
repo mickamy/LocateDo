@@ -1,11 +1,14 @@
 package com.locatedo.locatedo.core.notifications
 
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeArrivalNotifier
+import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.fakeAuthenticator
 import com.locatedo.locatedo.testing.testSession
@@ -25,7 +28,15 @@ class ArrivalHandlerTest {
     private val places = FakePlaceRepository()
     private val notifier = FakeArrivalNotifier()
     private val authenticator = fakeAuthenticator()
-    private val handler = ArrivalHandler(places, notifier, authenticator, Clock.fixed(now, ZoneOffset.UTC))
+    private val analytics = FakeAnalytics()
+    private val handler = ArrivalHandler(
+        places,
+        FakeCategoryRepository(),
+        notifier,
+        authenticator,
+        analytics,
+        Clock.fixed(now, ZoneOffset.UTC),
+    )
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0000, longitude = 139.0, createdAt = now)
     private val office = Place(id = uuidV7(now), name = "Office", latitude = 35.0100, longitude = 139.0, createdAt = now)
     private val here = Coordinate(35.0001, 139.0)
@@ -44,6 +55,10 @@ class ArrivalHandlerTest {
         assertEquals(listOf("Milk"), titles)
         assertEquals(now, places.state.value.first { it.place.id == store.id }.place.lastNotifiedAt)
         assertNull(places.state.value.first { it.place.id == office.id }.place.lastNotifiedAt)
+        val values = analytics.values(AnalyticsEvent.ARRIVAL_NOTIFIED)
+        assertEquals(1L, values["open_todos"])
+        assertEquals("none", values["category"])
+        assertEquals(100L, values["radius_m"])
     }
 
     @Test

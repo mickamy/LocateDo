@@ -1,5 +1,7 @@
 package com.locatedo.locatedo.feature.todos
 
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.model.FreeLimit
@@ -39,6 +41,7 @@ class TodoListViewModelTest {
     private val todos = FakeTodoRepository()
     private val memberships = FakeMembershipRepository()
     private val requests = PlaceSelectionRequests()
+    private val paywalls = PaywallRequests()
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
     private val pharmacy = Place(id = uuidV7(now), name = "Pharmacy", latitude = 35.1, longitude = 139.1, createdAt = now)
     private val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
@@ -103,16 +106,14 @@ class TodoListViewModelTest {
     }
 
     @Test
-    fun reopeningOverTheFreeLimitRaisesAnEvent() = runTest(dispatcher) {
+    fun reopeningOverTheFreeLimitAsksForThePaywall() = runTest(dispatcher) {
         places.state.value = listOf(PlaceWithTodos(store, listOf(bread)))
         val viewModel = viewModel()
-        val events = mutableListOf<TodoListEvent>()
-        backgroundScope.launch { viewModel.events.collect { events += it } }
         todos.limit = FreeLimit.OPEN_TODOS
 
         viewModel.setTodoCompleted(bread.id, completed = false)
 
-        assertEquals(listOf(TodoListEvent.LimitReached(FreeLimit.OPEN_TODOS)), events)
+        assertEquals(PaywallTrigger.TODO_LIMIT, paywalls.pending.value)
     }
 
     @Test
@@ -125,7 +126,7 @@ class TodoListViewModelTest {
     }
 
     private fun TestScope.viewModel(): TodoListViewModel {
-        val viewModel = TodoListViewModel(places, categories, memberships, todos, requests, fakeAuthenticator(), FakeSyncEngine())
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, requests, paywalls, fakeAuthenticator(), FakeSyncEngine())
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }
@@ -145,7 +146,7 @@ class TodoListViewModelTest {
     @Test
     fun pullingToRefreshSyncsOnceSignedIn() = runTest(dispatcher) {
         val sync = FakeSyncEngine()
-        val viewModel = TodoListViewModel(places, categories, memberships, todos, requests, fakeAuthenticator(testSession), sync)
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, requests, paywalls, fakeAuthenticator(testSession), sync)
         backgroundScope.launch { viewModel.uiState.collect {} }
         assertTrue(viewModel.uiState.value.isSignedIn)
 

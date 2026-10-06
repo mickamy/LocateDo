@@ -15,6 +15,8 @@ import com.locatedo.account.v1.SignInWithGoogleRequest
 import com.locatedo.account.v1.SignInWithGoogleResponse
 import com.locatedo.account.v1.SignOutRequest
 import com.locatedo.account.v1.SignOutResponse
+import com.locatedo.account.v1.SyncEntitlementRequest
+import com.locatedo.account.v1.SyncEntitlementResponse
 import com.locatedo.account.v1.refreshTokenResponse
 import com.locatedo.account.v1.session
 import com.locatedo.category.v1.CategoryServiceClientInterface
@@ -123,6 +125,9 @@ class FakeAccountService : AccountServiceClientInterface {
         deleteCalls += 1
         return success(DeleteAccountResponse.getDefaultInstance())
     }
+
+    override suspend fun syncEntitlement(request: SyncEntitlementRequest, headers: Headers): ResponseMessage<SyncEntitlementResponse> =
+        success(SyncEntitlementResponse.getDefaultInstance())
 
     companion object {
         const val USER_ID = "0199bd00-0000-7000-8000-000000000001"

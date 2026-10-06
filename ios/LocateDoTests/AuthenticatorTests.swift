@@ -205,6 +205,7 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
             .failure(ConnectError(code: .unimplemented, message: nil))
         var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest?
         var deleteCalls = 0
+        var syncEntitlementCalls = 0
         var refreshDelay: Duration?
         var signOutTokens: [String] = []
         var signOutPushTokens: [String] = []
@@ -226,6 +227,10 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
 
     var deleteCalls: Int {
         state.withLock { $0.deleteCalls }
+    }
+
+    var syncEntitlementCalls: Int {
+        state.withLock { $0.syncEntitlementCalls }
     }
 
     func delayRefreshes(by delay: Duration) {
@@ -291,6 +296,14 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
     ) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse> {
         state.withLock { $0.deleteCalls += 1 }
         return ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountResponse()))
+    }
+
+    func syncEntitlement(
+        request: Locatedo_Account_V1_SyncEntitlementRequest,
+        headers: Connect.Headers
+    ) async -> ResponseMessage<Locatedo_Account_V1_SyncEntitlementResponse> {
+        state.withLock { $0.syncEntitlementCalls += 1 }
+        return ResponseMessage(result: .success(Locatedo_Account_V1_SyncEntitlementResponse()))
     }
 
     func signOut(

@@ -1,4 +1,4 @@
--- Q2: which kinds of places reminders fire at, and with what radius.
+-- Which kinds of places reminders fire at, and with what radius.
 SELECT
   DATE_TRUNC(event_date, MONTH) AS month,
   category,

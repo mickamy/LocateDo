@@ -88,6 +88,7 @@
     <string name="onboarding_permissions">そのために位置情報の許可をお願いします。</string>
     <string name="onboarding_start">はじめる</string>
     <string name="onboarding_tagline">行く場所が、やることを思い出させる。</string>
+    <string name="paywall_android_renewal_note">解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、Google Play からいつでも解約できます。</string>
     <string name="paywall_annual">年額</string>
     <string name="paywall_benefit_household">1 つの契約で、世帯の全員が使える</string>
     <string name="paywall_benefit_share">最大 5 人の家族と、場所と TODO を共有</string>

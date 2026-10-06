@@ -295,6 +295,7 @@ paywall:
   start_trial: "Start Free Trial"
   subscribe: "Subscribe"
   renewal_note: "Subscriptions renew automatically until canceled. Cancel anytime in Settings at least 24 hours before the current period ends."
+  android_renewal_note: "Subscriptions renew automatically until canceled. Cancel anytime in Google Play at least 24 hours before the current period ends."
   restore: "Restore Purchases"
   terms: "Terms of Use"
   member_message: "Ask your household’s owner to upgrade to Pro."

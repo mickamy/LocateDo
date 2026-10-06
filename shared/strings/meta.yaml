@@ -52,3 +52,5 @@ session_ended.android_message:
   platforms: [android]
 removed.android_message:
   platforms: [android]
+paywall.android_renewal_note:
+  platforms: [android]

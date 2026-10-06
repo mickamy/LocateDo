@@ -5,8 +5,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.locatedo.locatedo.core.model.Place
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +24,13 @@ data class UserPreferences(
     val hasPendingSessionEndedNotice: Boolean = false,
 )
 
+// What the analytics reporting remembers between launches; it survives sign-out and account deletion.
+data class AnalyticsRecord(
+    val firstLaunchedAt: Instant? = null,
+    val dailyStateReportedOn: String? = null,
+    val lastReportedLocationAuth: String? = null,
+)
+
 @Singleton
 class AppPreferences @Inject constructor(private val dataStore: DataStore<Preferences>) {
     private object Keys {
@@ -33,10 +42,21 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val registeredGeofences = stringPreferencesKey("registeredGeofences")
         val pendingRemovedNotice = booleanPreferencesKey("pendingRemovedNotice")
         val pendingSessionEndedNotice = booleanPreferencesKey("pendingSessionEndedNotice")
+        val firstLaunchedAt = longPreferencesKey("firstLaunchedAt")
+        val dailyStateReportedOn = stringPreferencesKey("dailyStateReportedOn")
+        val lastReportedLocationAuth = stringPreferencesKey("lastReportedLocationAuth")
     }
 
     // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
     val registeredGeofences: Flow<String> = dataStore.data.map { it[Keys.registeredGeofences] ?: "" }
+
+    val analytics: Flow<AnalyticsRecord> = dataStore.data.map { preferences ->
+        AnalyticsRecord(
+            firstLaunchedAt = preferences[Keys.firstLaunchedAt]?.let(Instant::ofEpochMilli),
+            dailyStateReportedOn = preferences[Keys.dailyStateReportedOn],
+            lastReportedLocationAuth = preferences[Keys.lastReportedLocationAuth],
+        )
+    }
 
     val data: Flow<UserPreferences> = dataStore.data.map { preferences ->
         val radius = preferences[Keys.defaultRadiusMeters]
@@ -86,6 +106,22 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setPendingSessionEndedNotice(pending: Boolean) {
         dataStore.edit { it[Keys.pendingSessionEndedNotice] = pending }
+    }
+
+    suspend fun recordFirstLaunch(now: Instant) {
+        dataStore.edit {
+            if (it[Keys.firstLaunchedAt] == null) {
+                it[Keys.firstLaunchedAt] = now.toEpochMilli()
+            }
+        }
+    }
+
+    suspend fun setDailyStateReportedOn(day: String) {
+        dataStore.edit { it[Keys.dailyStateReportedOn] = day }
+    }
+
+    suspend fun setLastReportedLocationAuth(key: String) {
+        dataStore.edit { it[Keys.lastReportedLocationAuth] = key }
     }
 
     suspend fun reset() {

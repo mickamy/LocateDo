@@ -20,4 +20,11 @@ public interface AccountServiceClientInterface {
   public suspend fun signOut(request: SignOutRequest, headers: Headers = emptyMap()): ResponseMessage<SignOutResponse>
 
   public suspend fun deleteAccount(request: DeleteAccountRequest, headers: Headers = emptyMap()): ResponseMessage<DeleteAccountResponse>
+
+  /**
+   *  Re-reads the caller's subscription and updates their household plan in the background.
+   *  Call it after linking the purchase SDK to the user, since a purchase made before
+   *  signing in sends no webhook naming the user.
+   */
+  public suspend fun syncEntitlement(request: SyncEntitlementRequest, headers: Headers = emptyMap()): ResponseMessage<SyncEntitlementResponse>
 }

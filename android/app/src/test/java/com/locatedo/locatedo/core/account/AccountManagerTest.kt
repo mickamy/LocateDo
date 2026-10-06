@@ -3,8 +3,10 @@ package com.locatedo.locatedo.core.account
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.locatedo.account.v1.signInWithGoogleResponse
+import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.api.AccessTokenStore
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.data.FakeProStatus
 import com.locatedo.locatedo.core.data.LocalData
 import com.locatedo.locatedo.core.data.RoomCategoryRepository
@@ -23,7 +25,9 @@ import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.testing.FakeAccountService
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeDeviceService
+import com.locatedo.locatedo.testing.FakeEntitlementSource
 import com.locatedo.locatedo.testing.FakeHouseholdService
 import com.locatedo.locatedo.testing.FakeInstallationIdSource
 import com.locatedo.locatedo.testing.InMemorySessionStore
@@ -34,6 +38,8 @@ import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -67,16 +73,19 @@ class AccountManagerTest {
     private val account = FakeAccountService()
     private val household = FakeHouseholdService()
     private val devices = FakeDeviceService()
+    private val entitlementSource = FakeEntitlementSource()
     private val sessionStore = InMemorySessionStore()
     private val authenticator = Authenticator(sessionStore, account, AccessTokenStore(), fixedClock, CoroutineScope(Dispatchers.Unconfined))
     private val householdId = "0199bd00-0000-7000-8000-0000000000aa"
+    private val analyticsScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Before
     fun setUp() {
         database = inMemoryDatabase()
         queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
-        places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, fixedClock)
-        todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, fixedClock)
+        val writeAnalytics = WriteAnalytics(FakeAnalytics(), testPreferences(folder.newFolder(), analyticsScope), fixedClock)
+        places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
+        todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
         categories = RoomCategoryRepository(database, database.categoryDao(), queue, fixedClock)
         syncState = RoomSyncStateRepository(database.syncStateDao())
         localData = LocalData(
@@ -94,6 +103,7 @@ class AccountManagerTest {
     @After
     fun tearDown() {
         database.close()
+        analyticsScope.cancel()
     }
 
     @Test
@@ -120,6 +130,7 @@ class AccountManagerTest {
         assertEquals(created?.id, state.householdId.toString())
         assertEquals(42L, state.cursor)
         assertEquals("the device is registered once the household exists", listOf("installation-1"), devices.registered.map { it.pushToken })
+        assertEquals("the store learns the user id once the household exists", listOf(FakeAccountService.USER_ID), entitlementSource.loggedIn)
         assertEquals(true, preferences.data.first().hasCompletedOnboarding)
     }
 
@@ -231,6 +242,7 @@ class AccountManagerTest {
         assertTrue(places.observeAll().first().isEmpty())
         assertNull(syncState.get().householdId)
         assertEquals(BuiltinCategory.entries.size, categories.observeAll().first().size)
+        assertEquals(1, entitlementSource.logOuts)
     }
 
     @Test
@@ -323,6 +335,7 @@ class AccountManagerTest {
             localData = localData,
             queue = queue,
             deviceRegistration = registration,
+            entitlements = Entitlements(entitlementSource, FakeAnalytics(), this),
             preferences = preferences,
             clock = fixedClock,
         )

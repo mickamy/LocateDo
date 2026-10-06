@@ -142,6 +142,24 @@ final class AccountManager {
         }
     }
 
+    // A purchase made before signing in sends no webhook naming the user, so the server re-reads it once linked.
+    func linkPurchases(_ entitlements: Entitlements) async {
+        guard let userID = authenticator.session?.userID else {
+            return
+        }
+        guard await entitlements.logIn(userID: userID) else {
+            return
+        }
+        let client = account
+        do {
+            _ = try await authenticator.authorized {
+                await client.syncEntitlement(request: Locatedo_Account_V1_SyncEntitlementRequest(), headers: [:])
+            }
+        } catch {
+            logger.notice("SyncEntitlement failed: \(error, privacy: .public)")
+        }
+    }
+
     func hasUnsyncedWrites() throws -> Bool {
         try context.fetchCount(FetchDescriptor<PendingWrite>()) > 0
     }

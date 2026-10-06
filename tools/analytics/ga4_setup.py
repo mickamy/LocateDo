@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Register LocateDo's GA4 custom definitions and set 14-month data retention (docs/analytics-plan.md A6).
+"""Register LocateDo's GA4 custom definitions and set 14-month data retention.
 
 Usage: python3 tools/analytics/ga4_setup.py [property_id] [service_account_key.json]
 
@@ -20,6 +20,7 @@ SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 USER_DIMENSIONS = ["plan", "location_auth", "household_members", "place_count", "open_todo_count", "signed_in"]
 EVENT_DIMENSIONS = [
     "source", "category", "via", "kind", "trigger", "from", "to", "notification_auth", "mode", "step", "reason", "result",
+    "household_plan",
 ]
 METRICS = {
     "place_count": "STANDARD",

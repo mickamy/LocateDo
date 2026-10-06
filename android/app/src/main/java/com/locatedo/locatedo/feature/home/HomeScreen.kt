@@ -29,8 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,9 +58,11 @@ import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.feature.todos.TodoEditorSheet
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.CategoryMarker
 import java.util.UUID
 
@@ -79,13 +79,12 @@ fun HomeScreen(
     onOpenSharing: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.HOME)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selected = uiState.selected
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
     var placeToDelete by remember { mutableStateOf<Place?>(null) }
     var isAddingTodo by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val todoLimitMessage = stringResource(R.string.paywall_reason_todos)
     val requestPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         hasLocationPermission = viewModel.hasLocationPermission()
         if (hasLocationPermission) {
@@ -113,13 +112,6 @@ fun HomeScreen(
             CameraUpdateFactory.newLatLngZoom(LatLng(place.latitude, place.longitude), zoomForRadius(place.radiusMeters)),
         )
     }
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is HomeEvent.LimitReached -> snackbarHostState.showSnackbar(todoLimitMessage)
-            }
-        }
-    }
 
     // The collapsed sheet shows one summary line, the whole empty state, or the top of a place's details.
     val peekHeight = when {
@@ -131,7 +123,6 @@ fun HomeScreen(
     BottomSheetScaffold(
         scaffoldState = rememberBottomSheetScaffoldState(),
         sheetPeekHeight = peekHeight,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         sheetContent = {
             if (selected != null) {
                 PlaceDetailSheet(

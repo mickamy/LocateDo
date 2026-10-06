@@ -99,3 +99,15 @@ func NewSignOut(infra di.Infra) *SignOut {
 		devices:    devices,
 	}
 }
+
+// NewSyncEntitlement initializes dependencies and constructs SyncEntitlement.
+func NewSyncEntitlement(infra di.Infra) *SyncEntitlement {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	messages := outbox.NewRepository(reader)
+
+	return &SyncEntitlement{
+		transactor: transactor,
+		messages:   messages,
+	}
+}

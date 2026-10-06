@@ -2,6 +2,8 @@ package com.locatedo.locatedo.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.common.Geo
 import com.locatedo.locatedo.core.common.Nearby
 import com.locatedo.locatedo.core.common.NearbyPlace
@@ -14,7 +16,6 @@ import com.locatedo.locatedo.core.location.GeocodingRepository
 import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
-import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
@@ -57,10 +58,6 @@ data class HomeUiState(
         get() = places.sumOf { it.openTodos.size }
 }
 
-sealed interface HomeEvent {
-    data class LimitReached(val limit: FreeLimit) : HomeEvent
-}
-
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val placeRepository: PlaceRepository,
@@ -70,12 +67,12 @@ class HomeViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val geocodingRepository: GeocodingRepository,
     private val selectionRequests: PlaceSelectionRequests,
+    private val paywallRequests: PaywallRequests,
 ) : ViewModel() {
     private val selectedId = MutableStateFlow<UUID?>(null)
     private val addresses = MutableStateFlow<Map<UUID, String?>>(emptyMap())
     private val currentCoordinate = MutableStateFlow<Coordinate?>(null)
     private val _cameraTargets = MutableSharedFlow<Coordinate>()
-    private val _events = MutableSharedFlow<HomeEvent>()
 
     val uiState: StateFlow<HomeUiState> = combine(
         placeRepository.observeAllWithTodos(),
@@ -105,8 +102,6 @@ class HomeViewModel @Inject constructor(
 
     // One-off camera moves, like the Google Maps "my location" button.
     val cameraTargets: SharedFlow<Coordinate> = _cameraTargets
-
-    val events: SharedFlow<HomeEvent> = _events
 
     init {
         viewModelScope.launch {
@@ -147,7 +142,7 @@ class HomeViewModel @Inject constructor(
     fun setTodoCompleted(todoId: UUID, completed: Boolean) {
         viewModelScope.launch {
             val limit = todoRepository.setCompleted(todoId, completed) ?: return@launch
-            _events.emit(HomeEvent.LimitReached(limit))
+            paywallRequests.request(limit.paywallTrigger)
         }
     }
 

@@ -1,4 +1,4 @@
--- Q3: where "Always" location access is lost: the onboarding choice, and later changes.
+-- Where "Always" location access is lost: the onboarding choice, and later changes.
 SELECT
   DATE_TRUNC(event_date, MONTH) AS month,
   IF(event_name = 'onboarding_completed', 'onboarding', 'changed') AS moment,

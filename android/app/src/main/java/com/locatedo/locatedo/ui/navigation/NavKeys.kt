@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -20,6 +21,9 @@ data object AccountKey : NavKey
 
 @Serializable
 data object SharingKey : NavKey
+
+@Serializable
+data class PaywallKey(val trigger: PaywallTrigger) : NavKey
 
 // A token arrives with an opened invite link; from the sharing screen the field starts empty.
 @Serializable

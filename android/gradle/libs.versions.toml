@@ -28,6 +28,7 @@ robolectric = "4.17"
 credentials = "1.6.0"
 googleid = "1.2.1"
 firebaseBom = "34.19.0"
+revenuecat = "10.24.2"
 androidxTestCore = "1.7.0"
 protobuf = "4.36.2"
 junit = "4.13.2"
@@ -76,7 +77,9 @@ googleid = { group = "com.google.android.libraries.identity.googleid", name = "g
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-installations = { group = "com.google.firebase", name = "firebase-installations" }
+revenuecat-purchases = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "revenuecat" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

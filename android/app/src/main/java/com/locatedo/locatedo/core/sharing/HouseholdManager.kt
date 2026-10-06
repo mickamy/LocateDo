@@ -6,6 +6,8 @@ import com.locatedo.household.v1.acceptInviteRequest
 import com.locatedo.household.v1.createInviteRequest
 import com.locatedo.household.v1.removeMemberRequest
 import com.locatedo.locatedo.core.account.AccountManager
+import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.auth.SignedOutException
 import com.locatedo.locatedo.core.data.SyncStateRepository
@@ -46,6 +48,7 @@ class DefaultHouseholdManager @Inject constructor(
     private val account: AccountManager,
     private val sync: SyncEngine,
     private val preferences: AppPreferences,
+    private val analytics: Analytics,
 ) : HouseholdManager {
     private val _isWorking = MutableStateFlow(false)
 
@@ -78,6 +81,7 @@ class DefaultHouseholdManager @Inject constructor(
         val householdId = runCatching { UUID.fromString(response.household.id) }.getOrNull()
         checkNotNull(householdId) { "AcceptInvite returned an invalid household id" }
         account.join(householdId, response.household.plan.toModel())
+        analytics.log(AnalyticsEvent.INVITE_ACCEPTED)
     }
 
     override suspend fun handleRemoval() {

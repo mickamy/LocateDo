@@ -13,6 +13,10 @@ service AccountService {
   // Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
   rpc SignOut(SignOutRequest) returns (SignOutResponse);
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  // Re-reads the caller's subscription and updates their household plan in the background.
+  // Call it after linking the purchase SDK to the user, since a purchase made before
+  // signing in sends no webhook naming the user.
+  rpc SyncEntitlement(SyncEntitlementRequest) returns (SyncEntitlementResponse);
 }
 
 message Session {
@@ -85,3 +89,7 @@ message SignOutResponse {}
 message DeleteAccountRequest {}
 
 message DeleteAccountResponse {}
+
+message SyncEntitlementRequest {}
+
+message SyncEntitlementResponse {}

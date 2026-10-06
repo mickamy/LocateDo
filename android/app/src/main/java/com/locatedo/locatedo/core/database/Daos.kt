@@ -53,6 +53,9 @@ interface TodoDao {
     @Query("SELECT COUNT(*) FROM todos WHERE completedAt IS NULL")
     suspend fun countOpen(): Int
 
+    @Query("SELECT COUNT(*) FROM todos WHERE placeId = :placeId AND completedAt IS NULL")
+    suspend fun countOpen(placeId: String): Int
+
     @Upsert
     suspend fun upsert(todo: TodoEntity)
 
@@ -67,6 +70,9 @@ interface TodoDao {
 interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY sortOrder")
     fun observeAll(): Flow<List<CategoryEntity>>
+
+    @Query("SELECT * FROM categories WHERE id = :id")
+    suspend fun get(id: String): CategoryEntity?
 
     @Query("SELECT id FROM categories")
     suspend fun ids(): List<String>

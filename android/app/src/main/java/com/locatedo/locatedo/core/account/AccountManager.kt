@@ -11,6 +11,7 @@ import com.locatedo.device.v1.Platform
 import com.locatedo.household.v1.HouseholdServiceClientInterface
 import com.locatedo.locatedo.core.api.getOrThrow
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.auth.InvalidSessionException
 import com.locatedo.locatedo.core.auth.Session
 import com.locatedo.locatedo.core.common.uuidV7
@@ -56,6 +57,7 @@ class AccountManager @Inject constructor(
     private val localData: LocalData,
     private val queue: WriteQueue,
     private val deviceRegistration: DeviceRegistration,
+    private val entitlements: Entitlements,
     private val preferences: AppPreferences,
     private val clock: Clock,
 ) {
@@ -151,6 +153,7 @@ class AccountManager @Inject constructor(
         authenticator.signOut()
         pendingAdoption.value = null
         localData.reset()
+        entitlements.logOut()
     }
 
     suspend fun deleteAccount() = working {
@@ -159,6 +162,7 @@ class AccountManager @Inject constructor(
         pendingAdoption.value = null
         localData.reset()
         preferences.reset()
+        entitlements.logOut()
     }
 
     suspend fun startOver() {
@@ -171,6 +175,7 @@ class AccountManager @Inject constructor(
         pendingAdoption.value = null
         localData.reset()
         preferences.setPendingSessionEndedNotice(true)
+        entitlements.logOut()
     }
 
     suspend fun join(householdId: UUID, plan: Plan) {
@@ -184,9 +189,11 @@ class AccountManager @Inject constructor(
         join(adoption.householdId, Plan.FREE)
     }
 
+    // The store learns the user id here, so a subscription bought before signing in follows the account.
     private suspend fun householdReady() {
         _householdReady.tryEmit(Unit)
         deviceRegistration.registerIfSignedIn()
+        authenticator.current()?.let { entitlements.logIn(it.userId) }
     }
 
     private suspend fun <T> working(block: suspend () -> T): T {

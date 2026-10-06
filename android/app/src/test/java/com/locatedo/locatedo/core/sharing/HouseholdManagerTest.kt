@@ -6,8 +6,11 @@ import com.locatedo.household.v1.Plan
 import com.locatedo.household.v1.acceptInviteResponse
 import com.locatedo.household.v1.household
 import com.locatedo.locatedo.core.account.AccountManager
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
+import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.api.AccessTokenStore
 import com.locatedo.locatedo.core.auth.Authenticator
+import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.data.FakeProStatus
 import com.locatedo.locatedo.core.data.LocalData
 import com.locatedo.locatedo.core.data.RoomCategoryRepository
@@ -27,7 +30,9 @@ import com.locatedo.locatedo.core.sync.LimitRejection
 import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.core.sync.WriteSender
 import com.locatedo.locatedo.testing.FakeAccountService
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeDeviceService
+import com.locatedo.locatedo.testing.FakeEntitlementSource
 import com.locatedo.locatedo.testing.FakeHouseholdService
 import com.locatedo.locatedo.testing.FakeInstallationIdSource
 import com.locatedo.locatedo.testing.FakeSyncService
@@ -65,6 +70,7 @@ class HouseholdManagerTest {
     private val pulls = FakeSyncService()
     private val householdId = UUID.fromString("0199bd00-0000-7000-8000-0000000000aa")
     private val otherId = UUID.fromString("0199bd00-0000-7000-8000-000000000002")
+    private val analytics = FakeAnalytics()
 
     @Before
     fun setUp() {
@@ -169,6 +175,7 @@ class HouseholdManagerTest {
         assertEquals(joined, state.householdId)
         assertEquals(0L, state.cursor)
         assertEquals(com.locatedo.locatedo.core.model.Plan.PRO, state.plan)
+        assertEquals(1, analytics.count(AnalyticsEvent.INVITE_ACCEPTED))
     }
 
     @Test
@@ -191,8 +198,10 @@ class HouseholdManagerTest {
     private suspend fun TestScope.fixture(): Fixture {
         val authenticator = Authenticator(InMemorySessionStore(testSession), FakeAccountService(), AccessTokenStore(), fixedClock, this)
         val queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
-        val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, fixedClock)
-        val todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, fixedClock)
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val writeAnalytics = WriteAnalytics(analytics, preferences, fixedClock)
+        val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
+        val todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
         val categories = RoomCategoryRepository(database, database.categoryDao(), queue, fixedClock)
         val syncState = RoomSyncStateRepository(database.syncStateDao())
         syncState.set(SyncState(householdId = householdId))
@@ -206,7 +215,6 @@ class HouseholdManagerTest {
             database.syncStateDao(),
             categories,
         )
-        val preferences = testPreferences(folder.root, backgroundScope)
         val account = AccountManager(
             account = FakeAccountService(),
             household = household,
@@ -218,6 +226,7 @@ class HouseholdManagerTest {
             localData = localData,
             queue = queue,
             deviceRegistration = DeviceRegistration(FakeDeviceService(), authenticator, FakeInstallationIdSource()),
+            entitlements = Entitlements(FakeEntitlementSource(), FakeAnalytics(), this),
             preferences = preferences,
             clock = fixedClock,
         )
@@ -234,7 +243,7 @@ class HouseholdManagerTest {
             proStatus = FakeProStatus(),
             scope = this,
         )
-        val manager = DefaultHouseholdManager(household, authenticator, syncState, account, sync, preferences)
+        val manager = DefaultHouseholdManager(household, authenticator, syncState, account, sync, preferences, analytics)
         return Fixture(manager, places, syncState, preferences)
     }
 

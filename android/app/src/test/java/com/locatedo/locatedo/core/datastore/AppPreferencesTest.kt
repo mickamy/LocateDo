@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.datastore
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import java.io.File
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -76,6 +77,23 @@ class AppPreferencesTest {
         preferences.reset()
 
         assertEquals(UserPreferences(), preferences.data.first())
+    }
+
+    @Test
+    fun theFirstLaunchIsKeptAndTheAnalyticsRecordSurvivesAReset() = runTest {
+        val preferences = preferences()
+        val first = Instant.parse("2026-10-06T00:00:00Z")
+
+        preferences.recordFirstLaunch(first)
+        preferences.recordFirstLaunch(first.plusSeconds(86_400))
+        preferences.setDailyStateReportedOn("2026-10-07")
+        preferences.setLastReportedLocationAuth("always")
+        preferences.reset()
+
+        assertEquals(
+            AnalyticsRecord(firstLaunchedAt = first, dailyStateReportedOn = "2026-10-07", lastReportedLocationAuth = "always"),
+            preferences.analytics.first(),
+        )
     }
 
     private fun TestScope.preferences(): AppPreferences {

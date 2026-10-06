@@ -2,11 +2,12 @@ package com.locatedo.locatedo.feature.todos
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
-import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
@@ -42,7 +43,6 @@ data class TodoEditorUiState(
 
 sealed interface TodoEditorEvent {
     data object Saved : TodoEditorEvent
-    data class LimitReached(val limit: FreeLimit) : TodoEditorEvent
 }
 
 @HiltViewModel
@@ -50,6 +50,7 @@ class TodoEditorViewModel @Inject constructor(
     private val todoRepository: TodoRepository,
     placeRepository: PlaceRepository,
     membershipRepository: MembershipRepository,
+    private val paywallRequests: PaywallRequests,
     private val clock: Clock,
 ) : ViewModel() {
     private val draft = MutableStateFlow(TodoDraft())
@@ -92,7 +93,11 @@ class TodoEditorViewModel @Inject constructor(
                 createdAt = now,
             )
             val limit = todoRepository.add(todo)
-            _events.emit(if (limit == null) TodoEditorEvent.Saved else TodoEditorEvent.LimitReached(limit))
+            if (limit == null) {
+                _events.emit(TodoEditorEvent.Saved)
+            } else {
+                paywallRequests.request(limit.paywallTrigger)
+            }
         }
     }
 
