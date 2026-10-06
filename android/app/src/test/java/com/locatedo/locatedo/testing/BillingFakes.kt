@@ -14,6 +14,7 @@ class FakeEntitlementSource(var subscription: ProSubscription? = null) : Entitle
     val loggedIn = mutableListOf<String>()
     var logOuts = 0
     var restores = 0
+    val analyticsIds = mutableListOf<String>()
     var cancelsPurchases = false
     var failure: Exception? = null
     var plans = listOf(
@@ -56,6 +57,10 @@ class FakeEntitlementSource(var subscription: ProSubscription? = null) : Entitle
         failure?.let { throw it }
         restores += 1
         return subscription
+    }
+
+    override fun setAnalyticsId(instanceId: String) {
+        analyticsIds += instanceId
     }
 
     companion object {

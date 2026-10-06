@@ -2,6 +2,7 @@ package com.locatedo.locatedo.feature.paywall
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -51,15 +53,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.background
-import androidx.compose.foundation.selection.selectable
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.billing.PaywallPlan
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.billing.PlanKind
 import com.locatedo.locatedo.core.common.LegalLinks
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 // Why Pro, the two plans, and the store's purchase flow; the reason line says which limit brought the user here.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,6 +71,10 @@ fun PaywallScreen(
     onClose: () -> Unit,
     viewModel: PaywallViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.PAYWALL)
+    LaunchedEffect(trigger) {
+        viewModel.start(trigger)
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     val uriHandler = LocalUriHandler.current

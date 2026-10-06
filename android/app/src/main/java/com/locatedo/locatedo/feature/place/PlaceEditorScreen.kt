@@ -60,6 +60,9 @@ fun PlaceEditorScreen(
     onSaved: (isNew: Boolean) -> Unit,
     onCancel: () -> Unit,
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.editorShown()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val draft = uiState.draft
 

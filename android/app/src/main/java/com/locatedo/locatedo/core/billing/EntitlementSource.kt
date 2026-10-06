@@ -19,6 +19,8 @@ interface EntitlementSource {
     suspend fun purchase(activity: Activity, kind: PlanKind): PurchaseOutcome
 
     suspend fun restore(): ProSubscription?
+
+    fun setAnalyticsId(instanceId: String)
 }
 
 // Builds without a RevenueCat key: nothing to buy, nothing active.
@@ -36,4 +38,6 @@ object UnavailableEntitlementSource : EntitlementSource {
     override suspend fun purchase(activity: Activity, kind: PlanKind): PurchaseOutcome = PurchaseOutcome.Canceled
 
     override suspend fun restore(): ProSubscription? = null
+
+    override fun setAnalyticsId(instanceId: String) = Unit
 }

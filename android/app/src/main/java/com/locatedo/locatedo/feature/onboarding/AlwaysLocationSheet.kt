@@ -29,12 +29,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 // Explains why arrival reminders need background location (Play's prominent disclosure), then sends the user to the
 // system page where "all the time" can be chosen; Android 11 and later offer it nowhere else.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlwaysLocationSheet(onDismiss: () -> Unit) {
+    TrackScreen(AnalyticsScreen.ALWAYS_LOCATION_PROMPT)
     val context = LocalContext.current
     val backgroundOption = remember(context) { context.packageManager.backgroundPermissionOptionLabel.toString() }
     val requestBackgroundLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {

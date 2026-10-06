@@ -32,12 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.feature.todos.TodoRow
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.AssigneeChoice
 import com.locatedo.locatedo.ui.components.assigneeChoices
 import com.locatedo.locatedo.ui.components.assigneeName
@@ -56,6 +58,7 @@ fun PlaceDetailSheet(
     members: List<Membership> = emptyList(),
     onAssignTodo: (UUID, UUID?) -> Unit = { _, _ -> },
 ) {
+    TrackScreen(AnalyticsScreen.PLACE_DETAIL)
     val assignees = assigneeChoices(members)
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(

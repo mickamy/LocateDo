@@ -34,9 +34,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
 import com.locatedo.locatedo.feature.account.GoogleSignInButton
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import kotlinx.coroutines.launch
 
 // The link arrives pasted or from App Links; joining needs an account, so the signed-out form offers the sign-in.
@@ -49,6 +51,7 @@ fun AcceptInviteScreen(
     viewModel: AcceptInviteViewModel = hiltViewModel(),
     accountViewModel: AccountViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.ACCEPT_INVITE)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val accountState by accountViewModel.uiState.collectAsStateWithLifecycle()
     val clipboard = LocalClipboard.current

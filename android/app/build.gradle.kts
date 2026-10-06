@@ -171,6 +171,7 @@ dependencies {
     implementation(libs.firebase.installations)
     implementation(libs.revenuecat.purchases)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

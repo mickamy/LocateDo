@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.assigneeChoices
 import com.locatedo.locatedo.ui.components.assigneeName
 import java.util.UUID
@@ -52,6 +54,7 @@ fun TodoListScreen(
     onOpenPlace: () -> Unit,
     viewModel: TodoListViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.TODOS)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isAddingTodo by remember { mutableStateOf(false) }
 

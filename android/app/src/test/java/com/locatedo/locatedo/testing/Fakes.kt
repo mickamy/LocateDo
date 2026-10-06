@@ -17,6 +17,7 @@ import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.map
 class FakePlaceRepository : PlaceRepository {
     val state = MutableStateFlow<List<PlaceWithTodos>>(emptyList())
     val added = mutableListOf<Place>()
+    val sources = mutableListOf<PlaceSource?>()
     val updated = mutableListOf<Place>()
     var limit: FreeLimit? = null
 
@@ -53,9 +55,10 @@ class FakePlaceRepository : PlaceRepository {
     override fun observeWithTodos(id: UUID): Flow<PlaceWithTodos?> =
         state.map { entries -> entries.firstOrNull { it.place.id == id } }
 
-    override suspend fun add(place: Place): FreeLimit? {
+    override suspend fun add(place: Place, source: PlaceSource?): FreeLimit? {
         limit?.let { return it }
         added += place
+        sources += source
         state.value = state.value + PlaceWithTodos(place, emptyList())
         return null
     }

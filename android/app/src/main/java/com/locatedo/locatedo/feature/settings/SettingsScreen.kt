@@ -49,12 +49,14 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.BuildConfig
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.billing.PlanKind
 import com.locatedo.locatedo.core.common.LegalLinks
 import com.locatedo.locatedo.core.common.SystemSettings
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.RadiusSlider
 import java.time.Instant
 import java.time.ZoneId
@@ -71,6 +73,7 @@ fun SettingsScreen(
     onOpenCategories: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.SETTINGS)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current

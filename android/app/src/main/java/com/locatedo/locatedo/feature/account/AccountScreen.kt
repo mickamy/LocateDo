@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.BenefitRow
 
 // Signed out: what an account is for, and the Google button. Signed in: sign out and delete.
@@ -52,6 +54,9 @@ fun AccountScreen(
     viewModel: AccountViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    if (!uiState.isLoading) {
+        TrackScreen(if (uiState.isSignedIn) AnalyticsScreen.ACCOUNT else AnalyticsScreen.ACCOUNT_BENEFITS)
+    }
     var isConfirmingDelete by remember { mutableStateOf(false) }
 
     Scaffold(

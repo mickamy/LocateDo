@@ -57,11 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.model.MemberRole
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
 import com.locatedo.locatedo.feature.account.GoogleSignInButton
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.BenefitRow
 import com.locatedo.locatedo.ui.components.shownName
 
@@ -75,6 +77,9 @@ fun SharingScreen(
     accountViewModel: AccountViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    if (!uiState.isLoading) {
+        TrackScreen(if (uiState.isSignedIn) AnalyticsScreen.SHARING else AnalyticsScreen.SHARING_INTRO)
+    }
     val accountState by accountViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val inviteMessage = stringResource(R.string.sharing_invite_message)

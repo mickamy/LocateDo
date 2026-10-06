@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.billing
 
 import android.app.Activity
 import com.locatedo.locatedo.core.model.Plan
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeEntitlementSource
 import java.time.Instant
 import java.util.UUID
@@ -33,7 +34,7 @@ class EntitlementsTest {
     @Test
     fun logsInWithTheLowercasedUserIdAndTakesItsEntitlement() = runTest {
         val source = FakeEntitlementSource(FakeEntitlementSource.ANNUAL)
-        val entitlements = Entitlements(source, this)
+        val entitlements = Entitlements(source, FakeAnalytics(), this)
 
         entitlements.logIn(UUID.fromString("0199BD00-0000-7000-8000-000000000001"))
 
@@ -44,7 +45,7 @@ class EntitlementsTest {
     @Test
     fun loggingOutDropsTheEntitlement() = runTest {
         val source = FakeEntitlementSource(FakeEntitlementSource.ANNUAL)
-        val entitlements = Entitlements(source, this)
+        val entitlements = Entitlements(source, FakeAnalytics(), this)
         entitlements.logIn(UUID.randomUUID())
         source.subscription = null
 
@@ -58,7 +59,7 @@ class EntitlementsTest {
     fun aFailedLogInIsLoggedAndChangesNothing() = runTest {
         val source = FakeEntitlementSource(FakeEntitlementSource.ANNUAL)
         source.failure = IllegalStateException("offline")
-        val entitlements = Entitlements(source, this)
+        val entitlements = Entitlements(source, FakeAnalytics(), this)
 
         entitlements.logIn(UUID.randomUUID())
 
@@ -67,7 +68,7 @@ class EntitlementsTest {
 
     @Test
     fun aPurchaseGrantsTheEntitlement() = runTest {
-        val entitlements = Entitlements(FakeEntitlementSource(), this)
+        val entitlements = Entitlements(FakeEntitlementSource(), FakeAnalytics(), this)
 
         val completed = entitlements.purchase(activity, PlanKind.ANNUAL)
 
@@ -79,7 +80,7 @@ class EntitlementsTest {
     fun aCanceledPurchaseChangesNothing() = runTest {
         val source = FakeEntitlementSource()
         source.cancelsPurchases = true
-        val entitlements = Entitlements(source, this)
+        val entitlements = Entitlements(source, FakeAnalytics(), this)
 
         val completed = entitlements.purchase(activity, PlanKind.MONTHLY)
 
@@ -89,7 +90,7 @@ class EntitlementsTest {
 
     @Test
     fun restoringTakesWhateverTheStoreHas() = runTest {
-        val entitlements = Entitlements(FakeEntitlementSource(FakeEntitlementSource.ANNUAL), this)
+        val entitlements = Entitlements(FakeEntitlementSource(FakeEntitlementSource.ANNUAL), FakeAnalytics(), this)
 
         entitlements.restore()
 
@@ -105,7 +106,7 @@ class EntitlementsTest {
             isTrial = false,
             hasBillingIssue = false,
         )
-        val entitlements = Entitlements(FakeEntitlementSource(subscription), this)
+        val entitlements = Entitlements(FakeEntitlementSource(subscription), FakeAnalytics(), this)
 
         entitlements.logIn(UUID.randomUUID())
 
@@ -115,7 +116,7 @@ class EntitlementsTest {
     @Test
     fun storeUpdatesArriveOnceStarted() = runTest(UnconfinedTestDispatcher()) {
         val source = FakeEntitlementSource()
-        val entitlements = Entitlements(source, backgroundScope)
+        val entitlements = Entitlements(source, FakeAnalytics(), backgroundScope)
 
         entitlements.start()
         entitlements.start()
@@ -126,8 +127,20 @@ class EntitlementsTest {
     }
 
     @Test
+    fun handsTheAnalyticsIdToTheStoreAtStartAndAfterEachUserSwitch() = runTest(UnconfinedTestDispatcher()) {
+        val source = FakeEntitlementSource()
+        val entitlements = Entitlements(source, FakeAnalytics(), backgroundScope)
+
+        entitlements.start()
+        entitlements.logIn(UUID.randomUUID())
+        entitlements.logOut()
+
+        assertEquals(List(3) { "firebase-instance-1" }, source.analyticsIds)
+    }
+
+    @Test
     fun withoutAStoreNothingHappens() = runTest {
-        val entitlements = Entitlements(UnavailableEntitlementSource, this)
+        val entitlements = Entitlements(UnavailableEntitlementSource, FakeAnalytics(), this)
 
         entitlements.logIn(UUID.randomUUID())
         entitlements.start()

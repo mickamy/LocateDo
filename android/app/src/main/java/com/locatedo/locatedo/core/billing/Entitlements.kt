@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.billing
 
 import android.app.Activity
 import android.util.Log
+import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.sync.ProtoInput
 import java.util.UUID
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 @Singleton
 class Entitlements @Inject constructor(
     private val source: EntitlementSource,
+    private val analytics: Analytics,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) {
     private val _subscription = MutableStateFlow<ProSubscription?>(null)
@@ -34,12 +36,16 @@ class Entitlements @Inject constructor(
         scope.launch {
             source.updates().collect { _subscription.value = it }
         }
+        scope.launch {
+            attachAnalytics()
+        }
     }
 
     // The store's app user id is the server's user id, so iOS and Android see one subscription.
     suspend fun logIn(userId: UUID) {
         try {
             _subscription.value = source.logIn(ProtoInput.id(userId))
+            attachAnalytics()
         } catch (e: Exception) {
             Log.w(TAG, "RevenueCat logIn failed", e)
         }
@@ -48,9 +54,16 @@ class Entitlements @Inject constructor(
     suspend fun logOut() {
         try {
             _subscription.value = source.logOut()
+            attachAnalytics()
         } catch (e: Exception) {
             Log.w(TAG, "RevenueCat logOut failed", e)
         }
+    }
+
+    // The store ties attributes to its current app user id, so the Firebase id is handed over again after each switch.
+    private suspend fun attachAnalytics() {
+        val instanceId = analytics.appInstanceId() ?: return
+        source.setAnalyticsId(instanceId)
     }
 
     suspend fun plans(): List<PaywallPlan> = source.plans()

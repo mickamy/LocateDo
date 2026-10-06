@@ -32,6 +32,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
@@ -57,6 +59,7 @@ import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
+import com.locatedo.locatedo.ui.analytics.LocalAnalytics
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
 
@@ -133,6 +136,7 @@ private fun Tabs(
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val analytics = LocalAnalytics.current
 
     LaunchedEffect(pendingPlace) {
         if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
@@ -197,7 +201,10 @@ private fun Tabs(
                             placeEditor.start(placeId)
                             backStack.add(PlaceEditorKey)
                         },
-                        onOpenSharing = { backStack.add(SharingKey) },
+                        onOpenSharing = {
+                            analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
+                            backStack.add(SharingKey)
+                        },
                     )
                 }
                 entry<TodosKey> {
@@ -215,7 +222,10 @@ private fun Tabs(
                 entry<SettingsKey> {
                     SettingsScreen(
                         onOpenAccount = { backStack.add(AccountKey) },
-                        onOpenSharing = { backStack.add(SharingKey) },
+                        onOpenSharing = {
+                            analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "settings"))
+                            backStack.add(SharingKey)
+                        },
                         onOpenCategories = { backStack.add(CategoriesKey) },
                     )
                 }

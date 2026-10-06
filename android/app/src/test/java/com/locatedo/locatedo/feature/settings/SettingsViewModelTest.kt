@@ -10,12 +10,16 @@ import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.testing.FakeAccountService
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeEntitlementSource
 import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakeSyncStateRepository
 import com.locatedo.locatedo.testing.InMemorySessionStore
 import com.locatedo.locatedo.testing.testPreferences
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -25,9 +29,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -151,7 +152,7 @@ class SettingsViewModelTest {
             preferences,
             permissions,
             authenticator,
-            Entitlements(source, backgroundScope),
+            Entitlements(source, FakeAnalytics(), backgroundScope),
             syncState,
             FakeMembershipRepository(),
             paywalls,

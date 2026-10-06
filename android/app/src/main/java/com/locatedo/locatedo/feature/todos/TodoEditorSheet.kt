@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.AssigneeChoice
 import com.locatedo.locatedo.ui.components.assigneeChoices
 import java.util.UUID
@@ -46,6 +48,7 @@ fun TodoEditorSheet(
     onDismiss: () -> Unit,
     viewModel: TodoEditorViewModel = hiltViewModel(),
 ) {
+    TrackScreen(AnalyticsScreen.TODO_EDITOR)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val draft = uiState.draft
     val focusRequester = remember { FocusRequester() }

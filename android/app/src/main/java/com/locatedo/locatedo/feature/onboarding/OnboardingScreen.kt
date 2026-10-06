@@ -37,11 +37,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 // One page per permission, like Google Maps' first-run location screen: what the app does, then the system dialog.
 @Composable
 fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
     val step by viewModel.step.collectAsStateWithLifecycle()
+    TrackScreen(AnalyticsScreen.ONBOARDING, mapOf(AnalyticsParameter.STEP to step.key))
     var isRequesting by rememberSaveable { mutableStateOf(false) }
     val requestLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         isRequesting = false

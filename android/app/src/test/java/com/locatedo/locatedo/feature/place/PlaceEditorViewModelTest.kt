@@ -1,19 +1,21 @@
 package com.locatedo.locatedo.feature.place
 
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.billing.PaywallRequests
+import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
-import com.locatedo.locatedo.core.billing.PaywallRequests
-import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.places.PlaceCandidate
 import com.locatedo.locatedo.core.places.PlacePrediction
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeGeocodingRepository
 import com.locatedo.locatedo.testing.FakeLocationRepository
@@ -55,6 +57,7 @@ class PlaceEditorViewModelTest {
     private val categories = FakeCategoryRepository()
     private val search = FakePlacesRepository()
     private val geocoding = FakeGeocodingRepository()
+    private val analytics = FakeAnalytics()
     private val other = Category(id = uuidV7(now), builtin = BuiltinCategory.OTHER, icon = "mappin", color = "gray", sortOrder = 3, updatedAt = now)
     private val shopping = Category(id = uuidV7(now), builtin = BuiltinCategory.SHOPPING, icon = "cart", color = "green", sortOrder = 0, updatedAt = now)
     private val store = Coordinate(35.0, 139.0)
@@ -145,7 +148,28 @@ class PlaceEditorViewModelTest {
         assertEquals(200.0, saved.radiusMeters, 0.0)
         assertEquals(shopping.id, saved.categoryId)
         assertEquals(now, saved.createdAt)
+        assertEquals(listOf(PlaceSource.SEARCH), places.sources)
         assertEquals(PlaceEditorEvent.Saved(isNew = true), events.last())
+    }
+
+    @Test
+    fun theFormReportsWhetherItCreatesOrEdits() = runTest(dispatcher) {
+        val stored = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
+        places.state.value = listOf(PlaceWithTodos(stored, emptyList()))
+        val viewModel = viewModel()
+
+        viewModel.start(placeId = null)
+        viewModel.editorShown()
+        viewModel.start(stored.id)
+        viewModel.editorShown()
+
+        assertEquals(
+            listOf(
+                AnalyticsScreen.PLACE_EDITOR to mapOf("mode" to "new"),
+                AnalyticsScreen.PLACE_EDITOR to mapOf("mode" to "edit"),
+            ),
+            analytics.screens,
+        )
     }
 
     @Test
@@ -222,6 +246,7 @@ class PlaceEditorViewModelTest {
             locationRepository = FakeLocationRepository(),
             preferences = preferences,
             paywallRequests = paywalls,
+            analytics = analytics,
             clock = clock,
         )
         backgroundScope.launch { viewModel.uiState.collect {} }

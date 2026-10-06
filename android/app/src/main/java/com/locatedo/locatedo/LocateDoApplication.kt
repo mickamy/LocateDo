@@ -6,10 +6,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.locatedo.locatedo.core.account.AccountManager
+import com.locatedo.locatedo.core.analytics.DailyStateReporter
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.data.CategoryRepository
+import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.geofence.GeofenceSync
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.push.DeviceRegistration
@@ -18,12 +20,15 @@ import com.locatedo.locatedo.core.sharing.HouseholdManager
 import com.locatedo.locatedo.core.sync.NetworkMonitor
 import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.HiltAndroidApp
+import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class LocateDoApplication : Application() {
+    @Inject lateinit var preferences: AppPreferences
+
     @Inject lateinit var categories: CategoryRepository
 
     @Inject lateinit var notifier: ArrivalNotifier
@@ -46,12 +51,17 @@ class LocateDoApplication : Application() {
 
     @Inject lateinit var entitlements: Entitlements
 
+    @Inject lateinit var dailyStateReporter: DailyStateReporter
+
+    @Inject lateinit var clock: Clock
+
     @Inject @ApplicationScope lateinit var applicationScope: CoroutineScope
 
     override fun onCreate() {
         super.onCreate()
         notifier.prepare()
         applicationScope.launch {
+            preferences.recordFirstLaunch(clock.instant())
             categories.ensureBuiltins()
         }
         geofenceSync.start()
@@ -83,7 +93,10 @@ class LocateDoApplication : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_START) {
-                    applicationScope.launch { syncEngine.sync() }
+                    applicationScope.launch {
+                        syncEngine.sync()
+                        dailyStateReporter.report()
+                    }
                 }
             },
         )

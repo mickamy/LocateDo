@@ -2,6 +2,10 @@ package com.locatedo.locatedo.feature.place
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
+import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.EditorMode
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
@@ -84,6 +88,7 @@ class PlaceEditorViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val preferences: AppPreferences,
     private val paywallRequests: PaywallRequests,
+    private val analytics: Analytics,
     private val clock: Clock,
 ) : ViewModel() {
     private val draft = MutableStateFlow(PlaceDraft())
@@ -135,7 +140,7 @@ class PlaceEditorViewModel @Inject constructor(
         query.value = ""
         predictions.value = emptyList()
         pickPreview.value = PickPreview()
-        draft.value = PlaceDraft()
+        draft.value = PlaceDraft(placeId = placeId)
         viewModelScope.launch {
             if (placeId == null) {
                 val other = uiState.value.categories.firstOrNull { it.builtin == BuiltinCategory.OTHER }
@@ -156,6 +161,12 @@ class PlaceEditorViewModel @Inject constructor(
                 categoryId = stored.categoryId,
             )
         }
+    }
+
+    // The form screen reports itself here because the draft, not the screen, knows whether this is an edit.
+    fun editorShown() {
+        val mode = if (draft.value.isEditing) EditorMode.EDIT else EditorMode.NEW
+        analytics.logScreen(AnalyticsScreen.PLACE_EDITOR, mapOf(AnalyticsParameter.MODE to mode.key))
     }
 
     fun setName(name: String) = draft.update { it.copy(name = name) }
@@ -225,6 +236,7 @@ class PlaceEditorViewModel @Inject constructor(
                         categoryId = current.categoryId,
                         createdAt = now,
                     ),
+                    source = current.source,
                 )
             } else {
                 val stored = placeRepository.observeWithTodos(current.placeId).first()?.place ?: return@launch

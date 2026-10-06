@@ -1,14 +1,24 @@
 package com.locatedo.locatedo.core.data
 
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
+import com.locatedo.locatedo.core.analytics.AnalyticsUserProperty
+import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.core.sync.toInstant
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testPreferences
 import com.locatedo.locatedo.testing.testSession
+import java.time.Duration
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -16,31 +26,41 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class RoomTodoRepositoryTest {
+    @get:Rule
+    val folder = TemporaryFolder()
+
     private lateinit var database: LocateDoDatabase
     private lateinit var places: RoomPlaceRepository
     private lateinit var repository: RoomTodoRepository
+    private lateinit var writeAnalytics: WriteAnalytics
     private val proStatus = FakeProStatus()
     private val authenticator = fakeAuthenticator()
+    private val analytics = FakeAnalytics()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val store: Place = place("Store")
 
     @Before
     fun setUp() = runTest {
         database = inMemoryDatabase()
         val queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
-        places = RoomPlaceRepository(database, database.placeDao(), proStatus, queue, fixedClock)
-        repository = RoomTodoRepository(database, database.todoDao(), proStatus, queue, fixedClock)
+        writeAnalytics = WriteAnalytics(analytics, testPreferences(folder.root, scope), fixedClock)
+        places = RoomPlaceRepository(database, database.placeDao(), proStatus, queue, writeAnalytics, fixedClock)
+        repository = RoomTodoRepository(database, database.todoDao(), proStatus, queue, writeAnalytics, fixedClock)
         places.add(store)
     }
 
     @After
     fun tearDown() {
         database.close()
+        scope.cancel()
     }
 
     @Test
@@ -139,5 +159,85 @@ class RoomTodoRepositoryTest {
         val deletes = database.queuedWrites().filterIsInstance<Write.DeleteTodo>().map { it.request.id }
         assertEquals(listOf(milk.id.toString(), bread.id.toString()), deletes)
         assertEquals(listOf(1L, 2L, 3L, 4L), database.pendingWriteDao().all().map { it.sequence })
+    }
+
+    @Test
+    fun addingATodoLogsTheOpenCounts() = runTest {
+        val pharmacy = place("Pharmacy")
+        places.add(pharmacy)
+        repository.add(todo("Stamps", pharmacy.id))
+
+        repository.add(todo("Milk", store.id).copy(assigneeId = UUID.randomUUID()))
+
+        val values = analytics.values(AnalyticsEvent.TODO_ADDED)
+        assertEquals(2L, values["open_todo_count"])
+        assertEquals(1L, values["place_open_todos"])
+        assertEquals(1L, values["assigned"])
+        assertEquals("2", analytics.userProperties[AnalyticsUserProperty.OPEN_TODO_COUNT])
+    }
+
+    @Test
+    fun reopeningOverTheFreeLimitLogsTheLimit() = runTest {
+        val done = todo("Done", store.id)
+        repository.add(done)
+        repository.setCompleted(done.id, completed = true)
+        repeat(FreeLimit.OPEN_TODOS.max) { index ->
+            repository.add(todo("Todo $index", store.id))
+        }
+
+        repository.setCompleted(done.id, completed = false)
+
+        assertEquals("todo", analytics.values(AnalyticsEvent.LIMIT_REACHED)["kind"])
+    }
+
+    @Test
+    fun completingAndDeletingTodosKeepTheOpenCountCurrent() = runTest {
+        val milk = todo("Milk", store.id)
+        val eggs = todo("Eggs", store.id)
+        repository.add(milk)
+        repository.add(eggs)
+
+        repository.setCompleted(milk.id, completed = true)
+        assertEquals("1", analytics.userProperties[AnalyticsUserProperty.OPEN_TODO_COUNT])
+
+        repository.delete(listOf(eggs.id))
+        assertEquals("0", analytics.userProperties[AnalyticsUserProperty.OPEN_TODO_COUNT])
+    }
+
+    @Test
+    fun completingATodoInTheAppSaysSo() = runTest {
+        val milk = todo("Milk", store.id, createdAt = fixedNow.minus(Duration.ofHours(26)))
+        repository.add(milk)
+        repository.add(todo("Eggs", store.id))
+
+        repository.setCompleted(milk.id, completed = true)
+
+        val values = analytics.values(AnalyticsEvent.TODO_COMPLETED)
+        assertEquals("app", values["via"])
+        assertEquals(26L, values["age_hours"])
+        assertEquals(1L, values["open_todo_count"])
+    }
+
+    @Test
+    fun completingRightAfterOpeningTheArrivalNotificationCountsForIt() = runTest {
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+
+        writeAnalytics.arrivalOpened(store.id, notifiedAt = fixedNow.minusSeconds(10))
+        repository.setCompleted(milk.id, completed = true)
+
+        assertEquals(10L, analytics.values(AnalyticsEvent.ARRIVAL_OPENED)["latency_s"])
+        assertEquals("notification", analytics.values(AnalyticsEvent.TODO_COMPLETED)["via"])
+    }
+
+    @Test
+    fun reopeningATodoIsNotACompletion() = runTest {
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+        repository.setCompleted(milk.id, completed = true)
+
+        repository.setCompleted(milk.id, completed = false)
+
+        assertEquals(1, analytics.count(AnalyticsEvent.TODO_COMPLETED))
     }
 }
