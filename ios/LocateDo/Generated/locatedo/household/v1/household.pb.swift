@@ -216,8 +216,8 @@ nonisolated struct Locatedo_Household_V1_CreateHouseholdResponse: Sendable {
   /// Clears the value of `household`. Subsequent reads from it will return its default value.
   mutating func clearHousehold() {self._household = nil}
 
-  /// The household version the upload landed at. The device already holds
-  /// everything up to here, so it is the cursor for its first Pull.
+  /// The cursor for the first Pull. Always 0 so the device receives the owner
+  /// membership the server created along with the rows it uploaded.
   var cursor: Int64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()

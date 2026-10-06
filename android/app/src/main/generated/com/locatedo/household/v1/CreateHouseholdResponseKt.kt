@@ -58,8 +58,8 @@ public object CreateHouseholdResponseKt {
 
     /**
      * ```
-     * The household version the upload landed at. The device already holds
-     * everything up to here, so it is the cursor for its first Pull.
+     * The cursor for the first Pull. Always 0 so the device receives the owner
+     * membership the server created along with the rows it uploaded.
      * ```
      *
      * `int64 cursor = 2 [json_name = "cursor"];`
@@ -73,8 +73,8 @@ public object CreateHouseholdResponseKt {
       }
     /**
      * ```
-     * The household version the upload landed at. The device already holds
-     * everything up to here, so it is the cursor for its first Pull.
+     * The cursor for the first Pull. Always 0 so the device receives the owner
+     * membership the server created along with the rows it uploaded.
      * ```
      *
      * `int64 cursor = 2 [json_name = "cursor"];`

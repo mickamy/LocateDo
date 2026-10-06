@@ -1,4 +1,4 @@
-name: shared-check
+name: shared-ci
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
       - "ios/LocateDo/Generated/**"
       - "android/app/src/main/generated/**"
       - "android/app/src/main/res/values*/strings.xml"
-      - ".github/workflows/shared-check.yml"
+      - ".github/workflows/shared-ci.yml"
   push:
     branches: [main, dev]
     paths:
@@ -23,7 +23,7 @@ on:
       - "ios/LocateDo/Generated/**"
       - "android/app/src/main/generated/**"
       - "android/app/src/main/res/values*/strings.xml"
-      - ".github/workflows/shared-check.yml"
+      - ".github/workflows/shared-ci.yml"
   workflow_dispatch:
 
 permissions:

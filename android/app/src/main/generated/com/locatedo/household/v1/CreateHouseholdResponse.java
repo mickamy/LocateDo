@@ -68,8 +68,8 @@ public  final class CreateHouseholdResponse extends
   private long cursor_;
   /**
    * <pre>
-   * The household version the upload landed at. The device already holds
-   * everything up to here, so it is the cursor for its first Pull.
+   * The cursor for the first Pull. Always 0 so the device receives the owner
+   * membership the server created along with the rows it uploaded.
    * </pre>
    *
    * <code>int64 cursor = 2 [json_name = "cursor"];</code>
@@ -81,8 +81,8 @@ public  final class CreateHouseholdResponse extends
   }
   /**
    * <pre>
-   * The household version the upload landed at. The device already holds
-   * everything up to here, so it is the cursor for its first Pull.
+   * The cursor for the first Pull. Always 0 so the device receives the owner
+   * membership the server created along with the rows it uploaded.
    * </pre>
    *
    * <code>int64 cursor = 2 [json_name = "cursor"];</code>
@@ -94,8 +94,8 @@ public  final class CreateHouseholdResponse extends
   }
   /**
    * <pre>
-   * The household version the upload landed at. The device already holds
-   * everything up to here, so it is the cursor for its first Pull.
+   * The cursor for the first Pull. Always 0 so the device receives the owner
+   * membership the server created along with the rows it uploaded.
    * </pre>
    *
    * <code>int64 cursor = 2 [json_name = "cursor"];</code>
@@ -251,8 +251,8 @@ public  final class CreateHouseholdResponse extends
 
     /**
      * <pre>
-     * The household version the upload landed at. The device already holds
-     * everything up to here, so it is the cursor for its first Pull.
+     * The cursor for the first Pull. Always 0 so the device receives the owner
+     * membership the server created along with the rows it uploaded.
      * </pre>
      *
      * <code>int64 cursor = 2 [json_name = "cursor"];</code>
@@ -264,8 +264,8 @@ public  final class CreateHouseholdResponse extends
     }
     /**
      * <pre>
-     * The household version the upload landed at. The device already holds
-     * everything up to here, so it is the cursor for its first Pull.
+     * The cursor for the first Pull. Always 0 so the device receives the owner
+     * membership the server created along with the rows it uploaded.
      * </pre>
      *
      * <code>int64 cursor = 2 [json_name = "cursor"];</code>
@@ -279,8 +279,8 @@ public  final class CreateHouseholdResponse extends
     }
     /**
      * <pre>
-     * The household version the upload landed at. The device already holds
-     * everything up to here, so it is the cursor for its first Pull.
+     * The cursor for the first Pull. Always 0 so the device receives the owner
+     * membership the server created along with the rows it uploaded.
      * </pre>
      *
      * <code>int64 cursor = 2 [json_name = "cursor"];</code>
