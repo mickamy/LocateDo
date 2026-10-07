@@ -51,10 +51,10 @@ func (uc SignOut) Do(ctx context.Context, in SignOutInput) error {
 		if in.Device == nil {
 			return nil
 		}
-		if err := uc.devices.Bind(tx).DeleteOwnedByToken(
+		if err := uc.devices.Bind(tx).ReleaseOwnedByToken(
 			ctx, current.UserID, in.Device.Platform, in.Device.PushToken,
 		); err != nil {
-			return fmt.Errorf("delete device: %w", err)
+			return fmt.Errorf("release device: %w", err)
 		}
 		return nil
 	}); err != nil {

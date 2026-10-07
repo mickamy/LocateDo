@@ -48,6 +48,27 @@ func TestPushHousehold_wakesEveryMembersDeviceOnItsPlatform(t *testing.T) {
 	assert.Equal(t, []string{"member-android"}, android.woken())
 }
 
+func TestPushHousehold_skipsAnonymousDevices(t *testing.T) {
+	t.Parallel()
+
+	// arrange: devices consenting to promotions without a user belong to no household
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	device(t, d, h.OwnerID, "ios", "production", "owner-phone")
+	anonymousDevice(t, d, "ios", "production", "anonymous-phone")
+	anonymousDevice(t, d, "android", "", "anonymous-android")
+	pusher := &fakePusher{}
+	android := &fakeFCM{}
+
+	// act
+	err := pushJob(d, pusher, android).Handle(t.Context(), pushMessage(t, h.ID))
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, []string{"owner-phone"}, pusher.woken())
+	assert.Empty(t, android.woken())
+}
+
 func TestPushHousehold_forgetsUnregisteredAndroidTokens(t *testing.T) {
 	t.Parallel()
 
@@ -213,6 +234,15 @@ func device(t *testing.T, d tdb.DB, userID uuid.UUID, platform, env, token strin
 	_, err := d.Writer.Exec(t.Context(),
 		"INSERT INTO devices (user_id, platform, apns_environment, push_token) VALUES ($1, $2, NULLIF($3, ''), $4)",
 		userID, platform, env, token)
+	require.NoError(t, err)
+}
+
+func anonymousDevice(t *testing.T, d tdb.DB, platform, env, token string) {
+	t.Helper()
+
+	_, err := d.Writer.Exec(t.Context(),
+		`INSERT INTO devices (platform, apns_environment, push_token, promotions_consented_at)
+		 VALUES ($1, NULLIF($2, ''), $3, now())`, platform, env, token)
 	require.NoError(t, err)
 }
 

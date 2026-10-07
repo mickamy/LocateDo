@@ -63,6 +63,18 @@ func NewRevokeAppleToken(infra di.Infra, lib di.Lib) *RevokeAppleToken {
 	}
 }
 
+// NewSweepAnonymousDevices initializes dependencies and constructs SweepAnonymousDevices.
+func NewSweepAnonymousDevices(infra di.Infra) *SweepAnonymousDevices {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	devices := repository.NewDevice(reader)
+
+	return &SweepAnonymousDevices{
+		transactor: transactor,
+		devices:    devices,
+	}
+}
+
 // NewSweepDeadMessages initializes dependencies and constructs SweepDeadMessages.
 func NewSweepDeadMessages(infra di.Infra) *SweepDeadMessages {
 	transactor := infra.Transactor

@@ -12,6 +12,21 @@ import (
 	"uuid"
 )
 
+const deleteAnonymousDevicesUnseenSince = `-- name: DeleteAnonymousDevicesUnseenSince :execrows
+DELETE
+FROM devices
+WHERE user_id IS NULL
+  AND last_seen_at < $1
+`
+
+func (q *Queries) DeleteAnonymousDevicesUnseenSince(ctx context.Context, lastSeenAt time.Time) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteAnonymousDevicesUnseenSince, lastSeenAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const deleteDevice = `-- name: DeleteDevice :exec
 DELETE
 FROM devices
@@ -46,6 +61,7 @@ FROM devices
 WHERE user_id = $1
   AND platform = $2
   AND push_token = $3
+  AND promotions_consented_at IS NULL
 `
 
 type DeleteUserDeviceByTokenParams struct {
@@ -56,6 +72,26 @@ type DeleteUserDeviceByTokenParams struct {
 
 func (q *Queries) DeleteUserDeviceByToken(ctx context.Context, arg DeleteUserDeviceByTokenParams) error {
 	_, err := q.db.Exec(ctx, deleteUserDeviceByToken, arg.UserID, arg.Platform, arg.PushToken)
+	return err
+}
+
+const detachConsentingUserDeviceByToken = `-- name: DetachConsentingUserDeviceByToken :exec
+UPDATE devices
+SET user_id = NULL
+WHERE user_id = $1
+  AND platform = $2
+  AND push_token = $3
+  AND promotions_consented_at IS NOT NULL
+`
+
+type DetachConsentingUserDeviceByTokenParams struct {
+	UserID    *uuid.UUID
+	Platform  string
+	PushToken string
+}
+
+func (q *Queries) DetachConsentingUserDeviceByToken(ctx context.Context, arg DetachConsentingUserDeviceByTokenParams) error {
+	_, err := q.db.Exec(ctx, detachConsentingUserDeviceByToken, arg.UserID, arg.Platform, arg.PushToken)
 	return err
 }
 

@@ -227,26 +227,50 @@ func TestDevice_Delete(t *testing.T) {
 	assert.Equal(t, 0, countDevices(t, d, dev.PushToken))
 }
 
-func TestDevice_DeleteOwnedByToken(t *testing.T) {
+func TestDevice_ReleaseOwnedByToken(t *testing.T) {
 	t.Parallel()
 
-	// arrange
-	d := tdb.New(t)
-	devices := repository.NewDevice(d.Reader)
-	owner := d.Seeder.User(t)
-	dev := fixture.Device(func(m *model.Device) { m.UserID = new(owner); m.LastSeenAt = now })
-	upsert(t, d, dev)
+	tests := map[string]struct {
+		consent bool
+		wantRow bool
+	}{
+		"consenting device is detached": {consent: true, wantRow: true},
+		"other devices are deleted":     {consent: false, wantRow: false},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	// act
-	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, devices.Bind(tx).DeleteOwnedByToken(t.Context(), owner, dev.Platform, dev.PushToken))
-	})
+			// arrange
+			d := tdb.New(t)
+			devices := repository.NewDevice(d.Reader)
+			owner := d.Seeder.User(t)
+			dev := fixture.Device(func(m *model.Device) {
+				m.UserID = new(owner)
+				m.PromotionsConsent = tt.consent
+				m.LastSeenAt = now
+			})
+			upsert(t, d, dev)
 
-	// assert
-	assert.Equal(t, 0, countDevices(t, d, dev.PushToken))
+			// act
+			d.InTx(t, func(tx tx.Tx) {
+				require.NoError(t, devices.Bind(tx).ReleaseOwnedByToken(t.Context(), owner, dev.Platform, dev.PushToken))
+			})
+
+			// assert
+			if !tt.wantRow {
+				assert.Equal(t, 0, countDevices(t, d, dev.PushToken))
+				return
+			}
+			var userID *uuid.UUID
+			require.NoError(t, d.Writer.QueryRow(t.Context(),
+				"SELECT user_id FROM devices WHERE push_token = $1", dev.PushToken).Scan(&userID))
+			assert.Nil(t, userID)
+		})
+	}
 }
 
-func TestDevice_DeleteOwnedByToken_anotherUsersToken(t *testing.T) {
+func TestDevice_ReleaseOwnedByToken_anotherUsersToken(t *testing.T) {
 	t.Parallel()
 
 	// arrange
@@ -259,11 +283,46 @@ func TestDevice_DeleteOwnedByToken_anotherUsersToken(t *testing.T) {
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, devices.Bind(tx).DeleteOwnedByToken(t.Context(), other, dev.Platform, dev.PushToken))
+		require.NoError(t, devices.Bind(tx).ReleaseOwnedByToken(t.Context(), other, dev.Platform, dev.PushToken))
 	})
 
 	// assert
-	assert.Equal(t, 1, countDevices(t, d, dev.PushToken))
+	var userID *uuid.UUID
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT user_id FROM devices WHERE push_token = $1", dev.PushToken).Scan(&userID))
+	assert.Equal(t, new(owner), userID)
+}
+
+func TestDevice_DeleteAnonymousUnseenSince(t *testing.T) {
+	t.Parallel()
+
+	// arrange: an anonymous device unseen since before the cutoff, one seen after, and an old owned one
+	d := tdb.New(t)
+	devices := repository.NewDevice(d.Reader)
+	cutoff := now.Add(-model.AnonymousRetention)
+	stale := fixture.Device(func(m *model.Device) { m.LastSeenAt = cutoff.Add(-time.Hour) })
+	fresh := fixture.Device(func(m *model.Device) { m.LastSeenAt = cutoff.Add(time.Hour) })
+	owned := fixture.Device(func(m *model.Device) {
+		m.UserID = new(d.Seeder.User(t))
+		m.LastSeenAt = cutoff.Add(-time.Hour)
+	})
+	for _, dev := range []model.Device{stale, fresh, owned} {
+		upsert(t, d, dev)
+	}
+
+	// act
+	var swept int
+	d.InTx(t, func(tx tx.Tx) {
+		var err error
+		swept, err = devices.Bind(tx).DeleteAnonymousUnseenSince(t.Context(), cutoff)
+		require.NoError(t, err)
+	})
+
+	// assert
+	assert.Equal(t, 1, swept)
+	assert.Equal(t, 0, countDevices(t, d, stale.PushToken))
+	assert.Equal(t, 1, countDevices(t, d, fresh.PushToken))
+	assert.Equal(t, 1, countDevices(t, d, owned.PushToken))
 }
 
 func upsert(t *testing.T, d tdb.DB, dev model.Device) uuid.UUID {

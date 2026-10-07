@@ -24,12 +24,27 @@ FROM devices
 WHERE platform = $1
   AND push_token = $2;
 
+-- name: DetachConsentingUserDeviceByToken :exec
+UPDATE devices
+SET user_id = NULL
+WHERE user_id = $1
+  AND platform = $2
+  AND push_token = $3
+  AND promotions_consented_at IS NOT NULL;
+
 -- name: DeleteUserDeviceByToken :exec
 DELETE
 FROM devices
 WHERE user_id = $1
   AND platform = $2
-  AND push_token = $3;
+  AND push_token = $3
+  AND promotions_consented_at IS NULL;
+
+-- name: DeleteAnonymousDevicesUnseenSince :execrows
+DELETE
+FROM devices
+WHERE user_id IS NULL
+  AND last_seen_at < $1;
 
 -- A token already registered moves to this user; an anonymous registration
 -- (no user) leaves its owner in place. Consenting again keeps the original time.

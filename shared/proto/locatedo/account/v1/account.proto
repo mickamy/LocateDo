@@ -80,7 +80,9 @@ message SignOutRequest {
   }
 
   string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
-  // Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+  // Set when the device is registered for push. If the registration belongs to
+  // the token's owner, it is detached from them while it consents to promotions
+  // and removed otherwise.
   Device device = 2;
 }
 

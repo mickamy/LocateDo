@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	dmodel "github.com/mickamy/LocateDo/internal/feature/device/model"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	smodel "github.com/mickamy/LocateDo/internal/feature/sync/model"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
@@ -63,6 +64,36 @@ func TestSweepRefreshTokens_Run(t *testing.T) {
 	// assert
 	require.NoError(t, err)
 	assert.Equal(t, 1, rows(t, d, "SELECT count(*) FROM refresh_tokens WHERE user_id = $1", userID))
+}
+
+func TestSweepAnonymousDevices_Run(t *testing.T) {
+	t.Parallel()
+
+	// arrange: an anonymous device past retention, one within it, and an owned one past it
+	d := tdb.New(t)
+	now := time.Now()
+	stale := now.Add(-dmodel.AnonymousRetention - time.Hour)
+	for _, dev := range []struct {
+		userID     *uuid.UUID
+		token      string
+		lastSeenAt time.Time
+	}{
+		{nil, "stale", stale},
+		{nil, "fresh", now.Add(-time.Hour)},
+		{new(d.Seeder.User(t)), "owned", stale},
+	} {
+		_, err := d.Writer.Exec(t.Context(),
+			"INSERT INTO devices (user_id, platform, push_token, last_seen_at) VALUES ($1, 'android', $2, $3)",
+			dev.userID, dev.token, dev.lastSeenAt)
+		require.NoError(t, err)
+	}
+
+	// act
+	err := job.NewSweepAnonymousDevices(d.Infra()).Run(clock.Set(t.Context(), clock.NewFixed(now)))
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, []string{"fresh", "owned"}, tokens(t, d))
 }
 
 func TestSweepDeadMessages_Run(t *testing.T) {

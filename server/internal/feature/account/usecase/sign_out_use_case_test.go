@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"testing"
+	"uuid"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -77,7 +78,7 @@ func TestSignOut_deletesTheDevice(t *testing.T) {
 	infra, _ := fakedApple(d)
 	signedIn, err := usecase.NewSignInWithApple(infra, newLib()).Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
-	device := registerDevice(t, d, signedIn.Session.UserID)
+	device := registerDevice(t, d, signedIn.Session.UserID, false)
 
 	// act
 	err = usecase.NewSignOut(infra).Do(t.Context(), usecase.SignOutInput{
@@ -90,6 +91,30 @@ func TestSignOut_deletesTheDevice(t *testing.T) {
 	assert.Equal(t, 0, countDevices(t, d, device.PushToken))
 }
 
+func TestSignOut_detachesAConsentingDevice(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	signedIn, err := usecase.NewSignInWithApple(infra, newLib()).Do(fixedClock(t), signInInput("apple-sub", ""))
+	require.NoError(t, err)
+	device := registerDevice(t, d, signedIn.Session.UserID, true)
+
+	// act
+	err = usecase.NewSignOut(infra).Do(t.Context(), usecase.SignOutInput{
+		RefreshToken: signedIn.Session.RefreshToken,
+		Device:       &usecase.SignOutDevice{Platform: device.Platform, PushToken: device.PushToken},
+	})
+
+	// assert
+	require.NoError(t, err)
+	var owner *uuid.UUID
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT user_id FROM devices WHERE push_token = $1", device.PushToken).Scan(&owner))
+	assert.Nil(t, owner, "the device keeps receiving promotions without its user")
+}
+
 func TestSignOut_keepsAnotherUsersDevice(t *testing.T) {
 	t.Parallel()
 
@@ -98,7 +123,7 @@ func TestSignOut_keepsAnotherUsersDevice(t *testing.T) {
 	infra, _ := fakedApple(d)
 	signedIn, err := usecase.NewSignInWithApple(infra, newLib()).Do(fixedClock(t), signInInput("apple-sub", ""))
 	require.NoError(t, err)
-	device := registerDevice(t, d, d.Seeder.User(t))
+	device := registerDevice(t, d, d.Seeder.User(t), false)
 
 	// act
 	err = usecase.NewSignOut(infra).Do(t.Context(), usecase.SignOutInput{

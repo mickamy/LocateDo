@@ -26,7 +26,12 @@ type Device interface {
 	ListByHousehold(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]model.Device, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByToken(ctx context.Context, platform model.Platform, token string) error
-	DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error
+	// ReleaseOwnedByToken detaches the user's device from them while it
+	// consents to promotions and deletes it otherwise.
+	ReleaseOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error
+	// DeleteAnonymousUnseenSince removes devices without a user not seen since
+	// before and reports how many.
+	DeleteAnonymousUnseenSince(ctx context.Context, before time.Time) (int, error)
 	Bind(tx tx.Tx) Device
 }
 
@@ -126,7 +131,19 @@ func (r device) DeleteByToken(ctx context.Context, platform model.Platform, toke
 	return nil
 }
 
-func (r device) DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error {
+func (r device) ReleaseOwnedByToken(
+	ctx context.Context,
+	userID uuid.UUID,
+	platform model.Platform,
+	token string,
+) error {
+	if err := r.q.DetachConsentingUserDeviceByToken(ctx, queries.DetachConsentingUserDeviceByTokenParams{
+		UserID:    &userID,
+		Platform:  string(platform),
+		PushToken: token,
+	}); err != nil {
+		return fmt.Errorf("detach owned device: %w", err)
+	}
 	if err := r.q.DeleteUserDeviceByToken(ctx, queries.DeleteUserDeviceByTokenParams{
 		UserID:    &userID,
 		Platform:  string(platform),
@@ -135,6 +152,14 @@ func (r device) DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platfo
 		return fmt.Errorf("delete owned device: %w", err)
 	}
 	return nil
+}
+
+func (r device) DeleteAnonymousUnseenSince(ctx context.Context, before time.Time) (int, error) {
+	n, err := r.q.DeleteAnonymousDevicesUnseenSince(ctx, before)
+	if err != nil {
+		return 0, fmt.Errorf("delete anonymous devices: %w", err)
+	}
+	return int(n), nil
 }
 
 func toModel(row queries.Device) model.Device {

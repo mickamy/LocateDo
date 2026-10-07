@@ -20,6 +20,10 @@ const (
 	APNsProduction APNsEnvironment = "production"
 )
 
+// AnonymousRetention is how long a device without a user is kept after it
+// was last seen.
+const AnonymousRetention = 180 * 24 * time.Hour
+
 type Language string
 
 const (
