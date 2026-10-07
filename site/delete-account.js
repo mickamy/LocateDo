@@ -3,11 +3,11 @@
 const environments = {
   prod: {
     api: "https://api.locatedo.com",
-    googleClientId: "44680780234-p6sv8ec4o0p7aomkh7nt0eqb6gpan6ir.apps.googleusercontent.com",
+    googleClientId: "44680780234-mdnjqmlqu23rgas8dhojvoq6pcnoulq8.apps.googleusercontent.com",
   },
   stg: {
     api: "https://api-stg.locatedo.com",
-    googleClientId: "238700922224-1o8tu24ov85js2tumk4gn7abik3tre2f.apps.googleusercontent.com",
+    googleClientId: "238700922224-fiiu5qmdjv88rio10h1etfovg2i90ece.apps.googleusercontent.com",
   },
 };
 const appleServicesId = "com.locatedo.LocateDo.web";

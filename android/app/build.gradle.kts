@@ -65,7 +65,7 @@ android {
             signingConfig = signingConfigs.findByName("upload")
             manifestPlaceholders["CRASHLYTICS_COLLECTION_ENABLED"] = "true"
             buildConfigField("String", "API_BASE_URL", "\"https://api.locatedo.com\"")
-            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"44680780234-p6sv8ec4o0p7aomkh7nt0eqb6gpan6ir.apps.googleusercontent.com\"")
+            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"44680780234-mdnjqmlqu23rgas8dhojvoq6pcnoulq8.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status.json\"")
             // The Play Store key is created in RevenueCat once the Play app exists.
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
@@ -76,7 +76,7 @@ android {
             matchingFallbacks += "release"
             signingConfig = signingConfigs.findByName("staging") ?: signingConfigs.getByName("debug")
             buildConfigField("String", "API_BASE_URL", "\"https://api-stg.locatedo.com\"")
-            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"238700922224-1o8tu24ov85js2tumk4gn7abik3tre2f.apps.googleusercontent.com\"")
+            buildConfigField("String", "GOOGLE_CLIENT_ID", "\"238700922224-fiiu5qmdjv88rio10h1etfovg2i90ece.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status-stg.json\"")
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
         }
