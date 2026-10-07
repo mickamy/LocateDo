@@ -1,16 +1,24 @@
 # Staging runs on a Raspberry Pi registered with SSM as a hybrid node, so GitHub-hosted jobs reach it the same way
 # the prod deploy reaches its instance and the Pi keeps no inbound port or self-hosted runner. Applied from a
-# laptop, like the other roles here.
+# laptop, like persistent and bootstrap.
+
+data "aws_caller_identity" "current" {}
+
+# The account already has GitHub's provider, shared with other projects.
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
 
 locals {
-  stg_node_name = "locatedo-stg-pi"
-  stg_tags      = { Environment = "stg" }
+  account_id = data.aws_caller_identity.current.account_id
+  # The repository's immutable subject (owner and repository ids), as in bootstrap.
+  github_sub = "repo:mickamy@11856337/LocateDo@1402816584"
+  node_name  = "locatedo-stg-pi"
 }
 
 # The role the Pi takes on through its activation.
-resource "aws_iam_role" "stg_pi" {
+resource "aws_iam_role" "pi" {
   name = "locatedo-stg-pi"
-  tags = local.stg_tags
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -26,14 +34,14 @@ resource "aws_iam_role" "stg_pi" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "stg_pi_ssm" {
-  role       = aws_iam_role.stg_pi.name
+resource "aws_iam_role_policy_attachment" "pi_ssm" {
+  role       = aws_iam_role.pi.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-resource "aws_iam_role_policy" "stg_pi_parameters" {
+resource "aws_iam_role_policy" "pi_parameters" {
   name = "read-parameters"
-  role = aws_iam_role.stg_pi.id
+  role = aws_iam_role.pi.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -49,9 +57,8 @@ resource "aws_iam_role_policy" "stg_pi_parameters" {
 }
 
 # Only jobs in the repository's server-stg environment (limited to dev) can deploy and operate staging.
-resource "aws_iam_role" "stg_deploy" {
+resource "aws_iam_role" "deploy" {
   name = "locatedo-stg-deploy"
-  tags = local.stg_tags
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -69,9 +76,9 @@ resource "aws_iam_role" "stg_deploy" {
   })
 }
 
-resource "aws_iam_role_policy" "stg_deploy" {
+resource "aws_iam_role_policy" "deploy" {
   name = "deploy"
-  role = aws_iam_role.stg_deploy.id
+  role = aws_iam_role.deploy.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -87,7 +94,7 @@ resource "aws_iam_role_policy" "stg_deploy" {
         Action   = ["ssm:SendCommand"]
         Resource = "arn:aws:ssm:us-west-2:${local.account_id}:managed-instance/*"
         Condition = {
-          StringEquals = { "ssm:resourceTag/Name" = local.stg_node_name }
+          StringEquals = { "ssm:resourceTag/Name" = local.node_name }
         }
       },
       {
@@ -104,10 +111,10 @@ resource "aws_iam_role_policy" "stg_deploy" {
   })
 }
 
-output "stg_pi_role_name" {
-  value = aws_iam_role.stg_pi.name
+output "pi_role_name" {
+  value = aws_iam_role.pi.name
 }
 
-output "stg_deploy_role_arn" {
-  value = aws_iam_role.stg_deploy.arn
+output "deploy_role_arn" {
+  value = aws_iam_role.deploy.arn
 }
