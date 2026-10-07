@@ -116,40 +116,10 @@ jobs:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node_id=$(aws ssm describe-instance-information \
-            --filters Key=tag:Name,Values=locatedo-stg-pi Key=PingStatus,Values=Online \
-            --query 'InstanceInformationList[0].InstanceId' --output text)
-          if [ -z "${node_id}" ] || [ "${node_id}" = None ]; then
-            echo "::error::the locatedo-stg-pi node is not online in SSM"
-            exit 1
-          fi
-
           {
             printf 'export IMAGE_TAG=%q GHCR_USER=%q GHCR_TOKEN=%q\n' "${IMAGE_TAG}" "${GHCR_USER}" "${GHCR_TOKEN}"
             bundle=$(tar -cz -C server compose.stg.yaml initdb | base64 -w0)
             printf 'export BUNDLE_B64=%q\n' "${bundle}"
             cat server/scripts/deploy-stg.sh
           } > deploy.sh
-          jq -n --rawfile script deploy.sh '{commands: [$script], executionTimeout: ["900"]}' > parameters.json
-
-          command_id=$(aws ssm send-command --instance-ids "${node_id}" \
-            --document-name AWS-RunShellScript --parameters file://parameters.json \
-            --comment "deploy ${IMAGE_TAG}" --query Command.CommandId --output text)
-
-          status=Pending
-          for _ in $(seq 1 180); do
-            sleep 5
-            status=$(aws ssm get-command-invocation --command-id "${command_id}" --instance-id "${node_id}" \
-              --query Status --output text 2>/dev/null || echo Pending)
-            case "${status}" in
-              Pending | InProgress | Delayed) ;;
-              *) break ;;
-            esac
-          done
-
-          aws ssm get-command-invocation --command-id "${command_id}" --instance-id "${node_id}" \
-            --query '[StandardOutputContent, StandardErrorContent]' --output text
-          if [ "${status}" != Success ]; then
-            echo "::error::deploy finished with ${status}"
-            exit 1
-          fi
+          .github/scripts/run-on-stg.sh deploy.sh "deploy ${IMAGE_TAG}"

@@ -8,88 +8,25 @@ permissions:
 
 jobs:
   diagnose:
-    runs-on: self-hosted
-    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    environment: server-stg
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: API from the host
-        run: |
-          code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" http://localhost:8080/healthz || true)
-          echo "host -> http://localhost:8080/healthz: ${code:-unreachable}"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Containers
-        run: docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Networks}}'
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/locatedo-stg-deploy
+          aws-region: us-west-2
 
-      - name: API from inside the cloudflared container's network
-        run: |
-          name=$(docker ps --format '{{.Names}}\t{{.Image}}' | awk -F'\t' '$2 ~ /cloudflared/ {print $1; exit}')
-          if [ -z "$name" ]; then
-            echo "no cloudflared container found"
-            exit 0
-          fi
-          echo "cloudflared container: $name"
-          for url in http://localhost:8080/healthz http://host.docker.internal:8080/healthz http://api:8080/healthz; do
-            code=$(docker run --rm --network "container:$name" curlimages/curl:8.16.0 -s -o /dev/null -m 5 -w "%{http_code}" "$url" || true)
-            echo "cloudflared -> $url: ${code:-unreachable}"
-          done
-
-      - name: cloudflared log (errors and ingress only)
-        run: |
-          name=$(docker ps --format '{{.Names}}\t{{.Image}}' | awk -F'\t' '$2 ~ /cloudflared/ {print $1; exit}')
-          if [ -n "$name" ]; then
-            docker logs --tail 200 "$name" 2>&1 | grep -i -E "ERR|error|ingress|originService|dial|refused" | tail -30 || true
-          fi
-
-      - name: api internal errors (time, procedure, and error only)
-        run: |
-          name=$(docker ps --filter label=com.docker.compose.service=api --format '{{.Names}}' | head -n 1)
-          if [ -z "$name" ]; then
-            echo "no api container found"
-            exit 0
-          fi
-          docker logs --since 6h "$name" 2>&1 | python3 -c '
-          import json, sys
-          for line in sys.stdin:
-              try:
-                  entry = json.loads(line)
-              except ValueError:
-                  continue
-              if entry.get("msg") == "internal error":
-                  print(entry.get("time"), entry.get("procedure"), entry.get("error"))
-          ' | tail -20
-
-      - name: worker warnings and errors (time, message, kind, and error only)
-        run: |
-          name=$(docker ps --filter label=com.docker.compose.service=worker --format '{{.Names}}' | head -n 1)
-          if [ -z "$name" ]; then
-            echo "no worker container found"
-            exit 0
-          fi
-          docker logs --since 6h "$name" 2>&1 | python3 -c '
-          import json, sys
-          for line in sys.stdin:
-              try:
-                  entry = json.loads(line)
-              except ValueError:
-                  continue
-              if entry.get("level") in ("WARN", "ERROR") or entry.get("msg", "").startswith("forgetting"):
-                  print(entry.get("time"), entry.get("level"), entry.get("msg"),
-                        entry.get("kind") or entry.get("task") or "", entry.get("apns_environment") or "",
-                        entry.get("error"))
-          ' | tail -30
-
-      - name: Outbox and devices
-        run: |
-          name=$(docker ps --filter label=com.docker.compose.service=db --format '{{.Names}}' | head -n 1)
-          if [ -z "$name" ]; then
-            echo "no db container found"
-            exit 0
-          fi
-          docker exec "$name" psql -U admin -d locatedo -c "
-            SELECT kind, status, count(*), max(attempts) AS max_attempts, min(run_at) AS oldest_run_at
-            FROM outbox_messages GROUP BY kind, status ORDER BY kind, status"
-          docker exec "$name" psql -U admin -d locatedo -c "
-            SELECT kind, attempts, left(last_error, 200) AS last_error
-            FROM outbox_messages WHERE last_error IS NOT NULL ORDER BY created_at DESC LIMIT 10"
-          docker exec "$name" psql -U admin -d locatedo -c "
-            SELECT platform, apns_environment, count(*), max(last_seen_at) AS last_seen_at
-            FROM devices GROUP BY platform, apns_environment ORDER BY platform, apns_environment"
+      - name: Diagnose on the Pi
+        run: .github/scripts/run-on-stg.sh server/scripts/diagnose-stg.sh "diagnose"

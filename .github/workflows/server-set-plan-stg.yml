@@ -23,37 +23,37 @@ concurrency:
 
 jobs:
   set-plan:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment: server-stg
-    timeout-minutes: 10
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          go-version-file: server/go.mod
-          cache: false
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/locatedo-stg-deploy
+          aws-region: us-west-2
 
-      - name: Create .env file
-        run: |
-          make -B -C server .env
-
-      - name: Set plan
-        working-directory: server
+      - name: Set the plan on the Pi
         env:
           USER_ID: ${{ inputs.user_id }}
           PLAN: ${{ inputs.plan }}
         run: |
-          set -a
-          . ./.env
-          set +a
-          go run ./cmd/admin set-plan -user "$USER_ID" -plan "$PLAN"
-
-      - name: Remove .env file
-        if: always()
-        run: |
-          rm -f server/.env
+          if [[ ! "${USER_ID}" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+            echo "::error::user_id must be a lowercase UUID"
+            exit 1
+          fi
+          {
+            printf 'export USER_ID=%q PLAN=%q\n' "${USER_ID}" "${PLAN}"
+            cat server/scripts/set-plan-stg.sh
+          } > set-plan.sh
+          .github/scripts/run-on-stg.sh set-plan.sh "set plan ${PLAN} for ${USER_ID}"
