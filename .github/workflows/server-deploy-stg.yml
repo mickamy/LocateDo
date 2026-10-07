@@ -16,17 +16,65 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
-    runs-on: self-hosted
-    environment: server-stg
+  build:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Create .env file
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: server
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ghcr.io/mickamy/locatedo-server:${{ github.sha }}
+            ghcr.io/mickamy/locatedo-server:stg
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: server-stg
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/locatedo-stg-deploy
+          aws-region: us-west-2
+
+      - name: Write app settings to Parameter Store
         env:
           JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
           SEAL_KEY: ${{ secrets.SEAL_KEY }}
@@ -45,19 +93,63 @@ jobs:
           REVENUECAT_WEBHOOK_AUTH: ${{ secrets.REVENUECAT_WEBHOOK_AUTH }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
         run: |
-          make -B -C server .env
+          for name in JWT_SIGNING_KEY SEAL_KEY APPLE_BUNDLE_ID APPLE_TEAM_ID APPLE_KEY_ID APPLE_PRIVATE_KEY \
+            APNS_KEY_ID APNS_PRIVATE_KEY APNS_TOPIC REVENUECAT_API_KEY REVENUECAT_PROJECT_ID \
+            REVENUECAT_ENTITLEMENT_ID REVENUECAT_WEBHOOK_AUTH CLOUDFLARE_TUNNEL_TOKEN; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name} is empty"
+              exit 1
+            fi
+            aws ssm put-parameter --name "/locatedo/stg/app/${name}" --type SecureString \
+              --value "${!name}" --overwrite >/dev/null
+          done
+          for name in GOOGLE_CLIENT_ID FCM_SERVICE_ACCOUNT; do
+            if [ -n "${!name}" ]; then
+              aws ssm put-parameter --name "/locatedo/stg/app/${name}" --type SecureString \
+                --value "${!name}" --overwrite >/dev/null
+            fi
+          done
 
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: server/go.mod
-          cache: false
-
-      - name: Migrate database
+      - name: Run the deploy script on the Pi
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          make -C server db-migrate
+          node_id=$(aws ssm describe-instance-information \
+            --filters Key=tag:Name,Values=locatedo-stg-pi Key=PingStatus,Values=Online \
+            --query 'InstanceInformationList[0].InstanceId' --output text)
+          if [ -z "${node_id}" ] || [ "${node_id}" = None ]; then
+            echo "::error::the locatedo-stg-pi node is not online in SSM"
+            exit 1
+          fi
 
-      - name: Deploy Docker Compose
-        run: |
-          cd server
-          docker compose -f compose.stg.yaml up -d --build
-          docker image prune -f
+          {
+            printf 'export IMAGE_TAG=%q GHCR_USER=%q GHCR_TOKEN=%q\n' "${IMAGE_TAG}" "${GHCR_USER}" "${GHCR_TOKEN}"
+            bundle=$(tar -cz -C server compose.stg.yaml initdb | base64 -w0)
+            printf 'export BUNDLE_B64=%q\n' "${bundle}"
+            cat server/scripts/deploy-stg.sh
+          } > deploy.sh
+          jq -n --rawfile script deploy.sh '{commands: [$script], executionTimeout: ["900"]}' > parameters.json
+
+          command_id=$(aws ssm send-command --instance-ids "${node_id}" \
+            --document-name AWS-RunShellScript --parameters file://parameters.json \
+            --comment "deploy ${IMAGE_TAG}" --query Command.CommandId --output text)
+
+          status=Pending
+          for _ in $(seq 1 180); do
+            sleep 5
+            status=$(aws ssm get-command-invocation --command-id "${command_id}" --instance-id "${node_id}" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "${status}" in
+              Pending | InProgress | Delayed) ;;
+              *) break ;;
+            esac
+          done
+
+          aws ssm get-command-invocation --command-id "${command_id}" --instance-id "${node_id}" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          if [ "${status}" != Success ]; then
+            echo "::error::deploy finished with ${status}"
+            exit 1
+          fi
