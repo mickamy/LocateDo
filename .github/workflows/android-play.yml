@@ -8,6 +8,11 @@ on:
       - ".github/workflows/android-play.yml"
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      metadata_only:
+        description: Upload only the store listing (text and images) without building or uploading a release
+        type: boolean
+        default: false
 
 concurrency:
   group: android-play
@@ -41,10 +46,12 @@ jobs:
           working-directory: android
       - run: bundle install
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        if: ${{ !inputs.metadata_only }}
         with:
           validate-wrappers: true
           cache-disabled: true
       - name: Write the Firebase config, keystore, and Maps key
+        if: ${{ !inputs.metadata_only }}
         run: |
           mkdir -p app/src/release credentials
           printf '%s' "${GOOGLE_SERVICES_JSON:?}" | base64 --decode > app/src/release/google-services.json
@@ -57,6 +64,7 @@ jobs:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
           MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY }}
       - run: bundle exec fastlane beta
+        if: ${{ !inputs.metadata_only }}
         env:
           CI: "true"
           ORG_GRADLE_PROJECT_LOCATEDO_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
