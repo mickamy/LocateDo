@@ -192,6 +192,12 @@ func (f *fakePusher) Promote(_ context.Context, _ apns.Environment, token string
 	return nil
 }
 
+func (f *fakePusher) NotifyCompletion(
+	context.Context, apns.Environment, string, apns.CompletionNotice, time.Time,
+) error {
+	return nil
+}
+
 func (f *fakePusher) promotedTokens() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -248,6 +254,10 @@ func (f *fakeFCM) Promote(_ context.Context, token string, p fcm.Promotion, _ ti
 		f.promos = map[string]fcm.Promotion{}
 	}
 	f.promos[token] = p
+	return nil
+}
+
+func (f *fakeFCM) NotifyCompletion(context.Context, string, fcm.CompletionNotice, time.Time) error {
 	return nil
 }
 

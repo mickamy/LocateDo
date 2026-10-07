@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -50,6 +51,9 @@ type Pusher interface {
 	// Promote sends a promotional campaign for the app to show as a
 	// notification once it has checked its own consent.
 	Promote(ctx context.Context, installationID string, p Promotion, now time.Time) error
+	// NotifyCompletion tells a to-do's creator, at high priority, that a
+	// household member checked it off; the app builds the notification.
+	NotifyCompletion(ctx context.Context, installationID string, n CompletionNotice, now time.Time) error
 }
 
 type Promotion struct {
@@ -58,6 +62,12 @@ type Promotion struct {
 	Body       string
 	// URL is opened on tap when set.
 	URL string
+}
+
+type CompletionNotice struct {
+	Body string
+	// Count is how many to-dos the notice covers.
+	Count int
 }
 
 var _ Pusher = Client{}
@@ -127,7 +137,7 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 }
 
 func (c Client) Wake(ctx context.Context, installationID string, now time.Time) error {
-	return c.send(ctx, installationID, map[string]string{"reason": "sync"}, now)
+	return c.send(ctx, installationID, map[string]string{"reason": "sync"}, "normal", now)
 }
 
 func (c Client) Promote(ctx context.Context, installationID string, p Promotion, now time.Time) error {
@@ -140,10 +150,25 @@ func (c Client) Promote(ctx context.Context, installationID string, p Promotion,
 	if p.URL != "" {
 		data["url"] = p.URL
 	}
-	return c.send(ctx, installationID, data, now)
+	return c.send(ctx, installationID, data, "normal", now)
 }
 
-func (c Client) send(ctx context.Context, installationID string, data map[string]string, now time.Time) error {
+func (c Client) NotifyCompletion(ctx context.Context, installationID string, n CompletionNotice, now time.Time) error {
+	data := map[string]string{
+		"type":  "completion",
+		"body":  n.Body,
+		"count": strconv.Itoa(n.Count),
+	}
+	return c.send(ctx, installationID, data, "high", now)
+}
+
+func (c Client) send(
+	ctx context.Context,
+	installationID string,
+	data map[string]string,
+	priority string,
+	now time.Time,
+) error {
 	account := c.cfg.ServiceAccount
 	if account == nil {
 		logger.Debug(ctx, "fcm is not configured; dropping push", "installation_id", installationID)
@@ -158,7 +183,7 @@ func (c Client) send(ctx context.Context, installationID string, data map[string
 		"message": map[string]any{
 			"fid":     installationID,
 			"data":    data,
-			"android": map[string]string{"priority": "normal"},
+			"android": map[string]string{"priority": priority},
 		},
 	})
 	if err != nil {

@@ -50,6 +50,9 @@ type Pusher interface {
 	Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error
 	// Promote shows a quiet notification for a promotional campaign.
 	Promote(ctx context.Context, env Environment, deviceToken string, p Promotion, now time.Time) error
+	// NotifyCompletion tells a to-do's creator, with sound, that a household
+	// member checked it off.
+	NotifyCompletion(ctx context.Context, env Environment, deviceToken string, n CompletionNotice, now time.Time) error
 }
 
 type Promotion struct {
@@ -58,6 +61,12 @@ type Promotion struct {
 	Body       string
 	// URL is opened on tap when set.
 	URL string
+}
+
+type CompletionNotice struct {
+	Body string
+	// Count is how many to-dos the notice covers.
+	Count int
 }
 
 var _ Pusher = Client{}
@@ -85,7 +94,7 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 var background = []byte(`{"aps":{"content-available":1}}`)
 
 func (c Client) Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error {
-	return c.send(ctx, env, deviceToken, "background", "", background, now)
+	return c.send(ctx, env, deviceToken, push{pushType: "background", priority: "5", body: background}, now)
 }
 
 func (c Client) Promote(ctx context.Context, env Environment, deviceToken string, p Promotion, now time.Time) error {
@@ -104,20 +113,43 @@ func (c Client) Promote(ctx context.Context, env Environment, deviceToken string
 	if err != nil {
 		return fmt.Errorf("%w: encode promotion: %w", ErrNotDelivered, err)
 	}
-	return c.send(ctx, env, deviceToken, "alert", p.CampaignID.String(), body, now)
+	return c.send(ctx, env, deviceToken, push{
+		pushType: "alert", priority: "5", collapseID: p.CampaignID.String(), body: body,
+	}, now)
 }
 
-func (c Client) send(
+func (c Client) NotifyCompletion(
 	ctx context.Context,
 	env Environment,
 	deviceToken string,
-	pushType string,
-	collapseID string,
-	body []byte,
+	n CompletionNotice,
 	now time.Time,
 ) error {
+	body, err := json.Marshal(map[string]any{
+		"aps": map[string]any{
+			"alert":     map[string]string{"body": n.Body},
+			"sound":     "default",
+			"thread-id": "completion",
+		},
+		"type":  "completion",
+		"count": n.Count,
+	})
+	if err != nil {
+		return fmt.Errorf("%w: encode completion notice: %w", ErrNotDelivered, err)
+	}
+	return c.send(ctx, env, deviceToken, push{pushType: "alert", priority: "10", body: body}, now)
+}
+
+type push struct {
+	pushType   string
+	priority   string
+	collapseID string
+	body       []byte
+}
+
+func (c Client) send(ctx context.Context, env Environment, deviceToken string, p push, now time.Time) error {
 	if c.cfg.PrivateKey == nil {
-		logger.Debug(ctx, "apns is not configured; dropping push", "token", deviceToken, "push_type", pushType)
+		logger.Debug(ctx, "apns is not configured; dropping push", "token", deviceToken, "push_type", p.pushType)
 		return nil
 	}
 	var baseURL string
@@ -135,16 +167,16 @@ func (c Client) send(
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		baseURL+"/3/device/"+deviceToken, bytes.NewReader(body))
+		baseURL+"/3/device/"+deviceToken, bytes.NewReader(p.body))
 	if err != nil {
 		return fmt.Errorf("%w: new request: %w", ErrNotDelivered, err)
 	}
 	req.Header.Set("Authorization", "bearer "+bearer)
 	req.Header.Set("Apns-Topic", c.cfg.Topic)
-	req.Header.Set("Apns-Push-Type", pushType)
-	req.Header.Set("Apns-Priority", "5")
-	if collapseID != "" {
-		req.Header.Set("Apns-Collapse-Id", collapseID)
+	req.Header.Set("Apns-Push-Type", p.pushType)
+	req.Header.Set("Apns-Priority", p.priority)
+	if p.collapseID != "" {
+		req.Header.Set("Apns-Collapse-Id", p.collapseID)
 	}
 	req.Header.Set("Content-Type", "application/json")
 

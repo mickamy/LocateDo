@@ -137,6 +137,25 @@ func TestClient_Promote(t *testing.T) {
 	}
 }
 
+func TestClient_NotifyCompletion(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	fake := newFakeFCM(t)
+	client := fake.client(t)
+
+	// act
+	err := client.NotifyCompletion(t.Context(), "installation-1", fcm.CompletionNotice{Body: "done", Count: 2}, now)
+
+	// assert
+	require.NoError(t, err)
+	sent := fake.lastMessage()
+	assert.Equal(t, "installation-1", sent.Message.Fid)
+	assert.Equal(t, map[string]string{"type": "completion", "body": "done", "count": "2"}, sent.Message.Data)
+	assert.Equal(t, "high", sent.Message.Android.Priority, "a household update is delivered at once")
+	assert.Nil(t, sent.Message.Notification)
+}
+
 func TestClient_Wake_reusesTheAccessTokenUntilItExpires(t *testing.T) {
 	t.Parallel()
 
