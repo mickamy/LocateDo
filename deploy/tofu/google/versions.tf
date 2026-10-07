@@ -1,0 +1,25 @@
+terraform {
+  required_version = "~> 1.13"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.0"
+    }
+  }
+
+  backend "s3" {
+    bucket       = "locatedo-tofu-state"
+    key          = "google/terraform.tfstate"
+    region       = "us-west-2"
+    encrypt      = true
+    use_lockfile = true
+  }
+}
+
+# Applied by hand with Application Default Credentials (`gcloud auth application-default login`). Billing-account
+# APIs need a project to bill the calls to; the production project takes that role.
+provider "google" {
+  user_project_override = true
+  billing_project       = local.projects.prod
+}
