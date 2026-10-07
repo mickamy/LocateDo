@@ -1,5 +1,9 @@
 package com.locatedo.locatedo.feature.settings
 
+import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
+import com.locatedo.locatedo.core.analytics.PermissionAction
+import com.locatedo.locatedo.core.analytics.PermissionKind
 import com.locatedo.locatedo.core.api.AccessTokenStore
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
@@ -16,6 +20,7 @@ import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakeSyncStateRepository
 import com.locatedo.locatedo.testing.InMemorySessionStore
+import com.locatedo.locatedo.testing.SettableClock
 import com.locatedo.locatedo.testing.testPreferences
 import com.locatedo.locatedo.testing.testPromotionsConsent
 import java.time.Clock
@@ -53,6 +58,8 @@ class SettingsViewModelTest {
     private val source = FakeEntitlementSource()
     private val syncState = FakeSyncStateRepository()
     private val paywalls = PaywallRequests()
+    private val analytics = FakeAnalytics()
+    private val clock = SettableClock(Instant.parse("2026-10-06T03:00:00Z"))
 
     @Before
     fun setUp() {
@@ -153,6 +160,49 @@ class SettingsViewModelTest {
         assertTrue(preferences.promotions.first().consent)
     }
 
+    @Test
+    fun permissionButtonsAreCountedByKindAndAction() = runTest(dispatcher) {
+        val viewModel = viewModel(testPreferences(folder.root, backgroundScope))
+
+        viewModel.permissionActionTapped(PermissionKind.LOCATION, PermissionAction.REQUEST)
+        viewModel.permissionActionTapped(PermissionKind.LOCATION, PermissionAction.OPEN_SETTINGS)
+        viewModel.permissionActionTapped(PermissionKind.NOTIFICATIONS, PermissionAction.REQUEST)
+        viewModel.permissionActionTapped(PermissionKind.NOTIFICATIONS, PermissionAction.OPEN_SETTINGS)
+
+        assertEquals(
+            listOf(
+                mapOf("kind" to "location", "action" to "request"),
+                mapOf("kind" to "location", "action" to "open_settings"),
+                mapOf("kind" to "notifications", "action" to "request"),
+                mapOf("kind" to "notifications", "action" to "open_settings"),
+            ),
+            analytics.events.filter { it.first == AnalyticsEvent.PERMISSION_ACTION_TAPPED }.map { it.second },
+        )
+    }
+
+    @Test
+    fun explainingAlwaysLocationCountsAsARequestAndLogsTheAnswer() = runTest(dispatcher) {
+        val viewModel = viewModel(testPreferences(folder.root, backgroundScope))
+
+        viewModel.explainAlwaysLocation()
+
+        assertTrue(viewModel.isExplainingAlwaysLocation.value)
+        assertEquals(
+            mapOf("kind" to "location", "action" to "request"),
+            analytics.values(AnalyticsEvent.PERMISSION_ACTION_TAPPED),
+        )
+
+        clock.now = clock.now.plusSeconds(8)
+        viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.LATER)
+        viewModel.dismissAlwaysLocation()
+
+        assertFalse(viewModel.isExplainingAlwaysLocation.value)
+        assertEquals(
+            mapOf("result" to "later", "duration_s" to 8L),
+            analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
+        )
+    }
+
     private fun TestScope.viewModel(preferences: com.locatedo.locatedo.core.datastore.AppPreferences): SettingsViewModel {
         val authenticator = Authenticator(
             InMemorySessionStore(),
@@ -170,6 +220,8 @@ class SettingsViewModelTest {
             FakeMembershipRepository(),
             paywalls,
             testPromotionsConsent(preferences, backgroundScope),
+            analytics,
+            clock,
         )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel

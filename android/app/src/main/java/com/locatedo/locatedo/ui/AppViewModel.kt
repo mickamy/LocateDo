@@ -2,6 +2,9 @@ package com.locatedo.locatedo.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
+import com.locatedo.locatedo.core.analytics.AlwaysPromptTracker
+import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.analytics.InstallDate
 import com.locatedo.locatedo.core.appstatus.AppStatusDocument
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
@@ -59,8 +62,11 @@ class AppViewModel @Inject constructor(
     authenticator: Authenticator,
     private val appStatus: AppStatusStore,
     private val promotionsConsent: PromotionsConsent,
+    analytics: Analytics,
     private val clock: Clock,
 ) : ViewModel() {
+    private val alwaysPrompt = AlwaysPromptTracker(analytics, clock)
+
     private val isExplainingAlwaysLocation = MutableStateFlow(false)
 
     private val isAskingPromotions = MutableStateFlow(false)
@@ -155,9 +161,12 @@ class AppViewModel @Inject constructor(
                 return@launch
             }
             preferences.setPromptedAlwaysLocation(true)
+            alwaysPrompt.shown()
             isExplainingAlwaysLocation.value = true
         }
     }
+
+    fun alwaysLocationAnswered(answer: AlwaysPromptAnswer) = alwaysPrompt.answered(answer)
 
     fun dismissAlwaysLocation() {
         isExplainingAlwaysLocation.value = false

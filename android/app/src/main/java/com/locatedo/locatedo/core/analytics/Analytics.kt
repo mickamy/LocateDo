@@ -5,6 +5,7 @@ import com.locatedo.locatedo.core.model.FreeLimit
 
 // Names are shared with iOS; both apps report into the same GA4 property.
 enum class AnalyticsEvent(val key: String) {
+    ALWAYS_PROMPT_ANSWERED("always_prompt_answered"),
     ARRIVAL_NOTIFIED("arrival_notified"),
     ARRIVAL_OPENED("arrival_opened"),
     DAILY_STATE("daily_state"),
@@ -12,6 +13,7 @@ enum class AnalyticsEvent(val key: String) {
     LOCATION_AUTH_CHANGED("location_auth_changed"),
     NOTIFICATION_AUTH_CHANGED("notification_auth_changed"),
     ONBOARDING_COMPLETED("onboarding_completed"),
+    PERMISSION_ACTION_TAPPED("permission_action_tapped"),
     PLACE_ADDED("place_added"),
     PLACE_DELETED("place_deleted"),
     TODO_ADDED("todo_added"),
@@ -32,6 +34,7 @@ enum class AnalyticsEvent(val key: String) {
 }
 
 enum class AnalyticsParameter(val key: String) {
+    ACTION("action"),
     AGE_DAYS("age_days"),
     AGE_HOURS("age_hours"),
     ASSIGNED("assigned"),

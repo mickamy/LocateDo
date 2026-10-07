@@ -3,6 +3,12 @@ package com.locatedo.locatedo.feature.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
+import com.locatedo.locatedo.core.analytics.AlwaysPromptTracker
+import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.PermissionAction
+import com.locatedo.locatedo.core.analytics.PermissionKind
+import com.locatedo.locatedo.core.analytics.logPermissionAction
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.billing.PaywallRequests
@@ -17,6 +23,7 @@ import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.push.PromotionsConsent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -66,7 +73,15 @@ class SettingsViewModel @Inject constructor(
     membershipRepository: MembershipRepository,
     private val paywallRequests: PaywallRequests,
     private val promotionsConsent: PromotionsConsent,
+    private val analytics: Analytics,
+    clock: Clock,
 ) : ViewModel() {
+    private val alwaysPrompt = AlwaysPromptTracker(analytics, clock)
+
+    private val _isExplainingAlwaysLocation = MutableStateFlow(false)
+
+    val isExplainingAlwaysLocation: StateFlow<Boolean> = _isExplainingAlwaysLocation
+
     private data class Restore(val isRestoring: Boolean = false, val result: RestoreResult? = null)
 
     private val restore = MutableStateFlow(Restore())
@@ -127,6 +142,22 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun refreshPermissions() = permissions.refresh()
+
+    fun permissionActionTapped(kind: PermissionKind, action: PermissionAction) = analytics.logPermissionAction(kind, action)
+
+    // Counted as a request: the sheet is how this screen asks for "all the time".
+    fun explainAlwaysLocation() {
+        analytics.logPermissionAction(PermissionKind.LOCATION, PermissionAction.REQUEST)
+        alwaysPrompt.shown()
+        _isExplainingAlwaysLocation.value = true
+    }
+
+    fun alwaysLocationAnswered(answer: AlwaysPromptAnswer) = alwaysPrompt.answered(answer)
+
+    fun dismissAlwaysLocation() {
+        _isExplainingAlwaysLocation.value = false
+        permissions.refresh()
+    }
 
     fun locationRequested() {
         viewModelScope.launch {
