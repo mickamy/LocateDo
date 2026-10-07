@@ -13,6 +13,10 @@ locals {
   # The repository issues immutable subjects (owner and repository ids), so a
   # renamed or re-registered repository cannot match.
   github_sub = "repo:mickamy@11856337/LocateDo@1402816584"
+  github_infra_subs = [
+    "${local.github_sub}:ref:refs/heads/main",
+    "${local.github_sub}:environment:infra",
+  ]
 }
 
 resource "aws_iam_role" "plan" {
@@ -27,7 +31,7 @@ resource "aws_iam_role" "plan" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "${local.github_sub}:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = local.github_infra_subs
         }
       }
     }]
@@ -77,7 +81,7 @@ resource "aws_iam_role" "apply" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "${local.github_sub}:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = local.github_infra_subs
         }
       }
     }]
