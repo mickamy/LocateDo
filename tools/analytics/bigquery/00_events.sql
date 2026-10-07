@@ -5,6 +5,7 @@ SELECT
   event_name,
   user_pseudo_id,
   app_info.version AS app_version,
+  (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'app_build') AS app_build,
   geo.country AS country,
   device.language AS language,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'firebase_screen') AS screen,

@@ -34,6 +34,7 @@ import com.locatedo.locatedo.testing.InMemorySessionStore
 import com.locatedo.locatedo.testing.sessionProto
 import com.locatedo.locatedo.testing.success
 import com.locatedo.locatedo.testing.testPreferences
+import com.locatedo.locatedo.testing.testSession
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -131,7 +132,40 @@ class AccountManagerTest {
         assertEquals(42L, state.cursor)
         assertEquals("the device is registered once the household exists", listOf("installation-1"), devices.registered.map { it.pushToken })
         assertEquals("the store learns the user id once the household exists", listOf(FakeAccountService.USER_ID), entitlementSource.loggedIn)
+        assertEquals("the server re-reads the plan once the store knows the user", 1, account.syncEntitlementCalls)
         assertEquals(true, preferences.data.first().hasCompletedOnboarding)
+    }
+
+    @Test
+    fun linkingPurchasesAsksTheServerToRecheckThePlan() = runTest {
+        authenticator.signIn(testSession)
+        val (manager, _) = manager()
+
+        manager.linkPurchases()
+
+        assertEquals(listOf(testSession.userId.toString()), entitlementSource.loggedIn)
+        assertEquals(1, account.syncEntitlementCalls)
+    }
+
+    @Test
+    fun aFailedStoreLinkSkipsTheRecheck() = runTest {
+        authenticator.signIn(testSession)
+        entitlementSource.failure = IllegalStateException("offline")
+        val (manager, _) = manager()
+
+        manager.linkPurchases()
+
+        assertEquals(0, account.syncEntitlementCalls)
+    }
+
+    @Test
+    fun signedOutThereIsNothingToLink() = runTest {
+        val (manager, _) = manager()
+
+        manager.linkPurchases()
+
+        assertTrue(entitlementSource.loggedIn.isEmpty())
+        assertEquals(0, account.syncEntitlementCalls)
     }
 
     @Test

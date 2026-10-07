@@ -68,19 +68,22 @@ func TestSweepRefreshTokens_Run(t *testing.T) {
 func TestSweepDeadMessages_Run(t *testing.T) {
 	t.Parallel()
 
-	// arrange: an old dead message, a recent dead one, and an old pending one
+	// arrange: one died past retention, one recently after a long retry, and an old pending one
 	d := tdb.New(t)
 	now := time.Now()
+	old := now.Add(-outbox.DeadRetention - time.Hour)
 	for _, m := range []struct {
 		status    string
+		deadAt    *time.Time
 		createdAt time.Time
 	}{
-		{"dead", now.Add(-outbox.DeadRetention - time.Hour)},
-		{"dead", now.Add(-time.Hour)},
-		{"pending", now.Add(-outbox.DeadRetention - time.Hour)},
+		{"dead", &old, old},
+		{"dead", new(now.Add(-time.Hour)), old},
+		{"pending", nil, old},
 	} {
 		_, err := d.Writer.Exec(t.Context(),
-			"INSERT INTO outbox_messages (kind, status, created_at) VALUES ('x', $1, $2)", m.status, m.createdAt)
+			"INSERT INTO outbox_messages (kind, status, dead_at, created_at) VALUES ('x', $1, $2, $3)",
+			m.status, m.deadAt, m.createdAt)
 		require.NoError(t, err)
 	}
 

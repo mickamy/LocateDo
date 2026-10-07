@@ -99,15 +99,18 @@ func TestRepository_RetryAndKill(t *testing.T) {
 	m := claim(t, d, messages, now.Add(time.Minute))
 	assert.Equal(t, int32(1), m.Attempts)
 	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, messages.Bind(tx).Kill(t.Context(), id, "gave up"))
+		require.NoError(t, messages.Bind(tx).Kill(t.Context(), id, now.Add(time.Minute), "gave up"))
 	})
 	var status, lastError string
 	var attempts int32
+	var deadAt time.Time
 	require.NoError(t, d.Writer.QueryRow(t.Context(),
-		"SELECT status, attempts, last_error FROM outbox_messages WHERE id = $1", id).Scan(&status, &attempts, &lastError))
+		"SELECT status, attempts, last_error, dead_at FROM outbox_messages WHERE id = $1", id).
+		Scan(&status, &attempts, &lastError, &deadAt))
 	assert.Equal(t, "dead", status)
 	assert.Equal(t, int32(2), attempts)
 	assert.Equal(t, "gave up", lastError)
+	assert.WithinDuration(t, now.Add(time.Minute), deadAt, time.Millisecond)
 	d.InTx(t, func(tx tx.Tx) {
 		_, err := messages.Bind(tx).Claim(t.Context(), now.Add(time.Hour), now.Add(time.Hour+lease))
 		require.ErrorIs(t, err, aerrors.ErrNotFound, "dead messages are never claimed")
@@ -134,6 +137,53 @@ func TestRepository_Retry_dropsWhenAnotherIsPending(t *testing.T) {
 	// assert: the fresh one covers the work
 	assert.Equal(t, 1, count(t, d, key))
 	assert.NotEqual(t, failed.ID, claim(t, d, messages, now).ID)
+}
+
+func TestRepository_Health(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	messages := outbox.NewRepository(d.Reader)
+	for _, q := range []struct {
+		sql  string
+		args []any
+	}{
+		{"INSERT INTO outbox_messages (kind, run_at, created_at) VALUES ('due', $1, $2)",
+			[]any{now.Add(-10 * time.Minute), now.Add(-time.Hour)}},
+		{"INSERT INTO outbox_messages (kind, run_at, created_at) VALUES ('retrying', $1, $2)",
+			[]any{now.Add(time.Hour), now.Add(-7 * time.Hour)}},
+		{"INSERT INTO outbox_messages (kind, status, lease_until, created_at) VALUES ('stuck', 'running', $1, $2)",
+			[]any{now.Add(-20 * time.Minute), now.Add(-30 * time.Minute)}},
+		{"INSERT INTO outbox_messages (kind, status, dead_at, created_at) VALUES ('recent', 'dead', $1, $2)",
+			[]any{now.Add(-30 * time.Minute), now.Add(-20 * time.Hour)}},
+		{"INSERT INTO outbox_messages (kind, status, dead_at, created_at) VALUES ('old', 'dead', $1, $2)",
+			[]any{now.Add(-2 * time.Hour), now.Add(-20 * time.Hour)}},
+	} {
+		_, err := d.Writer.Exec(t.Context(), q.sql, q.args...)
+		require.NoError(t, err)
+	}
+
+	// act
+	got, err := messages.Health(t.Context(), now, now.Add(-time.Hour))
+
+	// assert: the expired lease is the most overdue, the retrying message the oldest, dead ones are left out
+	require.NoError(t, err)
+	assert.Equal(t, outbox.Health{Overdue: 20 * time.Minute, Oldest: 7 * time.Hour, Dead: 1}, got)
+}
+
+func TestRepository_Health_empty(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+
+	// act
+	got, err := outbox.NewRepository(d.Reader).Health(t.Context(), now, now.Add(-time.Hour))
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, outbox.Health{}, got)
 }
 
 func enqueue(t *testing.T, d tdb.DB, messages outbox.Repository, m outbox.Message) {

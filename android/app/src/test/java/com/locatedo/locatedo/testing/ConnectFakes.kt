@@ -92,6 +92,7 @@ class FakeAccountService : AccountServiceClientInterface {
     val signOuts = mutableListOf<SignOutRequest>()
     var signOutFailure: Code? = null
     var deleteCalls = 0
+    var syncEntitlementCalls = 0
 
     override suspend fun signInWithApple(request: SignInWithAppleRequest, headers: Headers): ResponseMessage<SignInWithAppleResponse> =
         failure(Code.UNIMPLEMENTED)
@@ -126,8 +127,10 @@ class FakeAccountService : AccountServiceClientInterface {
         return success(DeleteAccountResponse.getDefaultInstance())
     }
 
-    override suspend fun syncEntitlement(request: SyncEntitlementRequest, headers: Headers): ResponseMessage<SyncEntitlementResponse> =
-        success(SyncEntitlementResponse.getDefaultInstance())
+    override suspend fun syncEntitlement(request: SyncEntitlementRequest, headers: Headers): ResponseMessage<SyncEntitlementResponse> {
+        syncEntitlementCalls += 1
+        return success(SyncEntitlementResponse.getDefaultInstance())
+    }
 
     companion object {
         const val USER_ID = "0199bd00-0000-7000-8000-000000000001"

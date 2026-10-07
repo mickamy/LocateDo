@@ -7,6 +7,7 @@ import com.locatedo.account.v1.SignOutRequestKt
 import com.locatedo.account.v1.deleteAccountRequest
 import com.locatedo.account.v1.signInWithGoogleRequest
 import com.locatedo.account.v1.signOutRequest
+import com.locatedo.account.v1.syncEntitlementRequest
 import com.locatedo.device.v1.Platform
 import com.locatedo.household.v1.HouseholdServiceClientInterface
 import com.locatedo.locatedo.core.api.getOrThrow
@@ -134,6 +135,20 @@ class AccountManager @Inject constructor(
 
     suspend fun hasUnsyncedWrites(): Boolean = !queue.isEmpty()
 
+    // A purchase made before signing in sends no webhook naming the user, so the server re-reads it once linked.
+    // Failures are left alone: the next launch, sign-in, or webhook brings the plan back in line.
+    suspend fun linkPurchases() {
+        val session = authenticator.current() ?: return
+        if (!entitlements.logIn(session.userId)) {
+            return
+        }
+        try {
+            authenticator.authorized { account.syncEntitlement(syncEntitlementRequest {}) }
+        } catch (e: Exception) {
+            Log.w(TAG, "SyncEntitlement failed", e)
+        }
+    }
+
     suspend fun signOut() = working {
         authenticator.current()?.let { session ->
             val request = signOutRequest {
@@ -193,7 +208,7 @@ class AccountManager @Inject constructor(
     private suspend fun householdReady() {
         _householdReady.tryEmit(Unit)
         deviceRegistration.registerIfSignedIn()
-        authenticator.current()?.let { entitlements.logIn(it.userId) }
+        linkPurchases()
     }
 
     private suspend fun <T> working(block: suspend () -> T): T {

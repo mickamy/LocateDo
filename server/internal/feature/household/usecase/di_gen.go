@@ -87,11 +87,13 @@ func NewSetPlan(infra di.Infra) *SetPlan {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	households := repository.NewHousehold(reader)
+	plans := repository.NewPlan(reader)
 	messages := outbox.NewRepository(reader)
 
 	return &SetPlan{
 		transactor: transactor,
 		households: households,
+		plans:      plans,
 		messages:   messages,
 	}
 }

@@ -50,6 +50,14 @@ func SyncEntitlement(userID uuid.UUID, now time.Time) Message {
 // DeadRetention is how long a dead message is kept for inspection.
 const DeadRetention = 7 * 24 * time.Hour
 
+type Health struct {
+	// Overdue is how long the most overdue message has waited past its turn.
+	Overdue time.Duration
+	// Oldest is the age of the oldest message not yet delivered.
+	Oldest time.Duration
+	Dead   int
+}
+
 type Message struct {
 	ID        uuid.UUID
 	Kind      Kind
@@ -82,9 +90,11 @@ type Repository interface {
 	// Retry returns the message to the queue, or drops it when a pending
 	// message with the same dedupe key arrived meanwhile and will do the work.
 	Retry(ctx context.Context, id uuid.UUID, runAt time.Time, lastError string) error
-	Kill(ctx context.Context, id uuid.UUID, lastError string) error
-	// SweepDead removes dead messages created before the cutoff and reports how many.
+	Kill(ctx context.Context, id uuid.UUID, now time.Time, lastError string) error
+	// SweepDead removes messages that died before the cutoff and reports how many.
 	SweepDead(ctx context.Context, before time.Time) (int, error)
+	// Health reports how far delivery lags and how many messages died since deadSince.
+	Health(ctx context.Context, now, deadSince time.Time) (Health, error)
 	Bind(tx tx.Tx) Repository
 }
 
@@ -155,8 +165,8 @@ func (r repository) Retry(ctx context.Context, id uuid.UUID, runAt time.Time, la
 	return nil
 }
 
-func (r repository) Kill(ctx context.Context, id uuid.UUID, lastError string) error {
-	if err := r.q.KillMessage(ctx, queries.KillMessageParams{ID: id, LastError: &lastError}); err != nil {
+func (r repository) Kill(ctx context.Context, id uuid.UUID, now time.Time, lastError string) error {
+	if err := r.q.KillMessage(ctx, queries.KillMessageParams{ID: id, DeadAt: now, LastError: &lastError}); err != nil {
 		return fmt.Errorf("kill message: %w", err)
 	}
 	return nil
@@ -168,4 +178,16 @@ func (r repository) SweepDead(ctx context.Context, before time.Time) (int, error
 		return 0, fmt.Errorf("sweep dead messages: %w", err)
 	}
 	return int(n), nil
+}
+
+func (r repository) Health(ctx context.Context, now, deadSince time.Time) (Health, error) {
+	row, err := r.q.GetOutboxHealth(ctx, queries.GetOutboxHealthParams{Now: now, DeadSince: deadSince})
+	if err != nil {
+		return Health{}, fmt.Errorf("get outbox health: %w", err)
+	}
+	return Health{
+		Overdue: time.Duration(row.OverdueSeconds) * time.Second,
+		Oldest:  time.Duration(row.OldestSeconds) * time.Second,
+		Dead:    int(row.Dead),
+	}, nil
 }

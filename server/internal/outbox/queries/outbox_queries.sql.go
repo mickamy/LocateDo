@@ -92,22 +92,55 @@ func (q *Queries) EnqueueMessage(ctx context.Context, arg EnqueueMessageParams) 
 	return err
 }
 
+const getOutboxHealth = `-- name: GetOutboxHealth :one
+SELECT coalesce(extract(EPOCH FROM $1::timestamptz - min(CASE
+    WHEN status = 'pending' AND run_at <= $1 THEN run_at
+    WHEN status = 'running' AND lease_until <= $1 THEN lease_until
+    END)), 0)::bigint                                                            AS overdue_seconds,
+       coalesce(extract(EPOCH FROM $1::timestamptz - min(created_at)
+                                    FILTER (WHERE status IN ('pending', 'running'))), 0)::bigint AS oldest_seconds,
+       count(*) FILTER (WHERE status = 'dead' AND dead_at > $2::timestamptz)::bigint       AS dead
+FROM outbox_messages
+`
+
+type GetOutboxHealthParams struct {
+	Now       time.Time
+	DeadSince time.Time
+}
+
+type GetOutboxHealthRow struct {
+	OverdueSeconds int64
+	OldestSeconds  int64
+	Dead           int64
+}
+
+// Overdue: due pending messages and running ones whose lease ran out, measured
+// from when they should have been taken. Oldest: anything not yet delivered.
+func (q *Queries) GetOutboxHealth(ctx context.Context, arg GetOutboxHealthParams) (GetOutboxHealthRow, error) {
+	row := q.db.QueryRow(ctx, getOutboxHealth, arg.Now, arg.DeadSince)
+	var i GetOutboxHealthRow
+	err := row.Scan(&i.OverdueSeconds, &i.OldestSeconds, &i.Dead)
+	return i, err
+}
+
 const killMessage = `-- name: KillMessage :exec
 UPDATE outbox_messages
 SET attempts    = attempts + 1,
     status      = 'dead',
     lease_until = NULL,
+    dead_at     = $1::timestamptz,
     last_error  = $2
-WHERE id = $1
+WHERE id = $3
 `
 
 type KillMessageParams struct {
-	ID        uuid.UUID
+	DeadAt    time.Time
 	LastError *string
+	ID        uuid.UUID
 }
 
 func (q *Queries) KillMessage(ctx context.Context, arg KillMessageParams) error {
-	_, err := q.db.Exec(ctx, killMessage, arg.ID, arg.LastError)
+	_, err := q.db.Exec(ctx, killMessage, arg.DeadAt, arg.LastError, arg.ID)
 	return err
 }
 
@@ -144,11 +177,11 @@ const sweepDeadMessages = `-- name: SweepDeadMessages :execrows
 DELETE
 FROM outbox_messages
 WHERE status = 'dead'
-  AND created_at < $1
+  AND dead_at < $1::timestamptz
 `
 
-func (q *Queries) SweepDeadMessages(ctx context.Context, createdAt time.Time) (int64, error) {
-	result, err := q.db.Exec(ctx, sweepDeadMessages, createdAt)
+func (q *Queries) SweepDeadMessages(ctx context.Context, before time.Time) (int64, error) {
+	result, err := q.db.Exec(ctx, sweepDeadMessages, before)
 	if err != nil {
 		return 0, err
 	}

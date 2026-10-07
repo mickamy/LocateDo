@@ -158,6 +158,94 @@ resource "aws_cloudwatch_metric_alarm" "backup_missing" {
   ok_actions          = [aws_sns_topic.alerts.arn]
 }
 
+# The worker logs "outbox health" every five minutes (server/internal/worker/job/report_outbox.go).
+resource "aws_cloudwatch_log_metric_filter" "outbox_overdue" {
+  name           = "locatedo-prod-outbox-overdue"
+  log_group_name = aws_cloudwatch_log_group.containers.name
+  pattern        = "{ $.msg = \"outbox health\" }"
+
+  metric_transformation {
+    namespace = "LocateDo/Outbox"
+    name      = "OverdueSeconds"
+    value     = "$.overdue_seconds"
+    unit      = "Seconds"
+  }
+}
+
+resource "aws_cloudwatch_log_metric_filter" "outbox_oldest" {
+  name           = "locatedo-prod-outbox-oldest"
+  log_group_name = aws_cloudwatch_log_group.containers.name
+  pattern        = "{ $.msg = \"outbox health\" }"
+
+  metric_transformation {
+    namespace = "LocateDo/Outbox"
+    name      = "OldestSeconds"
+    value     = "$.oldest_seconds"
+    unit      = "Seconds"
+  }
+}
+
+resource "aws_cloudwatch_log_metric_filter" "outbox_dead" {
+  name           = "locatedo-prod-outbox-dead"
+  log_group_name = aws_cloudwatch_log_group.containers.name
+  pattern        = "{ $.msg = \"outbox health\" }"
+
+  metric_transformation {
+    namespace = "LocateDo/Outbox"
+    name      = "DeadLastHour"
+    value     = "$.dead_last_hour"
+    unit      = "Count"
+  }
+}
+
+# No report at all means the worker is down, so missing data alarms too.
+resource "aws_cloudwatch_metric_alarm" "outbox_overdue" {
+  alarm_name          = "locatedo-prod-outbox-overdue"
+  alarm_description   = "An outbox message has waited more than 10 minutes past its turn, or the worker stopped reporting."
+  namespace           = "LocateDo/Outbox"
+  metric_name         = "OverdueSeconds"
+  statistic           = "Maximum"
+  period              = 300
+  evaluation_periods  = 2
+  threshold           = 600
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "breaching"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+}
+
+# Retries back off up to an hour and give up after 20 attempts, so a message
+# this old has been failing for most of that time.
+resource "aws_cloudwatch_metric_alarm" "outbox_stale" {
+  alarm_name          = "locatedo-prod-outbox-stale"
+  alarm_description   = "An outbox message has not been delivered for 6 hours."
+  namespace           = "LocateDo/Outbox"
+  metric_name         = "OldestSeconds"
+  statistic           = "Maximum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 21600
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "outbox_dead" {
+  alarm_name          = "locatedo-prod-outbox-dead"
+  alarm_description   = "An outbox message gave up within the last hour; see \"outbox message dead\" in the container logs."
+  namespace           = "LocateDo/Outbox"
+  metric_name         = "DeadLastHour"
+  statistic           = "Maximum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+}
+
 resource "aws_route53_health_check" "api" {
   fqdn              = "api.locatedo.com"
   type              = "HTTPS"

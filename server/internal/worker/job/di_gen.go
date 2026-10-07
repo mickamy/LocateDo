@@ -4,10 +4,11 @@ package job
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
-	repository2 "github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository3 "github.com/mickamy/LocateDo/internal/feature/account/repository"
 	"github.com/mickamy/LocateDo/internal/feature/device/repository"
+	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
-	repository3 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
+	repository4 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
@@ -24,6 +25,30 @@ func NewPushHousehold(infra di.Infra) *PushHousehold {
 		devices:    devices,
 		apns:       apns,
 		fcm:        fcm,
+	}
+}
+
+// NewReconcileEntitlements initializes dependencies and constructs ReconcileEntitlements.
+func NewReconcileEntitlements(infra di.Infra) *ReconcileEntitlements {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	plans := repository2.NewPlan(reader)
+	messages := outbox.NewRepository(reader)
+
+	return &ReconcileEntitlements{
+		transactor: transactor,
+		plans:      plans,
+		messages:   messages,
+	}
+}
+
+// NewReportOutbox initializes dependencies and constructs ReportOutbox.
+func NewReportOutbox(infra di.Infra) *ReportOutbox {
+	reader := infra.Reader
+	messages := outbox.NewRepository(reader)
+
+	return &ReportOutbox{
+		messages: messages,
 	}
 }
 
@@ -54,7 +79,7 @@ func NewSweepDeadMessages(infra di.Infra) *SweepDeadMessages {
 func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	refreshTokens := repository2.NewRefreshToken(reader)
+	refreshTokens := repository3.NewRefreshToken(reader)
 
 	return &SweepRefreshTokens{
 		transactor:    transactor,
@@ -66,7 +91,7 @@ func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
 func NewSweepTombstones(infra di.Infra) *SweepTombstones {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	tombstones := repository3.NewTombstones(reader)
+	tombstones := repository4.NewTombstones(reader)
 
 	return &SweepTombstones{
 		transactor: transactor,

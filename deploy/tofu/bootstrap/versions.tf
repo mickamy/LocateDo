@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.0"
+    }
   }
 
   backend "s3" {
@@ -27,4 +31,11 @@ provider "aws" {
       ManagedBy   = "opentofu"
     }
   }
+}
+
+# Application Default Credentials (`gcloud auth application-default login`); billing-account calls are billed to
+# the production project.
+provider "google" {
+  user_project_override = true
+  billing_project       = local.google_projects.prod
 }
