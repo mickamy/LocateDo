@@ -17,7 +17,9 @@ fi
 
 parameters=$(mktemp)
 trap 'rm -f "${parameters}"' EXIT
-jq -n --rawfile script "${script}" '{commands: [$script], executionTimeout: ["900"]}' >"${parameters}"
+encoded=$(base64 -w0 "${script}")
+command="set -e; f=\$(mktemp); trap 'rm -f \"\$f\"' EXIT; echo ${encoded} | base64 -d >\"\$f\"; bash \"\$f\""
+jq -n --arg command "${command}" '{commands: [$command], executionTimeout: ["900"]}' >"${parameters}"
 
 command_id=$(aws ssm send-command --instance-ids "${node_id}" \
   --document-name AWS-RunShellScript --parameters "file://${parameters}" \
