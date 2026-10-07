@@ -12,6 +12,7 @@ final class AppPreferences {
         static let promotionsConsent = "promotionsConsent"
         static let receivedArrivalNotification = "receivedArrivalNotification"
         static let shownPromotionsPrompt = "shownPromotionsPrompt"
+        static let completionNotices = "completionNotices"
     }
 
     private let defaults: UserDefaults
@@ -48,6 +49,10 @@ final class AppPreferences {
         didSet { defaults.set(hasShownPromotionsPrompt, forKey: Key.shownPromotionsPrompt) }
     }
 
+    var completionNotices: Bool {
+        didSet { defaults.set(completionNotices, forKey: Key.completionNotices) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.completedOnboarding)
@@ -57,6 +62,7 @@ final class AppPreferences {
         promotionsConsent = defaults.bool(forKey: Key.promotionsConsent)
         hasReceivedArrivalNotification = defaults.bool(forKey: Key.receivedArrivalNotification)
         hasShownPromotionsPrompt = defaults.bool(forKey: Key.shownPromotionsPrompt)
+        completionNotices = defaults.object(forKey: Key.completionNotices) as? Bool ?? true
         let storedRadius = defaults.double(forKey: Key.defaultRadiusMeters)
         defaultRadiusMeters = Place.radiusRange.contains(storedRadius) ? storedRadius : Place.defaultRadiusMeters
     }

@@ -16,6 +16,7 @@ type Todo struct {
 	PlaceID     uuid.UUID
 	Title       string
 	AssigneeID  *uuid.UUID
+	CreatorID   *uuid.UUID
 	CompletedAt *time.Time
 	UpdatedAt   time.Time
 	Version     int64

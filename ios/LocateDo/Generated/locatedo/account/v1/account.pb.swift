@@ -20,6 +20,45 @@ fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobu
   typealias Version = _2
 }
 
+/// The client Apple issued the identity token and authorization code to.
+nonisolated enum Locatedo_Account_V1_AppleClient: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+
+  /// The app's Bundle ID, as the iOS app signs in.
+  case unspecified // = 0
+
+  /// The Services ID, as the Android app signs in through Apple's web sign-in.
+  case services // = 1
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .unspecified
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unspecified
+    case 1: self = .services
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .unspecified: return 0
+    case .services: return 1
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [Locatedo_Account_V1_AppleClient] = [
+    .unspecified,
+    .services,
+  ]
+
+}
+
 nonisolated struct Locatedo_Account_V1_Session: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -68,6 +107,8 @@ nonisolated struct Locatedo_Account_V1_SignInWithAppleRequest: Sendable {
   var authorizationCode: String = String()
 
   var nonce: String = String()
+
+  var client: Locatedo_Account_V1_AppleClient = .unspecified
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -347,6 +388,10 @@ nonisolated struct Locatedo_Account_V1_SyncEntitlementResponse: Sendable {
 
 fileprivate nonisolated let _protobuf_package = "locatedo.account.v1"
 
+nonisolated extension Locatedo_Account_V1_AppleClient: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0APPLE_CLIENT_UNSPECIFIED\0\u{1}APPLE_CLIENT_SERVICES\0")
+}
+
 nonisolated extension Locatedo_Account_V1_Session: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Session"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_id\0\u{3}access_token\0\u{3}access_token_expires_at\0\u{3}refresh_token\0\u{3}new_user\0")
@@ -403,7 +448,7 @@ nonisolated extension Locatedo_Account_V1_Session: SwiftProtobuf.Message, SwiftP
 
 nonisolated extension Locatedo_Account_V1_SignInWithAppleRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SignInWithAppleRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}identity_token\0\u{3}display_name\0\u{3}authorization_code\0\u{1}nonce\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}identity_token\0\u{3}display_name\0\u{3}authorization_code\0\u{1}nonce\0\u{1}client\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -415,6 +460,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleRequest: SwiftProtobuf.
       case 2: try { try decoder.decodeSingularStringField(value: &self._displayName) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self.authorizationCode) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self.nonce) }()
+      case 5: try { try decoder.decodeSingularEnumField(value: &self.client) }()
       default: break
       }
     }
@@ -437,6 +483,9 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleRequest: SwiftProtobuf.
     if !self.nonce.isEmpty {
       try visitor.visitSingularStringField(value: self.nonce, fieldNumber: 4)
     }
+    if self.client != .unspecified {
+      try visitor.visitSingularEnumField(value: self.client, fieldNumber: 5)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -445,6 +494,7 @@ nonisolated extension Locatedo_Account_V1_SignInWithAppleRequest: SwiftProtobuf.
     if lhs._displayName != rhs._displayName {return false}
     if lhs.authorizationCode != rhs.authorizationCode {return false}
     if lhs.nonce != rhs.nonce {return false}
+    if lhs.client != rhs.client {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

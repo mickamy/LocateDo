@@ -96,7 +96,7 @@ func (q *Queries) DetachConsentingUserDeviceByToken(ctx context.Context, arg Det
 }
 
 const findDeviceByTokenForUpdate = `-- name: FindDeviceByTokenForUpdate :one
-SELECT id, user_id, platform, push_token, apns_environment, language, promotions_consented_at, last_seen_at
+SELECT id, user_id, platform, push_token, apns_environment, language, promotions_consented_at, completion_notices, last_seen_at
 FROM devices
 WHERE platform = $1
   AND push_token = $2
@@ -119,6 +119,7 @@ func (q *Queries) FindDeviceByTokenForUpdate(ctx context.Context, arg FindDevice
 		&i.ApnsEnvironment,
 		&i.Language,
 		&i.PromotionsConsentedAt,
+		&i.CompletionNotices,
 		&i.LastSeenAt,
 	)
 	return i, err
@@ -146,8 +147,45 @@ func (q *Queries) InsertPromotionsConsentChange(ctx context.Context, arg InsertP
 	return err
 }
 
+const listCompletionNoticeDevices = `-- name: ListCompletionNoticeDevices :many
+SELECT id, user_id, platform, push_token, apns_environment, language, promotions_consented_at, completion_notices, last_seen_at
+FROM devices
+WHERE user_id = $1
+  AND completion_notices
+`
+
+func (q *Queries) ListCompletionNoticeDevices(ctx context.Context, userID *uuid.UUID) ([]Device, error) {
+	rows, err := q.db.Query(ctx, listCompletionNoticeDevices, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Device
+	for rows.Next() {
+		var i Device
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Platform,
+			&i.PushToken,
+			&i.ApnsEnvironment,
+			&i.Language,
+			&i.PromotionsConsentedAt,
+			&i.CompletionNotices,
+			&i.LastSeenAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listHouseholdDevices = `-- name: ListHouseholdDevices :many
-SELECT d.id, d.user_id, d.platform, d.push_token, d.apns_environment, d.language, d.promotions_consented_at, d.last_seen_at
+SELECT d.id, d.user_id, d.platform, d.push_token, d.apns_environment, d.language, d.promotions_consented_at, d.completion_notices, d.last_seen_at
 FROM devices d
          JOIN memberships m ON m.user_id = d.user_id
 WHERE m.household_id = $1
@@ -177,6 +215,7 @@ func (q *Queries) ListHouseholdDevices(ctx context.Context, arg ListHouseholdDev
 			&i.ApnsEnvironment,
 			&i.Language,
 			&i.PromotionsConsentedAt,
+			&i.CompletionNotices,
 			&i.LastSeenAt,
 		); err != nil {
 			return nil, err
@@ -190,12 +229,15 @@ func (q *Queries) ListHouseholdDevices(ctx context.Context, arg ListHouseholdDev
 }
 
 const upsertDevice = `-- name: UpsertDevice :one
-INSERT INTO devices (user_id, platform, push_token, apns_environment, language, promotions_consented_at, last_seen_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO devices (user_id, platform, push_token, apns_environment, language, promotions_consented_at,
+                     completion_notices, last_seen_at)
+VALUES ($1, $2, $3, $4, $5, $6,
+        COALESCE($7::boolean, true), $8)
 ON CONFLICT (platform, push_token) DO UPDATE
     SET user_id                 = COALESCE(EXCLUDED.user_id, devices.user_id),
         apns_environment        = EXCLUDED.apns_environment,
         language                = EXCLUDED.language,
+        completion_notices      = COALESCE($7::boolean, devices.completion_notices),
         promotions_consented_at = CASE
                                       WHEN EXCLUDED.promotions_consented_at IS NOT NULL
                                           THEN COALESCE(devices.promotions_consented_at,
@@ -212,11 +254,13 @@ type UpsertDeviceParams struct {
 	ApnsEnvironment       *string
 	Language              string
 	PromotionsConsentedAt *time.Time
+	CompletionNotices     *bool
 	LastSeenAt            time.Time
 }
 
 // A token already registered moves to this user; an anonymous registration
 // (no user) leaves its owner in place. Consenting again keeps the original time.
+// A NULL completion_notices keeps the device's setting.
 func (q *Queries) UpsertDevice(ctx context.Context, arg UpsertDeviceParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, upsertDevice,
 		arg.UserID,
@@ -225,6 +269,7 @@ func (q *Queries) UpsertDevice(ctx context.Context, arg UpsertDeviceParams) (uui
 		arg.ApnsEnvironment,
 		arg.Language,
 		arg.PromotionsConsentedAt,
+		arg.CompletionNotices,
 		arg.LastSeenAt,
 	)
 	var id uuid.UUID

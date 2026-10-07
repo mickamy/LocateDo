@@ -10,6 +10,7 @@ import (
 	place "github.com/mickamy/LocateDo/internal/feature/place/handler"
 	sync "github.com/mickamy/LocateDo/internal/feature/sync/handler"
 	todo "github.com/mickamy/LocateDo/internal/feature/todo/handler"
+	"github.com/mickamy/LocateDo/internal/server/auth"
 	"github.com/mickamy/LocateDo/internal/server/health"
 	"github.com/mickamy/LocateDo/internal/server/interceptor"
 	"github.com/mickamy/LocateDo/internal/server/webhook"
@@ -23,6 +24,7 @@ type Handlers struct {
 	Interceptors interceptor.Interceptors `di:""`
 	Health       health.Health            `di:""`
 	RevenueCat   *webhook.RevenueCat      `di:""`
+	AppleAndroid *auth.AppleAndroid       `di:""`
 	Account      *account.Account         `di:""`
 	Household    *household.Household     `di:""`
 	Category     *category.Category       `di:""`

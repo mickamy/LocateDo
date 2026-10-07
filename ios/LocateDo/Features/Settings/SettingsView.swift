@@ -9,6 +9,7 @@ struct SettingsView: View {
     @Environment(AppPreferences.self) private var preferences
     @Environment(AccountManager.self) private var account
     @Environment(PromotionsConsent.self) private var promotionsConsent
+    @Environment(CompletionNotices.self) private var completionNotices
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
 
@@ -58,6 +59,16 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings.promotionsConsent")
                 } footer: {
                     Text(.settingsNotificationsPromotionsFooter)
+                }
+                if account.isSignedIn {
+                    Section {
+                        Toggle(isOn: completionNoticesBinding) {
+                            Text(.settingsNotificationsCompletionTitle)
+                        }
+                        .accessibilityIdentifier("settings.completionNotices")
+                    } footer: {
+                        Text(.settingsNotificationsCompletionFooter)
+                    }
                 }
                 Section {
                     Slider(value: $preferences.defaultRadiusMeters, in: Place.radiusRange, step: 50) {
@@ -123,6 +134,14 @@ struct SettingsView: View {
             promotionsConsent.isOn
         } set: { isOn in
             promotionsConsent.set(isOn, source: .settings)
+        }
+    }
+
+    private var completionNoticesBinding: Binding<Bool> {
+        Binding {
+            completionNotices.isOn
+        } set: { isOn in
+            completionNotices.set(isOn)
         }
     }
 

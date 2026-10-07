@@ -25,6 +25,16 @@ type Todo interface {
 	Upsert(ctx context.Context, t model.Todo) (bool, error)
 	// SetCompletion and Delete succeed even when nothing matches.
 	SetCompletion(ctx context.Context, id, householdID uuid.UUID, completedAt *time.Time) error
+	RecordCompletion(ctx context.Context, id, completerID uuid.UUID, completedAt time.Time) error
+	// ReopenCompletions marks the todo's completions not reopened yet as
+	// reopened at the given time.
+	ReopenCompletions(ctx context.Context, id uuid.UUID, at time.Time) error
+	// ClaimCompletionNotice marks the creator's to-dos in the household that
+	// the completer checked off and nobody was told about, so each is
+	// announced once, and returns them.
+	ClaimCompletionNotice(
+		ctx context.Context, householdID, creatorID, completerID uuid.UUID, at time.Time,
+	) ([]model.CompletedTodo, error)
 	Delete(ctx context.Context, id, householdID uuid.UUID) error
 	Bind(tx tx.Tx) Todo
 }
@@ -57,6 +67,7 @@ func (r todo) Find(ctx context.Context, id, householdID uuid.UUID) (model.Todo, 
 		PlaceID:     row.PlaceID,
 		Title:       row.Title,
 		AssigneeID:  row.AssigneeID,
+		CreatorID:   row.CreatorID,
 		CompletedAt: row.CompletedAt,
 		UpdatedAt:   row.UpdatedAt,
 		Version:     row.Version,
@@ -78,6 +89,7 @@ func (r todo) Upsert(ctx context.Context, t model.Todo) (bool, error) {
 		PlaceID:     t.PlaceID,
 		Title:       t.Title,
 		AssigneeID:  t.AssigneeID,
+		CreatorID:   t.CreatorID,
 	})
 	switch {
 	case db.IsUniqueViolation(err):
@@ -99,6 +111,45 @@ func (r todo) SetCompletion(ctx context.Context, id, householdID uuid.UUID, comp
 		return fmt.Errorf("set todo completion: %w", err)
 	}
 	return nil
+}
+
+func (r todo) RecordCompletion(ctx context.Context, id, completerID uuid.UUID, completedAt time.Time) error {
+	if err := r.q.InsertCompletion(ctx, queries.InsertCompletionParams{
+		TodoID:      id,
+		CompleterID: &completerID,
+		CompletedAt: completedAt,
+	}); err != nil {
+		return fmt.Errorf("record completion: %w", err)
+	}
+	return nil
+}
+
+func (r todo) ReopenCompletions(ctx context.Context, id uuid.UUID, at time.Time) error {
+	if err := r.q.ReopenCompletions(ctx, queries.ReopenCompletionsParams{TodoID: id, ReopenedAt: &at}); err != nil {
+		return fmt.Errorf("reopen completions: %w", err)
+	}
+	return nil
+}
+
+func (r todo) ClaimCompletionNotice(
+	ctx context.Context,
+	householdID, creatorID, completerID uuid.UUID,
+	at time.Time,
+) ([]model.CompletedTodo, error) {
+	rows, err := r.q.ClaimCompletionNotice(ctx, queries.ClaimCompletionNoticeParams{
+		NotifiedAt:  &at,
+		HouseholdID: householdID,
+		CreatorID:   &creatorID,
+		CompleterID: &completerID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("claim completion notice: %w", err)
+	}
+	todos := make([]model.CompletedTodo, 0, len(rows))
+	for _, row := range rows {
+		todos = append(todos, model.CompletedTodo{Title: row.Title, CompletedAt: row.CompletedAt})
+	}
+	return todos, nil
 }
 
 func (r todo) Delete(ctx context.Context, id, householdID uuid.UUID) error {

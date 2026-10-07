@@ -12,6 +12,63 @@ import (
 	"uuid"
 )
 
+const claimCompletionNotice = `-- name: ClaimCompletionNotice :many
+UPDATE todo_completions c
+SET notified_at = $1
+FROM todos t
+WHERE t.id = c.todo_id
+  AND t.household_id = $2
+  AND t.creator_id = $3
+  AND t.completed_at IS NOT NULL
+  AND c.completer_id = $4
+  AND c.reopened_at IS NULL
+  AND c.notified_at IS NULL
+  AND NOT EXISTS (SELECT 1
+                  FROM todo_completions p
+                  WHERE p.todo_id = c.todo_id
+                    AND p.notified_at IS NOT NULL)
+RETURNING t.title, c.completed_at
+`
+
+type ClaimCompletionNoticeParams struct {
+	NotifiedAt  *time.Time
+	HouseholdID uuid.UUID
+	CreatorID   *uuid.UUID
+	CompleterID *uuid.UUID
+}
+
+type ClaimCompletionNoticeRow struct {
+	Title       string
+	CompletedAt time.Time
+}
+
+// Marks the creator's to-dos the completer checked off and nobody announced
+// yet, skipping reopened ones and to-dos announced before, and returns them.
+func (q *Queries) ClaimCompletionNotice(ctx context.Context, arg ClaimCompletionNoticeParams) ([]ClaimCompletionNoticeRow, error) {
+	rows, err := q.db.Query(ctx, claimCompletionNotice,
+		arg.NotifiedAt,
+		arg.HouseholdID,
+		arg.CreatorID,
+		arg.CompleterID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ClaimCompletionNoticeRow
+	for rows.Next() {
+		var i ClaimCompletionNoticeRow
+		if err := rows.Scan(&i.Title, &i.CompletedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countOpenTodos = `-- name: CountOpenTodos :one
 SELECT count(*)
 FROM todos
@@ -44,7 +101,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
 }
 
 const getTodo = `-- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
+SELECT id, household_id, place_id, title, assignee_id, creator_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2
@@ -64,11 +121,45 @@ func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (Todo, error) 
 		&i.PlaceID,
 		&i.Title,
 		&i.AssigneeID,
+		&i.CreatorID,
 		&i.CompletedAt,
 		&i.UpdatedAt,
 		&i.Version,
 	)
 	return i, err
+}
+
+const insertCompletion = `-- name: InsertCompletion :exec
+INSERT INTO todo_completions (todo_id, completer_id, completed_at)
+VALUES ($1, $2, $3)
+`
+
+type InsertCompletionParams struct {
+	TodoID      uuid.UUID
+	CompleterID *uuid.UUID
+	CompletedAt time.Time
+}
+
+func (q *Queries) InsertCompletion(ctx context.Context, arg InsertCompletionParams) error {
+	_, err := q.db.Exec(ctx, insertCompletion, arg.TodoID, arg.CompleterID, arg.CompletedAt)
+	return err
+}
+
+const reopenCompletions = `-- name: ReopenCompletions :exec
+UPDATE todo_completions
+SET reopened_at = $2
+WHERE todo_id = $1
+  AND reopened_at IS NULL
+`
+
+type ReopenCompletionsParams struct {
+	TodoID     uuid.UUID
+	ReopenedAt *time.Time
+}
+
+func (q *Queries) ReopenCompletions(ctx context.Context, arg ReopenCompletionsParams) error {
+	_, err := q.db.Exec(ctx, reopenCompletions, arg.TodoID, arg.ReopenedAt)
+	return err
 }
 
 const setTodoCompletion = `-- name: SetTodoCompletion :exec
@@ -90,7 +181,7 @@ func (q *Queries) SetTodoCompletion(ctx context.Context, arg SetTodoCompletionPa
 }
 
 const upsertTodo = `-- name: UpsertTodo :execrows
-INSERT INTO todos (id, household_id, place_id, title, assignee_id)
+INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id)
 SELECT $1::uuid,
        $2::uuid,
        $3::uuid,
@@ -98,7 +189,8 @@ SELECT $1::uuid,
        (SELECT m.user_id
         FROM memberships m
         WHERE m.user_id = $5::uuid
-          AND m.household_id = $2::uuid)
+          AND m.household_id = $2::uuid),
+       $6::uuid
 WHERE EXISTS (SELECT 1
               FROM places p
               WHERE p.id = $3::uuid
@@ -115,10 +207,12 @@ type UpsertTodoParams struct {
 	PlaceID     uuid.UUID
 	Title       string
 	AssigneeID  *uuid.UUID
+	CreatorID   *uuid.UUID
 }
 
 // Writes nothing when the place is not in the household. An assignee who is
-// not a member resolves to NULL. completed_at is left alone on update.
+// not a member resolves to NULL. completed_at and creator_id are left alone on
+// update.
 func (q *Queries) UpsertTodo(ctx context.Context, arg UpsertTodoParams) (int64, error) {
 	result, err := q.db.Exec(ctx, upsertTodo,
 		arg.ID,
@@ -126,6 +220,7 @@ func (q *Queries) UpsertTodo(ctx context.Context, arg UpsertTodoParams) (int64, 
 		arg.PlaceID,
 		arg.Title,
 		arg.AssigneeID,
+		arg.CreatorID,
 	)
 	if err != nil {
 		return 0, err

@@ -8,6 +8,8 @@ nonisolated enum AnalyticsEvent: String {
     case arrivalOpened = "arrival_opened"
     case arrivalSuppressed = "arrival_suppressed"
     case campaignOpened = "campaign_opened"
+    case completionNoticeOpened = "completion_notice_opened"
+    case completionNoticesChanged = "completion_notices_changed"
     case dailyState = "daily_state"
     case limitReached = "limit_reached"
     case locationAuthChanged = "location_auth_changed"
@@ -41,6 +43,7 @@ nonisolated enum AnalyticsParameter: String {
     case campaignID = "campaign_id"
     case category
     case completedTodoCount7d = "completed_todo_count_7d"
+    case count
     case customCategoryCount = "custom_category_count"
     case daysSinceInstall = "days_since_install"
     case durationS = "duration_s"

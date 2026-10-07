@@ -12,6 +12,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
+	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/outbox"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -47,9 +48,31 @@ func TestDeleteAccount(t *testing.T) {
 	var revocation model.AppleRevocation
 	require.NoError(t, json.Unmarshal(payload, &revocation))
 	assert.Equal(t, userID, revocation.UserID)
+	assert.Equal(t, apple.ClientApp, revocation.Client)
 	plain, err := lib.Box.Open(revocation.SealedToken, userID[:])
 	require.NoError(t, err)
 	assert.Equal(t, "apple-refresh:auth-code", string(plain), "the message carries the token the cascade deletes")
+}
+
+func TestDeleteAccount_revokesWithTheServicesID(t *testing.T) {
+	t.Parallel()
+
+	// arrange: signed in last on Android, through the Services ID
+	d := tdb.New(t)
+	infra, _ := fakedApple(d)
+	signedIn, err := usecase.NewSignInWithApple(infra, newLib()).Do(fixedClock(t), servicesSignInInput("apple-sub", ""))
+	require.NoError(t, err)
+
+	// act
+	err = usecase.NewDeleteAccount(infra).Do(fixedClock(t), usecase.DeleteAccountInput{UserID: signedIn.Session.UserID})
+
+	// assert
+	require.NoError(t, err)
+	var payload []byte
+	require.NoError(t, d.Writer.QueryRow(t.Context(), "SELECT payload FROM outbox_messages").Scan(&payload))
+	var revocation model.AppleRevocation
+	require.NoError(t, json.Unmarshal(payload, &revocation))
+	assert.Equal(t, apple.ClientServices, revocation.Client)
 }
 
 func TestDeleteAccount_withoutAppleToken(t *testing.T) {

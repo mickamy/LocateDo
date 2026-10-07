@@ -36,12 +36,14 @@ func NewHandlers(
 	revokeAppleToken *job.RevokeAppleToken,
 	syncEntitlement *job.SyncEntitlement,
 	sendCampaign *job.SendCampaign,
+	notifyCompletion *job.NotifyCompletion,
 ) Handlers {
 	return Handlers{
 		outbox.KindPushHousehold:    pushHousehold,
 		outbox.KindRevokeAppleToken: revokeAppleToken,
 		outbox.KindSyncEntitlement:  syncEntitlement,
 		outbox.KindSendCampaign:     sendCampaign,
+		outbox.KindNotifyCompletion: notifyCompletion,
 	}
 }
 

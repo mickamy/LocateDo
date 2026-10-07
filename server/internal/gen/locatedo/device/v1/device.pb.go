@@ -129,6 +129,9 @@ type RegisterDeviceRequest struct {
 	ApnsEnvironment   ApnsEnvironment `protobuf:"varint,3,opt,name=apns_environment,json=apnsEnvironment,proto3,enum=locatedo.device.v1.ApnsEnvironment" json:"apns_environment,omitempty"`
 	PromotionsConsent bool            `protobuf:"varint,4,opt,name=promotions_consent,json=promotionsConsent,proto3" json:"promotions_consent,omitempty"`
 	Language          string          `protobuf:"bytes,5,opt,name=language,proto3" json:"language,omitempty"`
+	// Whether to be told when a household member checks off a to-do the user
+	// added. Unset leaves the device's setting as it is (on for a new device).
+	CompletionNotices *bool `protobuf:"varint,6,opt,name=completion_notices,json=completionNotices,proto3,oneof" json:"completion_notices,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -198,6 +201,13 @@ func (x *RegisterDeviceRequest) GetLanguage() string {
 	return ""
 }
 
+func (x *RegisterDeviceRequest) GetCompletionNotices() bool {
+	if x != nil && x.CompletionNotices != nil {
+		return *x.CompletionNotices
+	}
+	return false
+}
+
 type RegisterDeviceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -238,7 +248,7 @@ var File_locatedo_device_v1_device_proto protoreflect.FileDescriptor
 
 const file_locatedo_device_v1_device_proto_rawDesc = "" +
 	"\n" +
-	"\x1flocatedo/device/v1/device.proto\x12\x12locatedo.device.v1\x1a\x1bbuf/validate/validate.proto\"\xe9\x03\n" +
+	"\x1flocatedo/device/v1/device.proto\x12\x12locatedo.device.v1\x1a\x1bbuf/validate/validate.proto\"\xb4\x04\n" +
 	"\x15RegisterDeviceRequest\x12D\n" +
 	"\bplatform\x18\x01 \x01(\x0e2\x1c.locatedo.device.v1.PlatformB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\bplatform\x12)\n" +
@@ -247,8 +257,10 @@ const file_locatedo_device_v1_device_proto_rawDesc = "" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\tpushToken\x12X\n" +
 	"\x10apns_environment\x18\x03 \x01(\x0e2#.locatedo.device.v1.ApnsEnvironmentB\b\xbaH\x05\x82\x01\x02\x10\x01R\x0fapnsEnvironment\x12-\n" +
 	"\x12promotions_consent\x18\x04 \x01(\bR\x11promotionsConsent\x12,\n" +
-	"\blanguage\x18\x05 \x01(\tB\x10\xbaH\r\xd8\x01\x01r\bR\x02enR\x02jaR\blanguage:\xa7\x01\xbaH\xa3\x01\x1a\xa0\x01\n" +
-	"(register_device_request.apns_environment\x12>apns_environment is required on iOS and not allowed on Android\x1a4(this.platform == 1) == (this.apns_environment != 0)\"\x18\n" +
+	"\blanguage\x18\x05 \x01(\tB\x10\xbaH\r\xd8\x01\x01r\bR\x02enR\x02jaR\blanguage\x122\n" +
+	"\x12completion_notices\x18\x06 \x01(\bH\x00R\x11completionNotices\x88\x01\x01:\xa7\x01\xbaH\xa3\x01\x1a\xa0\x01\n" +
+	"(register_device_request.apns_environment\x12>apns_environment is required on iOS and not allowed on Android\x1a4(this.platform == 1) == (this.apns_environment != 0)B\x15\n" +
+	"\x13_completion_notices\"\x18\n" +
 	"\x16RegisterDeviceResponse*L\n" +
 	"\bPlatform\x12\x18\n" +
 	"\x14PLATFORM_UNSPECIFIED\x10\x00\x12\x10\n" +
@@ -299,6 +311,7 @@ func file_locatedo_device_v1_device_proto_init() {
 	if File_locatedo_device_v1_device_proto != nil {
 		return
 	}
+	file_locatedo_device_v1_device_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

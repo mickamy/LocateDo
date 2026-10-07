@@ -11,6 +11,7 @@ import (
 	handler4 "github.com/mickamy/LocateDo/internal/feature/place/handler"
 	handler7 "github.com/mickamy/LocateDo/internal/feature/sync/handler"
 	handler5 "github.com/mickamy/LocateDo/internal/feature/todo/handler"
+	"github.com/mickamy/LocateDo/internal/server/auth"
 	"github.com/mickamy/LocateDo/internal/server/health"
 	"github.com/mickamy/LocateDo/internal/server/interceptor"
 	"github.com/mickamy/LocateDo/internal/server/webhook"
@@ -24,6 +25,7 @@ func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
 	reader := infra.Reader
 	health2 := health.NewHealth(writer, reader)
 	revenueCat := webhook.NewRevenueCat(config, infra)
+	appleAndroid := auth.NewAppleAndroid(config)
 	account := handler.NewAccount(infra, lib)
 	household := handler2.NewHousehold(infra)
 	category := handler3.NewCategory(infra)
@@ -37,6 +39,7 @@ func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
 		Interceptors: interceptors,
 		Health:       health2,
 		RevenueCat:   revenueCat,
+		AppleAndroid: appleAndroid,
 		Account:      account,
 		Household:    household,
 		Category:     category,

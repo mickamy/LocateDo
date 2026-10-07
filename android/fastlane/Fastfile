@@ -2,6 +2,76 @@ default_platform(:android)
 skip_docs
 
 ROOT = File.expand_path("..", __dir__)
+SDK = ENV.fetch("ANDROID_HOME", File.expand_path("~/Library/Android/sdk"))
+
+# A throwaway emulator, created and deleted by the screenshots lane so it never touches your own devices.
+SCREENSHOT_AVD = "locatedo-screenshots"
+SCREENSHOT_SERIAL = "emulator-5580"
+SCREENSHOT_PACKAGE = "com.locatedo.locatedo.dev"
+SCREENSHOT_RECEIVER = "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.debug.ScreenshotReceiver"
+
+# The App Store headlines, so both stores tell the same story. Break long ones by hand with \n.
+SCREENSHOT_HEADLINES = {
+  "en-US" => {
+    "01-Arrival" => "Reminded the moment\nyou arrive",
+    "02-Nearby" => "See what's waiting\nnearby",
+    "03-Place" => "A list for every store",
+    "04-Map" => "Your places on one map",
+    "05-Todos" => "Every to-do in one place",
+  },
+  "ja-JP" => {
+    "01-Arrival" => "着いたら、すぐお知らせ",
+    "02-Nearby" => "近くの用事がひと目で",
+    "03-Place" => "お店ごとの買い物リスト",
+    "04-Map" => "場所はマップでも",
+    "05-Todos" => "やることを\nまとめてチェック",
+  },
+}.freeze
+
+# Taps the element whose accessibility label is the app's string `name` in that language, wherever it is drawn.
+def tap_label(name, language)
+  values = language == "en" ? "values" : "values-#{language}"
+  label = File.read(File.join(ROOT, "app/src/main/res/#{values}/strings.xml"))[/name="#{name}">([^<]+)</, 1]
+  screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
+  node = screen.scan(/<node [^>]*>/).find { |n| n.include?("content-desc=\"#{label}\"") }
+  UI.user_error!("No element labeled #{label.inspect} on screen") if node.nil?
+  x1, y1, x2, y2 = node[/bounds="([^"]+)"/, 1].scan(/\d+/).map(&:to_i)
+  adb("shell", "input", "tap", ((x1 + x2) / 2).to_s, ((y1 + y2) / 2).to_s)
+end
+
+# Where the emulator stands; the seeded places sit around it (debug ScreenshotSeed).
+SCREENSHOT_LOCATIONS = {
+  "en-US" => { language: "en", latitude: 37.3230, longitude: -122.0322 },
+  "ja-JP" => { language: "ja", latitude: 35.6437, longitude: 139.6710 },
+}.freeze
+
+def adb(*args)
+  Fastlane::Actions.sh(File.join(SDK, "platform-tools/adb"), "-s", SCREENSHOT_SERIAL, *args, log: false)
+end
+
+# A stray tap or key can land on the launcher or another app; stop rather than publish that as a screenshot, and
+# show the app's last crash, since the throwaway emulator and its logs are gone afterwards.
+def capture(path)
+  top = adb("shell", "dumpsys", "activity", "activities").lines.find { |line| line.include?("topResumedActivity") }
+  unless top&.include?(SCREENSHOT_PACKAGE)
+    crash = adb("logcat", "-d", "-b", "crash").lines.last(20).join
+    screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
+    texts = screen.scan(/ text="([^"]+)"/).flatten.join(" | ")
+    UI.user_error!("#{File.basename(path)}: #{SCREENSHOT_PACKAGE} is not in front (#{top&.strip})\n#{texts}\n#{crash}")
+  end
+  adb("shell", "screencap", "-p", "/sdcard/screenshot.png")
+  adb("pull", "/sdcard/screenshot.png", path)
+end
+
+# CI passes the Play service account key base64-encoded; a local run reads the key from credentials/.
+def play_json_key
+  encoded = ENV["PLAY_SERVICE_ACCOUNT_JSON"].to_s
+  return encoded.unpack1("m") unless encoded.empty?
+
+  path = File.join(ROOT, "credentials/play-service-account.json")
+  UI.user_error!("Set PLAY_SERVICE_ACCOUNT_JSON or put the key at #{path}") unless File.exist?(path)
+  File.read(path)
+end
 
 platform :android do
   desc "Build the Staging APK and distribute it through Firebase App Distribution"
@@ -23,7 +93,7 @@ platform :android do
   desc "Build the Release AAB and upload it to the internal testing track on Google Play"
   lane :beta do
     require_build_inputs(build_type: "release", keystore: "upload")
-    json_key = ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON").unpack1("m")
+    json_key = play_json_key
     version_code = google_play_track_version_codes(track: "internal", json_key_data: json_key).max.to_i + 1
     build(task: "bundle", build_type: "Release", version_code: version_code)
     upload_to_play_store(
@@ -36,6 +106,46 @@ platform :android do
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
+  end
+
+  desc "Upload the store listing (text and images in fastlane/metadata) to Google Play"
+  lane :metadata do
+    json_key = play_json_key
+    # supply looks up a release even when only the listing changes, and fails on an empty version code; the listing
+    # itself is app-wide, so pointing at the latest internal build changes nothing else.
+    version_code = google_play_track_version_codes(track: "internal", json_key_data: json_key).max
+    upload_to_play_store(
+      json_key_data: json_key,
+      track: "internal",
+      version_code: version_code,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      sync_image_upload: true
+    )
+  end
+
+  desc "Take the Play screenshots on a throwaway emulator and add the App Store headlines"
+  lane :screenshots do
+    build(task: "assemble", build_type: "Debug", version_code: 1)
+    apk = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    raw = File.join(ROOT, "build/screenshots-raw")
+    FileUtils.rm_rf(raw)
+    with_screenshot_emulator do
+      adb("install", "-r", apk)
+      # The Google app finishes setting itself up on a fresh emulator and takes the screen in the middle of a run.
+      adb("shell", "pm", "disable-user", "--user", "0", "com.google.android.googlequicksearchbox")
+      %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
+        adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
+      end
+      enter_demo_mode
+      SCREENSHOT_LOCATIONS.each do |locale, location|
+        dir = File.join(raw, locale)
+        FileUtils.mkdir_p(dir)
+        take_screenshots(locale, location, dir)
+      end
+    end
+    compose_screenshots(raw)
   end
 
   # Play's API cannot upload to an app that has no build yet, so the first AAB goes up through Play Console.
@@ -61,6 +171,124 @@ platform :android do
       build_type: options.fetch(:build_type),
       properties: { "LOCATEDO_VERSION_CODE" => options.fetch(:version_code) }
     )
+  end
+
+  def with_screenshot_emulator
+    avd_dir = File.expand_path("~/.android/avd")
+    image = "system-images/android-37.0/google_apis_playstore/arm64-v8a/"
+    UI.user_error!("Missing #{File.join(SDK, image)}") unless File.directory?(File.join(SDK, image))
+    FileUtils.mkdir_p(File.join(avd_dir, "#{SCREENSHOT_AVD}.avd"))
+    File.write(File.join(avd_dir, "#{SCREENSHOT_AVD}.ini"), <<~INI)
+      avd.ini.encoding=UTF-8
+      path=#{avd_dir}/#{SCREENSHOT_AVD}.avd
+      target=android-37.0
+    INI
+    File.write(File.join(avd_dir, "#{SCREENSHOT_AVD}.avd/config.ini"), <<~INI)
+      AvdId=#{SCREENSHOT_AVD}
+      PlayStore.enabled=true
+      abi.type=arm64-v8a
+      hw.cpu.arch=arm64
+      hw.gps=yes
+      hw.gpu.enabled=yes
+      hw.keyboard=yes
+      hw.lcd.density=420
+      hw.lcd.height=2400
+      hw.lcd.width=1080
+      hw.ramSize=2048
+      disk.dataPartition.size=6G
+      image.sysdir.1=#{image}
+      tag.id=google_apis_playstore
+      target=android-37.0
+    INI
+    emulator = Process.spawn(
+      File.join(SDK, "emulator/emulator"), "-avd", SCREENSHOT_AVD, "-port", SCREENSHOT_SERIAL.split("-").last,
+      "-no-window", "-no-audio", "-no-boot-anim", "-no-snapshot", "-wipe-data", "-gpu", "swiftshader_indirect",
+      out: File::NULL, err: File::NULL
+    )
+    begin
+      adb("wait-for-device")
+      sleep(2) until adb("shell", "getprop", "sys.boot_completed").strip == "1"
+      yield
+    ensure
+      adb("emu", "kill") rescue nil
+      Process.wait(emulator)
+      FileUtils.rm_rf(File.join(avd_dir, "#{SCREENSHOT_AVD}.avd"))
+      FileUtils.rm_f(File.join(avd_dir, "#{SCREENSHOT_AVD}.ini"))
+    end
+  end
+
+  # 9:41, full battery, and no notification icons, as on the App Store images.
+  def enter_demo_mode
+    adb("shell", "settings", "put", "global", "sysui_demo_allowed", "1")
+    [
+      %w[command enter],
+      %w[command clock -e hhmm 0941],
+      %w[command battery -e level 100 -e plugged false],
+      %w[command network -e wifi show -e level 4 -e mobile hide],
+      %w[command notifications -e visible false],
+    ].each do |extras|
+      adb("shell", "am", "broadcast", "-a", "com.android.systemui.demo", "-e", *extras)
+    end
+  end
+
+  # Taps assume the 1080x2400 emulator created above. The map is recentered and given time before each map shot,
+  # since a fresh emulator loads tiles slowly.
+  def take_screenshots(locale, location, dir)
+    language = location.fetch(:language)
+    activity = "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity"
+    adb("shell", "am", "force-stop", SCREENSHOT_PACKAGE)
+    adb("shell", "cmd", "locale", "set-app-locales", SCREENSHOT_PACKAGE, "--locales", locale)
+    adb("emu", "geo", "fix", location.fetch(:longitude).to_s, location.fetch(:latitude).to_s)
+    adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "seed", "--es", "language", language)
+    sleep(3)
+    adb("shell", "am", "start", "-n", activity)
+    sleep(15)
+    recenter_map
+    capture(File.join(dir, "04-Map.png"))
+
+    adb("shell", "input", "swipe", "540", "1990", "540", "900", "600")
+    sleep(4)
+    capture(File.join(dir, "02-Nearby.png"))
+    adb("shell", "input", "swipe", "540", "160", "540", "2100", "600")
+    sleep(3)
+
+    adb("shell", "am", "start", "-n", activity, "-f", "0x20000000",
+        "--es", "placeId", "0199a6f0-0000-7000-8000-000000000001")
+    sleep(8)
+    capture(File.join(dir, "03-Place.png"))
+    # The sheet's close button, not BACK: BACK sometimes left the app, and the next taps landed on the launcher.
+    tap_label("common_done", language)
+    sleep(2)
+
+    adb("shell", "input", "tap", "540", "2270")
+    sleep(4)
+    capture(File.join(dir, "05-Todos.png"))
+    adb("shell", "input", "tap", "172", "2270")
+    sleep(3)
+    recenter_map
+
+    adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "notify", "--es", "language", language)
+    sleep(1.5)
+    capture(File.join(dir, "01-Arrival.png"))
+  end
+
+  def recenter_map
+    adb("shell", "input", "tap", "964", "1759")
+    sleep(8)
+  end
+
+  def compose_screenshots(raw)
+    SCREENSHOT_HEADLINES.each do |locale, headlines|
+      output = File.join(ROOT, "fastlane/metadata/android/#{locale}/images/phoneScreenshots")
+      FileUtils.rm_rf(output)
+      FileUtils.mkdir_p(output)
+      headlines.each do |name, headline|
+        sh("swift", File.join(ROOT, "../tools/screenshots/compose.swift"), File.join(raw, locale, "#{name}.png"),
+           File.join(output, "#{name}.png"), headline, "--language", SCREENSHOT_LOCATIONS.fetch(locale).fetch(:language),
+           "--corner", "0.06")
+      end
+      sh("oxipng", "-o", "4", "--strip", "safe", "-q", "-r", output)
+    end
   end
 
   private_lane :changelog do

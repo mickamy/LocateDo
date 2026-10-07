@@ -27,6 +27,7 @@ DB_NAME = locatedo
 		gen-mapper \
 		gen-sqlc \
 		gen-fixture \
+		gen-i18n \
 		new-migration \
 
 .env:
@@ -112,7 +113,7 @@ gen-mapper:
 		-exclude='$(PKG)/feature/category/model.Category.HouseholdID,$(PKG)/feature/category/model.Category.UpdatedAt,$(PKG)/feature/category/model.Category.Version' \
 		-types='$(PKG)/feature/category/model.Category<-*$(PKG)/gen/locatedo/category/v1.CategoryInput'
 	$(MAPPER) -destination=internal/feature/todo/mapper -package=mapper \
-		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt,$(PKG)/feature/todo/model.Todo.UpdatedAt,$(PKG)/feature/todo/model.Todo.Version' \
+		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt,$(PKG)/feature/todo/model.Todo.CreatorID,$(PKG)/feature/todo/model.Todo.CompleterID,$(PKG)/feature/todo/model.Todo.UpdatedAt,$(PKG)/feature/todo/model.Todo.Version' \
 		-types='$(PKG)/feature/todo/model.Todo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput'
 	$(MAPPER) -converters=./internal/feature/household/mapper -converters=./internal/feature/category/mapper \
 		-converters=./internal/feature/sync/mapper \
@@ -129,6 +130,9 @@ gen-mapper:
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate
+
+gen-i18n:
+	go tool -modfile=tools/go.mod kanna-i18n -locales=internal/messages/locales -destination=internal/messages
 
 gen-fixture:
 	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \

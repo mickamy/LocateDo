@@ -66,7 +66,7 @@ func (uc CreateHousehold) Do(ctx context.Context, in CreateHouseholdInput) (Crea
 		}); err != nil {
 			return fmt.Errorf("create membership: %w", err)
 		}
-		if err := households.Import(ctx, h.ID, in.Contents); err != nil {
+		if err := households.Import(ctx, h.ID, in.UserID, in.Contents); err != nil {
 			return fmt.Errorf("import contents: %w", err)
 		}
 		// Someone who bought Pro before signing in may never trigger a webhook.

@@ -16,8 +16,7 @@ common:
   ok: "OK"
 sharing:
   title: "家族と共有"
-  sign_in_message: "場所とやることを家族と共有するには、Apple でサインインしてください。"
-  android_sign_in_message: "場所とやることを家族と共有するには、Google でサインインしてください。"
+  sign_in_message: "場所とやることを家族と共有するには、サインインしてください。"
   pro_required: "家族との共有は Pro の機能です。"
   members: "メンバー"
   owner: "オーナー"
@@ -35,8 +34,7 @@ sharing:
   full: "1 つの世帯に入れるのは 6 人までです。"
   accept: "招待を受ける"
   intro_title: "家族と一緒に使う"
-  intro_message: "Apple でサインインすると、場所とやることを家族と共有できます。"
-  android_intro_message: "Google でサインインすると、場所とやることを家族と共有できます。"
+  intro_message: "サインインすると、場所とやることを家族と共有できます。"
   benefit_lists_title: "みんなで同じリスト"
   benefit_lists_message: "誰かが足した場所とやることが、全員の iPhone にすぐ届きます。"
   android_benefit_lists_message: "誰かが足した場所とやることが、全員の端末にすぐ届きます。"
@@ -97,14 +95,15 @@ settings:
     allow: "通知を許可"
     promotions_title: "新機能・キャンペーンのお知らせ"
     promotions_footer: "新機能やアップデート、キャンペーンをときどきお知らせします。到着のお知らせはどちらでも届きます。"
+    completion_title: "家族が完了したとき"
+    completion_footer: "自分が追加したやることを家族が完了すると、お知らせします。"
   account:
     title: "アカウント"
-    signed_in: "Apple でサインイン中"
-    android_signed_in: "Google でサインイン中"
+    signed_in: "サインイン中"
     not_signed_in: "未サインイン"
-    description: "Apple でサインインすると、場所とやることをアカウントに保存できます。"
-    android_description: "Google でサインインすると、場所とやることをアカウントに保存できます。"
+    description: "サインインすると、場所とやることをアカウントに保存できます。"
     android_sign_in: "Google でサインイン"
+    android_apple_sign_in: "Appleでサインイン"
     benefits:
       sync_title: "リストを失わない"
       sync_message: "機種変更しても、場所とやることはアカウントに残ります。"
@@ -195,6 +194,7 @@ place:
     delete_confirm_title: "「{name}」を削除しますか？"
     delete_confirm_message: "この場所のやることも削除されます。"
 todo:
+  completed_by: "{name}が完了"
   editor:
     title: "やることを追加"
     title_label: "やること"
@@ -218,6 +218,7 @@ todo:
 notification:
   channel_arrivals: "到着のお知らせ"
   channel_promotions: "新機能・キャンペーンのお知らせ"
+  channel_household: "家族の更新"
   arrived_title: "{place}に到着しました"
   more:
     plural:
@@ -309,7 +310,7 @@ paywall:
   unavailable: "プランを読み込めませんでした。しばらくしてからお試しください。"
 update:
   title: "アップデートが必要です"
-  message: "このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。"
+  message: "このバージョンのアプリは使えなくなりました。最新のバージョンにアップデートしてください。"
   open_app_store: "App Store を開く"
   android_open_play: "Google Play を開く"
 maintenance:

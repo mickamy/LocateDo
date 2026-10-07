@@ -62,12 +62,16 @@ func (uc DeleteAccount) deleteIdentity(ctx context.Context, provider model.Provi
 }
 
 func (uc DeleteAccount) deleteUser(ctx context.Context, tx tx.Tx, userID uuid.UUID) error {
-	sealed, err := uc.appleTokens.Bind(tx).Find(ctx, userID)
+	appleToken, err := uc.appleTokens.Bind(tx).Find(ctx, userID)
 	if err != nil && !errors.Is(err, aerrors.ErrNotFound) {
 		return fmt.Errorf("find apple token: %w", err)
 	}
-	if sealed != nil {
-		payload, err := json.Marshal(model.AppleRevocation{UserID: userID, SealedToken: sealed})
+	if err == nil {
+		payload, err := json.Marshal(model.AppleRevocation{
+			UserID:      userID,
+			SealedToken: appleToken.Sealed,
+			Client:      appleToken.Client,
+		})
 		if err != nil {
 			return fmt.Errorf("encode revocation: %w", err)
 		}

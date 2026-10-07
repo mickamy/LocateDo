@@ -11,6 +11,7 @@ final class DeviceRegistration {
     private let apnsEnvironment: Locatedo_Device_V1_ApnsEnvironment
     private let language: String
     private let promotionsConsent: () -> Bool
+    private let completionNotices: () -> Bool
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "push")
 
     init(
@@ -18,13 +19,15 @@ final class DeviceRegistration {
         authenticator: Authenticator,
         apnsEnvironment: Locatedo_Device_V1_ApnsEnvironment = .current,
         language: String = DeviceRegistration.language(preferredLocalizations: Bundle.main.preferredLocalizations),
-        promotionsConsent: @escaping () -> Bool = { false }
+        promotionsConsent: @escaping () -> Bool = { false },
+        completionNotices: @escaping () -> Bool = { true }
     ) {
         self.devices = devices
         self.authenticator = authenticator
         self.apnsEnvironment = apnsEnvironment
         self.language = language
         self.promotionsConsent = promotionsConsent
+        self.completionNotices = completionNotices
     }
 
     func received(deviceToken: Data) async {
@@ -61,6 +64,7 @@ final class DeviceRegistration {
             $0.apnsEnvironment = apnsEnvironment
             $0.language = language
             $0.promotionsConsent = promotionsConsent()
+            $0.completionNotices = completionNotices()
         }
         let client = devices
         do {

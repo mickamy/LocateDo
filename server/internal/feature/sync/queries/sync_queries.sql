@@ -23,12 +23,28 @@ WHERE household_id = $1
 ORDER BY version
 LIMIT $3;
 
+-- The completer is the one of the latest completion not reopened.
 -- name: ListTodoChanges :many
-SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
-FROM todos
-WHERE household_id = $1
-  AND version > $2
-ORDER BY version
+SELECT t.id,
+       t.household_id,
+       t.place_id,
+       t.title,
+       t.assignee_id,
+       t.creator_id,
+       c.completer_id,
+       t.completed_at,
+       t.updated_at,
+       t.version
+FROM todos t
+         LEFT JOIN LATERAL (SELECT tc.completer_id
+                            FROM todo_completions tc
+                            WHERE tc.todo_id = t.id
+                              AND tc.reopened_at IS NULL
+                            ORDER BY tc.id DESC
+                            LIMIT 1) c ON true
+WHERE t.household_id = $1
+  AND t.version > $2
+ORDER BY t.version
 LIMIT $3;
 
 -- name: SweepDeletions :many

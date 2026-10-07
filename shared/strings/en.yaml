@@ -16,8 +16,7 @@ common:
   ok: "OK"
 sharing:
   title: "Share with family"
-  sign_in_message: "Sign in with Apple to share places and to-dos with your family."
-  android_sign_in_message: "Sign in with Google to share places and to-dos with your family."
+  sign_in_message: "Sign in to share places and to-dos with your family."
   pro_required: "Sharing with family is a Pro feature."
   members: "Members"
   owner: "Owner"
@@ -35,8 +34,7 @@ sharing:
   full: "A household can have up to 6 members."
   accept: "Accept an Invite"
   intro_title: "Use it together"
-  intro_message: "Sign in with Apple to share places and to-dos with your family."
-  android_intro_message: "Sign in with Google to share places and to-dos with your family."
+  intro_message: "Sign in to share places and to-dos with your family."
   benefit_lists_title: "One list for everyone"
   benefit_lists_message: "Places and to-dos anyone adds show up on everyone’s iPhone."
   android_benefit_lists_message: "Places and to-dos anyone adds show up on everyone’s phone."
@@ -99,14 +97,15 @@ settings:
     allow: "Allow notifications"
     promotions_title: "News and offers"
     promotions_footer: "Occasional notifications about new features, updates, and offers. Arrival reminders work either way."
+    completion_title: "When family checks something off"
+    completion_footer: "Get a notification when someone in your household checks off a to-do you added."
   account:
     title: "Account"
-    signed_in: "Signed in with Apple"
-    android_signed_in: "Signed in with Google"
+    signed_in: "Signed in"
     not_signed_in: "Not signed in"
-    description: "Sign in with Apple to keep your places and to-dos in your account."
-    android_description: "Sign in with Google to keep your places and to-dos in your account."
+    description: "Sign in to keep your places and to-dos in your account."
     android_sign_in: "Sign in with Google"
+    android_apple_sign_in: "Sign in with Apple"
     benefits:
       sync_title: "Keep your lists"
       sync_message: "Your places and to-dos stay with your account, even when you change phones."
@@ -198,6 +197,7 @@ place:
     delete_confirm_title: "Delete “{name}”?"
     delete_confirm_message: "Its to-dos will be deleted too."
 todo:
+  completed_by: "Checked off by {name}"
   editor:
     title: "Add a to-do"
     title_label: "To-do"
@@ -221,6 +221,7 @@ todo:
 notification:
   channel_arrivals: "Arrival reminders"
   channel_promotions: "News and offers"
+  channel_household: "Household updates"
   arrived_title: "You’re at {place}"
   more:
     plural:

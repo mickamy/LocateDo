@@ -62,6 +62,25 @@ nonisolated struct Locatedo_Todo_V1_Todo: Sendable {
 
   var version: Int64 = 0
 
+  /// Recorded by the server from the caller; unset for to-dos from before it did.
+  var creatorID: String {
+    get {_creatorID ?? String()}
+    set {_creatorID = newValue}
+  }
+  /// Returns true if `creatorID` has been explicitly set.
+  var hasCreatorID: Bool {self._creatorID != nil}
+  /// Clears the value of `creatorID`. Subsequent reads from it will return its default value.
+  mutating func clearCreatorID() {self._creatorID = nil}
+
+  var completerID: String {
+    get {_completerID ?? String()}
+    set {_completerID = newValue}
+  }
+  /// Returns true if `completerID` has been explicitly set.
+  var hasCompleterID: Bool {self._completerID != nil}
+  /// Clears the value of `completerID`. Subsequent reads from it will return its default value.
+  mutating func clearCompleterID() {self._completerID = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -69,6 +88,8 @@ nonisolated struct Locatedo_Todo_V1_Todo: Sendable {
   fileprivate var _assigneeID: String? = nil
   fileprivate var _completedAt: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
   fileprivate var _updatedAt: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+  fileprivate var _creatorID: String? = nil
+  fileprivate var _completerID: String? = nil
 }
 
 nonisolated struct Locatedo_Todo_V1_TodoInput: Sendable {
@@ -193,7 +214,7 @@ fileprivate nonisolated let _protobuf_package = "locatedo.todo.v1"
 
 nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Todo"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}household_id\0\u{3}place_id\0\u{1}title\0\u{3}assignee_id\0\u{3}completed_at\0\u{3}updated_at\0\u{1}version\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}household_id\0\u{3}place_id\0\u{1}title\0\u{3}assignee_id\0\u{3}completed_at\0\u{3}updated_at\0\u{1}version\0\u{3}creator_id\0\u{3}completer_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -209,6 +230,8 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
       case 6: try { try decoder.decodeSingularMessageField(value: &self._completedAt) }()
       case 7: try { try decoder.decodeSingularMessageField(value: &self._updatedAt) }()
       case 8: try { try decoder.decodeSingularInt64Field(value: &self.version) }()
+      case 9: try { try decoder.decodeSingularStringField(value: &self._creatorID) }()
+      case 10: try { try decoder.decodeSingularStringField(value: &self._completerID) }()
       default: break
       }
     }
@@ -243,6 +266,12 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
     if self.version != 0 {
       try visitor.visitSingularInt64Field(value: self.version, fieldNumber: 8)
     }
+    try { if let v = self._creatorID {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 9)
+    } }()
+    try { if let v = self._completerID {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 10)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -255,6 +284,8 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
     if lhs._completedAt != rhs._completedAt {return false}
     if lhs._updatedAt != rhs._updatedAt {return false}
     if lhs.version != rhs.version {return false}
+    if lhs._creatorID != rhs._creatorID {return false}
+    if lhs._completerID != rhs._completerID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

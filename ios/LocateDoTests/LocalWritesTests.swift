@@ -85,6 +85,21 @@ struct LocalWritesTests {
         #expect(completions[0].completedAt.date == completedAt)
     }
 
+    @Test func checkingOffRecordsTheUserAndReopeningClearsIt() throws {
+        let fixture = try Fixture()
+        let me = UUID.v7()
+        fixture.writes.currentUserID = { me }
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let todo = Todo(title: "Milk", place: place)
+        fixture.writes.add(todo)
+
+        fixture.writes.toggleCompletion(todo)
+        #expect(todo.completerID == me)
+        fixture.writes.toggleCompletion(todo)
+        #expect(todo.completerID == nil)
+    }
+
     @Test func changingTheAssigneeQueuesAPut() throws {
         let fixture = try Fixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)

@@ -37,7 +37,7 @@ import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
-import com.locatedo.locatedo.feature.account.GoogleSignInButton
+import com.locatedo.locatedo.feature.account.SignInButtons
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import com.locatedo.locatedo.ui.appstatus.MaintenanceNote
@@ -136,7 +136,7 @@ fun AcceptInviteScreen(
                 MaintenanceNote()
             } else {
                 Text(
-                    text = stringResource(R.string.sharing_android_sign_in_message),
+                    text = stringResource(R.string.sharing_sign_in_message),
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -151,7 +151,7 @@ fun AcceptInviteScreen(
                         textAlign = TextAlign.Center,
                     )
                 }
-                GoogleSignInButton(viewModel = accountViewModel, modifier = Modifier.fillMaxWidth(), enabled = !accountState.isWorking)
+                SignInButtons(viewModel = accountViewModel, modifier = Modifier.fillMaxWidth(), enabled = !accountState.isWorking)
             }
         }
     }

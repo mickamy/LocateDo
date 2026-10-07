@@ -9,6 +9,7 @@ import (
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
+	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
 	"github.com/mickamy/LocateDo/internal/feature/todo/usecase"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -22,7 +23,11 @@ func TestPutTodo(t *testing.T) {
 	td := todoAt(h.ID, d.Seeder.Place(t, h.ID))
 
 	// act
-	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td})
+	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{
+		UserID:      h.OwnerID,
+		HouseholdID: h.ID,
+		Todo:        td,
+	})
 
 	// assert
 	require.NoError(t, err)
@@ -39,7 +44,11 @@ func TestPutTodo_anotherHousehold(t *testing.T) {
 	td := todoAt(other.ID, d.Seeder.Place(t, other.ID))
 
 	// act
-	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td})
+	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{
+		UserID:      h.OwnerID,
+		HouseholdID: h.ID,
+		Todo:        td,
+	})
 
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrPermissionDenied)
@@ -96,7 +105,7 @@ func TestPutTodo_freeLimit(t *testing.T) {
 
 			// act
 			err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{
-				HouseholdID: h.ID, Todo: todoAt(h.ID, placeID),
+				UserID: h.OwnerID, HouseholdID: h.ID, Todo: todoAt(h.ID, placeID),
 			})
 
 			// assert
@@ -120,14 +129,14 @@ func TestPutTodo_freeHouseholdOverTheLimitKeepsEditing(t *testing.T) {
 	h := d.Seeder.Household(t, hmodel.PlanFree)
 	placeID := d.Seeder.Place(t, h.ID)
 	td := todoAt(h.ID, placeID)
-	require.NoError(t, putTodo.Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td}))
+	require.NoError(t, putTodo.Do(t.Context(), usecase.PutTodoInput{UserID: h.OwnerID, HouseholdID: h.ID, Todo: td}))
 	for range hmodel.MaxFreeOpenTodos {
 		d.Seeder.Todo(t, h.ID, placeID)
 	}
 	td.Title = "Oat milk"
 
 	// act
-	err := putTodo.Do(t.Context(), usecase.PutTodoInput{HouseholdID: h.ID, Todo: td})
+	err := putTodo.Do(t.Context(), usecase.PutTodoInput{UserID: h.OwnerID, HouseholdID: h.ID, Todo: td})
 
 	// assert
 	require.NoError(t, err)
@@ -149,10 +158,34 @@ func TestPutTodo_placeGoneIsANoOp(t *testing.T) {
 
 	// act
 	err := usecase.NewPutTodo(d.Infra()).Do(t.Context(), usecase.PutTodoInput{
-		HouseholdID: h.ID, Todo: todoAt(h.ID, uuid.NewV7()),
+		UserID: h.OwnerID, HouseholdID: h.ID, Todo: todoAt(h.ID, uuid.NewV7()),
 	})
 
 	// assert
 	require.NoError(t, err)
 	assert.Equal(t, hmodel.MaxFreeOpenTodos, d.Seeder.Count(t, "todos", h.ID))
+}
+
+func TestPutTodo_recordsTheCallerAsCreator(t *testing.T) {
+	t.Parallel()
+
+	// arrange: the app cannot say who created it, and an edit by another member keeps it
+	d := tdb.New(t)
+	putTodo := usecase.NewPutTodo(d.Infra())
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	memberID := d.Seeder.Member(t, h.ID)
+	td := todoAt(h.ID, d.Seeder.Place(t, h.ID))
+	td.CreatorID = new(h.OwnerID)
+
+	// act
+	require.NoError(t, putTodo.Do(t.Context(), usecase.PutTodoInput{UserID: memberID, HouseholdID: h.ID, Todo: td}))
+	td.Title = "edited"
+	err := putTodo.Do(t.Context(), usecase.PutTodoInput{UserID: h.OwnerID, HouseholdID: h.ID, Todo: td})
+
+	// assert
+	require.NoError(t, err)
+	got, err := repository.NewTodo(d.Reader).Find(t.Context(), td.ID, h.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "edited", got.Title)
+	assert.Equal(t, &memberID, got.CreatorID)
 }

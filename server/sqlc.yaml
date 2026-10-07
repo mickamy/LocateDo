@@ -25,6 +25,11 @@ overrides:
         go_type:
           type: "string"
           pointer: true
+      - db_type: "pg_catalog.bool"
+        nullable: true
+        go_type:
+          type: "bool"
+          pointer: true
 sql:
   - engine: "postgresql"
     schema: "internal/infra/storage/db/migrate/sql"

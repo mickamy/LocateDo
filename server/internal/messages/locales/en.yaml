@@ -1,0 +1,4 @@
+completion_notice:
+  someone: "Someone in your household"
+  one: '{name} checked off "{title}"'
+  many: '{name} checked off "{title}" and {others:int} more'

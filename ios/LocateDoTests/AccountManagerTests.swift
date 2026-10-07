@@ -55,6 +55,19 @@ struct AccountManagerTests {
         #expect(fixture.ready.value == 1)
     }
 
+    @Test func signingInWithGoogleSendsTheTokenAndAdoptsTheHousehold() async throws {
+        let fixture = try Fixture()
+        let householdID = "0199bd00-0000-7000-8000-0000000000aa"
+        fixture.account.respondToSignIn(with: .success(Self.signInResponse(householdID: householdID)))
+
+        try await fixture.manager.signInWithGoogle(idToken: "google-id-token", nonce: "nonce-0123456789abcdef")
+
+        #expect(fixture.account.lastGoogleSignIn?.idToken == "google-id-token")
+        #expect(fixture.account.lastGoogleSignIn?.nonce == "nonce-0123456789abcdef")
+        #expect(try SyncState.current(in: fixture.context).householdID == UUID(uuidString: householdID))
+        #expect(fixture.manager.isSignedIn)
+    }
+
     @Test func localPlacesAreReplacedOnlyAfterConfirmation() async throws {
         let fixture = try Fixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)

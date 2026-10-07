@@ -33,7 +33,7 @@ func (uc DeleteAccountWithApple) Do(
 	ctx context.Context,
 	in DeleteAccountWithAppleInput,
 ) (DeleteAccountWithAppleOutput, error) {
-	identity, err := uc.apple.VerifyWebIdentityToken(ctx, in.IdentityToken, in.Nonce, clock.Now(ctx))
+	identity, err := uc.apple.VerifyIdentityToken(ctx, apple.ClientServices, in.IdentityToken, in.Nonce, clock.Now(ctx))
 	if errors.Is(err, apple.ErrInvalidToken) {
 		return DeleteAccountWithAppleOutput{}, aerrors.Unauthenticated(err.Error())
 	}

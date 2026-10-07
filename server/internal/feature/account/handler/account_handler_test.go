@@ -119,6 +119,50 @@ func TestAccount_SignInWithApple_invalidToken(t *testing.T) {
 	assert.Equal(t, connect.CodeUnauthenticated, connect.CodeOf(err))
 }
 
+func TestAccount_SignInWithApple_client(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		identity string
+		client   accountv1.AppleClient
+		want     connect.Code
+	}{
+		{name: "app", identity: "identity:apple-sub", client: accountv1.AppleClient_APPLE_CLIENT_UNSPECIFIED},
+		{name: "services", identity: "web:apple-sub", client: accountv1.AppleClient_APPLE_CLIENT_SERVICES},
+		{
+			name:     "app token as services",
+			identity: "identity:apple-sub",
+			client:   accountv1.AppleClient_APPLE_CLIENT_SERVICES,
+			want:     connect.CodeUnauthenticated,
+		},
+		{name: "undefined client", identity: "web:apple-sub", client: 99, want: connect.CodeInvalidArgument},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			client := newClient(t)
+
+			// act
+			_, err := client.SignInWithApple(t.Context(), connect.NewRequest(&accountv1.SignInWithAppleRequest{
+				IdentityToken:     tt.identity,
+				AuthorizationCode: "auth-code",
+				Nonce:             "0123456789abcdef",
+				Client:            tt.client,
+			}))
+
+			// assert
+			if tt.want == 0 {
+				require.NoError(t, err)
+				return
+			}
+			assert.Equal(t, tt.want, connect.CodeOf(err))
+		})
+	}
+}
+
 func TestAccount_SignInWithGoogle(t *testing.T) {
 	t.Parallel()
 
@@ -289,33 +333,31 @@ func newClient(t *testing.T) accountv1connect.AccountServiceClient {
 	return accountv1connect.NewAccountServiceClient(srv.Client(), srv.URL)
 }
 
-// fakeApple accepts identity tokens of the form "identity:<subject>", and
-// "web:<subject>" for the website.
+// fakeApple accepts identity tokens of the form "identity:<subject>" for the
+// app, and "web:<subject>" for the Services ID.
 type fakeApple struct{}
 
 var _ apple.Auth = fakeApple{}
 
-func (fakeApple) VerifyIdentityToken(_ context.Context, raw, _ string, _ time.Time) (apple.Identity, error) {
-	subject, ok := strings.CutPrefix(raw, "identity:")
+func (fakeApple) VerifyIdentityToken(
+	_ context.Context, kind apple.ClientKind, raw, _ string, _ time.Time,
+) (apple.Identity, error) {
+	prefix := "identity:"
+	if kind == apple.ClientServices {
+		prefix = "web:"
+	}
+	subject, ok := strings.CutPrefix(raw, prefix)
 	if !ok {
 		return apple.Identity{}, apple.ErrInvalidToken
 	}
 	return apple.Identity{Subject: subject}, nil
 }
 
-func (fakeApple) VerifyWebIdentityToken(_ context.Context, raw, _ string, _ time.Time) (apple.Identity, error) {
-	subject, ok := strings.CutPrefix(raw, "web:")
-	if !ok {
-		return apple.Identity{}, apple.ErrInvalidToken
-	}
-	return apple.Identity{Subject: subject}, nil
-}
-
-func (fakeApple) ExchangeCode(_ context.Context, code string, _ time.Time) (string, error) {
+func (fakeApple) ExchangeCode(_ context.Context, _ apple.ClientKind, code string, _ time.Time) (string, error) {
 	return "apple-refresh:" + code, nil
 }
 
-func (fakeApple) Revoke(context.Context, string, time.Time) error {
+func (fakeApple) Revoke(context.Context, apple.ClientKind, string, time.Time) error {
 	return nil
 }
 

@@ -24,6 +24,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// The client Apple issued the identity token and authorization code to.
+type AppleClient int32
+
+const (
+	// The app's Bundle ID, as the iOS app signs in.
+	AppleClient_APPLE_CLIENT_UNSPECIFIED AppleClient = 0
+	// The Services ID, as the Android app signs in through Apple's web sign-in.
+	AppleClient_APPLE_CLIENT_SERVICES AppleClient = 1
+)
+
+// Enum value maps for AppleClient.
+var (
+	AppleClient_name = map[int32]string{
+		0: "APPLE_CLIENT_UNSPECIFIED",
+		1: "APPLE_CLIENT_SERVICES",
+	}
+	AppleClient_value = map[string]int32{
+		"APPLE_CLIENT_UNSPECIFIED": 0,
+		"APPLE_CLIENT_SERVICES":    1,
+	}
+)
+
+func (x AppleClient) Enum() *AppleClient {
+	p := new(AppleClient)
+	*p = x
+	return p
+}
+
+func (x AppleClient) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AppleClient) Descriptor() protoreflect.EnumDescriptor {
+	return file_locatedo_account_v1_account_proto_enumTypes[0].Descriptor()
+}
+
+func (AppleClient) Type() protoreflect.EnumType {
+	return &file_locatedo_account_v1_account_proto_enumTypes[0]
+}
+
+func (x AppleClient) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AppleClient.Descriptor instead.
+func (AppleClient) EnumDescriptor() ([]byte, []int) {
+	return file_locatedo_account_v1_account_proto_rawDescGZIP(), []int{0}
+}
+
 type Session struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	UserId               string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -106,6 +155,7 @@ type SignInWithAppleRequest struct {
 	DisplayName       *string                `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3,oneof" json:"display_name,omitempty"`
 	AuthorizationCode string                 `protobuf:"bytes,3,opt,name=authorization_code,json=authorizationCode,proto3" json:"authorization_code,omitempty"`
 	Nonce             string                 `protobuf:"bytes,4,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Client            AppleClient            `protobuf:"varint,5,opt,name=client,proto3,enum=locatedo.account.v1.AppleClient" json:"client,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -166,6 +216,13 @@ func (x *SignInWithAppleRequest) GetNonce() string {
 		return x.Nonce
 	}
 	return ""
+}
+
+func (x *SignInWithAppleRequest) GetClient() AppleClient {
+	if x != nil {
+		return x.Client
+	}
+	return AppleClient_APPLE_CLIENT_UNSPECIFIED
 }
 
 type SignInWithAppleResponse struct {
@@ -915,13 +972,14 @@ const file_locatedo_account_v1_account_proto_rawDesc = "" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12Q\n" +
 	"\x17access_token_expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x14accessTokenExpiresAt\x12#\n" +
 	"\rrefresh_token\x18\x04 \x01(\tR\frefreshToken\x12\x19\n" +
-	"\bnew_user\x18\x05 \x01(\bR\anewUser\"\xe4\x01\n" +
+	"\bnew_user\x18\x05 \x01(\bR\anewUser\"\xa8\x02\n" +
 	"\x16SignInWithAppleRequest\x12.\n" +
 	"\x0eidentity_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\ridentityToken\x12/\n" +
 	"\fdisplay_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18dH\x00R\vdisplayName\x88\x01\x01\x126\n" +
 	"\x12authorization_code\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x11authorizationCode\x12 \n" +
 	"\x05nonce\x18\x04 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x10\x18\x80\x01R\x05nonceB\x0f\n" +
+	"\xbaH\ar\x05\x10\x10\x18\x80\x01R\x05nonce\x12B\n" +
+	"\x06client\x18\x05 \x01(\x0e2 .locatedo.account.v1.AppleClientB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06clientB\x0f\n" +
 	"\r_display_name\"\x8a\x01\n" +
 	"\x17SignInWithAppleResponse\x126\n" +
 	"\asession\x18\x01 \x01(\v2\x1c.locatedo.account.v1.SessionR\asession\x12&\n" +
@@ -966,7 +1024,10 @@ const file_locatedo_account_v1_account_proto_rawDesc = "" +
 	"\x1fDeleteAccountWithGoogleResponse\x12\x18\n" +
 	"\adeleted\x18\x01 \x01(\bR\adeleted\"\x18\n" +
 	"\x16SyncEntitlementRequest\"\x19\n" +
-	"\x17SyncEntitlementResponse2\x8b\a\n" +
+	"\x17SyncEntitlementResponse*F\n" +
+	"\vAppleClient\x12\x1c\n" +
+	"\x18APPLE_CLIENT_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15APPLE_CLIENT_SERVICES\x10\x012\x8b\a\n" +
 	"\x0eAccountService\x12l\n" +
 	"\x0fSignInWithApple\x12+.locatedo.account.v1.SignInWithAppleRequest\x1a,.locatedo.account.v1.SignInWithAppleResponse\x12o\n" +
 	"\x10SignInWithGoogle\x12,.locatedo.account.v1.SignInWithGoogleRequest\x1a-.locatedo.account.v1.SignInWithGoogleResponse\x12c\n" +
@@ -990,57 +1051,60 @@ func file_locatedo_account_v1_account_proto_rawDescGZIP() []byte {
 	return file_locatedo_account_v1_account_proto_rawDescData
 }
 
+var file_locatedo_account_v1_account_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_locatedo_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_locatedo_account_v1_account_proto_goTypes = []any{
-	(*Session)(nil),                         // 0: locatedo.account.v1.Session
-	(*SignInWithAppleRequest)(nil),          // 1: locatedo.account.v1.SignInWithAppleRequest
-	(*SignInWithAppleResponse)(nil),         // 2: locatedo.account.v1.SignInWithAppleResponse
-	(*SignInWithGoogleRequest)(nil),         // 3: locatedo.account.v1.SignInWithGoogleRequest
-	(*SignInWithGoogleResponse)(nil),        // 4: locatedo.account.v1.SignInWithGoogleResponse
-	(*RefreshTokenRequest)(nil),             // 5: locatedo.account.v1.RefreshTokenRequest
-	(*RefreshTokenResponse)(nil),            // 6: locatedo.account.v1.RefreshTokenResponse
-	(*SignOutRequest)(nil),                  // 7: locatedo.account.v1.SignOutRequest
-	(*SignOutResponse)(nil),                 // 8: locatedo.account.v1.SignOutResponse
-	(*DeleteAccountRequest)(nil),            // 9: locatedo.account.v1.DeleteAccountRequest
-	(*DeleteAccountResponse)(nil),           // 10: locatedo.account.v1.DeleteAccountResponse
-	(*DeleteAccountWithAppleRequest)(nil),   // 11: locatedo.account.v1.DeleteAccountWithAppleRequest
-	(*DeleteAccountWithAppleResponse)(nil),  // 12: locatedo.account.v1.DeleteAccountWithAppleResponse
-	(*DeleteAccountWithGoogleRequest)(nil),  // 13: locatedo.account.v1.DeleteAccountWithGoogleRequest
-	(*DeleteAccountWithGoogleResponse)(nil), // 14: locatedo.account.v1.DeleteAccountWithGoogleResponse
-	(*SyncEntitlementRequest)(nil),          // 15: locatedo.account.v1.SyncEntitlementRequest
-	(*SyncEntitlementResponse)(nil),         // 16: locatedo.account.v1.SyncEntitlementResponse
-	(*SignOutRequest_Device)(nil),           // 17: locatedo.account.v1.SignOutRequest.Device
-	(*timestamppb.Timestamp)(nil),           // 18: google.protobuf.Timestamp
-	(v1.Platform)(0),                        // 19: locatedo.device.v1.Platform
+	(AppleClient)(0),                        // 0: locatedo.account.v1.AppleClient
+	(*Session)(nil),                         // 1: locatedo.account.v1.Session
+	(*SignInWithAppleRequest)(nil),          // 2: locatedo.account.v1.SignInWithAppleRequest
+	(*SignInWithAppleResponse)(nil),         // 3: locatedo.account.v1.SignInWithAppleResponse
+	(*SignInWithGoogleRequest)(nil),         // 4: locatedo.account.v1.SignInWithGoogleRequest
+	(*SignInWithGoogleResponse)(nil),        // 5: locatedo.account.v1.SignInWithGoogleResponse
+	(*RefreshTokenRequest)(nil),             // 6: locatedo.account.v1.RefreshTokenRequest
+	(*RefreshTokenResponse)(nil),            // 7: locatedo.account.v1.RefreshTokenResponse
+	(*SignOutRequest)(nil),                  // 8: locatedo.account.v1.SignOutRequest
+	(*SignOutResponse)(nil),                 // 9: locatedo.account.v1.SignOutResponse
+	(*DeleteAccountRequest)(nil),            // 10: locatedo.account.v1.DeleteAccountRequest
+	(*DeleteAccountResponse)(nil),           // 11: locatedo.account.v1.DeleteAccountResponse
+	(*DeleteAccountWithAppleRequest)(nil),   // 12: locatedo.account.v1.DeleteAccountWithAppleRequest
+	(*DeleteAccountWithAppleResponse)(nil),  // 13: locatedo.account.v1.DeleteAccountWithAppleResponse
+	(*DeleteAccountWithGoogleRequest)(nil),  // 14: locatedo.account.v1.DeleteAccountWithGoogleRequest
+	(*DeleteAccountWithGoogleResponse)(nil), // 15: locatedo.account.v1.DeleteAccountWithGoogleResponse
+	(*SyncEntitlementRequest)(nil),          // 16: locatedo.account.v1.SyncEntitlementRequest
+	(*SyncEntitlementResponse)(nil),         // 17: locatedo.account.v1.SyncEntitlementResponse
+	(*SignOutRequest_Device)(nil),           // 18: locatedo.account.v1.SignOutRequest.Device
+	(*timestamppb.Timestamp)(nil),           // 19: google.protobuf.Timestamp
+	(v1.Platform)(0),                        // 20: locatedo.device.v1.Platform
 }
 var file_locatedo_account_v1_account_proto_depIdxs = []int32{
-	18, // 0: locatedo.account.v1.Session.access_token_expires_at:type_name -> google.protobuf.Timestamp
-	0,  // 1: locatedo.account.v1.SignInWithAppleResponse.session:type_name -> locatedo.account.v1.Session
-	0,  // 2: locatedo.account.v1.SignInWithGoogleResponse.session:type_name -> locatedo.account.v1.Session
-	0,  // 3: locatedo.account.v1.RefreshTokenResponse.session:type_name -> locatedo.account.v1.Session
-	17, // 4: locatedo.account.v1.SignOutRequest.device:type_name -> locatedo.account.v1.SignOutRequest.Device
-	19, // 5: locatedo.account.v1.SignOutRequest.Device.platform:type_name -> locatedo.device.v1.Platform
-	1,  // 6: locatedo.account.v1.AccountService.SignInWithApple:input_type -> locatedo.account.v1.SignInWithAppleRequest
-	3,  // 7: locatedo.account.v1.AccountService.SignInWithGoogle:input_type -> locatedo.account.v1.SignInWithGoogleRequest
-	5,  // 8: locatedo.account.v1.AccountService.RefreshToken:input_type -> locatedo.account.v1.RefreshTokenRequest
-	7,  // 9: locatedo.account.v1.AccountService.SignOut:input_type -> locatedo.account.v1.SignOutRequest
-	9,  // 10: locatedo.account.v1.AccountService.DeleteAccount:input_type -> locatedo.account.v1.DeleteAccountRequest
-	11, // 11: locatedo.account.v1.AccountService.DeleteAccountWithApple:input_type -> locatedo.account.v1.DeleteAccountWithAppleRequest
-	13, // 12: locatedo.account.v1.AccountService.DeleteAccountWithGoogle:input_type -> locatedo.account.v1.DeleteAccountWithGoogleRequest
-	15, // 13: locatedo.account.v1.AccountService.SyncEntitlement:input_type -> locatedo.account.v1.SyncEntitlementRequest
-	2,  // 14: locatedo.account.v1.AccountService.SignInWithApple:output_type -> locatedo.account.v1.SignInWithAppleResponse
-	4,  // 15: locatedo.account.v1.AccountService.SignInWithGoogle:output_type -> locatedo.account.v1.SignInWithGoogleResponse
-	6,  // 16: locatedo.account.v1.AccountService.RefreshToken:output_type -> locatedo.account.v1.RefreshTokenResponse
-	8,  // 17: locatedo.account.v1.AccountService.SignOut:output_type -> locatedo.account.v1.SignOutResponse
-	10, // 18: locatedo.account.v1.AccountService.DeleteAccount:output_type -> locatedo.account.v1.DeleteAccountResponse
-	12, // 19: locatedo.account.v1.AccountService.DeleteAccountWithApple:output_type -> locatedo.account.v1.DeleteAccountWithAppleResponse
-	14, // 20: locatedo.account.v1.AccountService.DeleteAccountWithGoogle:output_type -> locatedo.account.v1.DeleteAccountWithGoogleResponse
-	16, // 21: locatedo.account.v1.AccountService.SyncEntitlement:output_type -> locatedo.account.v1.SyncEntitlementResponse
-	14, // [14:22] is the sub-list for method output_type
-	6,  // [6:14] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	19, // 0: locatedo.account.v1.Session.access_token_expires_at:type_name -> google.protobuf.Timestamp
+	0,  // 1: locatedo.account.v1.SignInWithAppleRequest.client:type_name -> locatedo.account.v1.AppleClient
+	1,  // 2: locatedo.account.v1.SignInWithAppleResponse.session:type_name -> locatedo.account.v1.Session
+	1,  // 3: locatedo.account.v1.SignInWithGoogleResponse.session:type_name -> locatedo.account.v1.Session
+	1,  // 4: locatedo.account.v1.RefreshTokenResponse.session:type_name -> locatedo.account.v1.Session
+	18, // 5: locatedo.account.v1.SignOutRequest.device:type_name -> locatedo.account.v1.SignOutRequest.Device
+	20, // 6: locatedo.account.v1.SignOutRequest.Device.platform:type_name -> locatedo.device.v1.Platform
+	2,  // 7: locatedo.account.v1.AccountService.SignInWithApple:input_type -> locatedo.account.v1.SignInWithAppleRequest
+	4,  // 8: locatedo.account.v1.AccountService.SignInWithGoogle:input_type -> locatedo.account.v1.SignInWithGoogleRequest
+	6,  // 9: locatedo.account.v1.AccountService.RefreshToken:input_type -> locatedo.account.v1.RefreshTokenRequest
+	8,  // 10: locatedo.account.v1.AccountService.SignOut:input_type -> locatedo.account.v1.SignOutRequest
+	10, // 11: locatedo.account.v1.AccountService.DeleteAccount:input_type -> locatedo.account.v1.DeleteAccountRequest
+	12, // 12: locatedo.account.v1.AccountService.DeleteAccountWithApple:input_type -> locatedo.account.v1.DeleteAccountWithAppleRequest
+	14, // 13: locatedo.account.v1.AccountService.DeleteAccountWithGoogle:input_type -> locatedo.account.v1.DeleteAccountWithGoogleRequest
+	16, // 14: locatedo.account.v1.AccountService.SyncEntitlement:input_type -> locatedo.account.v1.SyncEntitlementRequest
+	3,  // 15: locatedo.account.v1.AccountService.SignInWithApple:output_type -> locatedo.account.v1.SignInWithAppleResponse
+	5,  // 16: locatedo.account.v1.AccountService.SignInWithGoogle:output_type -> locatedo.account.v1.SignInWithGoogleResponse
+	7,  // 17: locatedo.account.v1.AccountService.RefreshToken:output_type -> locatedo.account.v1.RefreshTokenResponse
+	9,  // 18: locatedo.account.v1.AccountService.SignOut:output_type -> locatedo.account.v1.SignOutResponse
+	11, // 19: locatedo.account.v1.AccountService.DeleteAccount:output_type -> locatedo.account.v1.DeleteAccountResponse
+	13, // 20: locatedo.account.v1.AccountService.DeleteAccountWithApple:output_type -> locatedo.account.v1.DeleteAccountWithAppleResponse
+	15, // 21: locatedo.account.v1.AccountService.DeleteAccountWithGoogle:output_type -> locatedo.account.v1.DeleteAccountWithGoogleResponse
+	17, // 22: locatedo.account.v1.AccountService.SyncEntitlement:output_type -> locatedo.account.v1.SyncEntitlementResponse
+	15, // [15:23] is the sub-list for method output_type
+	7,  // [7:15] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_locatedo_account_v1_account_proto_init() }
@@ -1057,13 +1121,14 @@ func file_locatedo_account_v1_account_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_locatedo_account_v1_account_proto_rawDesc), len(file_locatedo_account_v1_account_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_locatedo_account_v1_account_proto_goTypes,
 		DependencyIndexes: file_locatedo_account_v1_account_proto_depIdxs,
+		EnumInfos:         file_locatedo_account_v1_account_proto_enumTypes,
 		MessageInfos:      file_locatedo_account_v1_account_proto_msgTypes,
 	}.Build()
 	File_locatedo_account_v1_account_proto = out.File

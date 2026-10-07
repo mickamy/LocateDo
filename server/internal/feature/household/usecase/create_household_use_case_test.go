@@ -40,6 +40,14 @@ func TestCreateHousehold_imports(t *testing.T) {
 	assert.Equal(t, 1, d.Seeder.Count(t, "categories", householdID))
 	assert.Equal(t, 1, d.Seeder.Count(t, "places", householdID))
 	assert.Equal(t, 2, d.Seeder.Count(t, "todos", householdID))
+	var created, completions int
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		`SELECT (SELECT count(*) FROM todos WHERE household_id = $1 AND creator_id = $2),
+		        (SELECT count(*) FROM todo_completions c JOIN todos t ON t.id = c.todo_id
+		         WHERE t.household_id = $1 AND c.completer_id = $2)`,
+		householdID, userID).Scan(&created, &completions))
+	assert.Equal(t, 2, created, "the importer created every to-do")
+	assert.Equal(t, 1, completions, "and completed the completed one")
 	var checks int
 	require.NoError(t, d.Writer.QueryRow(t.Context(),
 		"SELECT count(*) FROM outbox_messages WHERE kind = 'sync_entitlement' AND payload->>'user_id' = $1",

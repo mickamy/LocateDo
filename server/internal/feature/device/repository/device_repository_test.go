@@ -114,6 +114,44 @@ func TestDevice_Upsert_promotionsConsentedAt(t *testing.T) {
 	}
 }
 
+func TestDevice_Upsert_completionNotices(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		before *bool
+		sent   *bool
+		want   bool
+	}{
+		"new device, unsaid":           {before: nil, sent: nil, want: true},
+		"new device, off":              {before: nil, sent: new(false), want: false},
+		"turned off stays when unsaid": {before: new(false), sent: nil, want: false},
+		"turned on again":              {before: new(false), sent: new(true), want: true},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			d := tdb.New(t)
+			dev := fixture.Device(func(m *model.Device) { m.LastSeenAt = now })
+			if tt.before != nil {
+				dev.CompletionNotices = tt.before
+				upsert(t, d, dev)
+			}
+
+			// act
+			dev.CompletionNotices = tt.sent
+			upsert(t, d, dev)
+
+			// assert
+			var got bool
+			require.NoError(t, d.Writer.QueryRow(t.Context(),
+				"SELECT completion_notices FROM devices WHERE push_token = $1", dev.PushToken).Scan(&got))
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestDevice_Upsert_apnsEnvironment(t *testing.T) {
 	t.Parallel()
 

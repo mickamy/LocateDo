@@ -1,3 +1,4 @@
+import GoogleSignIn
 import OSLog
 import SwiftData
 import SwiftUI
@@ -39,6 +40,9 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
+            if GIDSignIn.sharedInstance.handle(url) {
+                return
+            }
             if let token = InviteLink.token(from: url.absoluteString) {
                 router.pendingInvite = PendingInvite(token: token)
             }
@@ -218,6 +222,7 @@ struct RootView: View {
         .environment(router)
         .environment(preferences)
         .environment(PromotionsConsent(preferences: preferences))
+        .environment(CompletionNotices(preferences: preferences))
         .environment(locationProvider)
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))

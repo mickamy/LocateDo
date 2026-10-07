@@ -4,12 +4,16 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.account.AccountManager
+import com.locatedo.locatedo.core.auth.AppleSignIn
+import com.locatedo.locatedo.core.auth.AppleSignInCompletion
+import com.locatedo.locatedo.core.auth.AppleSignInRequests
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,7 +31,10 @@ data class AccountScreenState(
 )
 
 @HiltViewModel
-class AccountViewModel @Inject constructor(private val accountManager: AccountManager) : ViewModel() {
+class AccountViewModel @Inject constructor(
+    private val accountManager: AccountManager,
+    private val appleSignIn: AppleSignInRequests,
+) : ViewModel() {
     private data class Local(
         val isConfirmingSignOut: Boolean = false,
         val hasUnsyncedWrites: Boolean = false,
@@ -48,11 +55,45 @@ class AccountViewModel @Inject constructor(private val accountManager: AccountMa
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AccountScreenState())
 
-    fun signIn(idToken: String, nonce: String) {
+    val isAppleSignInAvailable: Boolean
+        get() = appleSignIn.isAvailable
+
+    // Whichever screen's ViewModel takes the result first finishes the sign-in; the others leave it alone.
+    init {
+        viewModelScope.launch {
+            appleSignIn.completed.filterNotNull().collect { completion ->
+                if (appleSignIn.consume(completion)) {
+                    finishAppleSignIn(completion)
+                }
+            }
+        }
+    }
+
+    fun signInWithGoogle(idToken: String, nonce: String) {
+        signIn { accountManager.signInWithGoogle(idToken, nonce) }
+    }
+
+    // The URL to open in a browser tab, or null when this build has no Sign in with Apple.
+    fun startAppleSignIn(): String? {
+        local.update { it.copy(failure = null) }
+        return appleSignIn.start()
+    }
+
+    private fun finishAppleSignIn(completion: AppleSignInCompletion) {
+        when (val result = completion.result) {
+            is AppleSignIn.Result.Success -> signIn {
+                accountManager.signInWithApple(result.identityToken, result.authorizationCode, completion.nonce, result.displayName)
+            }
+            AppleSignIn.Result.Canceled -> Unit
+            AppleSignIn.Result.Failed -> signInFailed()
+        }
+    }
+
+    private fun signIn(call: suspend () -> Unit) {
         local.update { it.copy(failure = null) }
         viewModelScope.launch {
             try {
-                accountManager.signInWithGoogle(idToken, nonce)
+                call()
             } catch (e: Exception) {
                 Log.w(TAG, "Sign-in failed", e)
                 local.update { it.copy(failure = AccountFailure.SIGN_IN) }

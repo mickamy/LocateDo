@@ -22,11 +22,12 @@ notification.channel_arrivals:
   platforms: [android]
 notification.channel_promotions:
   platforms: [android]
-settings.account.android_signed_in:
-  platforms: [android]
-settings.account.android_description:
+notification.channel_household:
   platforms: [android]
 settings.account.android_sign_in:
+  platforms: [android]
+settings.account.android_apple_sign_in:
+  comment: "Apple's own label for the button; keep it as Apple words it in each language."
   platforms: [android]
 settings.account.benefits.android_privacy_message:
   platforms: [android]
@@ -38,11 +39,7 @@ settings.account.android_replace_confirm_title:
   platforms: [android]
 settings.account.android_replace_confirm_message:
   platforms: [android]
-sharing.android_sign_in_message:
-  platforms: [android]
 sharing.android_leave_confirm_message:
-  platforms: [android]
-sharing.android_intro_message:
   platforms: [android]
 sharing.android_benefit_lists_message:
   platforms: [android]

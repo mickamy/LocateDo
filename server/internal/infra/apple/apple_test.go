@@ -39,9 +39,10 @@ func TestClient_VerifyIdentityToken(t *testing.T) {
 	// arrange
 	fake := newFakeApple(t)
 	client := fake.client(t)
+	raw := fake.identityToken(t, validClaims())
 
 	// act
-	got, err := client.VerifyIdentityToken(t.Context(), fake.identityToken(t, validClaims()), rawNonce, now)
+	got, err := client.VerifyIdentityToken(t.Context(), apple.ClientApp, raw, rawNonce, now)
 
 	// assert
 	require.NoError(t, err)
@@ -85,7 +86,7 @@ func TestClient_VerifyIdentityToken_rejects(t *testing.T) {
 			}
 
 			// act
-			_, err := client.VerifyIdentityToken(t.Context(), fake.identityToken(t, claims), nonce, at)
+			_, err := client.VerifyIdentityToken(t.Context(), apple.ClientApp, fake.identityToken(t, claims), nonce, at)
 
 			// assert
 			require.ErrorIs(t, err, apple.ErrInvalidToken)
@@ -93,7 +94,7 @@ func TestClient_VerifyIdentityToken_rejects(t *testing.T) {
 	}
 }
 
-func TestClient_VerifyWebIdentityToken(t *testing.T) {
+func TestClient_VerifyIdentityToken_servicesID(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -114,7 +115,8 @@ func TestClient_VerifyWebIdentityToken(t *testing.T) {
 			claims.Audience = jwt.ClaimStrings{tt.audience}
 
 			// act
-			got, err := fake.client(t).VerifyWebIdentityToken(t.Context(), fake.identityToken(t, claims), rawNonce, now)
+			raw := fake.identityToken(t, claims)
+			got, err := fake.client(t).VerifyIdentityToken(t.Context(), apple.ClientServices, raw, rawNonce, now)
 
 			// assert
 			if tt.wantErr != nil {
@@ -136,13 +138,14 @@ func TestClient_VerifyIdentityToken_refusesServicesID(t *testing.T) {
 	claims.Audience = jwt.ClaimStrings{servicesID}
 
 	// act
-	_, err := fake.client(t).VerifyIdentityToken(t.Context(), fake.identityToken(t, claims), rawNonce, now)
+	raw := fake.identityToken(t, claims)
+	_, err := fake.client(t).VerifyIdentityToken(t.Context(), apple.ClientApp, raw, rawNonce, now)
 
 	// assert
 	require.ErrorIs(t, err, apple.ErrInvalidToken)
 }
 
-func TestClient_VerifyWebIdentityToken_notConfigured(t *testing.T) {
+func TestClient_VerifyIdentityToken_servicesIDNotConfigured(t *testing.T) {
 	t.Parallel()
 
 	// arrange
@@ -150,7 +153,8 @@ func TestClient_VerifyWebIdentityToken_notConfigured(t *testing.T) {
 	client := apple.NewClient(apple.Config{BaseURL: fake.srv.URL, BundleID: bundleID}, fake.srv.Client())
 
 	// act
-	_, err := client.VerifyWebIdentityToken(t.Context(), fake.identityToken(t, validClaims()), rawNonce, now)
+	raw := fake.identityToken(t, validClaims())
+	_, err := client.VerifyIdentityToken(t.Context(), apple.ClientServices, raw, rawNonce, now)
 
 	// assert
 	require.ErrorIs(t, err, apple.ErrServicesIDNotConfigured)
@@ -170,7 +174,7 @@ func TestClient_VerifyIdentityToken_signedByUnknownKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// act
-	_, err = client.VerifyIdentityToken(t.Context(), raw, rawNonce, now)
+	_, err = client.VerifyIdentityToken(t.Context(), apple.ClientApp, raw, rawNonce, now)
 
 	// assert
 	require.ErrorIs(t, err, apple.ErrInvalidToken)
@@ -182,14 +186,14 @@ func TestClient_VerifyIdentityToken_keyRotation(t *testing.T) {
 	// arrange
 	fake := newFakeApple(t)
 	client := fake.client(t)
-	_, err := client.VerifyIdentityToken(t.Context(), fake.identityToken(t, validClaims()), rawNonce, now)
+	_, err := client.VerifyIdentityToken(t.Context(), apple.ClientApp, fake.identityToken(t, validClaims()), rawNonce, now)
 	require.NoError(t, err)
 	fake.rotate(t)
 
 	// act: a new kid within the refetch window is not fetched yet
 	rotated := fake.identityToken(t, validClaims())
-	_, errSoon := client.VerifyIdentityToken(t.Context(), rotated, rawNonce, now.Add(10*time.Second))
-	_, errLater := client.VerifyIdentityToken(t.Context(), rotated, rawNonce, now.Add(2*time.Minute))
+	_, errSoon := client.VerifyIdentityToken(t.Context(), apple.ClientApp, rotated, rawNonce, now.Add(10*time.Second))
+	_, errLater := client.VerifyIdentityToken(t.Context(), apple.ClientApp, rotated, rawNonce, now.Add(2*time.Minute))
 
 	// assert
 	require.ErrorIs(t, errSoon, apple.ErrInvalidToken)
@@ -200,21 +204,35 @@ func TestClient_VerifyIdentityToken_keyRotation(t *testing.T) {
 func TestClient_ExchangeCode(t *testing.T) {
 	t.Parallel()
 
-	// arrange
-	fake := newFakeApple(t)
-	client := fake.client(t)
+	tests := []struct {
+		name     string
+		kind     apple.ClientKind
+		clientID string
+	}{
+		{name: "app", kind: apple.ClientApp, clientID: bundleID},
+		{name: "services", kind: apple.ClientServices, clientID: servicesID},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	// act
-	got, err := client.ExchangeCode(t.Context(), "auth-code", now)
+			// arrange
+			fake := newFakeApple(t)
+			client := fake.client(t)
 
-	// assert
-	require.NoError(t, err)
-	assert.Equal(t, "apple-refresh-token", got)
-	req := fake.lastForm("/auth/token")
-	assert.Equal(t, "auth-code", req.Get("code"))
-	assert.Equal(t, "authorization_code", req.Get("grant_type"))
-	assert.Equal(t, bundleID, req.Get("client_id"))
-	fake.assertClientSecret(t, req.Get("client_secret"))
+			// act
+			got, err := client.ExchangeCode(t.Context(), tt.kind, "auth-code", now)
+
+			// assert
+			require.NoError(t, err)
+			assert.Equal(t, "apple-refresh-token", got)
+			req := fake.lastForm("/auth/token")
+			assert.Equal(t, "auth-code", req.Get("code"))
+			assert.Equal(t, "authorization_code", req.Get("grant_type"))
+			assert.Equal(t, tt.clientID, req.Get("client_id"))
+			fake.assertClientSecret(t, req.Get("client_secret"), tt.clientID)
+		})
+	}
 }
 
 func TestClient_ExchangeCode_rejected(t *testing.T) {
@@ -225,13 +243,60 @@ func TestClient_ExchangeCode_rejected(t *testing.T) {
 	client := fake.client(t)
 
 	// act
-	_, err := client.ExchangeCode(t.Context(), "bad-code", now)
+	_, err := client.ExchangeCode(t.Context(), apple.ClientApp, "bad-code", now)
 
 	// assert
 	require.ErrorContains(t, err, "invalid_grant")
 }
 
+func TestClient_ExchangeCode_servicesIDNotConfigured(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	fake := newFakeApple(t)
+	client := apple.NewClient(apple.Config{BaseURL: fake.srv.URL, BundleID: bundleID}, fake.srv.Client())
+
+	// act
+	_, err := client.ExchangeCode(t.Context(), apple.ClientServices, "auth-code", now)
+
+	// assert
+	require.ErrorIs(t, err, apple.ErrServicesIDNotConfigured)
+}
+
 func TestClient_Revoke(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		kind     apple.ClientKind
+		clientID string
+	}{
+		{name: "app", kind: apple.ClientApp, clientID: bundleID},
+		{name: "services", kind: apple.ClientServices, clientID: servicesID},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			fake := newFakeApple(t)
+			client := fake.client(t)
+
+			// act
+			err := client.Revoke(t.Context(), tt.kind, "apple-refresh-token", now)
+
+			// assert
+			require.NoError(t, err)
+			req := fake.lastForm("/auth/revoke")
+			assert.Equal(t, "apple-refresh-token", req.Get("token"))
+			assert.Equal(t, "refresh_token", req.Get("token_type_hint"))
+			assert.Equal(t, tt.clientID, req.Get("client_id"))
+			fake.assertClientSecret(t, req.Get("client_secret"), tt.clientID)
+		})
+	}
+}
+
+func TestClient_unknownKind(t *testing.T) {
 	t.Parallel()
 
 	// arrange
@@ -239,14 +304,10 @@ func TestClient_Revoke(t *testing.T) {
 	client := fake.client(t)
 
 	// act
-	err := client.Revoke(t.Context(), "apple-refresh-token", now)
+	_, err := client.ExchangeCode(t.Context(), apple.ClientKind(""), "auth-code", now)
 
 	// assert
-	require.NoError(t, err)
-	req := fake.lastForm("/auth/revoke")
-	assert.Equal(t, "apple-refresh-token", req.Get("token"))
-	assert.Equal(t, "refresh_token", req.Get("token_type_hint"))
-	fake.assertClientSecret(t, req.Get("client_secret"))
+	require.ErrorContains(t, err, "unknown apple client kind")
 }
 
 type testClaims struct {
@@ -343,7 +404,7 @@ func (f *fakeApple) lastForm(path string) formValues {
 	return formValues(f.forms[path])
 }
 
-func (f *fakeApple) assertClientSecret(t *testing.T, raw string) {
+func (f *fakeApple) assertClientSecret(t *testing.T, raw, clientID string) {
 	t.Helper()
 
 	var claims jwt.RegisteredClaims
@@ -355,7 +416,7 @@ func (f *fakeApple) assertClientSecret(t *testing.T, raw string) {
 	require.NoError(t, err)
 	assert.Equal(t, keyID, tok.Header["kid"])
 	assert.Equal(t, teamID, claims.Issuer)
-	assert.Equal(t, bundleID, claims.Subject)
+	assert.Equal(t, clientID, claims.Subject)
 	assert.Equal(t, jwt.ClaimStrings{"https://appleid.apple.com"}, claims.Audience)
 }
 

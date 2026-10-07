@@ -23,6 +23,7 @@ type SignInWithAppleInput struct {
 	AuthorizationCode string
 	Nonce             string
 	DisplayName       string
+	Client            apple.ClientKind
 }
 
 type SignInWithAppleOutput struct {
@@ -46,7 +47,7 @@ type SignInWithApple struct {
 func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (SignInWithAppleOutput, error) {
 	now := clock.Now(ctx)
 
-	identity, err := uc.apple.VerifyIdentityToken(ctx, in.IdentityToken, in.Nonce, now)
+	identity, err := uc.apple.VerifyIdentityToken(ctx, in.Client, in.IdentityToken, in.Nonce, now)
 	if errors.Is(err, apple.ErrInvalidToken) {
 		return SignInWithAppleOutput{}, aerrors.Unauthenticated(err.Error())
 	}
@@ -54,7 +55,7 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 		return SignInWithAppleOutput{}, fmt.Errorf("verify identity token: %w", err)
 	}
 
-	appleRefresh, err := uc.apple.ExchangeCode(ctx, in.AuthorizationCode, now)
+	appleRefresh, err := uc.apple.ExchangeCode(ctx, in.Client, in.AuthorizationCode, now)
 	if err != nil {
 		return SignInWithAppleOutput{}, fmt.Errorf("exchange authorization code: %w", err)
 	}
@@ -67,8 +68,8 @@ func (uc SignInWithApple) Do(ctx context.Context, in SignInWithAppleInput) (Sign
 			return err
 		}
 
-		sealed := uc.box.Seal([]byte(appleRefresh), user.ID[:])
-		if err := uc.appleTokens.Bind(tx).Save(ctx, user.ID, sealed); err != nil {
+		appleToken := model.AppleToken{Sealed: uc.box.Seal([]byte(appleRefresh), user.ID[:]), Client: in.Client}
+		if err := uc.appleTokens.Bind(tx).Save(ctx, user.ID, appleToken); err != nil {
 			return fmt.Errorf("save apple token: %w", err)
 		}
 

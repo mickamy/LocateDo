@@ -10,6 +10,7 @@ final class LocalWrites {
     private let onQueued: () -> Void
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "sync")
     @ObservationIgnored var isPro: () -> Bool = { false }
+    @ObservationIgnored var currentUserID: () -> UUID? = { nil }
     @ObservationIgnored var analytics: any AnalyticsSink = FirebaseAnalyticsSink()
     @ObservationIgnored var daysSinceInstall: () -> Int = {
         InstallDate.daysSinceInstall(defaults: .standard, now: .now)
@@ -91,7 +92,7 @@ final class LocalWrites {
             }
             todo.reopen(at: now)
         } else {
-            todo.complete(at: now)
+            todo.complete(by: currentUserID(), at: now)
         }
         commit([.completion(of: todo)])
         if todo.isCompleted {

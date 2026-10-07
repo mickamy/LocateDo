@@ -97,7 +97,7 @@ func TestUser_Delete_cascadesTokens(t *testing.T) {
 			FamilyID:  uuid.NewV7(),
 			ExpiresAt: now.Add(time.Hour),
 		}, []byte("hash")))
-		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, []byte("sealed")))
+		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, model.AppleToken{Sealed: []byte("sealed"), Client: "app"}))
 	})
 
 	// act

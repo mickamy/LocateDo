@@ -21,8 +21,8 @@ struct TodoRow: View {
                 Text(todo.title)
                     .strikethrough(todo.isCompleted)
                     .foregroundStyle(todo.isCompleted ? .secondary : .primary)
-                if let assignee {
-                    Text(assignee.shownName)
+                if let detail {
+                    Text(detail)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -54,6 +54,20 @@ struct TodoRow: View {
         memberships.first { $0.userID == todo.assigneeID }
     }
 
+    private var completer: Membership? {
+        guard todo.isCompleted, memberships.count > 1 else {
+            return nil
+        }
+        return memberships.first { $0.userID == todo.completerID }
+    }
+
+    private var detail: String? {
+        if let completer {
+            return String(localized: .todoCompletedBy(completer.shownName))
+        }
+        return assignee?.shownName
+    }
+
     private var assigneeSelection: Binding<UUID?> {
         Binding {
             todo.assigneeID
@@ -63,10 +77,10 @@ struct TodoRow: View {
     }
 
     private var accessibilityTitle: String {
-        guard let assignee else {
+        guard let detail else {
             return todo.title
         }
-        return "\(todo.title), \(assignee.shownName)"
+        return "\(todo.title), \(detail)"
     }
 
     private var status: LocalizedStringResource {

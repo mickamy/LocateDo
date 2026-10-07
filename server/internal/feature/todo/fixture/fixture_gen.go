@@ -10,6 +10,17 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/todo/model"
 )
 
+func CompletedTodo(setters ...func(m *model.CompletedTodo)) model.CompletedTodo {
+	m := model.CompletedTodo{
+		Title:       gofakeit.Word(),
+		CompletedAt: gofakeit.Date(),
+	}
+	for _, s := range setters {
+		s(&m)
+	}
+	return m
+}
+
 func Todo(setters ...func(m *model.Todo)) model.Todo {
 	m := model.Todo{
 		ID:          uuid.MustParse(gofakeit.UUID()),

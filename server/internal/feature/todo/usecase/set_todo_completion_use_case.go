@@ -11,23 +11,33 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
+	"github.com/mickamy/LocateDo/internal/feature/todo/model"
 	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
+	"github.com/mickamy/LocateDo/internal/lib/clock"
+	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
 type SetTodoCompletionInput struct {
+	UserID      uuid.UUID
 	HouseholdID uuid.UUID
 	TodoID      uuid.UUID
 	CompletedAt *time.Time
 }
 
-// SetTodoCompletion completes a todo or reopens it. Reopening counts as
-// adding an open todo for the free-tier limit. A missing todo is a no-op.
+// SetTodoCompletion completes a todo or reopens it. Completing an open todo
+// records the caller in its completions, and queues a notice to its creator
+// when that is another member of the household; reopening marks the
+// completions reopened.
+// Reopening counts as adding an open todo for the free-tier limit. A missing
+// todo is a no-op.
 type SetTodoCompletion struct {
-	_          di.Infra              `di:"embed"`
-	transactor tx.Transactor         `di:""`
-	households hrepository.Household `di:""`
-	todos      repository.Todo       `di:""`
+	_           di.Infra               `di:"embed"`
+	transactor  tx.Transactor          `di:""`
+	households  hrepository.Household  `di:""`
+	memberships hrepository.Membership `di:""`
+	todos       repository.Todo        `di:""`
+	messages    outbox.Repository      `di:""`
 }
 
 func (uc SetTodoCompletion) Do(ctx context.Context, in SetTodoCompletionInput) error {
@@ -49,9 +59,18 @@ func (uc SetTodoCompletion) Do(ctx context.Context, in SetTodoCompletionInput) e
 		if err := todos.SetCompletion(ctx, in.TodoID, householdID, in.CompletedAt); err != nil {
 			return fmt.Errorf("set completion: %w", err)
 		}
+		if in.CompletedAt != nil && current.CompletedAt == nil {
+			if err := todos.RecordCompletion(ctx, in.TodoID, in.UserID, *in.CompletedAt); err != nil {
+				return fmt.Errorf("record completion: %w", err)
+			}
+			return uc.queueNotice(ctx, tx, current, in.UserID)
+		}
 		reopening := in.CompletedAt == nil && current.CompletedAt != nil
 		if !reopening {
 			return nil
+		}
+		if err := todos.ReopenCompletions(ctx, in.TodoID, clock.Now(ctx)); err != nil {
+			return fmt.Errorf("reopen completions: %w", err)
 		}
 		n, err := todos.CountOpen(ctx, householdID)
 		if err != nil {
@@ -63,6 +82,27 @@ func (uc SetTodoCompletion) Do(ctx context.Context, in SetTodoCompletionInput) e
 		return nil
 	}); err != nil {
 		return fmt.Errorf("set todo completion: %w", err)
+	}
+	return nil
+}
+
+func (uc SetTodoCompletion) queueNotice(ctx context.Context, tx tx.Tx, td model.Todo, completerID uuid.UUID) error {
+	if td.CreatorID == nil || *td.CreatorID == completerID {
+		return nil
+	}
+	m, err := uc.memberships.Bind(tx).FindByUser(ctx, *td.CreatorID)
+	if errors.Is(err, aerrors.ErrNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("find creator's membership: %w", err)
+	}
+	if m.HouseholdID != td.HouseholdID {
+		return nil
+	}
+	msg := outbox.NotifyCompletion(td.HouseholdID, *td.CreatorID, completerID, clock.Now(ctx))
+	if err := uc.messages.Bind(tx).Enqueue(ctx, msg); err != nil {
+		return fmt.Errorf("enqueue completion notice: %w", err)
 	}
 	return nil
 }

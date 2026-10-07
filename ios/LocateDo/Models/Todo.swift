@@ -7,7 +7,9 @@ final class Todo {
     var title: String
     var place: Place?
     var assigneeID: UUID?
+    var creatorID: UUID?
     var completedAt: Date?
+    var completerID: UUID?
     var createdAt: Date
     var updatedAt: Date
 
@@ -23,13 +25,15 @@ final class Todo {
         completedAt != nil
     }
 
-    func complete(at now: Date = .now) {
+    func complete(by userID: UUID? = nil, at now: Date = .now) {
         completedAt = now
+        completerID = userID
         updatedAt = now
     }
 
     func reopen(at now: Date = .now) {
         completedAt = nil
+        completerID = nil
         updatedAt = now
     }
 }

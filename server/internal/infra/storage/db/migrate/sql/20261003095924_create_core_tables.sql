@@ -34,6 +34,7 @@ CREATE TABLE apple_tokens
 (
     user_id                  uuid PRIMARY KEY     REFERENCES users (id) ON DELETE CASCADE,
     refresh_token_ciphertext bytea       NOT NULL,
+    client                   text        NOT NULL CHECK (client IN ('app', 'services')),
     updated_at               timestamptz NOT NULL DEFAULT now()
 );
 
@@ -47,6 +48,7 @@ CREATE TABLE devices
     language                text        NOT NULL DEFAULT 'en' CHECK (language IN ('en', 'ja')),
     -- NULL while the device does not consent to promotional pushes.
     promotions_consented_at timestamptz,
+    completion_notices      boolean     NOT NULL DEFAULT true,
     last_seen_at            timestamptz NOT NULL DEFAULT now(),
     UNIQUE (platform, push_token)
 );
@@ -182,6 +184,7 @@ CREATE TABLE todos
     place_id         uuid        NOT NULL,
     title            text        NOT NULL,
     assignee_id      uuid REFERENCES users (id) ON DELETE SET NULL,
+    creator_id       uuid REFERENCES users (id) ON DELETE SET NULL,
     completed_at     timestamptz,
     updated_at       timestamptz NOT NULL,
     version          bigint      NOT NULL,
@@ -193,6 +196,21 @@ CREATE TABLE todos
 
 CREATE INDEX todos_household_id_version_idx ON todos (household_id, version);
 CREATE INDEX todos_place_id_idx ON todos (place_id);
+
+-- One row per completion; reopening marks the latest row instead of removing it.
+CREATE TABLE todo_completions
+(
+    id           uuid PRIMARY KEY     DEFAULT uuidv7(),
+    todo_id      uuid        NOT NULL REFERENCES todos (id) ON DELETE CASCADE,
+    completer_id uuid        REFERENCES users (id) ON DELETE SET NULL,
+    completed_at timestamptz NOT NULL,
+    reopened_at  timestamptz,
+    -- When the to-do's creator was told about it.
+    notified_at  timestamptz
+);
+
+CREATE INDEX todo_completions_todo_id_idx ON todo_completions (todo_id);
+CREATE INDEX todo_completions_completer_id_idx ON todo_completions (completer_id);
 
 CREATE TABLE deletions
 (
@@ -231,6 +249,7 @@ CREATE INDEX outbox_messages_dead_at_idx ON outbox_messages (dead_at) WHERE stat
 -- +goose Down
 DROP TABLE outbox_messages;
 DROP TABLE deletions;
+DROP TABLE todo_completions;
 DROP TABLE todos;
 DROP TABLE places;
 DROP TABLE categories;

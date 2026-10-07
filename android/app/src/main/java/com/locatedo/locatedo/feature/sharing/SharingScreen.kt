@@ -62,7 +62,7 @@ import com.locatedo.locatedo.core.model.MemberRole
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
-import com.locatedo.locatedo.feature.account.GoogleSignInButton
+import com.locatedo.locatedo.feature.account.SignInButtons
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import com.locatedo.locatedo.ui.appstatus.MaintenanceNote
@@ -407,7 +407,7 @@ private fun SharingIntro(failed: Boolean, isWorking: Boolean, accountViewModel: 
             HouseholdIcon(size = 88.dp)
             Text(stringResource(R.string.sharing_intro_title), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
             Text(
-                text = stringResource(R.string.sharing_android_intro_message),
+                text = stringResource(R.string.sharing_intro_message),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -431,7 +431,7 @@ private fun SharingIntro(failed: Boolean, isWorking: Boolean, accountViewModel: 
             )
             Spacer(Modifier.height(8.dp))
         }
-        GoogleSignInButton(viewModel = accountViewModel, modifier = Modifier.fillMaxWidth(), enabled = !isWorking)
+        SignInButtons(viewModel = accountViewModel, modifier = Modifier.fillMaxWidth(), enabled = !isWorking)
         Spacer(Modifier.height(24.dp))
     }
 }

@@ -3,6 +3,8 @@ package model
 import (
 	"time"
 	"uuid"
+
+	"github.com/mickamy/LocateDo/internal/infra/apple"
 )
 
 type Provider string
@@ -34,9 +36,17 @@ type RefreshToken struct {
 	UsedAt    *time.Time
 }
 
+// AppleToken is Apple's refresh token, sealed, with the client that obtained
+// it and so has to revoke it.
+type AppleToken struct {
+	Sealed []byte
+	Client apple.ClientKind
+}
+
 // AppleRevocation is what the worker needs to revoke a deleted user's Apple
 // token once the user row, and the token with it, are gone.
 type AppleRevocation struct {
-	UserID      uuid.UUID `json:"user_id"`
-	SealedToken []byte    `json:"sealed_token"`
+	UserID      uuid.UUID        `json:"user_id"`
+	SealedToken []byte           `json:"sealed_token"`
+	Client      apple.ClientKind `json:"client"`
 }

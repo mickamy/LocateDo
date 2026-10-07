@@ -81,6 +81,7 @@
     <string name="map_empty_message">Places you add appear here.</string>
     <string name="notification_arrived_title">You’re at %1$s</string>
     <string name="notification_channel_arrivals">Arrival reminders</string>
+    <string name="notification_channel_household">Household updates</string>
     <string name="notification_channel_promotions">News and offers</string>
     <plurals name="notification_more">
         <item quantity="one">+%1$d more</item>
@@ -154,13 +155,13 @@
     <string name="settings_about_privacy_policy">Privacy Policy</string>
     <string name="settings_about_title">About</string>
     <string name="settings_about_version">Version</string>
-    <string name="settings_account_android_description">Sign in with Google to keep your places and to-dos in your account.</string>
+    <!-- Apple's own label for the button; keep it as Apple words it in each language. -->
+    <string name="settings_account_android_apple_sign_in">Sign in with Apple</string>
     <string name="settings_account_android_replace_confirm_message">This account already has places and to-dos. The places and to-dos on this phone will be replaced with the account’s.</string>
     <string name="settings_account_android_replace_confirm_title">Replace data on this phone?</string>
     <string name="settings_account_android_sign_in">Sign in with Google</string>
     <string name="settings_account_android_sign_out_confirm_message">Places and to-dos on this phone will be removed. They come back when you sign in again.</string>
     <string name="settings_account_android_sign_out_unsynced_message">Some changes haven’t been synced yet and will be lost. Places and to-dos on this phone will be removed.</string>
-    <string name="settings_account_android_signed_in">Signed in with Google</string>
     <string name="settings_account_benefits_android_privacy_message">Your location never leaves this phone, and we don’t ask for your email.</string>
     <string name="settings_account_benefits_privacy_message">Your location never leaves this iPhone, and we don’t ask for your email.</string>
     <string name="settings_account_benefits_privacy_title">Your location stays private</string>
@@ -172,7 +173,7 @@
     <string name="settings_account_delete_confirm_message">Your account and the data saved on the server will be deleted. Places and to-dos on this device will be removed too.</string>
     <string name="settings_account_delete_confirm_title">Delete your account?</string>
     <string name="settings_account_delete_failed">Couldn’t delete your account. Try again.</string>
-    <string name="settings_account_description">Sign in with Apple to keep your places and to-dos in your account.</string>
+    <string name="settings_account_description">Sign in to keep your places and to-dos in your account.</string>
     <string name="settings_account_not_signed_in">Not signed in</string>
     <string name="settings_account_replace">Replace</string>
     <string name="settings_account_replace_confirm_message">This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s.</string>
@@ -182,7 +183,7 @@
     <string name="settings_account_sign_out_confirm_message">Places and to-dos on this iPhone will be removed. They come back when you sign in again.</string>
     <string name="settings_account_sign_out_confirm_title">Sign out?</string>
     <string name="settings_account_sign_out_unsynced_message">Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed.</string>
-    <string name="settings_account_signed_in">Signed in with Apple</string>
+    <string name="settings_account_signed_in">Signed in</string>
     <string name="settings_account_title">Account</string>
     <string name="settings_default_radius_label">Default notification radius</string>
     <string name="settings_default_radius_title">New places</string>
@@ -196,6 +197,8 @@
     <string name="settings_location_when_in_use">While using the app</string>
     <string name="settings_notifications_allow">Allow notifications</string>
     <string name="settings_notifications_authorized">Allowed</string>
+    <string name="settings_notifications_completion_footer">Get a notification when someone in your household checks off a to-do you added.</string>
+    <string name="settings_notifications_completion_title">When family checks something off</string>
     <string name="settings_notifications_denied">Not allowed</string>
     <string name="settings_notifications_needs_allow">Reminders are delivered as notifications.</string>
     <string name="settings_notifications_not_determined">Not asked yet</string>
@@ -219,10 +222,8 @@
     <string name="settings_pro_upgrade">Upgrade to Pro</string>
     <string name="sharing_accept">Accept an Invite</string>
     <string name="sharing_android_benefit_lists_message">Places and to-dos anyone adds show up on everyone’s phone.</string>
-    <string name="sharing_android_intro_message">Sign in with Google to share places and to-dos with your family.</string>
     <string name="sharing_android_leave_confirm_message">Places and to-dos on this phone will be removed, and you’ll start over on your own.</string>
     <string name="sharing_android_shared_header_message">Places and to-dos anyone adds reach everyone’s phone.</string>
-    <string name="sharing_android_sign_in_message">Sign in with Google to share places and to-dos with your family.</string>
     <string name="sharing_benefit_assign_message">Assign a to-do and only that person is reminded when they arrive.</string>
     <string name="sharing_benefit_assign_title">The right person gets reminded</string>
     <string name="sharing_benefit_lists_message">Places and to-dos anyone adds show up on everyone’s iPhone.</string>
@@ -231,7 +232,7 @@
     <string name="sharing_benefit_plan_title">One plan covers everyone</string>
     <string name="sharing_failed">Couldn’t update sharing. Try again.</string>
     <string name="sharing_full">A household can have up to 6 members.</string>
-    <string name="sharing_intro_message">Sign in with Apple to share places and to-dos with your family.</string>
+    <string name="sharing_intro_message">Sign in to share places and to-dos with your family.</string>
     <string name="sharing_intro_title">Use it together</string>
     <string name="sharing_invite">Invite Someone</string>
     <string name="sharing_invite_expiry">Invite links work for 72 hours.</string>
@@ -258,7 +259,7 @@
         <item quantity="one">%1$d person sharing</item>
         <item quantity="other">%1$d people sharing</item>
     </plurals>
-    <string name="sharing_sign_in_message">Sign in with Apple to share places and to-dos with your family.</string>
+    <string name="sharing_sign_in_message">Sign in to share places and to-dos with your family.</string>
     <string name="sharing_title">Share with family</string>
     <string name="sharing_unnamed_member">Member</string>
     <string name="sharing_you">You</string>
@@ -269,6 +270,7 @@
     <string name="todo_assignee_anyone">Anyone</string>
     <string name="todo_assignee_change">Change Assignee</string>
     <string name="todo_assignee_label">Assignee</string>
+    <string name="todo_completed_by">Checked off by %1$s</string>
     <string name="todo_completed_section">Completed</string>
     <string name="todo_editor_place_label">Place</string>
     <string name="todo_editor_title">Add a to-do</string>

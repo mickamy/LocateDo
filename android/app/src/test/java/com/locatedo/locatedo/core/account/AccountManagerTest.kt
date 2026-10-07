@@ -2,6 +2,8 @@ package com.locatedo.locatedo.core.account
 
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
+import com.locatedo.account.v1.AppleClient
+import com.locatedo.account.v1.signInWithAppleResponse
 import com.locatedo.account.v1.signInWithGoogleResponse
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.api.AccessTokenStore
@@ -396,6 +398,41 @@ class AccountManagerTest {
             clock = fixedClock,
         )
         return manager to preferences
+    }
+
+    @Test
+    fun appleSignInSendsTheServicesIdTokensAndTheName() = runTest {
+        account.appleSignInResponse = success(
+            signInWithAppleResponse {
+                session = sessionProto(FakeAccountService.USER_ID, "access", "refresh", fixedNow.plusSeconds(3600))
+            },
+        )
+        val (manager, _) = manager()
+
+        manager.signInWithApple("apple-id-token", "apple-code", "0123456789abcdef", "山田太郎")
+
+        val sent = account.appleSignIns.single()
+        assertEquals("apple-id-token", sent.identityToken)
+        assertEquals("apple-code", sent.authorizationCode)
+        assertEquals("0123456789abcdef", sent.nonce)
+        assertEquals(AppleClient.APPLE_CLIENT_SERVICES, sent.client)
+        assertEquals("山田太郎", sent.displayName)
+        assertTrue(manager.isSignedIn())
+        assertNotNull("a new user's local data becomes a household", household.lastCreate)
+    }
+
+    @Test
+    fun appleSignInWithoutANameLeavesItOut() = runTest {
+        account.appleSignInResponse = success(
+            signInWithAppleResponse {
+                session = sessionProto(FakeAccountService.USER_ID, "access", "refresh", fixedNow.plusSeconds(3600))
+            },
+        )
+        val (manager, _) = manager()
+
+        manager.signInWithApple("apple-id-token", "apple-code", "0123456789abcdef", displayName = null)
+
+        assertFalse(account.appleSignIns.single().hasDisplayName())
     }
 
     private fun signInResponse(householdId: String?) = signInWithGoogleResponse {

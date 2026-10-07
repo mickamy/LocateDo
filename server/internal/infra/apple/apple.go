@@ -33,11 +33,19 @@ var (
 	ErrServicesIDNotConfigured = errors.New("sign in with apple services id is not configured")
 )
 
+// ClientKind names the client a token was issued to: the app's Bundle ID, or
+// the Services ID that web sign-in uses (the website and the Android app).
+type ClientKind string
+
+const (
+	ClientApp      ClientKind = "app"
+	ClientServices ClientKind = "services"
+)
+
 type Auth interface {
-	VerifyIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error)
-	VerifyWebIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error)
-	ExchangeCode(ctx context.Context, code string, now time.Time) (string, error)
-	Revoke(ctx context.Context, refreshToken string, now time.Time) error
+	VerifyIdentityToken(ctx context.Context, kind ClientKind, raw, rawNonce string, now time.Time) (Identity, error)
+	ExchangeCode(ctx context.Context, kind ClientKind, code string, now time.Time) (string, error)
+	Revoke(ctx context.Context, kind ClientKind, refreshToken string, now time.Time) error
 }
 
 var _ Auth = Client{}
@@ -73,30 +81,33 @@ type identityClaims struct {
 	Nonce string `json:"nonce"`
 }
 
-// VerifyIdentityToken checks the token against Apple's keys and the hashed
-// nonce the app passed to Apple. rawNonce is the value before hashing.
-func (c Client) VerifyIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error) {
-	return c.verify(ctx, raw, rawNonce, c.cfg.BundleID, now)
-}
-
-// VerifyWebIdentityToken is VerifyIdentityToken for tokens issued to the
-// website's Services ID.
-func (c Client) VerifyWebIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error) {
-	if c.cfg.ServicesID == "" {
-		return Identity{}, ErrServicesIDNotConfigured
+// VerifyIdentityToken checks the token against Apple's keys, the client it
+// was issued to, and the hashed nonce passed to Apple. rawNonce is the value
+// before hashing.
+func (c Client) VerifyIdentityToken(
+	ctx context.Context, kind ClientKind, raw, rawNonce string, now time.Time,
+) (Identity, error) {
+	clientID, err := c.clientID(kind)
+	if err != nil {
+		return Identity{}, err
 	}
-	return c.verify(ctx, raw, rawNonce, c.cfg.ServicesID, now)
+	return c.verify(ctx, raw, rawNonce, clientID, now)
 }
 
 // ExchangeCode trades an authorization code for Apple's refresh token, which
-// is what Revoke needs when the account is deleted.
-func (c Client) ExchangeCode(ctx context.Context, code string, now time.Time) (string, error) {
-	secret, err := c.clientSecret(now)
+// is what Revoke needs when the account is deleted. The code must be traded
+// by the client it was issued to.
+func (c Client) ExchangeCode(ctx context.Context, kind ClientKind, code string, now time.Time) (string, error) {
+	clientID, err := c.clientID(kind)
+	if err != nil {
+		return "", err
+	}
+	secret, err := c.clientSecret(clientID, now)
 	if err != nil {
 		return "", err
 	}
 	form := url.Values{
-		"client_id":     {c.cfg.BundleID},
+		"client_id":     {clientID},
 		"client_secret": {secret},
 		"code":          {code},
 		"grant_type":    {"authorization_code"},
@@ -114,13 +125,18 @@ func (c Client) ExchangeCode(ctx context.Context, code string, now time.Time) (s
 	return body.RefreshToken, nil
 }
 
-func (c Client) Revoke(ctx context.Context, refreshToken string, now time.Time) error {
-	secret, err := c.clientSecret(now)
+// Revoke must be called with the client that obtained the refresh token.
+func (c Client) Revoke(ctx context.Context, kind ClientKind, refreshToken string, now time.Time) error {
+	clientID, err := c.clientID(kind)
+	if err != nil {
+		return err
+	}
+	secret, err := c.clientSecret(clientID, now)
 	if err != nil {
 		return err
 	}
 	form := url.Values{
-		"client_id":       {c.cfg.BundleID},
+		"client_id":       {clientID},
 		"client_secret":   {secret},
 		"token":           {refreshToken},
 		"token_type_hint": {"refresh_token"},
@@ -129,6 +145,20 @@ func (c Client) Revoke(ctx context.Context, refreshToken string, now time.Time) 
 		return fmt.Errorf("revoke: %w", err)
 	}
 	return nil
+}
+
+func (c Client) clientID(kind ClientKind) (string, error) {
+	switch kind {
+	case ClientApp:
+		return c.cfg.BundleID, nil
+	case ClientServices:
+		if c.cfg.ServicesID == "" {
+			return "", ErrServicesIDNotConfigured
+		}
+		return c.cfg.ServicesID, nil
+	default:
+		return "", fmt.Errorf("unknown apple client kind %q", kind)
+	}
 }
 
 func (c Client) verify(ctx context.Context, raw, rawNonce, audience string, now time.Time) (Identity, error) {
@@ -158,13 +188,15 @@ func (c Client) verify(ctx context.Context, raw, rawNonce, audience string, now 
 	return Identity{Subject: claims.Subject}, nil
 }
 
-func (c Client) clientSecret(now time.Time) (string, error) {
+// clientSecret signs for clientID: Apple requires the secret's subject to be
+// the client_id it is sent with.
+func (c Client) clientSecret(clientID string, now time.Time) (string, error) {
 	if c.cfg.PrivateKey == nil {
 		return "", ErrNotConfigured
 	}
 	claims := jwt.RegisteredClaims{
 		Issuer:    c.cfg.TeamID,
-		Subject:   c.cfg.BundleID,
+		Subject:   clientID,
 		Audience:  jwt.ClaimStrings{issuer},
 		IssuedAt:  jwt.NewNumericDate(now),
 		ExpiresAt: jwt.NewNumericDate(now.Add(clientSecretTTL)),

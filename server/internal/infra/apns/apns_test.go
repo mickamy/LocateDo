@@ -153,6 +153,28 @@ func TestClient_Promote(t *testing.T) {
 	}
 }
 
+func TestClient_NotifyCompletion(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+	n := apns.CompletionNotice{Body: `Alex checked off "Milk" and 2 more`, Count: 3}
+
+	// act
+	err := f.client(f.key).NotifyCompletion(t.Context(), apns.Production, "abc123", n, now)
+
+	// assert
+	require.NoError(t, err)
+	require.Len(t, f.requests, 1)
+	r := f.requests[0]
+	assert.Equal(t, "/3/device/abc123", r.path)
+	assert.Equal(t, "alert", r.pushType)
+	assert.Equal(t, "10", r.priority, "a household update is delivered at once")
+	assert.Empty(t, r.collapseID)
+	assert.JSONEq(t, `{"aps":{"alert":{"body":"Alex checked off \"Milk\" and 2 more"},"sound":"default",`+
+		`"thread-id":"completion"},"type":"completion","count":3}`, r.body)
+}
+
 func TestClient_Promote_unregistered(t *testing.T) {
 	t.Parallel()
 

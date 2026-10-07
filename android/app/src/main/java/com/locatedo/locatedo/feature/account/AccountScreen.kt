@@ -139,7 +139,7 @@ fun AccountScreen(
 private fun SignedIn(state: AccountScreenState, modifier: Modifier, onSignOut: () -> Unit, onDelete: () -> Unit) {
     Column(modifier = modifier.fillMaxSize()) {
         ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_account_android_signed_in)) },
+            headlineContent = { Text(stringResource(R.string.settings_account_signed_in)) },
             leadingContent = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
         )
         HorizontalDivider()
@@ -187,7 +187,7 @@ private fun SignedOut(state: AccountScreenState, modifier: Modifier, viewModel: 
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = stringResource(R.string.settings_account_android_description),
+                text = stringResource(R.string.settings_account_description),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -217,7 +217,7 @@ private fun SignedOut(state: AccountScreenState, modifier: Modifier, viewModel: 
             )
             Spacer(Modifier.height(8.dp))
         }
-        GoogleSignInButton(viewModel = viewModel, modifier = Modifier.fillMaxWidth(), enabled = !state.isWorking)
+        SignInButtons(viewModel = viewModel, modifier = Modifier.fillMaxWidth(), enabled = !state.isWorking)
         Spacer(Modifier.height(24.dp))
     }
 }

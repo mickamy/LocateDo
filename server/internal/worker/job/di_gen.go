@@ -4,20 +4,41 @@ package job
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
-	repository4 "github.com/mickamy/LocateDo/internal/feature/account/repository"
-	repository3 "github.com/mickamy/LocateDo/internal/feature/campaign/repository"
-	"github.com/mickamy/LocateDo/internal/feature/device/repository"
+	repository5 "github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository4 "github.com/mickamy/LocateDo/internal/feature/campaign/repository"
+	repository3 "github.com/mickamy/LocateDo/internal/feature/device/repository"
 	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
-	repository5 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
+	repository6 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
+	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
+
+// NewNotifyCompletion initializes dependencies and constructs NotifyCompletion.
+func NewNotifyCompletion(infra di.Infra) *NotifyCompletion {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	todos := repository.NewTodo(reader)
+	memberships := repository2.NewMembership(reader)
+	devices := repository3.NewDevice(reader)
+	apns := infra.APNs
+	fcm := infra.FCM
+
+	return &NotifyCompletion{
+		transactor:  transactor,
+		todos:       todos,
+		memberships: memberships,
+		devices:     devices,
+		apns:        apns,
+		fcm:         fcm,
+	}
+}
 
 // NewPushHousehold initializes dependencies and constructs PushHousehold.
 func NewPushHousehold(infra di.Infra) *PushHousehold {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	devices := repository.NewDevice(reader)
+	devices := repository3.NewDevice(reader)
 	apns := infra.APNs
 	fcm := infra.FCM
 
@@ -68,9 +89,9 @@ func NewRevokeAppleToken(infra di.Infra, lib di.Lib) *RevokeAppleToken {
 func NewSendCampaign(infra di.Infra) *SendCampaign {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	campaigns := repository3.NewCampaign(reader)
-	deliveries := repository3.NewDelivery(reader)
-	devices := repository.NewDevice(reader)
+	campaigns := repository4.NewCampaign(reader)
+	deliveries := repository4.NewDelivery(reader)
+	devices := repository3.NewDevice(reader)
 	apns := infra.APNs
 	fcm := infra.FCM
 
@@ -88,7 +109,7 @@ func NewSendCampaign(infra di.Infra) *SendCampaign {
 func NewSweepAnonymousDevices(infra di.Infra) *SweepAnonymousDevices {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	devices := repository.NewDevice(reader)
+	devices := repository3.NewDevice(reader)
 
 	return &SweepAnonymousDevices{
 		transactor: transactor,
@@ -112,7 +133,7 @@ func NewSweepDeadMessages(infra di.Infra) *SweepDeadMessages {
 func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	refreshTokens := repository4.NewRefreshToken(reader)
+	refreshTokens := repository5.NewRefreshToken(reader)
 
 	return &SweepRefreshTokens{
 		transactor:    transactor,
@@ -124,7 +145,7 @@ func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
 func NewSweepTombstones(infra di.Infra) *SweepTombstones {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	tombstones := repository5.NewTombstones(reader)
+	tombstones := repository6.NewTombstones(reader)
 
 	return &SweepTombstones{
 		transactor: transactor,

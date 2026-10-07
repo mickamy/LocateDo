@@ -18,6 +18,7 @@ public  final class RegisterDeviceRequest extends
     pushToken_ = "";
     language_ = "";
   }
+  private int bitField0_;
   public static final int PLATFORM_FIELD_NUMBER = 1;
   private int platform_;
   /**
@@ -247,6 +248,60 @@ public  final class RegisterDeviceRequest extends
     checkByteStringIsUtf8(value);
     language_ = value.toStringUtf8();
 
+  }
+
+  public static final int COMPLETION_NOTICES_FIELD_NUMBER = 6;
+  private boolean completionNotices_;
+  /**
+   * <pre>
+   * Whether to be told when a household member checks off a to-do the user
+   * added. Unset leaves the device's setting as it is (on for a new device).
+   * </pre>
+   *
+   * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+   * @return Whether the completionNotices field is set.
+   */
+  @java.lang.Override
+  public boolean hasCompletionNotices() {
+    return ((bitField0_ & 0x00000001) != 0);
+  }
+  /**
+   * <pre>
+   * Whether to be told when a household member checks off a to-do the user
+   * added. Unset leaves the device's setting as it is (on for a new device).
+   * </pre>
+   *
+   * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+   * @return The completionNotices.
+   */
+  @java.lang.Override
+  public boolean getCompletionNotices() {
+    return completionNotices_;
+  }
+  /**
+   * <pre>
+   * Whether to be told when a household member checks off a to-do the user
+   * added. Unset leaves the device's setting as it is (on for a new device).
+   * </pre>
+   *
+   * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+   * @param value The completionNotices to set.
+   */
+  private void setCompletionNotices(boolean value) {
+    bitField0_ |= 0x00000001;
+    completionNotices_ = value;
+  }
+  /**
+   * <pre>
+   * Whether to be told when a household member checks off a to-do the user
+   * added. Unset leaves the device's setting as it is (on for a new device).
+   * </pre>
+   *
+   * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+   */
+  private void clearCompletionNotices() {
+    bitField0_ = (bitField0_ & ~0x00000001);
+    completionNotices_ = false;
   }
 
   public static com.locatedo.device.v1.RegisterDeviceRequest parseFrom(
@@ -591,6 +646,62 @@ public  final class RegisterDeviceRequest extends
       return this;
     }
 
+    /**
+     * <pre>
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * </pre>
+     *
+     * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+     * @return Whether the completionNotices field is set.
+     */
+    @java.lang.Override
+    public boolean hasCompletionNotices() {
+      return instance.hasCompletionNotices();
+    }
+    /**
+     * <pre>
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * </pre>
+     *
+     * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+     * @return The completionNotices.
+     */
+    @java.lang.Override
+    public boolean getCompletionNotices() {
+      return instance.getCompletionNotices();
+    }
+    /**
+     * <pre>
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * </pre>
+     *
+     * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+     * @param value The completionNotices to set.
+     * @return This builder for chaining.
+     */
+    public Builder setCompletionNotices(boolean value) {
+      copyOnWrite();
+      instance.setCompletionNotices(value);
+      return this;
+    }
+    /**
+     * <pre>
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * </pre>
+     *
+     * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearCompletionNotices() {
+      copyOnWrite();
+      instance.clearCompletionNotices();
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.device.v1.RegisterDeviceRequest)
   }
   @java.lang.Override
@@ -607,15 +718,17 @@ public  final class RegisterDeviceRequest extends
       }
       case BUILD_MESSAGE_INFO: {
           java.lang.Object[] objects = new java.lang.Object[] {
+            "bitField0_",
             "platform_",
             "pushToken_",
             "apnsEnvironment_",
             "promotionsConsent_",
             "language_",
+            "completionNotices_",
           };
           java.lang.String info =
-              "\u0000\u0005\u0000\u0000\u0001\u0005\u0005\u0000\u0000\u0000\u0001\f\u0002\u0208" +
-              "\u0003\f\u0004\u0007\u0005\u0208";
+              "\u0000\u0006\u0000\u0001\u0001\u0006\u0006\u0000\u0000\u0000\u0001\f\u0002\u0208" +
+              "\u0003\f\u0004\u0007\u0005\u0208\u0006\u1007\u0000";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {

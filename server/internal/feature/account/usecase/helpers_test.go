@@ -54,9 +54,9 @@ func newLib() di.Lib {
 func openAppleToken(t *testing.T, d tdb.DB, lib di.Lib, userID uuid.UUID) string {
 	t.Helper()
 
-	sealed, err := repository.NewAppleToken(d.Reader).Find(t.Context(), userID)
+	appleToken, err := repository.NewAppleToken(d.Reader).Find(t.Context(), userID)
 	require.NoError(t, err)
-	plain, err := lib.Box.Open(sealed, userID[:])
+	plain, err := lib.Box.Open(appleToken.Sealed, userID[:])
 	require.NoError(t, err)
 	return string(plain)
 }
@@ -91,7 +91,15 @@ func signInInput(subject, displayName string) usecase.SignInWithAppleInput {
 		AuthorizationCode: "auth-code",
 		Nonce:             "raw-nonce",
 		DisplayName:       displayName,
+		Client:            apple.ClientApp,
 	}
+}
+
+func servicesSignInInput(subject, displayName string) usecase.SignInWithAppleInput {
+	in := signInInput(subject, displayName)
+	in.IdentityToken = "web:" + subject
+	in.Client = apple.ClientServices
+	return in
 }
 
 func webAppleInput(token string) usecase.DeleteAccountWithAppleInput {
@@ -115,42 +123,43 @@ func (fakeGoogle) VerifyIDToken(_ context.Context, raw, nonce string, _ time.Tim
 	return google.Identity{Subject: subject, Name: "Google User"}, nil
 }
 
-// fakeApple accepts identity tokens of the form "identity:<subject>" (and
-// "web:<subject>" for the website) and exchanges any code except "expired-code" for "apple-refresh:<code>".
+// fakeApple accepts identity tokens of the form "identity:<subject>" for the
+// app and "web:<subject>" for the Services ID, and exchanges any code except
+// "expired-code" for "apple-refresh:<code>", recording the client that did.
 type fakeApple struct {
-	mu         sync.Mutex
-	failRevoke bool
-	revoked    []string
+	mu          sync.Mutex
+	failRevoke  bool
+	exchangedBy []apple.ClientKind
+	revoked     []string
 }
 
 var _ apple.Auth = (*fakeApple)(nil)
 
-func (f *fakeApple) VerifyIdentityToken(_ context.Context, raw, rawNonce string, _ time.Time) (apple.Identity, error) {
-	subject, ok := strings.CutPrefix(raw, "identity:")
-	if !ok || rawNonce == "" {
-		return apple.Identity{}, apple.ErrInvalidToken
-	}
-	return apple.Identity{Subject: subject}, nil
-}
-
-func (f *fakeApple) VerifyWebIdentityToken(
-	_ context.Context, raw, rawNonce string, _ time.Time,
+func (f *fakeApple) VerifyIdentityToken(
+	_ context.Context, kind apple.ClientKind, raw, rawNonce string, _ time.Time,
 ) (apple.Identity, error) {
-	subject, ok := strings.CutPrefix(raw, "web:")
+	prefix := "identity:"
+	if kind == apple.ClientServices {
+		prefix = "web:"
+	}
+	subject, ok := strings.CutPrefix(raw, prefix)
 	if !ok || rawNonce == "" {
 		return apple.Identity{}, apple.ErrInvalidToken
 	}
 	return apple.Identity{Subject: subject}, nil
 }
 
-func (f *fakeApple) ExchangeCode(_ context.Context, code string, _ time.Time) (string, error) {
+func (f *fakeApple) ExchangeCode(_ context.Context, kind apple.ClientKind, code string, _ time.Time) (string, error) {
 	if code == "expired-code" {
 		return "", errors.New("status 400: invalid_grant")
 	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.exchangedBy = append(f.exchangedBy, kind)
 	return "apple-refresh:" + code, nil
 }
 
-func (f *fakeApple) Revoke(_ context.Context, refreshToken string, _ time.Time) error {
+func (f *fakeApple) Revoke(_ context.Context, _ apple.ClientKind, refreshToken string, _ time.Time) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.failRevoke {
@@ -158,6 +167,12 @@ func (f *fakeApple) Revoke(_ context.Context, refreshToken string, _ time.Time) 
 	}
 	f.revoked = append(f.revoked, refreshToken)
 	return nil
+}
+
+func (f *fakeApple) exchangedClients() []apple.ClientKind {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.exchangedBy
 }
 
 func (f *fakeApple) revokedTokens() []string {

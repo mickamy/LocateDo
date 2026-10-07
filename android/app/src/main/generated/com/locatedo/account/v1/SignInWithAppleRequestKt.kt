@@ -103,6 +103,30 @@ public object SignInWithAppleRequestKt {
     public fun clearNonce() {
       _builder.clearNonce()
     }
+
+    /**
+     * `.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }`
+     */
+    public var client: com.locatedo.account.v1.AppleClient
+      @kotlin.jvm.JvmName("getClient")
+        get() = _builder.client
+      @kotlin.jvm.JvmName("setClient")
+        set(value) {
+        _builder.client = value
+      }
+    public var clientValue: kotlin.Int
+      @kotlin.jvm.JvmName("getClientValue")
+        get() = _builder.clientValue
+      @kotlin.jvm.JvmName("setClientValue")
+        set(value) {
+        _builder.clientValue = value
+      }
+    /**
+     * `.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }`
+     */
+    public fun clearClient() {
+      _builder.clearClient()
+    }
   }
 }
 public inline fun com.locatedo.account.v1.SignInWithAppleRequest.copy(block: `com.locatedo.account.v1`.SignInWithAppleRequestKt.Dsl.() -> kotlin.Unit): com.locatedo.account.v1.SignInWithAppleRequest =

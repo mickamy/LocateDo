@@ -1,8 +1,11 @@
 import AuthenticationServices
+import GoogleSignIn
+import GoogleSignInSwift
 import OSLog
 import SwiftUI
+import UIKit
 
-struct AppleSignInButton: View {
+struct SignInButtons: View {
     @Environment(AccountManager.self) private var account
     @Environment(AppStatusStore.self) private var appStatus
     @Environment(\.colorScheme) private var colorScheme
@@ -23,7 +26,10 @@ struct AppleSignInButton: View {
             }
             MaintenanceNote()
                 .multilineTextAlignment(.center)
-            button
+            appleButton
+            if GoogleSignInSetup.isConfigured {
+                googleButton
+            }
         }
         .alert(Text(.settingsAccountReplaceConfirmTitle), isPresented: $isConfirmingReplace) {
             Button(.settingsAccountReplace, role: .destructive) {
@@ -39,7 +45,26 @@ struct AppleSignInButton: View {
         }
     }
 
-    private var button: some View {
+    private var isDisabled: Bool {
+        account.isWorking || appStatus.activeMaintenance != nil
+    }
+
+    private var googleButton: some View {
+        var scheme = GoogleSignInButtonColorScheme.light
+        if colorScheme == .dark {
+            scheme = .dark
+        }
+        var state = GoogleSignInButtonState.normal
+        if isDisabled {
+            state = .disabled
+        }
+        return GoogleSignInButton(scheme: scheme, style: .wide, state: state) {
+            signInWithGoogle()
+        }
+        .accessibilityIdentifier("account.signInWithGoogle")
+    }
+
+    private var appleButton: some View {
         ZStack {
             SignInWithAppleButton(.signIn, onRequest: prepare, onCompletion: complete)
                 .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
@@ -53,15 +78,15 @@ struct AppleSignInButton: View {
         }
         .frame(height: 50)
         .clipShape(.capsule)
-        .disabled(account.isWorking || appStatus.activeMaintenance != nil)
+        .disabled(isDisabled)
     }
 
     private func prepare(_ request: ASAuthorizationAppleIDRequest) {
-        let nonce = AppleSignInNonce.make()
+        let nonce = SignInNonce.make()
         self.nonce = nonce
         failure = nil
         request.requestedScopes = [.fullName]
-        request.nonce = AppleSignInNonce.sha256(nonce)
+        request.nonce = SignInNonce.sha256(nonce)
     }
 
     private func complete(_ result: Result<ASAuthorization, any Error>) {
@@ -96,6 +121,48 @@ struct AppleSignInButton: View {
             logger.error("Apple authorization failed: \(error, privacy: .public)")
             failure = .settingsAccountSignInFailed
         }
+    }
+
+    private func signInWithGoogle() {
+        guard let presenter = Self.topViewController() else {
+            failure = .settingsAccountSignInFailed
+            return
+        }
+        failure = nil
+        let nonce = SignInNonce.make()
+        Task {
+            do {
+                let result = try await GIDSignIn.sharedInstance.signIn(
+                    withPresenting: presenter,
+                    hint: nil,
+                    additionalScopes: nil,
+                    nonce: nonce
+                )
+                GIDSignIn.sharedInstance.signOut()
+                guard let idToken = result.user.idToken?.tokenString else {
+                    failure = .settingsAccountSignInFailed
+                    return
+                }
+                try await account.signInWithGoogle(idToken: idToken, nonce: nonce)
+                isConfirmingReplace = account.needsReplaceConfirmation
+            } catch let error as GIDSignInError where error.code == .canceled {
+                return
+            } catch {
+                logger.error("Sign in with Google failed: \(error, privacy: .public)")
+                failure = .settingsAccountSignInFailed
+            }
+        }
+    }
+
+    private static func topViewController() -> UIViewController? {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+        var top = scene?.keyWindow?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
     }
 
     private func replaceLocalData() async {

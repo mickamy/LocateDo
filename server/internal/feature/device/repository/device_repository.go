@@ -22,6 +22,9 @@ type Device interface {
 	// whoever held it before. A device without a user keeps the owner the
 	// token already has.
 	Upsert(ctx context.Context, d model.Device) (uuid.UUID, error)
+	// ListCompletionNoticeDevices lists the user's devices that take completion
+	// notices.
+	ListCompletionNoticeDevices(ctx context.Context, userID uuid.UUID) ([]model.Device, error)
 	// ListByHousehold lists every member's devices on the platform.
 	ListByHousehold(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]model.Device, error)
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -84,6 +87,7 @@ func (r device) Upsert(ctx context.Context, d model.Device) (uuid.UUID, error) {
 		ApnsEnvironment:       env,
 		Language:              string(d.Language),
 		PromotionsConsentedAt: consentedAt,
+		CompletionNotices:     d.CompletionNotices,
 		LastSeenAt:            d.LastSeenAt,
 	})
 	switch {
@@ -106,6 +110,18 @@ func (r device) ListByHousehold(
 	})
 	if err != nil {
 		return nil, fmt.Errorf("list household devices: %w", err)
+	}
+	devices := make([]model.Device, 0, len(rows))
+	for _, row := range rows {
+		devices = append(devices, toModel(row))
+	}
+	return devices, nil
+}
+
+func (r device) ListCompletionNoticeDevices(ctx context.Context, userID uuid.UUID) ([]model.Device, error) {
+	rows, err := r.q.ListCompletionNoticeDevices(ctx, &userID)
+	if err != nil {
+		return nil, fmt.Errorf("list completion notice devices: %w", err)
 	}
 	devices := make([]model.Device, 0, len(rows))
 	for _, row := range rows {
@@ -175,6 +191,7 @@ func toModel(row queries.Device) model.Device {
 		APNsEnvironment:   env,
 		Language:          model.Language(row.Language),
 		PromotionsConsent: row.PromotionsConsentedAt != nil,
+		CompletionNotices: &row.CompletionNotices,
 		LastSeenAt:        row.LastSeenAt,
 	}
 }

@@ -78,6 +78,7 @@
     <string name="map_empty_message">追加した場所がここに表示されます。</string>
     <string name="notification_arrived_title">%1$sに到着しました</string>
     <string name="notification_channel_arrivals">到着のお知らせ</string>
+    <string name="notification_channel_household">家族の更新</string>
     <string name="notification_channel_promotions">新機能・キャンペーンのお知らせ</string>
     <plurals name="notification_more">
         <item quantity="other">他 %1$d 件</item>
@@ -150,13 +151,12 @@
     <string name="settings_about_privacy_policy">プライバシーポリシー</string>
     <string name="settings_about_title">このアプリについて</string>
     <string name="settings_about_version">バージョン</string>
-    <string name="settings_account_android_description">Google でサインインすると、場所とやることをアカウントに保存できます。</string>
+    <string name="settings_account_android_apple_sign_in">Appleでサインイン</string>
     <string name="settings_account_android_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この端末の場所とやることはアカウントのデータに置き換わります。</string>
     <string name="settings_account_android_replace_confirm_title">この端末のデータを置き換えますか？</string>
     <string name="settings_account_android_sign_in">Google でサインイン</string>
     <string name="settings_account_android_sign_out_confirm_message">この端末の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_android_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この端末の場所とやることは消えます。</string>
-    <string name="settings_account_android_signed_in">Google でサインイン中</string>
     <string name="settings_account_benefits_android_privacy_message">現在地がこの端末の外に出ることはありません。メールアドレスもいただきません。</string>
     <string name="settings_account_benefits_privacy_message">現在地がこの iPhone の外に出ることはありません。メールアドレスもいただきません。</string>
     <string name="settings_account_benefits_privacy_title">位置情報は端末の中だけ</string>
@@ -168,7 +168,7 @@
     <string name="settings_account_delete_confirm_message">アカウントとサーバーに保存されたデータを削除します。この端末の場所とやることも消えます。</string>
     <string name="settings_account_delete_confirm_title">アカウントを削除しますか？</string>
     <string name="settings_account_delete_failed">アカウントを削除できませんでした。もう一度お試しください。</string>
-    <string name="settings_account_description">Apple でサインインすると、場所とやることをアカウントに保存できます。</string>
+    <string name="settings_account_description">サインインすると、場所とやることをアカウントに保存できます。</string>
     <string name="settings_account_not_signed_in">未サインイン</string>
     <string name="settings_account_replace">置き換える</string>
     <string name="settings_account_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この iPhone の場所とやることはアカウントのデータに置き換わります。</string>
@@ -178,7 +178,7 @@
     <string name="settings_account_sign_out_confirm_message">この iPhone の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_sign_out_confirm_title">サインアウトしますか？</string>
     <string name="settings_account_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この iPhone の場所とやることは消えます。</string>
-    <string name="settings_account_signed_in">Apple でサインイン中</string>
+    <string name="settings_account_signed_in">サインイン中</string>
     <string name="settings_account_title">アカウント</string>
     <string name="settings_default_radius_label">通知の範囲（半径）の初期値</string>
     <string name="settings_default_radius_title">新しい場所</string>
@@ -192,6 +192,8 @@
     <string name="settings_location_when_in_use">使用中のみ</string>
     <string name="settings_notifications_allow">通知を許可</string>
     <string name="settings_notifications_authorized">許可</string>
+    <string name="settings_notifications_completion_footer">自分が追加したやることを家族が完了すると、お知らせします。</string>
+    <string name="settings_notifications_completion_title">家族が完了したとき</string>
     <string name="settings_notifications_denied">許可されていません</string>
     <string name="settings_notifications_needs_allow">到着のお知らせは通知で届きます。</string>
     <string name="settings_notifications_not_determined">未設定</string>
@@ -215,10 +217,8 @@
     <string name="settings_pro_upgrade">Pro にする</string>
     <string name="sharing_accept">招待を受ける</string>
     <string name="sharing_android_benefit_lists_message">誰かが足した場所とやることが、全員の端末にすぐ届きます。</string>
-    <string name="sharing_android_intro_message">Google でサインインすると、場所とやることを家族と共有できます。</string>
     <string name="sharing_android_leave_confirm_message">この端末の場所とやることは消え、ひとりで使う状態に戻ります。</string>
     <string name="sharing_android_shared_header_message">誰かが足した場所とやることが、全員の端末に届きます。</string>
-    <string name="sharing_android_sign_in_message">場所とやることを家族と共有するには、Google でサインインしてください。</string>
     <string name="sharing_benefit_assign_message">やることに担当を決めると、着いたときにその人にだけ知らせます。</string>
     <string name="sharing_benefit_assign_title">着いた人に、その人の用事を</string>
     <string name="sharing_benefit_lists_message">誰かが足した場所とやることが、全員の iPhone にすぐ届きます。</string>
@@ -227,7 +227,7 @@
     <string name="sharing_benefit_plan_title">1 つの契約で全員が使える</string>
     <string name="sharing_failed">共有の設定を変更できませんでした。もう一度お試しください。</string>
     <string name="sharing_full">1 つの世帯に入れるのは 6 人までです。</string>
-    <string name="sharing_intro_message">Apple でサインインすると、場所とやることを家族と共有できます。</string>
+    <string name="sharing_intro_message">サインインすると、場所とやることを家族と共有できます。</string>
     <string name="sharing_intro_title">家族と一緒に使う</string>
     <string name="sharing_invite">招待する</string>
     <string name="sharing_invite_expiry">招待リンクは 72 時間有効です。</string>
@@ -252,7 +252,7 @@
     <plurals name="sharing_shared_header_title">
         <item quantity="other">%1$d 人で共有しています</item>
     </plurals>
-    <string name="sharing_sign_in_message">場所とやることを家族と共有するには、Apple でサインインしてください。</string>
+    <string name="sharing_sign_in_message">場所とやることを家族と共有するには、サインインしてください。</string>
     <string name="sharing_title">家族と共有</string>
     <string name="sharing_unnamed_member">メンバー</string>
     <string name="sharing_you">自分</string>
@@ -263,6 +263,7 @@
     <string name="todo_assignee_anyone">誰でも</string>
     <string name="todo_assignee_change">担当を変更</string>
     <string name="todo_assignee_label">担当</string>
+    <string name="todo_completed_by">%1$sが完了</string>
     <string name="todo_completed_section">完了済み</string>
     <string name="todo_editor_place_label">場所</string>
     <string name="todo_editor_title">やることを追加</string>
@@ -277,7 +278,7 @@
     <string name="todo_list_no_places_message">やることは場所ごとに登録します。</string>
     <string name="todo_list_no_places_title">先に場所を追加してください</string>
     <string name="update_android_open_play">Google Play を開く</string>
-    <string name="update_message">このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。</string>
+    <string name="update_message">このバージョンのアプリは使えなくなりました。最新のバージョンにアップデートしてください。</string>
     <string name="update_open_app_store">App Store を開く</string>
     <string name="update_title">アップデートが必要です</string>
 </resources>

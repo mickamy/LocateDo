@@ -33,6 +33,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
+        <!-- Pushes are addressed to the Firebase installation ID, an FCM API that stays off until enabled here. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="true" />
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
             android:value="${CRASHLYTICS_COLLECTION_ENABLED}" />
@@ -62,6 +66,16 @@
                 <data android:host="locatedo.com" />
                 <data android:host="www.locatedo.com" />
                 <data android:pathPrefix="/i/" />
+            </intent-filter>
+            <!-- Sign in with Apple comes back here from the API server's relay of Apple's form post. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="auth"
+                    android:path="/apple"
+                    android:scheme="${applicationId}" />
             </intent-filter>
         </activity>
         <service

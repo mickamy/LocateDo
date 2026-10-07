@@ -1,0 +1,4 @@
+completion_notice:
+  someone: "家族"
+  one: "{name}が「{title}」を完了しました"
+  many: "{name}が「{title}」ほか {others:int} 件を完了しました"

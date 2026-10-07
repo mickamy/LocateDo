@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 import Security
 
-nonisolated enum AppleSignInNonce {
+nonisolated enum SignInNonce {
     static func make(byteCount: Int = 32) -> String {
         var bytes = [UInt8](repeating: 0, count: byteCount)
         let status = SecRandomCopyBytes(kSecRandomDefault, byteCount, &bytes)
