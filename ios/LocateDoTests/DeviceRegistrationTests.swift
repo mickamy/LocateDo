@@ -82,6 +82,21 @@ struct DeviceRegistrationTests {
         #expect(devices.registered.map(\.promotionsConsent) == [true])
     }
 
+    @Test func sendsTheCompletionNoticeSetting() async {
+        let devices = FakeDeviceService()
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: true),
+            apnsEnvironment: .sandbox,
+            completionNotices: { false }
+        )
+
+        await registration.received(deviceToken: Self.token)
+
+        #expect(devices.registered.map(\.hasCompletionNotices) == [true])
+        #expect(devices.registered.map(\.completionNotices) == [false])
+    }
+
     @Test func registersASignedOutDeviceThatConsents() async {
         let devices = FakeDeviceService()
         let registration = DeviceRegistration(

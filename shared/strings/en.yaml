@@ -99,6 +99,8 @@ settings:
     allow: "Allow notifications"
     promotions_title: "News and offers"
     promotions_footer: "Occasional notifications about new features, updates, and offers. Arrival reminders work either way."
+    completion_title: "When family checks something off"
+    completion_footer: "Get a notification when someone in your household checks off a to-do you added."
   account:
     title: "Account"
     signed_in: "Signed in with Apple"
@@ -198,6 +200,7 @@ place:
     delete_confirm_title: "Delete “{name}”?"
     delete_confirm_message: "Its to-dos will be deleted too."
 todo:
+  completed_by: "Checked off by {name}"
   editor:
     title: "Add a to-do"
     title_label: "To-do"
@@ -221,6 +224,7 @@ todo:
 notification:
   channel_arrivals: "Arrival reminders"
   channel_promotions: "News and offers"
+  channel_household: "Household updates"
   arrived_title: "You’re at {place}"
   more:
     plural:

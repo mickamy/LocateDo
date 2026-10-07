@@ -61,6 +61,31 @@ struct ChangeApplierTests {
         #expect(try fetch(Place.self, in: context).count == 1)
     }
 
+    @Test func todosCarryWhoAddedAndWhoCheckedThemOff() throws {
+        let context = try makeContext()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        let todo = Todo(title: "Milk", place: place)
+        context.insert(place)
+        context.insert(todo)
+        try context.save()
+        let creator = UUID.v7()
+        let completer = UUID.v7()
+
+        var completed = Self.todo(todo.id, placeID: place.id, version: 2)
+        completed.creatorID = ProtoInput.id(creator)
+        completed.completerID = ProtoInput.id(completer)
+        completed.completedAt = Google_Protobuf_Timestamp(date: Self.updated)
+        _ = try ChangeApplier.apply([.todo(completed)], reset: false, to: context)
+        #expect(todo.creatorID == creator)
+        #expect(todo.completerID == completer)
+
+        var reopened = Self.todo(todo.id, placeID: place.id, version: 3)
+        reopened.creatorID = ProtoInput.id(creator)
+        _ = try ChangeApplier.apply([.todo(reopened)], reset: false, to: context)
+        #expect(todo.creatorID == creator)
+        #expect(todo.completerID == nil)
+    }
+
     @Test func unknownCategoryLeavesThePlaceUncategorizedAndOrphanTodosAreSkipped() throws {
         let context = try makeContext()
         let placeID = UUID.v7()
@@ -199,7 +224,9 @@ struct ChangeApplierTests {
     private func fetch<Model: PersistentModel>(_ type: Model.Type, in context: ModelContext) throws -> [Model] {
         try context.fetch(FetchDescriptor<Model>())
     }
+}
 
+extension ChangeApplierTests {
     private static func category(
         _ id: UUID,
         builtin: Locatedo_Category_V1_BuiltinCategory = .unspecified,

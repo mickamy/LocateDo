@@ -78,6 +78,7 @@
     <string name="map_empty_message">追加した場所がここに表示されます。</string>
     <string name="notification_arrived_title">%1$sに到着しました</string>
     <string name="notification_channel_arrivals">到着のお知らせ</string>
+    <string name="notification_channel_household">家族の更新</string>
     <string name="notification_channel_promotions">新機能・キャンペーンのお知らせ</string>
     <plurals name="notification_more">
         <item quantity="other">他 %1$d 件</item>
@@ -192,6 +193,8 @@
     <string name="settings_location_when_in_use">使用中のみ</string>
     <string name="settings_notifications_allow">通知を許可</string>
     <string name="settings_notifications_authorized">許可</string>
+    <string name="settings_notifications_completion_footer">自分が追加したやることを家族が完了すると、お知らせします。</string>
+    <string name="settings_notifications_completion_title">家族が完了したとき</string>
     <string name="settings_notifications_denied">許可されていません</string>
     <string name="settings_notifications_needs_allow">到着のお知らせは通知で届きます。</string>
     <string name="settings_notifications_not_determined">未設定</string>
@@ -263,6 +266,7 @@
     <string name="todo_assignee_anyone">誰でも</string>
     <string name="todo_assignee_change">担当を変更</string>
     <string name="todo_assignee_label">担当</string>
+    <string name="todo_completed_by">%1$sが完了</string>
     <string name="todo_completed_section">完了済み</string>
     <string name="todo_editor_place_label">場所</string>
     <string name="todo_editor_title">やることを追加</string>

@@ -81,6 +81,7 @@
     <string name="map_empty_message">Places you add appear here.</string>
     <string name="notification_arrived_title">You’re at %1$s</string>
     <string name="notification_channel_arrivals">Arrival reminders</string>
+    <string name="notification_channel_household">Household updates</string>
     <string name="notification_channel_promotions">News and offers</string>
     <plurals name="notification_more">
         <item quantity="one">+%1$d more</item>
@@ -196,6 +197,8 @@
     <string name="settings_location_when_in_use">While using the app</string>
     <string name="settings_notifications_allow">Allow notifications</string>
     <string name="settings_notifications_authorized">Allowed</string>
+    <string name="settings_notifications_completion_footer">Get a notification when someone in your household checks off a to-do you added.</string>
+    <string name="settings_notifications_completion_title">When family checks something off</string>
     <string name="settings_notifications_denied">Not allowed</string>
     <string name="settings_notifications_needs_allow">Reminders are delivered as notifications.</string>
     <string name="settings_notifications_not_determined">Not asked yet</string>
@@ -269,6 +272,7 @@
     <string name="todo_assignee_anyone">Anyone</string>
     <string name="todo_assignee_change">Change Assignee</string>
     <string name="todo_assignee_label">Assignee</string>
+    <string name="todo_completed_by">Checked off by %1$s</string>
     <string name="todo_completed_section">Completed</string>
     <string name="todo_editor_place_label">Place</string>
     <string name="todo_editor_title">Add a to-do</string>

@@ -218,6 +218,7 @@ struct RootView: View {
         .environment(router)
         .environment(preferences)
         .environment(PromotionsConsent(preferences: preferences))
+        .environment(CompletionNotices(preferences: preferences))
         .environment(locationProvider)
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))

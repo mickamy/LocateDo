@@ -9,6 +9,7 @@ struct LocateDoApp: App {
     private let router = AppRouter()
     private let preferences = AppPreferences()
     private let promotionsConsent: PromotionsConsent
+    private let completionNotices: CompletionNotices
     private let locationProvider = LocationProvider()
     private let notifier: ArrivalNotifier
     private let geofence: GeofenceMonitor
@@ -26,6 +27,7 @@ struct LocateDoApp: App {
     init() {
         container = Self.makeContainer()
         promotionsConsent = PromotionsConsent(preferences: preferences)
+        completionNotices = CompletionNotices(preferences: preferences)
         #if DEBUG
         ScreenshotSeed.replaceIfRequested(in: container.mainContext)
         #endif
@@ -83,6 +85,9 @@ struct LocateDoApp: App {
             return Entitlements.isPro(hasEntitlement: entitlements.hasEntitlement, plan: plan)
         }
         writes.isPro = isPro
+        writes.currentUserID = { [authenticator] in
+            authenticator.session?.userID
+        }
         sync.isPro = isPro
         sync.onLimitRejected = { [router, writes] limit in
             writes.logLimitReached(limit)
@@ -128,6 +133,9 @@ struct LocateDoApp: App {
         promotionsConsent.onChanged = { [devices] in
             await devices.promotionsConsentChanged()
         }
+        completionNotices.onChanged = { [devices] in
+            await devices.register()
+        }
         AppDelegate.onDeviceToken = { [devices] token in
             await devices.received(deviceToken: token)
         }
@@ -158,6 +166,7 @@ struct LocateDoApp: App {
         .environment(router)
         .environment(preferences)
         .environment(promotionsConsent)
+        .environment(completionNotices)
         .environment(locationProvider)
         .environment(notifier)
         .environment(geofence)
@@ -195,16 +204,6 @@ struct LocateDoApp: App {
         account.onSignedOut = { [geofence, entitlements] in
             await entitlements.logOut()
             await geofence.sync()
-        }
-    }
-
-    private static func makeDevices(
-        api: APIClient,
-        authenticator: Authenticator,
-        preferences: AppPreferences
-    ) -> DeviceRegistration {
-        DeviceRegistration(devices: api.device, authenticator: authenticator) { [preferences] in
-            preferences.promotionsConsent
         }
     }
 
@@ -260,5 +259,20 @@ struct LocateDoApp: App {
     private static var isRunningTests: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || ProcessInfo.processInfo.environment["XCTestBundlePath"] != nil
+    }
+}
+
+extension LocateDoApp {
+    private static func makeDevices(
+        api: APIClient,
+        authenticator: Authenticator,
+        preferences: AppPreferences
+    ) -> DeviceRegistration {
+        DeviceRegistration(
+            devices: api.device,
+            authenticator: authenticator,
+            promotionsConsent: { [preferences] in preferences.promotionsConsent },
+            completionNotices: { [preferences] in preferences.completionNotices }
+        )
     }
 }

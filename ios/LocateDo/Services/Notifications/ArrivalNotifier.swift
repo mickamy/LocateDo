@@ -69,7 +69,16 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         let latency = max(Int(Date().timeIntervalSince(response.notification.date)), 0)
-        if let campaign = CampaignNotification(userInfo: userInfo) {
+        if userInfo["type"] as? String == "completion" {
+            var count = 1
+            if let sent = userInfo["count"] as? Int {
+                count = sent
+            }
+            Analytics.log(.completionNoticeOpened, parameters: [.count: count])
+            Task { @MainActor in
+                router.selectedTab = .todos
+            }
+        } else if let campaign = CampaignNotification(userInfo: userInfo) {
             Analytics.log(.campaignOpened, parameters: [
                 .campaignID: campaign.id,
                 .latencyS: latency,

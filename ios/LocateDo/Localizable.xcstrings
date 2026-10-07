@@ -2810,6 +2810,40 @@
         }
       }
     },
+    "settings.notifications.completion_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get a notification when someone in your household checks off a to-do you added."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分が追加したやることを家族が完了すると、お知らせします。"
+          }
+        }
+      }
+    },
+    "settings.notifications.completion_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When family checks something off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族が完了したとき"
+          }
+        }
+      }
+    },
     "settings.notifications.denied" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3896,6 +3930,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "担当"
+          }
+        }
+      }
+    },
+    "todo.completed_by" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checked off by %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@が完了"
           }
         }
       }

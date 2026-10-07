@@ -214,10 +214,9 @@ struct ChangeApplier {
             todos[id] = todo
         }
         todo.title = proto.title
-        todo.assigneeID = nil
-        if proto.hasAssigneeID {
-            todo.assigneeID = UUID(uuidString: proto.assigneeID)
-        }
+        todo.assigneeID = optionalUUID(proto.assigneeID, isSet: proto.hasAssigneeID)
+        todo.creatorID = optionalUUID(proto.creatorID, isSet: proto.hasCreatorID)
+        todo.completerID = optionalUUID(proto.completerID, isSet: proto.hasCompleterID)
         todo.completedAt = nil
         if proto.hasCompletedAt {
             todo.completedAt = proto.completedAt.date
@@ -279,4 +278,11 @@ private extension BuiltinCategory {
         case .unspecified, .UNRECOGNIZED: return nil
         }
     }
+}
+
+private nonisolated func optionalUUID(_ raw: String, isSet: Bool) -> UUID? {
+    guard isSet else {
+        return nil
+    }
+    return UUID(uuidString: raw)
 }
