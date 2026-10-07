@@ -1,6 +1,6 @@
 -- The four KPIs from business-spec, one row per month.
 -- Retention: users who started in the month and got an arrival reminder 7-13 days later (cohorts at least 14 days old).
--- Share taps: users who tapped share / users active in the month.
+-- Share taps: users who tapped share / users who opened the app in the month.
 -- Trial conversion: trials started in the month that later converted (rc_* events come from RevenueCat).
 --   The _unaffected columns leave out users whose sync was held back by a stale server plan (see sync_blocked_weekly).
 -- Paid users: users whose latest subscription event by the end of the month is not an expiration.
@@ -33,6 +33,7 @@ share AS (
       LOGICAL_OR(event_name = 'share_tapped') AS tapped_share
     FROM `__PROJECT__.__DATASET__.events`
     GROUP BY month, user_pseudo_id
+    HAVING LOGICAL_OR(foreground)
   )
   GROUP BY month
 ),

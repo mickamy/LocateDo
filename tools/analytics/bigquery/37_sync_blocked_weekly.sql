@@ -16,6 +16,7 @@ WITH sync AS (
 active AS (
   SELECT DATE_TRUNC(event_date, WEEK(MONDAY)) AS week, COUNT(DISTINCT user_pseudo_id) AS active_users
   FROM `__PROJECT__.__DATASET__.events`
+  WHERE foreground
   GROUP BY week
 ),
 blocked AS (

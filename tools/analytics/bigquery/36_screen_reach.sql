@@ -5,7 +5,7 @@ WITH recent AS (
   WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
 ),
 active AS (
-  SELECT COUNT(DISTINCT user_pseudo_id) AS users FROM recent
+  SELECT COUNT(DISTINCT user_pseudo_id) AS users FROM recent WHERE foreground
 )
 SELECT
   screen,
