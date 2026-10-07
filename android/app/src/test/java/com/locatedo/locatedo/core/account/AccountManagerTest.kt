@@ -27,6 +27,7 @@ import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeDeviceService
+import com.locatedo.locatedo.testing.FakeDisplayLanguage
 import com.locatedo.locatedo.testing.FakeEntitlementSource
 import com.locatedo.locatedo.testing.FakeHouseholdService
 import com.locatedo.locatedo.testing.FakeInstallationIdSource
@@ -338,6 +339,21 @@ class AccountManagerTest {
     }
 
     @Test
+    fun aDeviceThatWantsPromotionsRegistersAgainAfterTheAccountIsDeleted() = runTest {
+        categories.ensureBuiltins()
+        account.signInResponse = success(signInResponse(householdId = null))
+        val (manager, preferences) = manager()
+        manager.signInWithGoogle("google-id-token", "0123456789abcdef")
+        preferences.setPromotionsConsent(true)
+        val before = devices.registered.size
+
+        manager.deleteAccount()
+
+        assertEquals(before + 1, devices.registered.size)
+        assertTrue(devices.registered.last().promotionsConsent)
+    }
+
+    @Test
     fun unsyncedWritesAreTheQueuedOnes() = runTest {
         categories.ensureBuiltins()
         account.signInResponse = success(signInResponse(householdId = null))
@@ -357,7 +373,13 @@ class AccountManagerTest {
     private suspend fun TestScope.manager(): Pair<AccountManager, AppPreferences> {
         val preferences = testPreferences(folder.root, backgroundScope)
         preferences.setCompletedOnboarding(true)
-        val registration = DeviceRegistration(devices, authenticator, FakeInstallationIdSource("installation-1"))
+        val registration = DeviceRegistration(
+            devices,
+            authenticator,
+            FakeInstallationIdSource("installation-1"),
+            preferences,
+            FakeDisplayLanguage(),
+        )
         val manager = AccountManager(
             account = account,
             household = household,

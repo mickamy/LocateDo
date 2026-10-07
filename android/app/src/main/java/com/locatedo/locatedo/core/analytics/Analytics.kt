@@ -24,6 +24,9 @@ enum class AnalyticsEvent(val key: String) {
     PURCHASE_CANCELED("purchase_cancelled"),
     PURCHASE_FAILED("purchase_failed"),
     RESTORE_COMPLETED("restore_completed"),
+    PROMOTIONS_PROMPT_SHOWN("promotions_prompt_shown"),
+    PROMOTIONS_PROMPT_ANSWERED("promotions_prompt_answered"),
+    PROMOTIONS_CONSENT_CHANGED("promotions_consent_changed"),
 }
 
 enum class AnalyticsParameter(val key: String) {
@@ -66,6 +69,7 @@ enum class AnalyticsUserProperty(val key: String) {
     OPEN_TODO_COUNT("open_todo_count"),
     PLACE_COUNT("place_count"),
     PLAN("plan"),
+    PROMOTIONS_CONSENT("promotions_consent"),
     SIGNED_IN("signed_in"),
 }
 

@@ -7,8 +7,10 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.locatedo.device.v1.DeviceServiceClientInterface
 import com.locatedo.device.v1.Platform
 import com.locatedo.device.v1.registerDeviceRequest
+import com.locatedo.locatedo.core.api.getOrThrow
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.auth.SignedOutException
+import com.locatedo.locatedo.core.datastore.AppPreferences
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 
 interface InstallationIdSource {
@@ -41,13 +44,15 @@ class FirebaseInstallationIdSource @Inject constructor() : InstallationIdSource 
     }
 }
 
-// Tells the server which installation to wake once the user is signed in; the messaging service reports the id at
-// startup and whenever it changes.
+// Tells the server which installation to wake. Signed-in devices always register; signed-out ones only while
+// promotions consent is on, plus once right after turning it off so the server drops the anonymous row.
 @Singleton
 class DeviceRegistration @Inject constructor(
     private val devices: DeviceServiceClientInterface,
     private val authenticator: Authenticator,
     private val source: InstallationIdSource,
+    private val preferences: AppPreferences,
+    private val language: DisplayLanguage,
 ) {
     private val _installationId = MutableStateFlow<String?>(null)
 
@@ -55,22 +60,34 @@ class DeviceRegistration @Inject constructor(
 
     suspend fun received(installationId: String) {
         _installationId.value = installationId
-        registerIfSignedIn()
+        registerIfNeeded()
     }
 
-    suspend fun registerIfSignedIn() {
-        if (authenticator.current() == null) {
+    suspend fun registerIfNeeded() {
+        val consent = preferences.promotions.first().consent
+        if (authenticator.current() == null && !consent) {
             return
         }
+        register(consent)
+    }
+
+    suspend fun consentChanged() {
+        register(preferences.promotions.first().consent)
+    }
+
+    private suspend fun register(consent: Boolean) {
         val id = _installationId.value ?: source.installationId()?.also { _installationId.value = it } ?: return
+        val request = registerDeviceRequest {
+            platform = Platform.PLATFORM_ANDROID
+            pushToken = id
+            promotionsConsent = consent
+            language = this@DeviceRegistration.language.current()
+        }
         try {
-            authenticator.authorized {
-                devices.registerDevice(
-                    registerDeviceRequest {
-                        platform = Platform.PLATFORM_ANDROID
-                        pushToken = id
-                    },
-                )
+            if (authenticator.current() == null) {
+                devices.registerDevice(request).getOrThrow()
+            } else {
+                authenticator.authorized { devices.registerDevice(request) }
             }
         } catch (e: ConnectException) {
             Log.w(TAG, "Could not register the installation", e)
@@ -101,4 +118,7 @@ class PushMessages @Inject constructor() {
 abstract class PushModule {
     @Binds
     abstract fun installationIdSource(source: FirebaseInstallationIdSource): InstallationIdSource
+
+    @Binds
+    abstract fun displayLanguage(language: ResourcesDisplayLanguage): DisplayLanguage
 }

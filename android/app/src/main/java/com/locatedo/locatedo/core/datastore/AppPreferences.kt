@@ -39,6 +39,13 @@ data class AppStatusRecord(
     val shownNotices: Set<String> = emptySet(),
 )
 
+// Promotional push consent belongs to the device, not the account, so it survives sign-out and account deletion.
+data class PromotionsRecord(
+    val consent: Boolean = false,
+    val hasReceivedArrivalNotification: Boolean = false,
+    val hasShownPrompt: Boolean = false,
+)
+
 @Singleton
 class AppPreferences @Inject constructor(private val dataStore: DataStore<Preferences>) {
     private object Keys {
@@ -56,6 +63,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val appStatusDocument = stringPreferencesKey("appStatusDocument")
         val appStatusDismissedMaintenance = stringPreferencesKey("appStatusDismissedMaintenance")
         val appStatusShownNotices = stringSetPreferencesKey("appStatusShownNotices")
+        val promotionsConsent = booleanPreferencesKey("promotionsConsent")
+        val receivedArrivalNotification = booleanPreferencesKey("receivedArrivalNotification")
+        val shownPromotionsPrompt = booleanPreferencesKey("shownPromotionsPrompt")
     }
 
     // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
@@ -74,6 +84,14 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             document = preferences[Keys.appStatusDocument],
             dismissedMaintenance = preferences[Keys.appStatusDismissedMaintenance],
             shownNotices = preferences[Keys.appStatusShownNotices] ?: emptySet(),
+        )
+    }
+
+    val promotions: Flow<PromotionsRecord> = dataStore.data.map { preferences ->
+        PromotionsRecord(
+            consent = preferences[Keys.promotionsConsent] ?: false,
+            hasReceivedArrivalNotification = preferences[Keys.receivedArrivalNotification] ?: false,
+            hasShownPrompt = preferences[Keys.shownPromotionsPrompt] ?: false,
         )
     }
 
@@ -153,6 +171,18 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setShownNotices(ids: Set<String>) {
         dataStore.edit { it[Keys.appStatusShownNotices] = ids }
+    }
+
+    suspend fun setPromotionsConsent(consent: Boolean) {
+        dataStore.edit { it[Keys.promotionsConsent] = consent }
+    }
+
+    suspend fun setReceivedArrivalNotification() {
+        dataStore.edit { it[Keys.receivedArrivalNotification] = true }
+    }
+
+    suspend fun setShownPromotionsPrompt() {
+        dataStore.edit { it[Keys.shownPromotionsPrompt] = true }
     }
 
     suspend fun reset() {

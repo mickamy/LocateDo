@@ -178,6 +178,8 @@ class AccountManager @Inject constructor(
         localData.reset()
         preferences.reset()
         entitlements.logOut()
+        // The server deleted the device with the account; one that still wants promotions comes back anonymously.
+        deviceRegistration.registerIfNeeded()
     }
 
     suspend fun startOver() {
@@ -207,7 +209,7 @@ class AccountManager @Inject constructor(
     // The store learns the user id here, so a subscription bought before signing in follows the account.
     private suspend fun householdReady() {
         _householdReady.tryEmit(Unit)
-        deviceRegistration.registerIfSignedIn()
+        deviceRegistration.registerIfNeeded()
         linkPurchases()
     }
 

@@ -33,6 +33,7 @@ import com.locatedo.locatedo.core.sync.WriteSender
 import com.locatedo.locatedo.testing.FakeAccountService
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeDeviceService
+import com.locatedo.locatedo.testing.FakeDisplayLanguage
 import com.locatedo.locatedo.testing.FakeEntitlementSource
 import com.locatedo.locatedo.testing.FakeHouseholdService
 import com.locatedo.locatedo.testing.FakeInstallationIdSource
@@ -226,7 +227,13 @@ class HouseholdManagerTest {
             syncState = syncState,
             localData = localData,
             queue = queue,
-            deviceRegistration = DeviceRegistration(FakeDeviceService(), authenticator, FakeInstallationIdSource()),
+            deviceRegistration = DeviceRegistration(
+                FakeDeviceService(),
+                authenticator,
+                FakeInstallationIdSource(),
+                preferences,
+                FakeDisplayLanguage(),
+            ),
             entitlements = Entitlements(FakeEntitlementSource(), FakeAnalytics(), this),
             preferences = preferences,
             clock = fixedClock,

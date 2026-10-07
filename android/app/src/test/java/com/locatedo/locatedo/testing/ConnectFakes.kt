@@ -46,6 +46,7 @@ import com.locatedo.locatedo.core.auth.Session
 import com.locatedo.locatedo.core.auth.SessionStore
 import com.locatedo.locatedo.core.data.fixedClock
 import com.locatedo.locatedo.core.data.fixedNow
+import com.locatedo.locatedo.core.push.DisplayLanguage
 import com.locatedo.locatedo.core.push.InstallationIdSource
 import com.locatedo.locatedo.core.sync.toTimestamp
 import com.locatedo.place.v1.DeletePlaceRequest
@@ -290,4 +291,8 @@ class InMemorySessionStore(var session: Session? = null) : SessionStore {
 
 class FakeInstallationIdSource(var installationId: String? = null) : InstallationIdSource {
     override suspend fun installationId(): String? = installationId
+}
+
+class FakeDisplayLanguage(var language: String = "en") : DisplayLanguage {
+    override fun current(): String = language
 }

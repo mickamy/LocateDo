@@ -88,7 +88,7 @@ class LocateDoApplication : Application() {
             } catch (e: Exception) {
                 Log.w(TAG, "Initial upload failed", e)
             }
-            deviceRegistration.registerIfSignedIn()
+            deviceRegistration.registerIfNeeded()
         }
     }
 
