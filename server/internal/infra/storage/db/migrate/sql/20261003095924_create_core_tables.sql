@@ -185,10 +185,10 @@ CREATE INDEX outbox_messages_dead_at_idx ON outbox_messages (dead_at) WHERE stat
 -- +goose Down
 DROP TABLE outbox_messages;
 DROP TABLE deletions;
-DROP TABLE household_invites;
 DROP TABLE todos;
 DROP TABLE places;
 DROP TABLE categories;
+DROP TABLE household_invites;
 DROP TABLE memberships;
 DROP TABLE households;
 DROP TABLE devices;

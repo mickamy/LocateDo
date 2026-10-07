@@ -9,11 +9,11 @@ BEGIN
         -- the grants below apply. Passwords are local/CI values — production
         -- rotates them out-of-band via ALTER ROLE.
         IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'locatedo_writer') THEN
-CREATE ROLE locatedo_writer LOGIN PASSWORD 'password';
-END IF;
+            CREATE ROLE locatedo_writer LOGIN PASSWORD 'password';
+        END IF;
         IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'locatedo_reader') THEN
-CREATE ROLE locatedo_reader LOGIN PASSWORD 'password';
-END IF;
+            CREATE ROLE locatedo_reader LOGIN PASSWORD 'password';
+        END IF;
 END
 $$;
 -- +goose StatementEnd
@@ -22,7 +22,7 @@ $$;
 DO
 $$
 BEGIN
-EXECUTE 'GRANT CONNECT ON DATABASE ' || quote_ident(current_database()) || ' TO locatedo_writer, locatedo_reader';
+        EXECUTE 'GRANT CONNECT ON DATABASE ' || quote_ident(current_database()) || ' TO locatedo_writer, locatedo_reader';
 END
 $$;
 -- +goose StatementEnd
@@ -30,7 +30,6 @@ $$;
 GRANT USAGE ON SCHEMA public TO locatedo_writer, locatedo_reader;
 
 -- Tables and sequences created by the role running migrations pick these up automatically.
--- The events table later revokes UPDATE/DELETE from locatedo_writer to make events INSERT-only.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO locatedo_writer;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO locatedo_writer;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO locatedo_reader;
@@ -47,10 +46,10 @@ $$
 BEGIN
         IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'locatedo_writer') THEN
             DROP OWNED BY locatedo_writer;
-END IF;
+        END IF;
         IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'locatedo_reader') THEN
             DROP OWNED BY locatedo_reader;
-END IF;
+        END IF;
 END
 $$;
 -- +goose StatementEnd
