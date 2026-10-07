@@ -63,6 +63,16 @@ def capture(path)
   adb("pull", "/sdcard/screenshot.png", path)
 end
 
+# CI passes the Play service account key base64-encoded; a local run reads the key from credentials/.
+def play_json_key
+  encoded = ENV["PLAY_SERVICE_ACCOUNT_JSON"].to_s
+  return encoded.unpack1("m") unless encoded.empty?
+
+  path = File.join(ROOT, "credentials/play-service-account.json")
+  UI.user_error!("Set PLAY_SERVICE_ACCOUNT_JSON or put the key at #{path}") unless File.exist?(path)
+  File.read(path)
+end
+
 platform :android do
   desc "Build the Staging APK and distribute it through Firebase App Distribution"
   lane :firebase do
@@ -83,7 +93,7 @@ platform :android do
   desc "Build the Release AAB and upload it to the internal testing track on Google Play"
   lane :beta do
     require_build_inputs(build_type: "release", keystore: "upload")
-    json_key = ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON").unpack1("m")
+    json_key = play_json_key
     version_code = google_play_track_version_codes(track: "internal", json_key_data: json_key).max.to_i + 1
     build(task: "bundle", build_type: "Release", version_code: version_code)
     upload_to_play_store(
@@ -100,8 +110,14 @@ platform :android do
 
   desc "Upload the store listing (text and images in fastlane/metadata) to Google Play"
   lane :metadata do
+    json_key = play_json_key
+    # supply looks up a release even when only the listing changes, and fails on an empty version code; the listing
+    # itself is app-wide, so pointing at the latest internal build changes nothing else.
+    version_code = google_play_track_version_codes(track: "internal", json_key_data: json_key).max
     upload_to_play_store(
-      json_key_data: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON").unpack1("m"),
+      json_key_data: json_key,
+      track: "internal",
+      version_code: version_code,
       skip_upload_apk: true,
       skip_upload_aab: true,
       skip_upload_changelogs: true,
