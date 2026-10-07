@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>ちかメモのアカウント削除</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 0 64px;
+  }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 36px 0 8px; }
+  p, li { margin: 0 0 12px; }
+  ul { padding-left: 22px; }
+  .meta { color: var(--muted); margin-bottom: 24px; }
+  .lang { font-size: 15px; margin-bottom: 32px; }
+  a { color: var(--accent); }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+  button {
+    font: inherit;
+    font-size: 16px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  #appleid-signin { width: 220px; height: 40px; cursor: pointer; }
+  .danger { background: #d70015; color: #ffffff; border-color: #d70015; }
+</style>
+</head>
+<body>
+<main>
+  <p class="lang"><a href="delete-account.html" hreflang="en">English</a></p>
+
+  <h1>ちかメモのアカウント削除</h1>
+  <p class="meta">ちかメモ（英語名 StopBy）のアカウントを削除するページです。アプリの「設定 &gt; アカウント &gt; アカウントを削除」からも削除できます。</p>
+
+  <h2>削除されるもの</h2>
+  <ul>
+    <li>サーバー上のアカウントと端末の登録</li>
+    <li>世帯のオーナーであれば、世帯とその中の場所、やること、カテゴリのすべて（世帯の全員の分）</li>
+    <li>他の人の世帯に参加している場合は世帯から抜けます。あなたが追加したものはその世帯に残ります</li>
+  </ul>
+
+  <h2>残るもの</h2>
+  <ul>
+    <li>データベースのバックアップは 70 日以内に、サーバーのログは 30 日で消えます</li>
+    <li>利用状況の分析データは Google が 14 か月、クラッシュレポートは 90 日間保持します</li>
+    <li>端末の中のデータは、アプリを削除するまで残ります</li>
+  </ul>
+  <p>アカウントを削除しても、ちかメモ Pro は解約されません。App Store（iOS の「設定 &gt; Apple アカウント &gt; サブスクリプション」）または Google Play（Play ストアの「お支払いと定期購入 &gt; 定期購入」）で解約してください。</p>
+
+  <h2>サインインして削除する</h2>
+  <div id="sign-in" data-state>
+    <p>アプリと同じ方法でサインインしてください。iPhone なら Apple、Android なら Google です。サインインはアカウントを見つけるためだけに使います。</p>
+    <div class="actions">
+      <div id="appleid-signin" data-color="black" data-border="true" data-type="sign-in" data-width="220" data-height="40"></div>
+      <div id="google-button"></div>
+    </div>
+  </div>
+  <div id="confirm" data-state hidden>
+    <p><strong>アカウントを削除しますか？</strong>元に戻すことはできません。</p>
+    <div class="actions">
+      <button type="button" id="delete-button" class="danger">アカウントを削除</button>
+      <button type="button" id="cancel-button">キャンセル</button>
+    </div>
+  </div>
+  <p id="deleting" data-state hidden>削除しています…</p>
+  <p id="deleted" data-state hidden>アカウントを削除しました。</p>
+  <div id="not-found" data-state hidden>
+    <p>このサインインに対応するちかメモのアカウントはありません。アプリでは別の Apple ID や Google アカウントを使っているかもしれません。</p>
+    <div class="actions"><button type="button" data-retry>別のアカウントで試す</button></div>
+  </div>
+  <div id="failed" data-state hidden>
+    <p>アカウントを削除できませんでした。もう一度お試しいただくか、<a href="mailto:support@locatedo.com">support@locatedo.com</a> までご連絡ください。</p>
+    <div class="actions"><button type="button" data-retry>もう一度試す</button></div>
+  </div>
+
+  <p><a href="privacy-ja.html">プライバシーポリシー</a>と<a href="support-ja.html">サポート</a>もあわせてご覧ください。</p>
+</main>
+<script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/ja_JP/appleid.auth.js"></script>
+<script src="delete-account.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+</body>
+</html>
