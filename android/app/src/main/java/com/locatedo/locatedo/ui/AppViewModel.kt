@@ -2,6 +2,9 @@ package com.locatedo.locatedo.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.appstatus.AppStatusDocument
+import com.locatedo.locatedo.core.appstatus.AppStatusStore
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.billing.paywallTrigger
@@ -31,11 +34,13 @@ enum class AppNotice {
 data class AppUiState(
     val isLoading: Boolean = true,
     val hasCompletedOnboarding: Boolean = false,
+    val isSignedIn: Boolean = false,
     val isExplainingAlwaysLocation: Boolean = false,
     val notice: AppNotice? = null,
 )
 
-// What sits above the tabs: the onboarding gate, the one-time "always" location prompt, and the notices.
+// What sits above the tabs: the onboarding gate, the one-time "always" location prompt, the notices, and what the
+// app status takes away or announces.
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val preferences: AppPreferences,
@@ -44,6 +49,8 @@ class AppViewModel @Inject constructor(
     private val inviteRequests: InviteRequests,
     private val paywallRequests: PaywallRequests,
     sync: SyncEngine,
+    authenticator: Authenticator,
+    private val appStatus: AppStatusStore,
 ) : ViewModel() {
     private val isExplainingAlwaysLocation = MutableStateFlow(false)
 
@@ -56,10 +63,15 @@ class AppViewModel @Inject constructor(
     // Some screen hit a free limit, or the server refused a queued write; either way the paywall explains.
     val pendingPaywall: StateFlow<PaywallTrigger?> = paywallRequests.pending
 
-    val uiState: StateFlow<AppUiState> = combine(preferences.data, isExplainingAlwaysLocation) { stored, explaining ->
+    val uiState: StateFlow<AppUiState> = combine(
+        preferences.data,
+        isExplainingAlwaysLocation,
+        authenticator.session,
+    ) { stored, explaining, session ->
         AppUiState(
             isLoading = false,
             hasCompletedOnboarding = stored.hasCompletedOnboarding,
+            isSignedIn = session != null,
             isExplainingAlwaysLocation = explaining,
             notice = when {
                 stored.hasPendingRemovedNotice -> AppNotice.REMOVED
@@ -103,6 +115,18 @@ class AppViewModel @Inject constructor(
     fun inviteConsumed(token: String) = inviteRequests.consume(token)
 
     fun paywallConsumed(trigger: PaywallTrigger) = paywallRequests.consume(trigger)
+
+    fun dismissMaintenanceBanner() {
+        viewModelScope.launch {
+            appStatus.dismissUpcomingBanner()
+        }
+    }
+
+    fun noticeShown(notice: AppStatusDocument.Notice) {
+        viewModelScope.launch {
+            appStatus.markNoticeShown(notice)
+        }
+    }
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

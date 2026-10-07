@@ -3,6 +3,8 @@ package com.locatedo.locatedo.core.sync
 import com.connectrpc.Code
 import com.locatedo.household.v1.Plan
 import com.locatedo.locatedo.core.api.AccessTokenStore
+import com.locatedo.locatedo.core.appstatus.AppStatusDocument
+import com.locatedo.locatedo.core.appstatus.MaintenanceGate
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.data.FakeProStatus
@@ -47,11 +49,32 @@ class SyncEngineTest {
     private val pulls = FakeSyncService()
     private val account = FakeAccountService()
     private val proStatus = FakeProStatus()
+    private val gate = MaintenanceGate(fixedClock)
     private val householdId = UUID.fromString("0199bd00-0000-7000-8000-0000000000aa")
 
     @Before
     fun setUp() {
         database = inMemoryDatabase()
+    }
+
+    @Test
+    fun staysQuietDuringMaintenanceAndCatchesUpAfter() = runTest {
+        enqueue(Write.put(place("Store")))
+        val fixture = fixture()
+        gate.update(AppStatusDocument.Maintenance(startsAt = fixedNow.minusSeconds(60), endsAt = fixedNow.plusSeconds(3600)))
+
+        fixture.engine.sync()
+
+        assertTrue(services.sent.isEmpty())
+        assertTrue(pulls.cursors.isEmpty())
+        assertEquals(0, database.pendingWriteDao().head()?.attempts)
+
+        gate.update(null)
+        fixture.engine.sync()
+
+        assertEquals(listOf("putPlace"), services.sent)
+        assertEquals(listOf(0L), pulls.cursors)
+        assertEquals(0, queueCount())
     }
 
     @After
@@ -328,6 +351,7 @@ class SyncEngineTest {
             applier = ChangeApplier(database.categoryDao(), database.placeDao(), database.todoDao(), database.membershipDao()),
             limitRejection = LimitRejection(database.placeDao(), database.todoDao(), fixedClock),
             proStatus = proStatus,
+            gate = gate,
             scope = this,
         )
         return Fixture(engine, authenticator, syncState)

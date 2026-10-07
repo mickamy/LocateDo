@@ -274,6 +274,7 @@
     <string name="todo_list_filter_empty">No to-dos match this filter</string>
     <string name="todo_list_no_places_message">To-dos belong to places.</string>
     <string name="todo_list_no_places_title">Add a place first</string>
+    <string name="update_android_open_play">Open Google Play</string>
     <string name="update_message">This version of StopBy is no longer supported. Update to the latest version to keep using it.</string>
     <string name="update_open_app_store">Open App Store</string>
     <string name="update_title">Update Required</string>

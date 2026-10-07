@@ -308,6 +308,7 @@ update:
   title: "Update Required"
   message: "This version of StopBy is no longer supported. Update to the latest version to keep using it."
   open_app_store: "Open App Store"
+  android_open_play: "Open Google Play"
 maintenance:
   upcoming: "Sync will pause for server maintenance from {start} to {end}."
   active: "Server maintenance is in progress. Sync resumes around {end}, and your changes will be sent then."

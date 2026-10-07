@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.locatedo.locatedo.core.account.AccountManager
 import com.locatedo.locatedo.core.analytics.DailyStateReporter
+import com.locatedo.locatedo.core.appstatus.AppStatusStore
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.common.di.ApplicationScope
@@ -53,6 +54,8 @@ class LocateDoApplication : Application() {
 
     @Inject lateinit var dailyStateReporter: DailyStateReporter
 
+    @Inject lateinit var appStatus: AppStatusStore
+
     @Inject lateinit var clock: Clock
 
     @Inject @ApplicationScope lateinit var applicationScope: CoroutineScope
@@ -74,9 +77,11 @@ class LocateDoApplication : Application() {
                 accountManager.endSession()
             }
         }
-        // The store's view of the signed-in user, a household whose creation failed last time, and an installation
-        // the server has not seen yet.
+        // The app status first, so a maintenance window or an outdated build stops the calls below; then the store's
+        // view of the signed-in user, a household whose creation failed last time, and an installation the server
+        // has not seen yet.
         applicationScope.launch {
+            appStatus.refresh()
             accountManager.linkPurchases()
             try {
                 accountManager.uploadLocalDataIfNeeded()
@@ -87,19 +92,27 @@ class LocateDoApplication : Application() {
         }
     }
 
-    // Pull on every return to the foreground, when the server says something changed, when the network comes back,
-    // and as soon as the device has a household. Being removed from the household starts a fresh one.
+    // Pull on every return to the foreground (after re-reading the app status), when the server says something
+    // changed, when the network comes back, when a maintenance window ends, and as soon as the device has a
+    // household. Being removed from the household starts a fresh one.
     private fun collectSyncTriggers() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_START) {
                     applicationScope.launch {
+                        appStatus.refresh()
+                        if (appStatus.state.value.requiresUpdate) {
+                            return@launch
+                        }
                         syncEngine.sync()
                         dailyStateReporter.report()
                     }
                 }
             },
         )
+        applicationScope.launch {
+            appStatus.maintenanceEnded.collect { syncEngine.sync() }
+        }
         applicationScope.launch {
             pushMessages.received.collect { syncEngine.sync() }
         }

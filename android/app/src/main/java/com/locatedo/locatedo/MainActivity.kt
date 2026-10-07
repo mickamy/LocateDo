@@ -7,13 +7,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
+import com.locatedo.locatedo.core.appstatus.AppStatusStore
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.sharing.InviteLink
 import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.ui.LocateDoApp
 import com.locatedo.locatedo.ui.analytics.LocalAnalytics
+import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import com.locatedo.locatedo.ui.theme.LocateDoTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.time.Instant
@@ -30,13 +34,16 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var writeAnalytics: WriteAnalytics
 
+    @Inject lateinit var appStatus: AppStatusStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         openRequestedPlace(intent)
         openInviteLink(intent)
         setContent {
-            CompositionLocalProvider(LocalAnalytics provides analytics) {
+            val status by appStatus.state.collectAsStateWithLifecycle()
+            CompositionLocalProvider(LocalAnalytics provides analytics, LocalAppStatus provides status) {
                 LocateDoTheme {
                     LocateDoApp()
                 }

@@ -19,4 +19,7 @@ object LegalLinks {
 
     // Play's subscription center; the app's own subscription is listed there once bought.
     const val PLAY_SUBSCRIPTIONS = "https://play.google.com/store/account/subscriptions"
+
+    // The store listing, for the update-required screen.
+    const val PLAY_LISTING = "https://play.google.com/store/apps/details?id=com.locatedo.locatedo"
 }

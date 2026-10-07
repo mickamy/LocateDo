@@ -9,6 +9,7 @@ import com.locatedo.locatedo.core.account.AccountManager
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.api.AccessTokenStore
+import com.locatedo.locatedo.core.appstatus.MaintenanceGate
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.data.FakeProStatus
@@ -241,6 +242,7 @@ class HouseholdManagerTest {
             applier = ChangeApplier(database.categoryDao(), database.placeDao(), database.todoDao(), database.membershipDao()),
             limitRejection = LimitRejection(database.placeDao(), database.todoDao(), fixedClock),
             proStatus = FakeProStatus(),
+            gate = MaintenanceGate(fixedClock),
             scope = this,
         )
         val manager = DefaultHouseholdManager(household, authenticator, syncState, account, sync, preferences, analytics)

@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import com.connectrpc.Code
 import com.connectrpc.ConnectException
 import com.google.protobuf.InvalidProtocolBufferException
+import com.locatedo.locatedo.core.appstatus.MaintenanceGate
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.auth.SignedOutException
 import com.locatedo.locatedo.core.common.di.ApplicationScope
@@ -61,6 +62,7 @@ class DefaultSyncEngine @Inject constructor(
     private val applier: ChangeApplier,
     private val limitRejection: LimitRejection,
     private val proStatus: ProStatus,
+    private val gate: MaintenanceGate,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) : SyncEngine {
     private class Pulled(val changes: List<Change>, val cursor: Long, val reset: Boolean, val plan: Plan)
@@ -122,6 +124,10 @@ class DefaultSyncEngine @Inject constructor(
                 pulls
             }
             try {
+                // Maintenance, or a build too old for the server: the queue waits, and the app syncs when it reopens.
+                if (gate.isClosed()) {
+                    continue
+                }
                 sendQueuedWrites()
                 if (pulls) {
                     pullChanges()

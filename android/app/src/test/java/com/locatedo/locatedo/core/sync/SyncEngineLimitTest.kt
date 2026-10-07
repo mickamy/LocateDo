@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.sync
 
 import com.connectrpc.Code
 import com.locatedo.locatedo.core.api.AccessTokenStore
+import com.locatedo.locatedo.core.appstatus.MaintenanceGate
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.data.FakeProStatus
 import com.locatedo.locatedo.core.data.RoomSyncStateRepository
@@ -127,6 +128,7 @@ class SyncEngineLimitTest {
             applier = ChangeApplier(database.categoryDao(), database.placeDao(), database.todoDao(), database.membershipDao()),
             limitRejection = LimitRejection(database.placeDao(), database.todoDao(), fixedClock),
             proStatus = proStatus,
+            gate = MaintenanceGate(fixedClock),
             scope = this,
         )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { engine.limitRejected.collect { limits += it } }

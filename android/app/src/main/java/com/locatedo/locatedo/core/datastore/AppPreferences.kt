@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.locatedo.locatedo.core.model.Place
 import java.time.Instant
 import javax.inject.Inject
@@ -31,6 +32,13 @@ data class AnalyticsRecord(
     val lastReportedLocationAuth: String? = null,
 )
 
+// The last app status read, as served, plus what the user has already seen of it.
+data class AppStatusRecord(
+    val document: String? = null,
+    val dismissedMaintenance: String? = null,
+    val shownNotices: Set<String> = emptySet(),
+)
+
 @Singleton
 class AppPreferences @Inject constructor(private val dataStore: DataStore<Preferences>) {
     private object Keys {
@@ -45,6 +53,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val firstLaunchedAt = longPreferencesKey("firstLaunchedAt")
         val dailyStateReportedOn = stringPreferencesKey("dailyStateReportedOn")
         val lastReportedLocationAuth = stringPreferencesKey("lastReportedLocationAuth")
+        val appStatusDocument = stringPreferencesKey("appStatusDocument")
+        val appStatusDismissedMaintenance = stringPreferencesKey("appStatusDismissedMaintenance")
+        val appStatusShownNotices = stringSetPreferencesKey("appStatusShownNotices")
     }
 
     // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
@@ -55,6 +66,14 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             firstLaunchedAt = preferences[Keys.firstLaunchedAt]?.let(Instant::ofEpochMilli),
             dailyStateReportedOn = preferences[Keys.dailyStateReportedOn],
             lastReportedLocationAuth = preferences[Keys.lastReportedLocationAuth],
+        )
+    }
+
+    val appStatus: Flow<AppStatusRecord> = dataStore.data.map { preferences ->
+        AppStatusRecord(
+            document = preferences[Keys.appStatusDocument],
+            dismissedMaintenance = preferences[Keys.appStatusDismissedMaintenance],
+            shownNotices = preferences[Keys.appStatusShownNotices] ?: emptySet(),
         )
     }
 
@@ -122,6 +141,18 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setLastReportedLocationAuth(key: String) {
         dataStore.edit { it[Keys.lastReportedLocationAuth] = key }
+    }
+
+    suspend fun setAppStatusDocument(json: String) {
+        dataStore.edit { it[Keys.appStatusDocument] = json }
+    }
+
+    suspend fun setDismissedMaintenance(key: String) {
+        dataStore.edit { it[Keys.appStatusDismissedMaintenance] = key }
+    }
+
+    suspend fun setShownNotices(ids: Set<String>) {
+        dataStore.edit { it[Keys.appStatusShownNotices] = ids }
     }
 
     suspend fun reset() {
