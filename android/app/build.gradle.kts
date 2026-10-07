@@ -56,6 +56,9 @@ android {
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"15768665811-butqb8dsgllkm9e4ni0fo8sld9jepv7u.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status-stg.json\"")
             buildConfigField("String", "REVENUECAT_API_KEY", "\"test_lqvPOSuItMaeQPmgcTBlMFVumra\"")
+            // Apple cannot post to a server on this machine, so debug builds offer no Sign in with Apple.
+            buildConfigField("String", "APPLE_SERVICES_ID", "\"\"")
+            buildConfigField("String", "APPLE_REDIRECT_URI", "\"\"")
         }
         release {
             optimization {
@@ -70,6 +73,8 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"https://api.locatedo.com\"")
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"44680780234-mdnjqmlqu23rgas8dhojvoq6pcnoulq8.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status.json\"")
+            buildConfigField("String", "APPLE_SERVICES_ID", "\"com.locatedo.LocateDo.web\"")
+            buildConfigField("String", "APPLE_REDIRECT_URI", "\"https://api.locatedo.com/auth/apple/android\"")
             // The Play Store key is created in RevenueCat once the Play app exists.
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
         }
@@ -82,6 +87,7 @@ android {
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"238700922224-fiiu5qmdjv88rio10h1etfovg2i90ece.apps.googleusercontent.com\"")
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status-stg.json\"")
             buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
+            buildConfigField("String", "APPLE_REDIRECT_URI", "\"https://api-stg.locatedo.com/auth/apple/android\"")
         }
     }
 
@@ -168,6 +174,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.credentials)
+    implementation(libs.androidx.browser)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(platform(libs.firebase.bom))

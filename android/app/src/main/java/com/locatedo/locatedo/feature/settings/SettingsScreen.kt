@@ -110,7 +110,7 @@ fun SettingsScreen(
                 modifier = Modifier.clickable(onClick = onOpenAccount),
                 supportingContent = {
                     val status = if (uiState.isSignedIn) {
-                        R.string.settings_account_android_signed_in
+                        R.string.settings_account_signed_in
                     } else {
                         R.string.settings_account_not_signed_in
                     }

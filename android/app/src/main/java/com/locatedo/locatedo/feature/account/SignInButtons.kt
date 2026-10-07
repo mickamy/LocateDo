@@ -1,11 +1,17 @@
 package com.locatedo.locatedo.feature.account
 
 import androidx.activity.compose.LocalActivity
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -13,8 +19,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
@@ -25,11 +34,11 @@ import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import com.locatedo.locatedo.ui.appstatus.MaintenanceNote
 import kotlinx.coroutines.launch
 
-// Credential Manager needs the Activity, so the sign-in runs from the screen and hands the ViewModel the id token.
-// The confirmation a sign-in may need (an account that already has data) travels with the button, so every screen
-// that offers the sign-in can finish it.
+// Credential Manager needs the Activity, so the Google sign-in runs from the screen and hands the ViewModel the id
+// token; Apple's opens in a browser tab and comes back through MainActivity. The confirmation a sign-in may need (an
+// account that already has data) travels with the buttons, so every screen that offers the sign-in can finish it.
 @Composable
-fun GoogleSignInButton(viewModel: AccountViewModel, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun SignInButtons(viewModel: AccountViewModel, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
@@ -49,7 +58,7 @@ fun GoogleSignInButton(viewModel: AccountViewModel, modifier: Modifier = Modifie
                         return@launch
                     }
                     when (result) {
-                        is GoogleSignInResult.IdToken -> viewModel.signIn(result.value, nonce)
+                        is GoogleSignInResult.IdToken -> viewModel.signInWithGoogle(result.value, nonce)
                         GoogleSignInResult.NoAccount -> viewModel.signInFailed()
                         GoogleSignInResult.Canceled -> Unit
                     }
@@ -59,6 +68,19 @@ fun GoogleSignInButton(viewModel: AccountViewModel, modifier: Modifier = Modifie
             enabled = enabled && !isUnderMaintenance,
         ) {
             Text(stringResource(R.string.settings_account_android_sign_in))
+        }
+        if (viewModel.isAppleSignInAvailable) {
+            AppleSignInButton(
+                onClick = {
+                    val context = activity ?: return@AppleSignInButton
+                    val url = viewModel.startAppleSignIn() ?: return@AppleSignInButton
+                    CustomTabsIntent.Builder().build().launchUrl(context, url.toUri())
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                enabled = enabled && !isUnderMaintenance,
+            )
         }
         MaintenanceNote(modifier = Modifier.padding(top = 8.dp))
     }
@@ -79,5 +101,25 @@ fun GoogleSignInButton(viewModel: AccountViewModel, modifier: Modifier = Modifie
                 }
             },
         )
+    }
+}
+
+// Apple's black style: a white logo and Apple's own wording on black. Apple's artwork is licensed for Apple platforms
+// only, so the logo is a CC0 drawing of it.
+@Composable
+private fun AppleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_apple_logo),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(stringResource(R.string.settings_account_android_apple_sign_in))
     }
 }

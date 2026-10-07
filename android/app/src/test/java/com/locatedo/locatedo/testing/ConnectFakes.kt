@@ -94,6 +94,8 @@ fun sessionProto(userId: String, accessToken: String, refreshToken: String, expi
 class FakeAccountService : AccountServiceClientInterface {
     var signInResponse: ResponseMessage<SignInWithGoogleResponse> = failure(Code.UNIMPLEMENTED)
     val signIns = mutableListOf<SignInWithGoogleRequest>()
+    var appleSignInResponse: ResponseMessage<SignInWithAppleResponse> = failure(Code.UNIMPLEMENTED)
+    val appleSignIns = mutableListOf<SignInWithAppleRequest>()
     val refreshes = mutableListOf<String>()
     var refreshFailure: Code? = null
     var refreshDelayMillis = 0L
@@ -103,8 +105,10 @@ class FakeAccountService : AccountServiceClientInterface {
     var deleteCalls = 0
     var syncEntitlementCalls = 0
 
-    override suspend fun signInWithApple(request: SignInWithAppleRequest, headers: Headers): ResponseMessage<SignInWithAppleResponse> =
-        failure(Code.UNIMPLEMENTED)
+    override suspend fun signInWithApple(request: SignInWithAppleRequest, headers: Headers): ResponseMessage<SignInWithAppleResponse> {
+        appleSignIns += request
+        return appleSignInResponse
+    }
 
     override suspend fun signInWithGoogle(request: SignInWithGoogleRequest, headers: Headers): ResponseMessage<SignInWithGoogleResponse> {
         signIns += request

@@ -151,13 +151,12 @@
     <string name="settings_about_privacy_policy">プライバシーポリシー</string>
     <string name="settings_about_title">このアプリについて</string>
     <string name="settings_about_version">バージョン</string>
-    <string name="settings_account_android_description">Google でサインインすると、場所とやることをアカウントに保存できます。</string>
+    <string name="settings_account_android_apple_sign_in">Appleでサインイン</string>
     <string name="settings_account_android_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この端末の場所とやることはアカウントのデータに置き換わります。</string>
     <string name="settings_account_android_replace_confirm_title">この端末のデータを置き換えますか？</string>
     <string name="settings_account_android_sign_in">Google でサインイン</string>
     <string name="settings_account_android_sign_out_confirm_message">この端末の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_android_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この端末の場所とやることは消えます。</string>
-    <string name="settings_account_android_signed_in">Google でサインイン中</string>
     <string name="settings_account_benefits_android_privacy_message">現在地がこの端末の外に出ることはありません。メールアドレスもいただきません。</string>
     <string name="settings_account_benefits_privacy_message">現在地がこの iPhone の外に出ることはありません。メールアドレスもいただきません。</string>
     <string name="settings_account_benefits_privacy_title">位置情報は端末の中だけ</string>
@@ -218,10 +217,8 @@
     <string name="settings_pro_upgrade">Pro にする</string>
     <string name="sharing_accept">招待を受ける</string>
     <string name="sharing_android_benefit_lists_message">誰かが足した場所とやることが、全員の端末にすぐ届きます。</string>
-    <string name="sharing_android_intro_message">Google でサインインすると、場所とやることを家族と共有できます。</string>
     <string name="sharing_android_leave_confirm_message">この端末の場所とやることは消え、ひとりで使う状態に戻ります。</string>
     <string name="sharing_android_shared_header_message">誰かが足した場所とやることが、全員の端末に届きます。</string>
-    <string name="sharing_android_sign_in_message">場所とやることを家族と共有するには、Google でサインインしてください。</string>
     <string name="sharing_benefit_assign_message">やることに担当を決めると、着いたときにその人にだけ知らせます。</string>
     <string name="sharing_benefit_assign_title">着いた人に、その人の用事を</string>
     <string name="sharing_benefit_lists_message">誰かが足した場所とやることが、全員の iPhone にすぐ届きます。</string>

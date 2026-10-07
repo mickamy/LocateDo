@@ -3,8 +3,11 @@ package com.locatedo.locatedo.core.account
 import android.util.Log
 import com.connectrpc.ResponseMessage
 import com.locatedo.account.v1.AccountServiceClientInterface
+import com.locatedo.account.v1.AppleClient
+import com.locatedo.account.v1.Session as SessionProto
 import com.locatedo.account.v1.SignOutRequestKt
 import com.locatedo.account.v1.deleteAccountRequest
+import com.locatedo.account.v1.signInWithAppleRequest
 import com.locatedo.account.v1.signInWithGoogleRequest
 import com.locatedo.account.v1.signOutRequest
 import com.locatedo.account.v1.syncEntitlementRequest
@@ -87,8 +90,27 @@ class AccountManager @Inject constructor(
                 this.nonce = nonce
             },
         ).getOrThrow()
-        val session = Session.fromProto(response.session) ?: throw InvalidSessionException()
-        val householdId = if (response.hasHouseholdId()) runCatching { UUID.fromString(response.householdId) }.getOrNull() else null
+        signedIn(response.session, response.householdId)
+    }
+
+    // Through Apple's web sign-in, so the token and code were issued to the Services ID.
+    suspend fun signInWithApple(identityToken: String, authorizationCode: String, nonce: String, displayName: String?) = working {
+        val response = account.signInWithApple(
+            signInWithAppleRequest {
+                this.identityToken = identityToken
+                this.authorizationCode = authorizationCode
+                this.nonce = nonce
+                client = AppleClient.APPLE_CLIENT_SERVICES
+                displayName?.let { this.displayName = it }
+            },
+        ).getOrThrow()
+        signedIn(response.session, response.householdId)
+    }
+
+    // An empty household id means the user has none yet.
+    private suspend fun signedIn(sessionProto: SessionProto, rawHouseholdId: String) {
+        val session = Session.fromProto(sessionProto) ?: throw InvalidSessionException()
+        val householdId = runCatching { UUID.fromString(rawHouseholdId) }.getOrNull()
         if (householdId != null) {
             val adoption = PendingAdoption(session, householdId)
             if (localData.hasUserData()) {
@@ -96,7 +118,7 @@ class AccountManager @Inject constructor(
             } else {
                 adopt(adoption)
             }
-            return@working
+            return
         }
         authenticator.signIn(session)
         uploadLocalDataIfNeeded()

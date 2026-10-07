@@ -17,7 +17,6 @@ common:
 sharing:
   title: "家族と共有"
   sign_in_message: "場所とやることを家族と共有するには、サインインしてください。"
-  android_sign_in_message: "場所とやることを家族と共有するには、Google でサインインしてください。"
   pro_required: "家族との共有は Pro の機能です。"
   members: "メンバー"
   owner: "オーナー"
@@ -36,7 +35,6 @@ sharing:
   accept: "招待を受ける"
   intro_title: "家族と一緒に使う"
   intro_message: "サインインすると、場所とやることを家族と共有できます。"
-  android_intro_message: "Google でサインインすると、場所とやることを家族と共有できます。"
   benefit_lists_title: "みんなで同じリスト"
   benefit_lists_message: "誰かが足した場所とやることが、全員の iPhone にすぐ届きます。"
   android_benefit_lists_message: "誰かが足した場所とやることが、全員の端末にすぐ届きます。"
@@ -102,11 +100,10 @@ settings:
   account:
     title: "アカウント"
     signed_in: "サインイン中"
-    android_signed_in: "Google でサインイン中"
     not_signed_in: "未サインイン"
     description: "サインインすると、場所とやることをアカウントに保存できます。"
-    android_description: "Google でサインインすると、場所とやることをアカウントに保存できます。"
     android_sign_in: "Google でサインイン"
+    android_apple_sign_in: "Appleでサインイン"
     benefits:
       sync_title: "リストを失わない"
       sync_message: "機種変更しても、場所とやることはアカウントに残ります。"

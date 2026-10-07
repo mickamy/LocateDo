@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
+import com.locatedo.locatedo.core.auth.AppleSignInRequests
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.notifications.CampaignHandler
 import com.locatedo.locatedo.core.notifications.CampaignNotification
@@ -43,10 +44,13 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var campaignHandler: CampaignHandler
 
+    @Inject lateinit var appleSignInRequests: AppleSignInRequests
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         openRequestedPlace(intent)
+        finishAppleSignIn(intent)
         openInviteLink(intent)
         openCampaign(intent)
         setContent {
@@ -62,8 +66,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         openRequestedPlace(intent)
+        finishAppleSignIn(intent)
         openInviteLink(intent)
         openCampaign(intent)
+    }
+
+    // Sign in with Apple returns as <applicationId>://auth/apple#…, before any invite link handling clears the data.
+    private fun finishAppleSignIn(intent: Intent?) {
+        val link = intent?.data ?: return
+        if (link.scheme != packageName || link.host != "auth" || link.path != "/apple") {
+            return
+        }
+        intent.data = null
+        appleSignInRequests.received(link.encodedFragment)
     }
 
     // A promotional push; its link, if any, opens in the browser over the app.
