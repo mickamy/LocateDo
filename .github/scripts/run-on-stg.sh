@@ -8,8 +8,8 @@ script=${1:?script file}
 comment=${2:?comment}
 
 node_id=$(aws ssm describe-instance-information \
-  --filters Key=tag:Name,Values=locatedo-stg-pi Key=PingStatus,Values=Online \
-  --query 'InstanceInformationList[0].InstanceId' --output text)
+  --filters Key=tag:Name,Values=locatedo-stg-pi \
+  --query "InstanceInformationList[?PingStatus=='Online'] | [0].InstanceId" --output text)
 if [ -z "${node_id}" ] || [ "${node_id}" = None ]; then
   echo "::error::the locatedo-stg-pi node is not online in SSM"
   exit 1
