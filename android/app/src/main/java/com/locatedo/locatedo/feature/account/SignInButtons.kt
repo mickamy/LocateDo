@@ -2,6 +2,9 @@ package com.locatedo.locatedo.feature.account
 
 import androidx.activity.compose.LocalActivity
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,9 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.credentials.exceptions.GetCredentialException
@@ -46,9 +51,9 @@ fun SignInButtons(viewModel: AccountViewModel, modifier: Modifier = Modifier, en
     val isUnderMaintenance = LocalAppStatus.current.activeMaintenance != null
 
     Column(modifier = modifier) {
-        Button(
+        GoogleSignInButton(
             onClick = {
-                val context = activity ?: return@Button
+                val context = activity ?: return@GoogleSignInButton
                 scope.launch {
                     val nonce = Nonce.make()
                     val result = try {
@@ -66,9 +71,7 @@ fun SignInButtons(viewModel: AccountViewModel, modifier: Modifier = Modifier, en
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled && !isUnderMaintenance,
-        ) {
-            Text(stringResource(R.string.settings_account_android_sign_in))
-        }
+        )
         if (viewModel.isAppleSignInAvailable) {
             AppleSignInButton(
                 onClick = {
@@ -103,6 +106,51 @@ fun SignInButtons(viewModel: AccountViewModel, modifier: Modifier = Modifier, en
         )
     }
 }
+
+// Google's sign-in branding: the four-color "G" with Google's wording, on white with a gray outline, or on near-black
+// in dark mode. Like iOS, it is shaped like the Apple button below it.
+@Composable
+private fun GoogleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    var container = Color.White
+    var content = GoogleLightText
+    var outline = GoogleLightOutline
+    if (isSystemInDarkTheme()) {
+        container = GoogleDarkContainer
+        content = GoogleDarkText
+        outline = GoogleDarkOutline
+    }
+    var alpha = 1f
+    if (!enabled) {
+        alpha = DISABLED_ALPHA
+    }
+    Button(
+        onClick = onClick,
+        modifier = modifier.alpha(alpha),
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = container,
+            contentColor = content,
+            disabledContainerColor = container,
+            disabledContentColor = content,
+        ),
+        border = BorderStroke(1.dp, outline),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_google_logo),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(stringResource(R.string.settings_account_android_sign_in), fontWeight = FontWeight.Medium)
+    }
+}
+
+private val GoogleLightText = Color(0xFF1F1F1F)
+private val GoogleLightOutline = Color(0xFF747775)
+private val GoogleDarkContainer = Color(0xFF131314)
+private val GoogleDarkText = Color(0xFFE3E3E3)
+private val GoogleDarkOutline = Color(0xFF8E918F)
+private const val DISABLED_ALPHA = 0.5f
 
 // Apple's black style: a white logo and Apple's own wording on black. Apple's artwork is licensed for Apple platforms
 // only, so the logo is a CC0 drawing of it.
