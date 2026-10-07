@@ -1,6 +1,9 @@
 package com.locatedo.locatedo.feature.settings
 
 import android.content.ClipData
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -20,10 +23,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.locatedo.locatedo.BuildConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -45,12 +51,33 @@ fun DebugSection(viewModel: DebugViewModel = hiltViewModel()) {
     TextButton(onClick = viewModel::checkConnection, modifier = Modifier.padding(horizontal = 8.dp)) {
         Text("Check connection")
     }
+    if (BuildConfig.DEBUG) {
+        LocalNetworkAccess()
+    }
     uiState.serverStatus?.let { status ->
         Text(
             text = status,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+// From API 37 the local server at 10.0.2.2 counts as the local network, which needs a runtime permission; only the
+// debug manifest declares it, since staging talks to the remote server.
+@Composable
+private fun LocalNetworkAccess() {
+    val context = LocalContext.current
+    var isGranted by remember {
+        mutableStateOf(ContextCompat.checkSelfPermission(context, LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED)
+    }
+    val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        isGranted = granted
+    }
+    if (!isGranted) {
+        TextButton(onClick = { request.launch(LOCAL_NETWORK) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+            Text("Allow local network")
+        }
     }
 }
 
@@ -92,3 +119,4 @@ private fun CopyableRow(label: String, value: String) {
 }
 
 private const val COPIED_MILLIS = 1_500L
+private const val LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
