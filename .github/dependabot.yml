@@ -18,3 +18,29 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: weekly
+  - package-ecosystem: bundler
+    directories:
+      - /ios
+      - /android
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /server
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker-compose
+    directory: /server
+    schedule:
+      interval: weekly
+  - package-ecosystem: opentofu
+    directories:
+      - /deploy/tofu/bootstrap
+      - /deploy/tofu/google
+      - /deploy/tofu/persistent
+      - /deploy/tofu/prod
+    schedule:
+      interval: weekly
