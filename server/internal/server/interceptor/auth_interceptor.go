@@ -15,10 +15,12 @@ import (
 )
 
 var publicProcedures = map[string]bool{
-	accountv1connect.AccountServiceSignInWithAppleProcedure:  true,
-	accountv1connect.AccountServiceSignInWithGoogleProcedure: true,
-	accountv1connect.AccountServiceRefreshTokenProcedure:     true,
-	accountv1connect.AccountServiceSignOutProcedure:          true,
+	accountv1connect.AccountServiceSignInWithAppleProcedure:         true,
+	accountv1connect.AccountServiceSignInWithGoogleProcedure:        true,
+	accountv1connect.AccountServiceRefreshTokenProcedure:            true,
+	accountv1connect.AccountServiceSignOutProcedure:                 true,
+	accountv1connect.AccountServiceDeleteAccountWithAppleProcedure:  true,
+	accountv1connect.AccountServiceDeleteAccountWithGoogleProcedure: true,
 }
 
 var optionalAuthProcedures = map[string]bool{
@@ -31,7 +33,7 @@ var (
 )
 
 // Auth requires a valid access token on every procedure except sign-in,
-// refresh, and sign-out, and puts the caller's user ID in the context. A
+// refresh, sign-out, and deletion with a provider token, and puts the caller's user ID in the context. A
 // procedure with optional auth runs anonymously only when no token is sent.
 func Auth(signer token.Signer) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {

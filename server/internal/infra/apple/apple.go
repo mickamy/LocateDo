@@ -28,12 +28,14 @@ const (
 )
 
 var (
-	ErrInvalidToken  = errors.New("invalid apple identity token")
-	ErrNotConfigured = errors.New("sign in with apple private key is not configured")
+	ErrInvalidToken            = errors.New("invalid apple identity token")
+	ErrNotConfigured           = errors.New("sign in with apple private key is not configured")
+	ErrServicesIDNotConfigured = errors.New("sign in with apple services id is not configured")
 )
 
 type Auth interface {
 	VerifyIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error)
+	VerifyWebIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error)
 	ExchangeCode(ctx context.Context, code string, now time.Time) (string, error)
 	Revoke(ctx context.Context, refreshToken string, now time.Time) error
 }
@@ -43,6 +45,7 @@ var _ Auth = Client{}
 type Config struct {
 	BaseURL    string
 	BundleID   string
+	ServicesID string
 	TeamID     string
 	KeyID      string
 	PrivateKey *ecdsa.PrivateKey
@@ -73,30 +76,16 @@ type identityClaims struct {
 // VerifyIdentityToken checks the token against Apple's keys and the hashed
 // nonce the app passed to Apple. rawNonce is the value before hashing.
 func (c Client) VerifyIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error) {
-	var claims identityClaims
-	_, err := jwt.ParseWithClaims(raw, &claims,
-		func(t *jwt.Token) (any, error) {
-			kid, _ := t.Header["kid"].(string)
-			return c.keys.Key(ctx, kid, now)
-		},
-		jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Alg()}),
-		jwt.WithIssuer(issuer),
-		jwt.WithAudience(c.cfg.BundleID),
-		jwt.WithExpirationRequired(),
-		jwt.WithTimeFunc(func() time.Time { return now }),
-	)
-	if err != nil {
-		return Identity{}, fmt.Errorf("%w: %w", ErrInvalidToken, err)
-	}
+	return c.verify(ctx, raw, rawNonce, c.cfg.BundleID, now)
+}
 
-	sum := sha256.Sum256([]byte(rawNonce))
-	if claims.Nonce != hex.EncodeToString(sum[:]) {
-		return Identity{}, fmt.Errorf("%w: nonce mismatch", ErrInvalidToken)
+// VerifyWebIdentityToken is VerifyIdentityToken for tokens issued to the
+// website's Services ID.
+func (c Client) VerifyWebIdentityToken(ctx context.Context, raw, rawNonce string, now time.Time) (Identity, error) {
+	if c.cfg.ServicesID == "" {
+		return Identity{}, ErrServicesIDNotConfigured
 	}
-	if claims.Subject == "" {
-		return Identity{}, fmt.Errorf("%w: empty subject", ErrInvalidToken)
-	}
-	return Identity{Subject: claims.Subject}, nil
+	return c.verify(ctx, raw, rawNonce, c.cfg.ServicesID, now)
 }
 
 // ExchangeCode trades an authorization code for Apple's refresh token, which
@@ -140,6 +129,33 @@ func (c Client) Revoke(ctx context.Context, refreshToken string, now time.Time) 
 		return fmt.Errorf("revoke: %w", err)
 	}
 	return nil
+}
+
+func (c Client) verify(ctx context.Context, raw, rawNonce, audience string, now time.Time) (Identity, error) {
+	var claims identityClaims
+	_, err := jwt.ParseWithClaims(raw, &claims,
+		func(t *jwt.Token) (any, error) {
+			kid, _ := t.Header["kid"].(string)
+			return c.keys.Key(ctx, kid, now)
+		},
+		jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Alg()}),
+		jwt.WithIssuer(issuer),
+		jwt.WithAudience(audience),
+		jwt.WithExpirationRequired(),
+		jwt.WithTimeFunc(func() time.Time { return now }),
+	)
+	if err != nil {
+		return Identity{}, fmt.Errorf("%w: %w", ErrInvalidToken, err)
+	}
+
+	sum := sha256.Sum256([]byte(rawNonce))
+	if claims.Nonce != hex.EncodeToString(sum[:]) {
+		return Identity{}, fmt.Errorf("%w: nonce mismatch", ErrInvalidToken)
+	}
+	if claims.Subject == "" {
+		return Identity{}, fmt.Errorf("%w: empty subject", ErrInvalidToken)
+	}
+	return Identity{Subject: claims.Subject}, nil
 }
 
 func (c Client) clientSecret(now time.Time) (string, error) {

@@ -27,6 +27,14 @@ internal protocol Locatedo_Account_V1_AccountServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `deleteAccount`(request: Locatedo_Account_V1_DeleteAccountRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountResponse>
 
+    /// Deletes the account signed in with the token, for the web page that lets
+    /// people delete their account without the app. Never creates an account.
+    @available(iOS 13, *)
+    func `deleteAccountWithApple`(request: Locatedo_Account_V1_DeleteAccountWithAppleRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountWithAppleResponse>
+
+    @available(iOS 13, *)
+    func `deleteAccountWithGoogle`(request: Locatedo_Account_V1_DeleteAccountWithGoogleRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountWithGoogleResponse>
+
     /// Re-reads the caller's subscription and updates their household plan in the background.
     /// Call it after linking the purchase SDK to the user, since a purchase made before
     /// signing in sends no webhook naming the user.
@@ -68,6 +76,16 @@ internal final class Locatedo_Account_V1_AccountServiceClient: Locatedo_Account_
     }
 
     @available(iOS 13, *)
+    internal func `deleteAccountWithApple`(request: Locatedo_Account_V1_DeleteAccountWithAppleRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountWithAppleResponse> {
+        return await self.client.unary(path: "/locatedo.account.v1.AccountService/DeleteAccountWithApple", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
+    @available(iOS 13, *)
+    internal func `deleteAccountWithGoogle`(request: Locatedo_Account_V1_DeleteAccountWithGoogleRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountWithGoogleResponse> {
+        return await self.client.unary(path: "/locatedo.account.v1.AccountService/DeleteAccountWithGoogle", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
+    @available(iOS 13, *)
     internal func `syncEntitlement`(request: Locatedo_Account_V1_SyncEntitlementRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Locatedo_Account_V1_SyncEntitlementResponse> {
         return await self.client.unary(path: "/locatedo.account.v1.AccountService/SyncEntitlement", idempotencyLevel: .unknown, request: request, headers: headers)
     }
@@ -79,6 +97,8 @@ internal final class Locatedo_Account_V1_AccountServiceClient: Locatedo_Account_
             internal static let refreshToken = Connect.MethodSpec(name: "RefreshToken", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let signOut = Connect.MethodSpec(name: "SignOut", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let deleteAccount = Connect.MethodSpec(name: "DeleteAccount", service: "locatedo.account.v1.AccountService", type: .unary)
+            internal static let deleteAccountWithApple = Connect.MethodSpec(name: "DeleteAccountWithApple", service: "locatedo.account.v1.AccountService", type: .unary)
+            internal static let deleteAccountWithGoogle = Connect.MethodSpec(name: "DeleteAccountWithGoogle", service: "locatedo.account.v1.AccountService", type: .unary)
             internal static let syncEntitlement = Connect.MethodSpec(name: "SyncEntitlement", service: "locatedo.account.v1.AccountService", type: .unary)
         }
     }

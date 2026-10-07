@@ -12,4 +12,5 @@ type Config struct {
 	APNs       config.APNs       `di:""`
 	FCM        config.FCM        `di:""`
 	RevenueCat config.RevenueCat `di:""`
+	CORS       config.CORS       `di:""`
 }

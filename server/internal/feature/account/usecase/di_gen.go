@@ -26,6 +26,28 @@ func NewDeleteAccount(infra di.Infra) *DeleteAccount {
 	}
 }
 
+// NewDeleteAccountWithApple initializes dependencies and constructs DeleteAccountWithApple.
+func NewDeleteAccountWithApple(infra di.Infra) *DeleteAccountWithApple {
+	deleteAccount := NewDeleteAccount(infra)
+	apple := infra.Apple
+
+	return &DeleteAccountWithApple{
+		deleteAccount: deleteAccount,
+		apple:         apple,
+	}
+}
+
+// NewDeleteAccountWithGoogle initializes dependencies and constructs DeleteAccountWithGoogle.
+func NewDeleteAccountWithGoogle(infra di.Infra) *DeleteAccountWithGoogle {
+	deleteAccount := NewDeleteAccount(infra)
+	google := infra.Google
+
+	return &DeleteAccountWithGoogle{
+		deleteAccount: deleteAccount,
+		google:        google,
+	}
+}
+
 // NewRefreshToken initializes dependencies and constructs RefreshToken.
 func NewRefreshToken(infra di.Infra, lib di.Lib) *RefreshToken {
 	transactor := infra.Transactor

@@ -20,14 +20,16 @@ import (
 type Account struct {
 	accountv1connect.UnimplementedAccountServiceHandler
 
-	_                di.Infra                  `di:"embed"`
-	_                di.Lib                    `di:"embed"`
-	signInWithApple  *usecase.SignInWithApple  `di:""`
-	signInWithGoogle *usecase.SignInWithGoogle `di:""`
-	refreshToken     *usecase.RefreshToken     `di:""`
-	signOut          *usecase.SignOut          `di:""`
-	deleteAccount    *usecase.DeleteAccount    `di:""`
-	syncEntitlement  *usecase.SyncEntitlement  `di:""`
+	_                di.Infra                         `di:"embed"`
+	_                di.Lib                           `di:"embed"`
+	signInWithApple  *usecase.SignInWithApple         `di:""`
+	signInWithGoogle *usecase.SignInWithGoogle        `di:""`
+	refreshToken     *usecase.RefreshToken            `di:""`
+	signOut          *usecase.SignOut                 `di:""`
+	deleteAccount    *usecase.DeleteAccount           `di:""`
+	deleteWithApple  *usecase.DeleteAccountWithApple  `di:""`
+	deleteWithGoogle *usecase.DeleteAccountWithGoogle `di:""`
+	syncEntitlement  *usecase.SyncEntitlement         `di:""`
 }
 
 var _ accountv1connect.AccountServiceHandler = (*Account)(nil)
@@ -111,6 +113,34 @@ func (h *Account) DeleteAccount(
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&accountv1.DeleteAccountResponse{}), nil
+}
+
+func (h *Account) DeleteAccountWithApple(
+	ctx context.Context,
+	req *connect.Request[accountv1.DeleteAccountWithAppleRequest],
+) (*connect.Response[accountv1.DeleteAccountWithAppleResponse], error) {
+	out, err := h.deleteWithApple.Do(ctx, usecase.DeleteAccountWithAppleInput{
+		IdentityToken: req.Msg.GetIdentityToken(),
+		Nonce:         req.Msg.GetNonce(),
+	})
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.DeleteAccountWithAppleResponse{Deleted: out.Deleted}), nil
+}
+
+func (h *Account) DeleteAccountWithGoogle(
+	ctx context.Context,
+	req *connect.Request[accountv1.DeleteAccountWithGoogleRequest],
+) (*connect.Response[accountv1.DeleteAccountWithGoogleResponse], error) {
+	out, err := h.deleteWithGoogle.Do(ctx, usecase.DeleteAccountWithGoogleInput{
+		IDToken: req.Msg.GetIdToken(),
+		Nonce:   req.Msg.GetNonce(),
+	})
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+	return connect.NewResponse(&accountv1.DeleteAccountWithGoogleResponse{Deleted: out.Deleted}), nil
 }
 
 func (h *Account) SyncEntitlement(

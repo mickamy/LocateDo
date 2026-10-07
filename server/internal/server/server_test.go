@@ -3,6 +3,7 @@ package server_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 	"uuid"
@@ -110,6 +111,68 @@ func TestHandler_validatesRequests(t *testing.T) {
 
 	// assert
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
+}
+
+func TestHandler_cors(t *testing.T) {
+	t.Parallel()
+
+	const allowed = "https://locatedo.com"
+	deletePath := accountv1connect.AccountServiceDeleteAccountWithGoogleProcedure
+
+	tests := []struct {
+		name       string
+		method     string
+		path       string
+		origin     string
+		wantStatus int
+		wantOrigin string
+	}{
+		{
+			name:   "preflight from the site",
+			method: http.MethodOptions, path: deletePath, origin: allowed,
+			wantStatus: http.StatusNoContent, wantOrigin: allowed,
+		},
+		{
+			name:   "post from the site",
+			method: http.MethodPost, path: deletePath, origin: allowed,
+			wantStatus: http.StatusBadRequest, wantOrigin: allowed,
+		},
+		{
+			name:   "preflight from another origin",
+			method: http.MethodOptions, path: deletePath, origin: "https://example.com",
+			wantStatus: http.StatusMethodNotAllowed,
+		},
+		{
+			name:   "preflight for another procedure",
+			method: http.MethodOptions, path: accountv1connect.AccountServiceDeleteAccountProcedure, origin: allowed,
+			wantStatus: http.StatusMethodNotAllowed,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			cfg := di.Config{App: config.App{Env: config.EnvTest}, CORS: config.CORS{AllowedOrigins: []string{allowed}}}
+			handlers := server.NewHandlers(cfg, tdb.New(t).Infra(), di.MustNewLib(di.NewConfig()))
+			srv := httptest.NewServer(server.Handler(*handlers))
+			t.Cleanup(srv.Close)
+			req, err := http.NewRequestWithContext(t.Context(), tt.method, srv.URL+tt.path, strings.NewReader("{}"))
+			require.NoError(t, err)
+			req.Header.Set("Origin", tt.origin)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Access-Control-Request-Method", http.MethodPost)
+
+			// act
+			res, err := srv.Client().Do(req)
+			require.NoError(t, err)
+			defer res.Body.Close()
+
+			// assert
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
+			assert.Equal(t, tt.wantOrigin, res.Header.Get("Access-Control-Allow-Origin"))
+		})
+	}
 }
 
 func newTestServer(t *testing.T) (*httptest.Server, di.Lib) {

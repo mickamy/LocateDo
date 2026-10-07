@@ -29,7 +29,10 @@ func Handler(handlers Handlers) http.Handler {
 	mux.Handle(devicev1connect.NewDeviceServiceHandler(handlers.Device, opt))
 	mux.Handle(syncv1connect.NewSyncServiceHandler(handlers.Sync, opt))
 
-	return mux
+	return allowCORS(mux, handlers.CORS.AllowedOrigins,
+		accountv1connect.AccountServiceDeleteAccountWithAppleProcedure,
+		accountv1connect.AccountServiceDeleteAccountWithGoogleProcedure,
+	)
 }
 
 func New(addr string, handlers Handlers) *http.Server {

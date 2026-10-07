@@ -73,10 +73,11 @@ func provideReadTransactor(reader db.Reader) tx.ReadTransactor {
 
 func provideApple(cfg config.Apple) (apple.Auth, error) {
 	appleCfg := apple.Config{
-		BaseURL:  cfg.BaseURL,
-		BundleID: cfg.BundleID,
-		TeamID:   cfg.TeamID,
-		KeyID:    cfg.KeyID,
+		BaseURL:    cfg.BaseURL,
+		BundleID:   cfg.BundleID,
+		ServicesID: cfg.ServicesID,
+		TeamID:     cfg.TeamID,
+		KeyID:      cfg.KeyID,
 	}
 	if cfg.PrivateKey != "" {
 		key, err := p8.Parse(cfg.PrivateKey)

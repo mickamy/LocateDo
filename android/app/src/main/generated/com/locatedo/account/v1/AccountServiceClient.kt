@@ -77,6 +77,34 @@ public class AccountServiceClient(
 
 
   /**
+   *  Deletes the account signed in with the token, for the web page that lets
+   *  people delete their account without the app. Never creates an account.
+   */
+  override suspend fun deleteAccountWithApple(request: DeleteAccountWithAppleRequest, headers: Headers): ResponseMessage<DeleteAccountWithAppleResponse> = client.unary(
+    request,
+    headers,
+    MethodSpec(
+    "locatedo.account.v1.AccountService/DeleteAccountWithApple",
+      com.locatedo.account.v1.DeleteAccountWithAppleRequest::class,
+      com.locatedo.account.v1.DeleteAccountWithAppleResponse::class,
+      StreamType.UNARY,
+    ),
+  )
+
+
+  override suspend fun deleteAccountWithGoogle(request: DeleteAccountWithGoogleRequest, headers: Headers): ResponseMessage<DeleteAccountWithGoogleResponse> = client.unary(
+    request,
+    headers,
+    MethodSpec(
+    "locatedo.account.v1.AccountService/DeleteAccountWithGoogle",
+      com.locatedo.account.v1.DeleteAccountWithGoogleRequest::class,
+      com.locatedo.account.v1.DeleteAccountWithGoogleResponse::class,
+      StreamType.UNARY,
+    ),
+  )
+
+
+  /**
    *  Re-reads the caller's subscription and updates their household plan in the background.
    *  Call it after linking the purchase SDK to the user, since a purchase made before
    *  signing in sends no webhook naming the user.

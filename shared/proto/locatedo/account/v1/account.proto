@@ -13,6 +13,10 @@ service AccountService {
   // Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
   rpc SignOut(SignOutRequest) returns (SignOutResponse);
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  // Deletes the account signed in with the token, for the web page that lets
+  // people delete their account without the app. Never creates an account.
+  rpc DeleteAccountWithApple(DeleteAccountWithAppleRequest) returns (DeleteAccountWithAppleResponse);
+  rpc DeleteAccountWithGoogle(DeleteAccountWithGoogleRequest) returns (DeleteAccountWithGoogleResponse);
   // Re-reads the caller's subscription and updates their household plan in the background.
   // Call it after linking the purchase SDK to the user, since a purchase made before
   // signing in sends no webhook naming the user.
@@ -91,6 +95,33 @@ message SignOutResponse {}
 message DeleteAccountRequest {}
 
 message DeleteAccountResponse {}
+
+message DeleteAccountWithAppleRequest {
+  // Issued to the web Services ID.
+  string identity_token = 1 [(buf.validate.field).string.min_len = 1];
+  string nonce = 2 [(buf.validate.field).string = {
+    min_len: 16
+    max_len: 128
+  }];
+}
+
+message DeleteAccountWithAppleResponse {
+  // False when no account is linked to the token.
+  bool deleted = 1;
+}
+
+message DeleteAccountWithGoogleRequest {
+  string id_token = 1 [(buf.validate.field).string.min_len = 1];
+  string nonce = 2 [(buf.validate.field).string = {
+    min_len: 16
+    max_len: 128
+  }];
+}
+
+message DeleteAccountWithGoogleResponse {
+  // False when no account is linked to the token.
+  bool deleted = 1;
+}
 
 message SyncEntitlementRequest {}
 

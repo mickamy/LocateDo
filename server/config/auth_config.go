@@ -15,6 +15,7 @@ func ParseAuth() Auth {
 type Apple struct {
 	BaseURL    string `env:"APPLE_BASE_URL"    envDefault:"https://appleid.apple.com"`
 	BundleID   string `env:"APPLE_BUNDLE_ID"   envDefault:"com.locatedo.LocateDo"`
+	ServicesID string `env:"APPLE_SERVICES_ID"`
 	TeamID     string `env:"APPLE_TEAM_ID"`
 	KeyID      string `env:"APPLE_KEY_ID"`
 	PrivateKey string `env:"APPLE_PRIVATE_KEY"`
