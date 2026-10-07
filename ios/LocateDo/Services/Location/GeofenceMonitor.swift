@@ -14,6 +14,7 @@ final class GeofenceMonitor {
     private var eventLoop: Task<Void, Never>?
     private var authorizationWatch: Task<Void, Never>?
     @ObservationIgnored var onArrival: () async -> Void = {}
+    @ObservationIgnored var onNotified: () -> Void = {}
     @ObservationIgnored var currentUserID: () -> UUID? = { nil }
 
     init(container: ModelContainer, notifier: ArrivalNotifier, locationProvider: LocationProvider) {
@@ -167,6 +168,7 @@ final class GeofenceMonitor {
         await notifier.notifyArrival(at: place, todoTitles: openTodos.map(\.title))
         place.lastNotifiedAt = now
         try? context.save()
+        onNotified()
         Analytics.log(.arrivalNotified, parameters: [
             .openTodos: openTodos.count,
             .category: place.analyticsCategory,

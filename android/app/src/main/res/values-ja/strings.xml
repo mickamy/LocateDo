@@ -75,8 +75,13 @@
     <string name="maintenance_unavailable">サーバーのメンテナンス中のため、今は使えません。%1$s 以降にお試しください。</string>
     <string name="maintenance_upcoming">%1$s〜%2$s はサーバーのメンテナンスのため同期を止めます。</string>
     <string name="map_empty_message">追加した場所がここに表示されます。</string>
+    <string name="marketing_prompt_accept">受け取る</string>
+    <string name="marketing_prompt_decline">今はいい</string>
+    <string name="marketing_prompt_message">新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。</string>
+    <string name="marketing_prompt_title">ちかメモからのお知らせを受け取りますか？</string>
     <string name="notification_arrived_title">%1$s に到着しました</string>
     <string name="notification_channel_arrivals">到着のお知らせ</string>
+    <string name="notification_channel_marketing">新機能・キャンペーンのお知らせ</string>
     <plurals name="notification_more">
         <item quantity="other">他 %1$d 件</item>
     </plurals>
@@ -187,6 +192,8 @@
     <string name="settings_notifications_allow">通知を許可</string>
     <string name="settings_notifications_authorized">許可</string>
     <string name="settings_notifications_denied">許可されていません</string>
+    <string name="settings_notifications_marketing_footer">新機能やアップデート、キャンペーンをときどきお知らせします。到着のお知らせはどちらでも届きます。</string>
+    <string name="settings_notifications_marketing_title">新機能・キャンペーンのお知らせ</string>
     <string name="settings_notifications_needs_allow">到着のお知らせは通知で届きます。</string>
     <string name="settings_notifications_not_determined">未設定</string>
     <string name="settings_notifications_title">通知</string>

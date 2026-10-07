@@ -6,6 +6,7 @@ import UserNotifications
 final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
     @ObservationIgnored var onOpened: (UUID) -> Void = { _ in }
+    @ObservationIgnored private(set) var lastOpenedAt: Date?
 
     private let router: AppRouter
     private let center = UNUserNotificationCenter.current()
@@ -70,6 +71,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             let latency = Date().timeIntervalSince(response.notification.date)
             Analytics.log(.arrivalOpened, parameters: [.latencyS: max(Int(latency), 0)])
             Task { @MainActor in
+                lastOpenedAt = .now
                 onOpened(placeID)
                 router.open(placeID: placeID)
             }

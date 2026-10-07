@@ -69,6 +69,11 @@ onboarding:
   notifications_description: "StopBy sends a notification when you arrive at a place that still has open to-dos."
   allow_notifications: "Allow notifications"
   later: "Not now"
+marketing_prompt:
+  title: "Want news from StopBy?"
+  message: "We’ll occasionally let you know about new features, updates, and offers. You can turn this off anytime in Settings."
+  accept: "Turn On"
+  decline: "Not Now"
 always_prompt:
   title: "Remind you even when the app is closed"
   description: "To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."
@@ -92,6 +97,8 @@ settings:
     not_determined: "Not asked yet"
     needs_allow: "Reminders are delivered as notifications."
     allow: "Allow notifications"
+    marketing_title: "News and offers"
+    marketing_footer: "Occasional notifications about new features, updates, and offers. Arrival reminders work either way."
   account:
     title: "Account"
     signed_in: "Signed in with Apple"
@@ -212,6 +219,7 @@ todo:
     done: "Done"
 notification:
   channel_arrivals: "Arrival reminders"
+  channel_marketing: "News and offers"
   arrived_title: "You’re at {place}"
   more:
     plural:

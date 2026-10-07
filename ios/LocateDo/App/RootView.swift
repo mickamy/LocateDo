@@ -12,8 +12,10 @@ struct RootView: View {
     @Environment(Authenticator.self) private var authenticator
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
+    @Environment(MarketingConsent.self) private var marketingConsent
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
+    @State private var isMarketingPromptPresented = false
 
     var body: some View {
         Group {
@@ -74,6 +76,9 @@ struct RootView: View {
                 }
                 .sheet(item: $router.pendingPaywall) { trigger in
                     PaywallView(trigger: trigger)
+                }
+                .sheet(isPresented: $isMarketingPromptPresented) {
+                    MarketingConsentSheet()
                 }
     }
 
@@ -142,9 +147,37 @@ struct RootView: View {
                 entitlements: entitlements,
                 authenticator: authenticator,
                 locationProvider: locationProvider,
-                notifier: notifier
+                notifier: notifier,
+                marketingConsent: marketingConsent.isOn
             )
+            presentMarketingPromptIfDue()
         }
+    }
+
+    private func presentMarketingPromptIfDue() {
+        let now = Date()
+        let isDue = marketingConsent.shouldPrompt(
+            notificationAuth: notifier.authorizationStatus,
+            lastArrivalOpenedAt: notifier.lastOpenedAt,
+            now: now
+        )
+        guard isDue, !isShowingSomethingElse else {
+            return
+        }
+        marketingConsent.promptShown(
+            daysSinceInstall: InstallDate.daysSinceInstall(defaults: .standard, now: now),
+            notificationAuth: notifier.authorizationStatus
+        )
+        isMarketingPromptPresented = true
+    }
+
+    private var isShowingSomethingElse: Bool {
+        router.pendingPaywall != nil
+            || router.pendingInvite != nil
+            || router.pendingPlaceID != nil
+            || appStatus.pendingNotice != nil
+            || preferences.hasPendingSessionEndedNotice
+            || preferences.hasPendingRemovedNotice
     }
 }
 
@@ -154,6 +187,7 @@ struct RootView: View {
     let router = AppRouter()
     let locationProvider = LocationProvider()
     let notifier = ArrivalNotifier(router: router)
+    let preferences = AppPreferences(defaults: UserDefaults(suiteName: "preview")!)
     let tokens = AccessTokenStore()
     let api = APIClient(
         environment: APIEnvironment(baseURL: URL(string: "http://localhost:8080")!),
@@ -182,7 +216,8 @@ struct RootView: View {
     RootView()
         .modelContainer(container)
         .environment(router)
-        .environment(AppPreferences(defaults: UserDefaults(suiteName: "preview")!))
+        .environment(preferences)
+        .environment(MarketingConsent(preferences: preferences))
         .environment(locationProvider)
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))

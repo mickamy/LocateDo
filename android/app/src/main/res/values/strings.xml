@@ -78,8 +78,13 @@
     <string name="maintenance_unavailable">Not available during server maintenance. Try again after %1$s.</string>
     <string name="maintenance_upcoming">Sync will pause for server maintenance from %1$s to %2$s.</string>
     <string name="map_empty_message">Places you add appear here.</string>
+    <string name="marketing_prompt_accept">Turn On</string>
+    <string name="marketing_prompt_decline">Not Now</string>
+    <string name="marketing_prompt_message">We’ll occasionally let you know about new features, updates, and offers. You can turn this off anytime in Settings.</string>
+    <string name="marketing_prompt_title">Want news from StopBy?</string>
     <string name="notification_arrived_title">You’re at %1$s</string>
     <string name="notification_channel_arrivals">Arrival reminders</string>
+    <string name="notification_channel_marketing">News and offers</string>
     <plurals name="notification_more">
         <item quantity="one">+%1$d more</item>
         <item quantity="other">+%1$d more</item>
@@ -191,6 +196,8 @@
     <string name="settings_notifications_allow">Allow notifications</string>
     <string name="settings_notifications_authorized">Allowed</string>
     <string name="settings_notifications_denied">Not allowed</string>
+    <string name="settings_notifications_marketing_footer">Occasional notifications about new features, updates, and offers. Arrival reminders work either way.</string>
+    <string name="settings_notifications_marketing_title">News and offers</string>
     <string name="settings_notifications_needs_allow">Reminders are delivered as notifications.</string>
     <string name="settings_notifications_not_determined">Not asked yet</string>
     <string name="settings_notifications_title">Notifications</string>

@@ -7,6 +7,7 @@ struct LocateDoApp: App {
     private let container: ModelContainer
     private let router = AppRouter()
     private let preferences = AppPreferences()
+    private let marketingConsent: MarketingConsent
     private let locationProvider = LocationProvider()
     private let notifier: ArrivalNotifier
     private let geofence: GeofenceMonitor
@@ -23,6 +24,7 @@ struct LocateDoApp: App {
 
     init() {
         container = Self.makeContainer()
+        marketingConsent = MarketingConsent(preferences: preferences)
         #if DEBUG
         ScreenshotSeed.replaceIfRequested(in: container.mainContext)
         #endif
@@ -91,6 +93,9 @@ struct LocateDoApp: App {
         geofence.onArrival = { [sync] in
             await sync.sync()
         }
+        geofence.onNotified = { [marketingConsent] in
+            marketingConsent.arrivalNotified()
+        }
         geofence.currentUserID = { [authenticator] in
             authenticator.session?.userID
         }
@@ -142,6 +147,7 @@ struct LocateDoApp: App {
         .modelContainer(container)
         .environment(router)
         .environment(preferences)
+        .environment(marketingConsent)
         .environment(locationProvider)
         .environment(notifier)
         .environment(geofence)

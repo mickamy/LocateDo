@@ -67,6 +67,11 @@ onboarding:
   notifications_description: "未完了の TODO がある場所に着くと、通知でお知らせします。"
   allow_notifications: "通知を許可"
   later: "あとで"
+marketing_prompt:
+  title: "ちかメモからのお知らせを受け取りますか？"
+  message: "新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。"
+  accept: "受け取る"
+  decline: "今はいい"
 always_prompt:
   title: "アプリを閉じていてもお知らせ"
   description: "アプリを閉じている間も到着に気づくには、位置情報を「常に許可」にする必要があります。あとから設定で変更できます。"
@@ -90,6 +95,8 @@ settings:
     not_determined: "未設定"
     needs_allow: "到着のお知らせは通知で届きます。"
     allow: "通知を許可"
+    marketing_title: "新機能・キャンペーンのお知らせ"
+    marketing_footer: "新機能やアップデート、キャンペーンをときどきお知らせします。到着のお知らせはどちらでも届きます。"
   account:
     title: "アカウント"
     signed_in: "Apple でサインイン中"
@@ -209,6 +216,7 @@ todo:
     done: "完了"
 notification:
   channel_arrivals: "到着のお知らせ"
+  channel_marketing: "新機能・キャンペーンのお知らせ"
   arrived_title: "{place} に到着しました"
   more:
     plural:
