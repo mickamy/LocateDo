@@ -19,6 +19,9 @@ type Apple struct {
 	TeamID     string `env:"APPLE_TEAM_ID"`
 	KeyID      string `env:"APPLE_KEY_ID"`
 	PrivateKey string `env:"APPLE_PRIVATE_KEY"`
+	// Where Apple's web sign-in on Android hands its result to the app. Empty
+	// turns the callback off.
+	AndroidRedirect string `env:"APPLE_ANDROID_REDIRECT"`
 }
 
 func ParseApple() Apple {

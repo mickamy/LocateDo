@@ -41,6 +41,23 @@ func TestHandler_healthz(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
+func TestHandler_appleAndroidCallback_onlyPost(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	srv, _ := newTestServer(t)
+
+	// act
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, srv.URL+"/auth/apple/android", nil)
+	require.NoError(t, err)
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	// assert
+	assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
+}
+
 func TestHandler_auth(t *testing.T) {
 	t.Parallel()
 
