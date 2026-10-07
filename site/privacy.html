@@ -87,6 +87,8 @@
 
   <h2>Notifications</h2>
   <p>Arrival reminders are local notifications created on your device. If you are signed in, our servers may send silent push notifications to your devices, through Apple on iOS and through Google's Firebase Cloud Messaging on Android; these carry no content and only tell the app to sync.</p>
+  <p>If you opt in, we may send push notifications about new features, updates, and offers. You can withdraw consent at any time in the app's settings, or turn notifications off in your device settings. Arrival reminders and the notifications that keep your devices in sync work separately and are not affected by this choice.</p>
+  <p>To send these, we keep your device's push notification token (iOS) or Firebase installation identifier (Android), the app's language, and whether you opted in, even if you are not signed in. If you withdraw consent while signed out, we delete that device record; a signed-out device that has not opened the app for 180 days is deleted as well. We also keep a record of when consent was given or withdrawn, to show that we only send these notifications with your agreement; it holds an internal device identifier and the time, and is no longer linked to your account once the account is deleted.</p>
 
   <h2>Maps and place search</h2>
   <p>On iOS, the map and the place search come from Apple Maps, which is part of iOS. On Android, they come from Google Maps Platform: to draw the map and suggest places, the app sends Google the area of the map you are looking at, the text you type when searching for a place, and the place you pick. Google processes this under the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>. We do not receive the searches themselves; only the place you save reaches our servers, and only if you are signed in.</p>
@@ -101,7 +103,8 @@
     <tr><td>That an arrival reminder was shown or opened, how long it took to open, how many open to-dos it listed, and the place's category and reminder radius</td><td>To measure whether reminders fire and help</td></tr>
     <tr><td>Which screens you open; when you add, delete, or complete a place or to-do, with how many you have, how long the item existed, the place's category and radius, how it was picked on the map, and whether a to-do was completed shortly after its arrival reminder</td><td>To understand how StopBy is used and what to improve</td></tr>
     <tr><td>Once a day: how many places, open to-dos, and custom categories you have, how many to-dos you completed in the past week, how many people share your household, your plan, whether you are signed in, whether location (and precise location) and notifications are allowed, and how many days ago you installed the app</td><td>To see which patterns of use keep StopBy useful</td></tr>
-    <tr><td>Onboarding results and changes to the location permission</td><td>To see where reminders stop working</td></tr>
+    <tr><td>Onboarding results and changes to the location and notification permissions</td><td>To see where reminders stop working</td></tr>
+    <tr><td>Whether you receive news and offers, whether you were asked and how you answered, which of these notifications you opened and how long it took to open them</td><td>To check that these notifications are welcome and to send fewer if they are not</td></tr>
     <tr><td>That a paywall was shown or closed, that a purchase was started, canceled, failed, or completed, that purchases were restored, and whether the plan was yearly or monthly</td><td>To understand which plans people choose</td></tr>
     <tr><td>Subscription events sent by RevenueCat, as described under Subscriptions</td><td>To understand whether subscriptions work for people</td></tr>
     <tr><td>An app-instance identifier (Apple's identifier for vendor on iOS, a Firebase installation identifier on Android), device model, operating system version, app version, language, and an approximate country derived by Google from your network address</td><td>Standard Firebase Analytics data used to count users and sessions</td></tr>
@@ -135,6 +138,7 @@
   <ul>
     <li>Location: change the permission at any time in iOS or Android Settings. Without "Always" (iOS) or "Allow all the time" (Android), reminders only work while the app is open.</li>
     <li>Notifications: turn them off in iOS or Android Settings.</li>
+    <li>News and offers: off unless you turn them on; turn them off at any time in the app under Settings &gt; Notifications.</li>
     <li>Sync and sharing: use the app without signing in, or delete your account to stop syncing.</li>
     <li>Subscriptions: manage or cancel in your Apple ID settings or in Google Play.</li>
   </ul>
