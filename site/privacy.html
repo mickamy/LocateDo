@@ -77,16 +77,17 @@
     <tr><th>What we store on our servers</th><th>Why</th></tr>
     <tr><td>The identifier Apple or Google assigns to your account for StopBy, and the name you choose to share at sign-in (if any). We do not store your email address, including Apple's relay address.</td><td>To recognize you when you sign in again</td></tr>
     <tr><td>A token from Apple, stored encrypted (Sign in with Apple only)</td><td>To revoke your Sign in with Apple session when you delete your account</td></tr>
-    <tr><td>Your places, to-dos, categories, and the household they belong to</td><td>To sync them across your devices and with your household</td></tr>
+    <tr><td>Your places, to-dos, categories, and the household they belong to, including who added and who checked off each to-do</td><td>To sync them across your devices and with your household</td></tr>
     <tr><td>Session tokens for your devices</td><td>To keep you signed in without asking again</td></tr>
     <tr><td>A push notification token (iOS) or a Firebase installation identifier (Android) for each of your devices</td><td>To tell your other devices that something changed (see "Notifications")</td></tr>
   </table>
 
   <h2>Family sharing</h2>
-  <p>If you create or join a household, the other members of that household can see all places, to-dos, and categories in it, including who added or completed each to-do and the display names of the members. Invitations are single-use links that expire after 72 hours. The owner of a household can remove members, and any member can leave. When you leave or are removed, the shared data stays with the household and is removed from your device.</p>
+  <p>If you create or join a household, the other members of that household can see all places, to-dos, and categories in it, including who checked off each to-do and the display names of the members. Invitations are single-use links that expire after 72 hours. The owner of a household can remove members, and any member can leave. When you leave or are removed, the shared data stays with the household and is removed from your device.</p>
 
   <h2>Notifications</h2>
   <p>Arrival reminders are local notifications created on your device. If you are signed in, our servers may send silent push notifications to your devices, through Apple on iOS and through Google's Firebase Cloud Messaging on Android; these carry no content and only tell the app to sync.</p>
+  <p>When someone in your household checks off a to-do you added, our servers send you a notification with their display name and the to-do's title, through Apple or Google in the same way. You can turn this off in the app under Settings &gt; Notifications.</p>
   <p>If you opt in, we may send push notifications about new features, updates, and offers. You can withdraw consent at any time in the app's settings, or turn notifications off in your device settings. Arrival reminders and the notifications that keep your devices in sync work separately and are not affected by this choice.</p>
   <p>To send these, we keep your device's push notification token (iOS) or Firebase installation identifier (Android), the app's language, and whether you opted in, even if you are not signed in. If you withdraw consent while signed out, we delete that device record; a signed-out device that has not opened the app for 180 days is deleted as well. We also keep a record of when consent was given or withdrawn, to show that we only send these notifications with your agreement; it holds an internal device identifier and the time, and is no longer linked to your account once the account is deleted.</p>
 
