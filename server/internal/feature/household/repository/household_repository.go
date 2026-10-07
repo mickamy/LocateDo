@@ -22,8 +22,6 @@ type Household interface {
 	// plan limit can be checked against a count that no other member changes.
 	FindForUpdate(ctx context.Context, id uuid.UUID) (model.Household, error)
 	FindByOwner(ctx context.Context, ownerID uuid.UUID) (model.Household, error)
-	// SetPlan reports whether the plan changed.
-	SetPlan(ctx context.Context, id uuid.UUID, plan model.Plan) (bool, error)
 	// AdvanceAllVersions moves every household's version and swept_version
 	// forward by step and returns the households it touched.
 	AdvanceAllVersions(ctx context.Context, step int64) ([]uuid.UUID, error)
@@ -124,14 +122,6 @@ func (r household) FindByOwner(ctx context.Context, ownerID uuid.UUID) (model.Ho
 		SweptVersion: row.SweptVersion,
 		CreatedAt:    row.CreatedAt,
 	}, nil
-}
-
-func (r household) SetPlan(ctx context.Context, id uuid.UUID, plan model.Plan) (bool, error) {
-	n, err := r.q.SetHouseholdPlan(ctx, queries.SetHouseholdPlanParams{ID: id, Plan: string(plan)})
-	if err != nil {
-		return false, fmt.Errorf("set plan: %w", err)
-	}
-	return n > 0, nil
 }
 
 func (r household) AdvanceAllVersions(ctx context.Context, step int64) ([]uuid.UUID, error) {

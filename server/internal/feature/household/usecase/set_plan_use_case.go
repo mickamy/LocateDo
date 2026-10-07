@@ -29,6 +29,7 @@ type SetPlan struct {
 	_          di.Infra             `di:"embed"`
 	transactor tx.Transactor        `di:""`
 	households repository.Household `di:""`
+	plans      repository.Plan      `di:""`
 	messages   outbox.Repository    `di:""`
 }
 
@@ -40,7 +41,7 @@ func (uc SetPlan) Do(ctx context.Context, in SetPlanInput) (SetPlanOutput, error
 		if err != nil {
 			return fmt.Errorf("find household: %w", err)
 		}
-		changed, err := households.SetPlan(ctx, h.ID, in.Plan)
+		changed, err := uc.plans.Bind(tx).Set(ctx, h.ID, in.Plan)
 		if err != nil {
 			return fmt.Errorf("set plan: %w", err)
 		}

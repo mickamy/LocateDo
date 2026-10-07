@@ -371,6 +371,33 @@ func (q *Queries) ImportTodo(ctx context.Context, arg ImportTodoParams) error {
 	return err
 }
 
+const listHouseholdOwnersByPlan = `-- name: ListHouseholdOwnersByPlan :many
+SELECT owner_id
+FROM households
+WHERE plan = $1
+ORDER BY owner_id
+`
+
+func (q *Queries) ListHouseholdOwnersByPlan(ctx context.Context, plan string) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listHouseholdOwnersByPlan, plan)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var owner_id uuid.UUID
+		if err := rows.Scan(&owner_id); err != nil {
+			return nil, err
+		}
+		items = append(items, owner_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const moveCustomCategories = `-- name: MoveCustomCategories :exec
 UPDATE categories
 SET household_id = $1

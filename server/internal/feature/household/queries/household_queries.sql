@@ -19,6 +19,12 @@ SELECT id, owner_id, plan, version, swept_version, created_at
 FROM households
 WHERE owner_id = $1;
 
+-- name: ListHouseholdOwnersByPlan :many
+SELECT owner_id
+FROM households
+WHERE plan = $1
+ORDER BY owner_id;
+
 -- name: SetHouseholdPlan :execrows
 UPDATE households
 SET plan = $2

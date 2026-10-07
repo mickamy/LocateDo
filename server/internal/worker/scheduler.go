@@ -21,17 +21,22 @@ type Task struct {
 
 type Tasks []Task
 
-const sweepInterval = time.Hour
+const (
+	sweepInterval     = time.Hour
+	reconcileInterval = 24 * time.Hour
+)
 
 func NewTasks(
 	tombstones *job.SweepTombstones,
 	refreshTokens *job.SweepRefreshTokens,
 	deadMessages *job.SweepDeadMessages,
+	entitlements *job.ReconcileEntitlements,
 ) Tasks {
 	return Tasks{
 		{Name: "sweep_tombstones", Interval: sweepInterval, Run: tombstones.Run},
 		{Name: "sweep_refresh_tokens", Interval: sweepInterval, Run: refreshTokens.Run},
 		{Name: "sweep_dead_messages", Interval: sweepInterval, Run: deadMessages.Run},
+		{Name: "reconcile_entitlements", Interval: reconcileInterval, Run: entitlements.Run},
 	}
 }
 
