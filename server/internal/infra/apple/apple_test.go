@@ -24,10 +24,11 @@ import (
 )
 
 const (
-	bundleID = "com.locatedo.LocateDo"
-	teamID   = "TEAM123456"
-	keyID    = "KEY1234567"
-	rawNonce = "0123456789abcdef-raw-nonce"
+	bundleID   = "com.locatedo.LocateDo"
+	servicesID = "com.locatedo.LocateDo.web"
+	teamID     = "TEAM123456"
+	keyID      = "KEY1234567"
+	rawNonce   = "0123456789abcdef-raw-nonce"
 )
 
 var now = time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
@@ -90,6 +91,69 @@ func TestClient_VerifyIdentityToken_rejects(t *testing.T) {
 			require.ErrorIs(t, err, apple.ErrInvalidToken)
 		})
 	}
+}
+
+func TestClient_VerifyWebIdentityToken(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		audience string
+		wantErr  error
+	}{
+		{name: "services id", audience: servicesID},
+		{name: "bundle id", audience: bundleID, wantErr: apple.ErrInvalidToken},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			fake := newFakeApple(t)
+			claims := validClaims()
+			claims.Audience = jwt.ClaimStrings{tt.audience}
+
+			// act
+			got, err := fake.client(t).VerifyWebIdentityToken(t.Context(), fake.identityToken(t, claims), rawNonce, now)
+
+			// assert
+			if tt.wantErr != nil {
+				require.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, "001234.abcd.5678", got.Subject)
+		})
+	}
+}
+
+func TestClient_VerifyIdentityToken_refusesServicesID(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	fake := newFakeApple(t)
+	claims := validClaims()
+	claims.Audience = jwt.ClaimStrings{servicesID}
+
+	// act
+	_, err := fake.client(t).VerifyIdentityToken(t.Context(), fake.identityToken(t, claims), rawNonce, now)
+
+	// assert
+	require.ErrorIs(t, err, apple.ErrInvalidToken)
+}
+
+func TestClient_VerifyWebIdentityToken_notConfigured(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	fake := newFakeApple(t)
+	client := apple.NewClient(apple.Config{BaseURL: fake.srv.URL, BundleID: bundleID}, fake.srv.Client())
+
+	// act
+	_, err := client.VerifyWebIdentityToken(t.Context(), fake.identityToken(t, validClaims()), rawNonce, now)
+
+	// assert
+	require.ErrorIs(t, err, apple.ErrServicesIDNotConfigured)
 }
 
 func TestClient_VerifyIdentityToken_signedByUnknownKey(t *testing.T) {
@@ -237,6 +301,7 @@ func (f *fakeApple) client(t *testing.T) apple.Client {
 	return apple.NewClient(apple.Config{
 		BaseURL:    f.srv.URL,
 		BundleID:   bundleID,
+		ServicesID: servicesID,
 		TeamID:     teamID,
 		KeyID:      keyID,
 		PrivateKey: f.secret,

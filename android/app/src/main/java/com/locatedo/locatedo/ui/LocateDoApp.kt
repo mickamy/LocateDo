@@ -104,7 +104,10 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
         )
     }
     if (appState.isExplainingAlwaysLocation) {
-        AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
+        AlwaysLocationSheet(
+            onAnswer = appViewModel::alwaysLocationAnswered,
+            onDismiss = appViewModel::dismissAlwaysLocation,
+        )
     }
     if (appState.isAskingPromotions) {
         PromotionsConsentSheet(onAnswer = appViewModel::answerPromotions)

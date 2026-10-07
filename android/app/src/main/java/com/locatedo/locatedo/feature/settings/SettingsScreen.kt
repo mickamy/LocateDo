@@ -37,7 +37,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,6 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.BuildConfig
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.PermissionAction
+import com.locatedo.locatedo.core.analytics.PermissionKind
 import com.locatedo.locatedo.core.billing.PlanKind
 import com.locatedo.locatedo.core.common.LegalLinks
 import com.locatedo.locatedo.core.common.SystemSettings
@@ -82,7 +83,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val locale = LocalConfiguration.current.locales[0]
-    var isExplainingAlwaysLocation by remember { mutableStateOf(false) }
+    val isExplainingAlwaysLocation by viewModel.isExplainingAlwaysLocation.collectAsStateWithLifecycle()
     val requestLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         viewModel.locationRequested()
     }
@@ -129,10 +130,14 @@ fun SettingsScreen(
             LocationSection(
                 auth = uiState.location,
                 onAllow = {
+                    viewModel.permissionActionTapped(PermissionKind.LOCATION, PermissionAction.REQUEST)
                     requestLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                 },
-                onExplainAlways = { isExplainingAlwaysLocation = true },
-                onOpenSettings = { SystemSettings.openAppDetails(context) },
+                onExplainAlways = viewModel::explainAlwaysLocation,
+                onOpenSettings = {
+                    viewModel.permissionActionTapped(PermissionKind.LOCATION, PermissionAction.OPEN_SETTINGS)
+                    SystemSettings.openAppDetails(context)
+                },
             )
             HorizontalDivider()
             NotificationSection(
@@ -140,11 +145,15 @@ fun SettingsScreen(
                 promotionsConsent = uiState.promotionsConsent,
                 onPromotionsConsentChange = viewModel::setPromotionsConsent,
                 onAllow = {
+                    viewModel.permissionActionTapped(PermissionKind.NOTIFICATIONS, PermissionAction.REQUEST)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 },
-                onOpenSettings = { SystemSettings.openNotifications(context) },
+                onOpenSettings = {
+                    viewModel.permissionActionTapped(PermissionKind.NOTIFICATIONS, PermissionAction.OPEN_SETTINGS)
+                    SystemSettings.openNotifications(context)
+                },
             )
             HorizontalDivider()
             DefaultRadiusSection(meters = uiState.defaultRadiusMeters, onSave = viewModel::setDefaultRadius)
@@ -181,10 +190,8 @@ fun SettingsScreen(
 
     if (isExplainingAlwaysLocation) {
         AlwaysLocationSheet(
-            onDismiss = {
-                isExplainingAlwaysLocation = false
-                viewModel.refreshPermissions()
-            },
+            onAnswer = viewModel::alwaysLocationAnswered,
+            onDismiss = viewModel::dismissAlwaysLocation,
         )
     }
     if (uiState.pro.restoreResult == RestoreResult.RESTORED) {

@@ -42,11 +42,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
@@ -59,8 +62,10 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.common.SystemSettings
 import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.feature.todos.TodoEditorSheet
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.CategoryMarker
@@ -70,6 +75,7 @@ private const val PLACE_ZOOM = 14f
 private val sheetPeekHeight = 96.dp
 private val emptyPeekHeight = 260.dp
 private val detailPeekHeight = 360.dp
+private val permissionBannerPeekHeight = 104.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +87,8 @@ fun HomeScreen(
 ) {
     TrackScreen(AnalyticsScreen.HOME)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isExplainingAlwaysLocation by viewModel.isExplainingAlwaysLocation.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val selected = uiState.selected
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
     var placeToDelete by remember { mutableStateOf<Place?>(null) }
@@ -93,6 +101,9 @@ fun HomeScreen(
     }
     val cameraPositionState = rememberCameraPositionState()
 
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshPermissions()
+    }
     BackHandler(enabled = selected != null) {
         viewModel.clearSelection()
     }
@@ -113,11 +124,15 @@ fun HomeScreen(
         )
     }
 
-    // The collapsed sheet shows one summary line, the whole empty state, or the top of a place's details.
-    val peekHeight = when {
+    // The collapsed sheet shows one summary line, the whole empty state, or the top of a place's details, with room
+    // for the permission banner above the first two.
+    var peekHeight = when {
         selected != null -> detailPeekHeight
         !uiState.isLoading && uiState.places.isEmpty() -> emptyPeekHeight
         else -> sheetPeekHeight
+    }
+    if (selected == null && uiState.permissionBanner != null) {
+        peekHeight += permissionBannerPeekHeight
     }
 
     BottomSheetScaffold(
@@ -137,7 +152,19 @@ fun HomeScreen(
                     onAssignTodo = viewModel::setAssignee,
                 )
             } else {
-                HomeSheet(uiState = uiState, onAddPlace = onAddPlace, onSelect = viewModel::select)
+                HomeSheet(
+                    uiState = uiState,
+                    onAddPlace = onAddPlace,
+                    onSelect = viewModel::select,
+                    onPermissionBanner = { banner ->
+                        viewModel.permissionBannerTapped(banner)
+                        when (banner) {
+                            PermissionBanner.LOCATION_ALWAYS -> Unit
+                            PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
+                            PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
+                        }
+                    },
+                )
             }
         },
     ) { padding ->
@@ -230,6 +257,12 @@ fun HomeScreen(
     if (isAddingTodo && selected != null) {
         TodoEditorSheet(placeId = selected.place.id, onDismiss = { isAddingTodo = false })
     }
+    if (isExplainingAlwaysLocation) {
+        AlwaysLocationSheet(
+            onAnswer = viewModel::alwaysLocationAnswered,
+            onDismiss = viewModel::dismissAlwaysLocation,
+        )
+    }
 }
 
 // The floating bar is the way into adding a place, as the search bar is in Google Maps.
@@ -267,16 +300,26 @@ private fun SearchBar(modifier: Modifier = Modifier, onSearch: () -> Unit, onAcc
 }
 
 @Composable
-private fun HomeSheet(uiState: HomeUiState, onAddPlace: () -> Unit, onSelect: (UUID) -> Unit) {
+private fun HomeSheet(
+    uiState: HomeUiState,
+    onAddPlace: () -> Unit,
+    onSelect: (UUID) -> Unit,
+    onPermissionBanner: (PermissionBanner) -> Unit,
+) {
     if (uiState.isLoading) {
         Spacer(Modifier.height(sheetPeekHeight))
         return
     }
-    if (uiState.places.isEmpty()) {
-        EmptyPlaces(onAddPlace = onAddPlace)
-        return
+    Column {
+        uiState.permissionBanner?.let { banner ->
+            PermissionBannerCard(banner = banner, onClick = { onPermissionBanner(banner) })
+        }
+        if (uiState.places.isEmpty()) {
+            EmptyPlaces(onAddPlace = onAddPlace)
+        } else {
+            NearbyList(uiState = uiState, onSelect = onSelect)
+        }
     }
-    NearbyList(uiState = uiState, onSelect = onSelect)
 }
 
 @Composable

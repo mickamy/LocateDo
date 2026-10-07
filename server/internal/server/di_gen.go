@@ -18,6 +18,7 @@ import (
 
 // NewHandlers initializes dependencies and constructs Handlers.
 func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
+	cors := config.CORS
 	interceptors := interceptor.NewInterceptors(config, infra, lib)
 	writer := infra.Writer
 	reader := infra.Reader
@@ -32,6 +33,7 @@ func NewHandlers(config di.Config, infra di.Infra, lib di.Lib) *Handlers {
 	sync := handler7.NewSync(infra)
 
 	return &Handlers{
+		CORS:         cors,
 		Interceptors: interceptors,
 		Health:       health2,
 		RevenueCat:   revenueCat,

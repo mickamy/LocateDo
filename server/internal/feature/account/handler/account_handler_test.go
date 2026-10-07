@@ -212,6 +212,58 @@ func TestAccount_SyncEntitlement(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestAccount_DeleteAccountWithApple(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	client := newClient(t)
+	_, err := client.SignInWithApple(t.Context(), connect.NewRequest(&accountv1.SignInWithAppleRequest{
+		IdentityToken:     "identity:apple-sub",
+		AuthorizationCode: "auth-code",
+		Nonce:             "0123456789abcdef",
+	}))
+	require.NoError(t, err)
+	deleteWithApple := func() bool {
+		req := &accountv1.DeleteAccountWithAppleRequest{ //nolint:gosec // a test value, not a credential
+			IdentityToken: "web:apple-sub",
+			Nonce:         "0123456789abcdef",
+		}
+		res, err := client.DeleteAccountWithApple(t.Context(), connect.NewRequest(req))
+		require.NoError(t, err)
+		return res.Msg.GetDeleted()
+	}
+
+	// act: without an access token
+	first := deleteWithApple()
+	second := deleteWithApple()
+
+	// assert
+	assert.True(t, first)
+	assert.False(t, second)
+}
+
+func TestAccount_DeleteAccountWithGoogle(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	client := newClient(t)
+	_, err := client.SignInWithGoogle(t.Context(), connect.NewRequest(&accountv1.SignInWithGoogleRequest{
+		IdToken: "google:google-sub",
+		Nonce:   "0123456789abcdef",
+	}))
+	require.NoError(t, err)
+
+	// act
+	res, err := client.DeleteAccountWithGoogle(t.Context(), connect.NewRequest(&accountv1.DeleteAccountWithGoogleRequest{
+		IdToken: "google:google-sub",
+		Nonce:   "0123456789abcdef",
+	}))
+
+	// assert
+	require.NoError(t, err)
+	assert.True(t, res.Msg.GetDeleted())
+}
+
 func TestAccount_SyncEntitlement_requiresToken(t *testing.T) {
 	t.Parallel()
 
@@ -237,13 +289,22 @@ func newClient(t *testing.T) accountv1connect.AccountServiceClient {
 	return accountv1connect.NewAccountServiceClient(srv.Client(), srv.URL)
 }
 
-// fakeApple accepts identity tokens of the form "identity:<subject>".
+// fakeApple accepts identity tokens of the form "identity:<subject>", and
+// "web:<subject>" for the website.
 type fakeApple struct{}
 
 var _ apple.Auth = fakeApple{}
 
 func (fakeApple) VerifyIdentityToken(_ context.Context, raw, _ string, _ time.Time) (apple.Identity, error) {
 	subject, ok := strings.CutPrefix(raw, "identity:")
+	if !ok {
+		return apple.Identity{}, apple.ErrInvalidToken
+	}
+	return apple.Identity{Subject: subject}, nil
+}
+
+func (fakeApple) VerifyWebIdentityToken(_ context.Context, raw, _ string, _ time.Time) (apple.Identity, error) {
+	subject, ok := strings.CutPrefix(raw, "web:")
 	if !ok {
 		return apple.Identity{}, apple.ErrInvalidToken
 	}

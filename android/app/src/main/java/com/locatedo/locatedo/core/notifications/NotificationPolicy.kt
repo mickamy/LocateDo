@@ -7,18 +7,38 @@ import java.util.UUID
 
 data class NotificationBody(val titles: List<String>, val more: Int)
 
+enum class ArrivalSuppression(val key: String) {
+    NO_OPEN_TODOS("no_open_todos"),
+    ASSIGNED_TO_OTHERS("assigned_to_others"),
+    RECENTLY_NOTIFIED("recently_notified"),
+    NOTIFICATIONS_OFF("notifications_off"),
+}
+
 object NotificationPolicy {
     val COOLDOWN: Duration = Duration.ofMinutes(30)
     const val MAX_TITLES = 3
 
-    fun shouldNotify(openTodoCount: Int, lastNotifiedAt: Instant?, now: Instant): Boolean {
+    // Why an arrival goes unannounced, checked in this order; null means notify.
+    fun suppression(
+        openTodoCount: Int,
+        notifiableTodoCount: Int,
+        lastNotifiedAt: Instant?,
+        notificationsAllowed: Boolean,
+        now: Instant,
+    ): ArrivalSuppression? {
         if (openTodoCount <= 0) {
-            return false
+            return ArrivalSuppression.NO_OPEN_TODOS
         }
-        if (lastNotifiedAt == null) {
-            return true
+        if (notifiableTodoCount <= 0) {
+            return ArrivalSuppression.ASSIGNED_TO_OTHERS
         }
-        return Duration.between(lastNotifiedAt, now) >= COOLDOWN
+        if (lastNotifiedAt != null && Duration.between(lastNotifiedAt, now) < COOLDOWN) {
+            return ArrivalSuppression.RECENTLY_NOTIFIED
+        }
+        if (!notificationsAllowed) {
+            return ArrivalSuppression.NOTIFICATIONS_OFF
+        }
+        return null
     }
 
     fun notifiableTodos(todos: List<Todo>, userId: UUID?): List<Todo> {

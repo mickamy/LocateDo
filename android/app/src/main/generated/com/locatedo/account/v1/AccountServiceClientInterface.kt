@@ -22,6 +22,14 @@ public interface AccountServiceClientInterface {
   public suspend fun deleteAccount(request: DeleteAccountRequest, headers: Headers = emptyMap()): ResponseMessage<DeleteAccountResponse>
 
   /**
+   *  Deletes the account signed in with the token, for the web page that lets
+   *  people delete their account without the app. Never creates an account.
+   */
+  public suspend fun deleteAccountWithApple(request: DeleteAccountWithAppleRequest, headers: Headers = emptyMap()): ResponseMessage<DeleteAccountWithAppleResponse>
+
+  public suspend fun deleteAccountWithGoogle(request: DeleteAccountWithGoogleRequest, headers: Headers = emptyMap()): ResponseMessage<DeleteAccountWithGoogleResponse>
+
+  /**
    *  Re-reads the caller's subscription and updates their household plan in the background.
    *  Call it after linking the purchase SDK to the user, since a purchase made before
    *  signing in sends no webhook naming the user.

@@ -17,6 +17,7 @@ func NewConfig() Config {
 	apNs := config.ParseAPNs()
 	fcm := config.ParseFCM()
 	revenueCat := config.ParseRevenueCat()
+	cors := config.ParseCORS()
 
 	return Config{
 		App:        app,
@@ -27,6 +28,7 @@ func NewConfig() Config {
 		APNs:       apNs,
 		FCM:        fcm,
 		RevenueCat: revenueCat,
+		CORS:       cors,
 	}
 }
 

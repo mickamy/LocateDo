@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Delete your StopBy account</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 0 64px;
+  }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 36px 0 8px; }
+  p, li { margin: 0 0 12px; }
+  ul { padding-left: 22px; }
+  .meta { color: var(--muted); margin-bottom: 24px; }
+  .lang { font-size: 15px; margin-bottom: 32px; }
+  a { color: var(--accent); }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+  button {
+    font: inherit;
+    font-size: 16px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  #appleid-signin { width: 220px; height: 40px; cursor: pointer; }
+  .danger { background: #d70015; color: #ffffff; border-color: #d70015; }
+</style>
+</head>
+<body>
+<main>
+  <p class="lang"><a href="delete-account-ja.html" hreflang="ja">日本語</a></p>
+
+  <h1>Delete your StopBy account</h1>
+  <p class="meta">StopBy (ちかメモ in Japanese). You can also delete your account in the app: Settings &gt; Account &gt; Delete account.</p>
+
+  <h2>What is deleted</h2>
+  <ul>
+    <li>Your account and your devices’ registrations on our servers.</li>
+    <li>If you own a household, the household and all of its places, to-dos, and categories, for everyone in it.</li>
+    <li>If you belong to someone else’s household, you leave it, and what you added stays with that household.</li>
+  </ul>
+
+  <h2>What is kept</h2>
+  <ul>
+    <li>Database backups are removed within 70 days, and server logs after 30 days.</li>
+    <li>Google keeps usage analytics for 14 months and crash reports for 90 days.</li>
+    <li>Data on your device stays until you delete the app.</li>
+  </ul>
+  <p>Deleting your account does not cancel StopBy Pro. Cancel it in the App Store (iOS Settings &gt; Apple Account &gt; Subscriptions) or in Google Play (Play Store &gt; Payments &amp; subscriptions &gt; Subscriptions).</p>
+
+  <h2>Sign in to delete</h2>
+  <div id="sign-in" data-state>
+    <p>Sign in the same way you did in the app: with Apple on iPhone, with Google on Android. We only use the sign-in to find your account.</p>
+    <div class="actions">
+      <div id="appleid-signin" data-color="black" data-border="true" data-type="sign-in" data-width="220" data-height="40"></div>
+      <div id="google-button"></div>
+    </div>
+  </div>
+  <div id="confirm" data-state hidden>
+    <p><strong>Delete your account?</strong> This cannot be undone.</p>
+    <div class="actions">
+      <button type="button" id="delete-button" class="danger">Delete account</button>
+      <button type="button" id="cancel-button">Cancel</button>
+    </div>
+  </div>
+  <p id="deleting" data-state hidden>Deleting…</p>
+  <p id="deleted" data-state hidden>Your account has been deleted.</p>
+  <div id="not-found" data-state hidden>
+    <p>There is no StopBy account for this sign-in. If you have the app, it may be using a different Apple ID or Google account.</p>
+    <div class="actions"><button type="button" data-retry>Try another account</button></div>
+  </div>
+  <div id="failed" data-state hidden>
+    <p>Your account could not be deleted. Please try again, or email <a href="mailto:support@locatedo.com">support@locatedo.com</a>.</p>
+    <div class="actions"><button type="button" data-retry>Try again</button></div>
+  </div>
+
+  <p>See also the <a href="privacy.html">Privacy Policy</a> and <a href="support.html">Support</a>.</p>
+</main>
+<script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
+<script src="delete-account.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+</body>
+</html>

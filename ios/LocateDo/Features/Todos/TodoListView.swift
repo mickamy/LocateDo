@@ -80,6 +80,11 @@ struct TodoListView: View {
 
     private var list: some View {
         List {
+            Section {
+                filterPicker
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
             if groups.isEmpty {
                 Text(.todoListFilterEmpty)
                     .foregroundStyle(.secondary)
@@ -99,20 +104,19 @@ struct TodoListView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .top) {
-            Picker(selection: $filter) {
-                ForEach(TodoFilter.allCases) { filter in
-                    Text(filter.title)
-                        .tag(filter)
-                }
-            } label: {
-                Text(.tabTodos)
+    }
+
+    private var filterPicker: some View {
+        Picker(selection: $filter) {
+            ForEach(TodoFilter.allCases) { filter in
+                Text(filter.title)
+                    .tag(filter)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(.horizontal)
-            .padding(.bottom, 8)
+        } label: {
+            Text(.tabTodos)
         }
+        .pickerStyle(.segmented)
+        .labelsHidden()
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {

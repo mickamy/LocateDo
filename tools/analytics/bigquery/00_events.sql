@@ -3,6 +3,9 @@ SELECT
   PARSE_DATE('%Y%m%d', event_date) AS event_date,
   TIMESTAMP_MICROS(event_timestamp) AS event_time,
   event_name,
+  -- The app was on screen. Arrival reminders, RevenueCat's rc_* events, and Firebase's automatic ones also come in
+  -- while it is closed, so these four are what counts a user as active.
+  event_name IN ('session_start', 'user_engagement', 'screen_view', 'daily_state') AS foreground,
   user_pseudo_id,
   app_info.version AS app_version,
   (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'app_build') AS app_build,
@@ -10,6 +13,7 @@ SELECT
   device.language AS language,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'firebase_screen') AS screen,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'mode') AS mode,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'action') AS action,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'step') AS step,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'source') AS source,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'category') AS category,
@@ -53,3 +57,5 @@ SELECT
   ) AS value,
   event_value_in_usd
 FROM `__PROJECT__.__SOURCE__.events_*`
+-- Streaming export adds events_intraday_* tables that repeat days already in the daily tables.
+WHERE _TABLE_SUFFIX NOT LIKE 'intraday%'

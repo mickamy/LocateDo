@@ -94,6 +94,10 @@ func signInInput(subject, displayName string) usecase.SignInWithAppleInput {
 	}
 }
 
+func webAppleInput(token string) usecase.DeleteAccountWithAppleInput {
+	return usecase.DeleteAccountWithAppleInput{IdentityToken: token, Nonce: "raw-nonce"}
+}
+
 func googleInput(subject string) usecase.SignInWithGoogleInput {
 	return usecase.SignInWithGoogleInput{IDToken: "google:" + subject, Nonce: "0123456789abcdef"}
 }
@@ -111,8 +115,8 @@ func (fakeGoogle) VerifyIDToken(_ context.Context, raw, nonce string, _ time.Tim
 	return google.Identity{Subject: subject, Name: "Google User"}, nil
 }
 
-// fakeApple accepts identity tokens of the form "identity:<subject>" and
-// exchanges any code except "expired-code" for "apple-refresh:<code>".
+// fakeApple accepts identity tokens of the form "identity:<subject>" (and
+// "web:<subject>" for the website) and exchanges any code except "expired-code" for "apple-refresh:<code>".
 type fakeApple struct {
 	mu         sync.Mutex
 	failRevoke bool
@@ -123,6 +127,16 @@ var _ apple.Auth = (*fakeApple)(nil)
 
 func (f *fakeApple) VerifyIdentityToken(_ context.Context, raw, rawNonce string, _ time.Time) (apple.Identity, error) {
 	subject, ok := strings.CutPrefix(raw, "identity:")
+	if !ok || rawNonce == "" {
+		return apple.Identity{}, apple.ErrInvalidToken
+	}
+	return apple.Identity{Subject: subject}, nil
+}
+
+func (f *fakeApple) VerifyWebIdentityToken(
+	_ context.Context, raw, rawNonce string, _ time.Time,
+) (apple.Identity, error) {
+	subject, ok := strings.CutPrefix(raw, "web:")
 	if !ok || rawNonce == "" {
 		return apple.Identity{}, apple.ErrInvalidToken
 	}

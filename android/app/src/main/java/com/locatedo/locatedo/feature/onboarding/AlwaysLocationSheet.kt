@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 
@@ -36,7 +37,7 @@ import com.locatedo.locatedo.ui.analytics.TrackScreen
 // system page where "all the time" can be chosen; Android 11 and later offer it nowhere else.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlwaysLocationSheet(onDismiss: () -> Unit) {
+fun AlwaysLocationSheet(onAnswer: (AlwaysPromptAnswer) -> Unit, onDismiss: () -> Unit) {
     TrackScreen(AnalyticsScreen.ALWAYS_LOCATION_PROMPT)
     val context = LocalContext.current
     val backgroundOption = remember(context) { context.packageManager.backgroundPermissionOptionLabel.toString() }
@@ -44,7 +45,12 @@ fun AlwaysLocationSheet(onDismiss: () -> Unit) {
         onDismiss()
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = {
+            onAnswer(AlwaysPromptAnswer.DISMISSED)
+            onDismiss()
+        },
+    ) {
         Column(
             modifier = Modifier
                 .padding(horizontal = 24.dp)
@@ -75,12 +81,20 @@ fun AlwaysLocationSheet(onDismiss: () -> Unit) {
                 textAlign = TextAlign.Center,
             )
             Button(
-                onClick = { requestBackgroundLocation.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION) },
+                onClick = {
+                    onAnswer(AlwaysPromptAnswer.ALLOW)
+                    requestBackgroundLocation.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_open_settings))
             }
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = {
+                    onAnswer(AlwaysPromptAnswer.LATER)
+                    onDismiss()
+                },
+            ) {
                 Text(stringResource(R.string.always_prompt_later))
             }
             Spacer(Modifier.height(8.dp))

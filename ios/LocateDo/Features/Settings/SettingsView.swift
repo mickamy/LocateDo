@@ -149,10 +149,12 @@ struct SettingsView: View {
     private var locationAction: some View {
         if locationProvider.authorizationStatus == .notDetermined {
             Button(.settingsLocationAllow) {
+                Self.logAction(.location, .request)
                 locationProvider.start()
             }
         } else {
             Button(.settingsOpenSettings) {
+                Self.logAction(.location, .openSettings)
                 openSystemSettings()
             }
         }
@@ -162,6 +164,7 @@ struct SettingsView: View {
     private var notificationAction: some View {
         if notifier.authorizationStatus == .notDetermined {
             Button(.settingsNotificationsAllow) {
+                Self.logAction(.notifications, .request)
                 Task {
                     await notifier.requestAuthorization()
                 }
@@ -169,9 +172,24 @@ struct SettingsView: View {
             .accessibilityIdentifier("settings.allowNotifications")
         } else {
             Button(.settingsOpenSettings) {
+                Self.logAction(.notifications, .openSettings)
                 openSystemSettings()
             }
         }
+    }
+
+    private enum Permission: String {
+        case location
+        case notifications
+    }
+
+    private enum PermissionAction: String {
+        case request
+        case openSettings = "open_settings"
+    }
+
+    private static func logAction(_ permission: Permission, _ action: PermissionAction) {
+        Analytics.log(.permissionActionTapped, parameters: [.kind: permission.rawValue, .action: action.rawValue])
     }
 
     private func refresh() async {

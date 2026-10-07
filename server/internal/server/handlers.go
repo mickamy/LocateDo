@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/mickamy/LocateDo/config"
 	"github.com/mickamy/LocateDo/internal/di"
 	account "github.com/mickamy/LocateDo/internal/feature/account/handler"
 	category "github.com/mickamy/LocateDo/internal/feature/category/handler"
@@ -18,6 +19,7 @@ type Handlers struct {
 	_            di.Config                `di:"embed"`
 	_            di.Infra                 `di:"embed"`
 	_            di.Lib                   `di:"embed"`
+	CORS         config.CORS              `di:""`
 	Interceptors interceptor.Interceptors `di:""`
 	Health       health.Health            `di:""`
 	RevenueCat   *webhook.RevenueCat      `di:""`

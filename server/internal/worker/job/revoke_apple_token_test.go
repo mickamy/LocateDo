@@ -81,6 +81,10 @@ func (*fakeApple) VerifyIdentityToken(context.Context, string, string, time.Time
 	return apple.Identity{}, errors.New("not used")
 }
 
+func (*fakeApple) VerifyWebIdentityToken(context.Context, string, string, time.Time) (apple.Identity, error) {
+	return apple.Identity{}, errors.New("not used")
+}
+
 func (*fakeApple) ExchangeCode(context.Context, string, time.Time) (string, error) {
 	return "", errors.New("not used")
 }

@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.ui
 
+import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
@@ -85,6 +86,26 @@ class AppViewModelTest {
         viewModel.placeAdded()
 
         assertFalse(viewModel.uiState.first { !it.isExplainingAlwaysLocation }.isExplainingAlwaysLocation)
+    }
+
+    @Test
+    fun theAlwaysLocationAnswerIsLoggedOnceWithItsDuration() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
+        subscribe(viewModel)
+        viewModel.placeAdded()
+        viewModel.uiState.first { it.isExplainingAlwaysLocation }
+        clock.now = clock.now.plusSeconds(3)
+
+        viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.ALLOW)
+        viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.DISMISSED)
+        viewModel.dismissAlwaysLocation()
+
+        assertEquals(1, analytics.count(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED))
+        assertEquals(
+            mapOf("result" to "allow", "duration_s" to 3L),
+            analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
+        )
     }
 
     @Test
@@ -222,6 +243,7 @@ class AppViewModelTest {
         fakeAuthenticator(),
         appStatusStore(preferences, scope = backgroundScope),
         promotions,
+        analytics,
         clock,
     )
 

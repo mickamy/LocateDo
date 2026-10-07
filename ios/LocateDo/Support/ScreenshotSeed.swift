@@ -68,28 +68,24 @@ enum ScreenshotSeed {
         if japanese {
             return [
                 Entry(name: "スーパー", builtin: .shopping, latitudeOffset: 0.0030, longitudeOffset: 0,
-                      todos: ["牛乳", "卵", "食パン", "豆腐"]),
+                      todos: ["牛乳", "卵", "食パン"]),
                 Entry(name: "ドラッグストア", builtin: .shopping, latitudeOffset: -0.0045, longitudeOffset: 0.0040,
                       todos: ["日焼け止め", "歯みがき粉"]),
                 Entry(name: "ホームセンター", builtin: .life, latitudeOffset: 0.0110, longitudeOffset: -0.0060,
-                      todos: ["電球", "収納ボックス"]),
+                      todos: ["電球"]),
                 Entry(name: "会社", builtin: .work, latitudeOffset: -0.0150, longitudeOffset: 0.0100,
-                      todos: ["経費の書類を出す"]),
-                Entry(name: "図書館", builtin: .other, latitudeOffset: 0.0060, longitudeOffset: 0.0090,
-                      todos: ["本を返す"])
+                      todos: ["経費の書類を出す"])
             ]
         }
         return [
             Entry(name: "Grocery store", builtin: .shopping, latitudeOffset: 0.0030, longitudeOffset: 0,
-                  todos: ["Milk", "Eggs", "Avocados", "Coffee beans"]),
+                  todos: ["Milk", "Eggs", "Avocados"]),
             Entry(name: "Pharmacy", builtin: .shopping, latitudeOffset: -0.0045, longitudeOffset: 0.0040,
                   todos: ["Sunscreen", "Toothpaste"]),
             Entry(name: "Hardware store", builtin: .life, latitudeOffset: 0.0110, longitudeOffset: -0.0060,
-                  todos: ["Light bulbs", "Picture hooks"]),
+                  todos: ["Light bulbs"]),
             Entry(name: "Office", builtin: .work, latitudeOffset: -0.0150, longitudeOffset: 0.0100,
-                  todos: ["Hand in the expense report"]),
-            Entry(name: "Library", builtin: .other, latitudeOffset: 0.0060, longitudeOffset: 0.0090,
-                  todos: ["Return the books"])
+                  todos: ["Hand in the expense report"])
         ]
     }
 }

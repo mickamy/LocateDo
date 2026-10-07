@@ -47,6 +47,12 @@ const (
 	// AccountServiceDeleteAccountProcedure is the fully-qualified name of the AccountService's
 	// DeleteAccount RPC.
 	AccountServiceDeleteAccountProcedure = "/locatedo.account.v1.AccountService/DeleteAccount"
+	// AccountServiceDeleteAccountWithAppleProcedure is the fully-qualified name of the AccountService's
+	// DeleteAccountWithApple RPC.
+	AccountServiceDeleteAccountWithAppleProcedure = "/locatedo.account.v1.AccountService/DeleteAccountWithApple"
+	// AccountServiceDeleteAccountWithGoogleProcedure is the fully-qualified name of the
+	// AccountService's DeleteAccountWithGoogle RPC.
+	AccountServiceDeleteAccountWithGoogleProcedure = "/locatedo.account.v1.AccountService/DeleteAccountWithGoogle"
 	// AccountServiceSyncEntitlementProcedure is the fully-qualified name of the AccountService's
 	// SyncEntitlement RPC.
 	AccountServiceSyncEntitlementProcedure = "/locatedo.account.v1.AccountService/SyncEntitlement"
@@ -60,6 +66,10 @@ type AccountServiceClient interface {
 	// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
 	SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
+	// Deletes the account signed in with the token, for the web page that lets
+	// people delete their account without the app. Never creates an account.
+	DeleteAccountWithApple(context.Context, *connect.Request[v1.DeleteAccountWithAppleRequest]) (*connect.Response[v1.DeleteAccountWithAppleResponse], error)
+	DeleteAccountWithGoogle(context.Context, *connect.Request[v1.DeleteAccountWithGoogleRequest]) (*connect.Response[v1.DeleteAccountWithGoogleResponse], error)
 	// Re-reads the caller's subscription and updates their household plan in the background.
 	// Call it after linking the purchase SDK to the user, since a purchase made before
 	// signing in sends no webhook naming the user.
@@ -107,6 +117,18 @@ func NewAccountServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(accountServiceMethods.ByName("DeleteAccount")),
 			connect.WithClientOptions(opts...),
 		),
+		deleteAccountWithApple: connect.NewClient[v1.DeleteAccountWithAppleRequest, v1.DeleteAccountWithAppleResponse](
+			httpClient,
+			baseURL+AccountServiceDeleteAccountWithAppleProcedure,
+			connect.WithSchema(accountServiceMethods.ByName("DeleteAccountWithApple")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteAccountWithGoogle: connect.NewClient[v1.DeleteAccountWithGoogleRequest, v1.DeleteAccountWithGoogleResponse](
+			httpClient,
+			baseURL+AccountServiceDeleteAccountWithGoogleProcedure,
+			connect.WithSchema(accountServiceMethods.ByName("DeleteAccountWithGoogle")),
+			connect.WithClientOptions(opts...),
+		),
 		syncEntitlement: connect.NewClient[v1.SyncEntitlementRequest, v1.SyncEntitlementResponse](
 			httpClient,
 			baseURL+AccountServiceSyncEntitlementProcedure,
@@ -118,12 +140,14 @@ func NewAccountServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // accountServiceClient implements AccountServiceClient.
 type accountServiceClient struct {
-	signInWithApple  *connect.Client[v1.SignInWithAppleRequest, v1.SignInWithAppleResponse]
-	signInWithGoogle *connect.Client[v1.SignInWithGoogleRequest, v1.SignInWithGoogleResponse]
-	refreshToken     *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
-	signOut          *connect.Client[v1.SignOutRequest, v1.SignOutResponse]
-	deleteAccount    *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
-	syncEntitlement  *connect.Client[v1.SyncEntitlementRequest, v1.SyncEntitlementResponse]
+	signInWithApple         *connect.Client[v1.SignInWithAppleRequest, v1.SignInWithAppleResponse]
+	signInWithGoogle        *connect.Client[v1.SignInWithGoogleRequest, v1.SignInWithGoogleResponse]
+	refreshToken            *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
+	signOut                 *connect.Client[v1.SignOutRequest, v1.SignOutResponse]
+	deleteAccount           *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
+	deleteAccountWithApple  *connect.Client[v1.DeleteAccountWithAppleRequest, v1.DeleteAccountWithAppleResponse]
+	deleteAccountWithGoogle *connect.Client[v1.DeleteAccountWithGoogleRequest, v1.DeleteAccountWithGoogleResponse]
+	syncEntitlement         *connect.Client[v1.SyncEntitlementRequest, v1.SyncEntitlementResponse]
 }
 
 // SignInWithApple calls locatedo.account.v1.AccountService.SignInWithApple.
@@ -151,6 +175,16 @@ func (c *accountServiceClient) DeleteAccount(ctx context.Context, req *connect.R
 	return c.deleteAccount.CallUnary(ctx, req)
 }
 
+// DeleteAccountWithApple calls locatedo.account.v1.AccountService.DeleteAccountWithApple.
+func (c *accountServiceClient) DeleteAccountWithApple(ctx context.Context, req *connect.Request[v1.DeleteAccountWithAppleRequest]) (*connect.Response[v1.DeleteAccountWithAppleResponse], error) {
+	return c.deleteAccountWithApple.CallUnary(ctx, req)
+}
+
+// DeleteAccountWithGoogle calls locatedo.account.v1.AccountService.DeleteAccountWithGoogle.
+func (c *accountServiceClient) DeleteAccountWithGoogle(ctx context.Context, req *connect.Request[v1.DeleteAccountWithGoogleRequest]) (*connect.Response[v1.DeleteAccountWithGoogleResponse], error) {
+	return c.deleteAccountWithGoogle.CallUnary(ctx, req)
+}
+
 // SyncEntitlement calls locatedo.account.v1.AccountService.SyncEntitlement.
 func (c *accountServiceClient) SyncEntitlement(ctx context.Context, req *connect.Request[v1.SyncEntitlementRequest]) (*connect.Response[v1.SyncEntitlementResponse], error) {
 	return c.syncEntitlement.CallUnary(ctx, req)
@@ -164,6 +198,10 @@ type AccountServiceHandler interface {
 	// Revokes the caller's refresh token family. Succeeds for an unknown or already revoked token.
 	SignOut(context.Context, *connect.Request[v1.SignOutRequest]) (*connect.Response[v1.SignOutResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
+	// Deletes the account signed in with the token, for the web page that lets
+	// people delete their account without the app. Never creates an account.
+	DeleteAccountWithApple(context.Context, *connect.Request[v1.DeleteAccountWithAppleRequest]) (*connect.Response[v1.DeleteAccountWithAppleResponse], error)
+	DeleteAccountWithGoogle(context.Context, *connect.Request[v1.DeleteAccountWithGoogleRequest]) (*connect.Response[v1.DeleteAccountWithGoogleResponse], error)
 	// Re-reads the caller's subscription and updates their household plan in the background.
 	// Call it after linking the purchase SDK to the user, since a purchase made before
 	// signing in sends no webhook naming the user.
@@ -207,6 +245,18 @@ func NewAccountServiceHandler(svc AccountServiceHandler, opts ...connect.Handler
 		connect.WithSchema(accountServiceMethods.ByName("DeleteAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
+	accountServiceDeleteAccountWithAppleHandler := connect.NewUnaryHandler(
+		AccountServiceDeleteAccountWithAppleProcedure,
+		svc.DeleteAccountWithApple,
+		connect.WithSchema(accountServiceMethods.ByName("DeleteAccountWithApple")),
+		connect.WithHandlerOptions(opts...),
+	)
+	accountServiceDeleteAccountWithGoogleHandler := connect.NewUnaryHandler(
+		AccountServiceDeleteAccountWithGoogleProcedure,
+		svc.DeleteAccountWithGoogle,
+		connect.WithSchema(accountServiceMethods.ByName("DeleteAccountWithGoogle")),
+		connect.WithHandlerOptions(opts...),
+	)
 	accountServiceSyncEntitlementHandler := connect.NewUnaryHandler(
 		AccountServiceSyncEntitlementProcedure,
 		svc.SyncEntitlement,
@@ -225,6 +275,10 @@ func NewAccountServiceHandler(svc AccountServiceHandler, opts ...connect.Handler
 			accountServiceSignOutHandler.ServeHTTP(w, r)
 		case AccountServiceDeleteAccountProcedure:
 			accountServiceDeleteAccountHandler.ServeHTTP(w, r)
+		case AccountServiceDeleteAccountWithAppleProcedure:
+			accountServiceDeleteAccountWithAppleHandler.ServeHTTP(w, r)
+		case AccountServiceDeleteAccountWithGoogleProcedure:
+			accountServiceDeleteAccountWithGoogleHandler.ServeHTTP(w, r)
 		case AccountServiceSyncEntitlementProcedure:
 			accountServiceSyncEntitlementHandler.ServeHTTP(w, r)
 		default:
@@ -254,6 +308,14 @@ func (UnimplementedAccountServiceHandler) SignOut(context.Context, *connect.Requ
 
 func (UnimplementedAccountServiceHandler) DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.DeleteAccount is not implemented"))
+}
+
+func (UnimplementedAccountServiceHandler) DeleteAccountWithApple(context.Context, *connect.Request[v1.DeleteAccountWithAppleRequest]) (*connect.Response[v1.DeleteAccountWithAppleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.DeleteAccountWithApple is not implemented"))
+}
+
+func (UnimplementedAccountServiceHandler) DeleteAccountWithGoogle(context.Context, *connect.Request[v1.DeleteAccountWithGoogleRequest]) (*connect.Response[v1.DeleteAccountWithGoogleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("locatedo.account.v1.AccountService.DeleteAccountWithGoogle is not implemented"))
 }
 
 func (UnimplementedAccountServiceHandler) SyncEntitlement(context.Context, *connect.Request[v1.SyncEntitlementRequest]) (*connect.Response[v1.SyncEntitlementResponse], error) {

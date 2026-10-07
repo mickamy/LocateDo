@@ -37,16 +37,34 @@ class ArrivalHandler @Inject constructor(
         }
     }
 
+    // Every place looked at and left unannounced is reported with the reason; arrival_notified counts only
+    // notifications that are actually shown.
     private suspend fun notify(entry: PlaceWithTodos): Boolean {
         val todos = NotificationPolicy.notifiableTodos(entry.openTodos, userId = authenticator.current()?.userId)
         val now = clock.instant()
-        if (!NotificationPolicy.shouldNotify(todos.size, entry.place.lastNotifiedAt, now)) {
+        val category = categoryRepository.observeAll().first().firstOrNull { it.id == entry.place.categoryId }
+        val suppression = NotificationPolicy.suppression(
+            openTodoCount = entry.openTodos.size,
+            notifiableTodoCount = todos.size,
+            lastNotifiedAt = entry.place.lastNotifiedAt,
+            notificationsAllowed = notifier.canNotify(),
+            now = now,
+        )
+        if (suppression != null) {
+            analytics.log(
+                AnalyticsEvent.ARRIVAL_SUPPRESSED,
+                mapOf(
+                    AnalyticsParameter.REASON to suppression.key,
+                    AnalyticsParameter.OPEN_TODOS to entry.openTodos.size,
+                    AnalyticsParameter.CATEGORY to analyticsCategory(category),
+                    AnalyticsParameter.RADIUS_M to entry.place.radiusMeters.toInt(),
+                ),
+            )
             return false
         }
         notifier.notifyArrival(entry.place, todos.map { it.title })
         placeRepository.markNotified(entry.place.id, now)
         preferences.setReceivedArrivalNotification()
-        val category = categoryRepository.observeAll().first().firstOrNull { it.id == entry.place.categoryId }
         analytics.log(
             AnalyticsEvent.ARRIVAL_NOTIFIED,
             mapOf(

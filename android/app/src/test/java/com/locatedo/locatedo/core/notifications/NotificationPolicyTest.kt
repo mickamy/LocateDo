@@ -6,31 +6,58 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class NotificationPolicyTest {
     private val now = Instant.ofEpochSecond(100_000)
 
     @Test
-    fun staysQuietWithoutOpenTodos() {
-        assertFalse(NotificationPolicy.shouldNotify(openTodoCount = 0, lastNotifiedAt = null, now = now))
-    }
-
-    @Test
     fun notifiesTheFirstTime() {
-        assertTrue(NotificationPolicy.shouldNotify(openTodoCount = 1, lastNotifiedAt = null, now = now))
+        assertNull(suppression())
     }
 
     @Test
-    fun respectsTheCooldown() {
-        val tenMinutesAgo = now.minus(Duration.ofMinutes(10))
-        assertFalse(NotificationPolicy.shouldNotify(openTodoCount = 2, lastNotifiedAt = tenMinutesAgo, now = now))
-
-        val thirtyOneMinutesAgo = now.minus(Duration.ofMinutes(31))
-        assertTrue(NotificationPolicy.shouldNotify(openTodoCount = 2, lastNotifiedAt = thirtyOneMinutesAgo, now = now))
+    fun eachReasonOnItsOwn() {
+        assertEquals(ArrivalSuppression.NO_OPEN_TODOS, suppression(open = 0, notifiable = 0))
+        assertEquals(ArrivalSuppression.ASSIGNED_TO_OTHERS, suppression(open = 2, notifiable = 0))
+        assertEquals(ArrivalSuppression.RECENTLY_NOTIFIED, suppression(lastNotifiedAt = now.minus(Duration.ofMinutes(10))))
+        assertEquals(ArrivalSuppression.NOTIFICATIONS_OFF, suppression(allowed = false))
     }
+
+    @Test
+    fun theCooldownEndsAfterThirtyMinutes() {
+        assertNull(suppression(lastNotifiedAt = now.minus(Duration.ofMinutes(30))))
+    }
+
+    @Test
+    fun overlappingReasonsReportTheFirstInOrder() {
+        val recent = now.minus(Duration.ofMinutes(10))
+        assertEquals(
+            ArrivalSuppression.NO_OPEN_TODOS,
+            suppression(open = 0, notifiable = 0, lastNotifiedAt = recent, allowed = false),
+        )
+        assertEquals(
+            ArrivalSuppression.ASSIGNED_TO_OTHERS,
+            suppression(open = 1, notifiable = 0, lastNotifiedAt = recent, allowed = false),
+        )
+        assertEquals(ArrivalSuppression.RECENTLY_NOTIFIED, suppression(lastNotifiedAt = recent, allowed = false))
+    }
+
+    @Test
+    fun keysMatchIos() {
+        assertEquals(
+            listOf("no_open_todos", "assigned_to_others", "recently_notified", "notifications_off"),
+            ArrivalSuppression.entries.map { it.key },
+        )
+    }
+
+    private fun suppression(
+        open: Int = 1,
+        notifiable: Int = 1,
+        lastNotifiedAt: Instant? = null,
+        allowed: Boolean = true,
+    ): ArrivalSuppression? = NotificationPolicy.suppression(open, notifiable, lastNotifiedAt, allowed, now)
 
     @Test
     fun bodyListsUpToThreeTitles() {
