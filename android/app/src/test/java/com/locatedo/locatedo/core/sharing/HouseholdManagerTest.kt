@@ -203,7 +203,7 @@ class HouseholdManagerTest {
         val preferences = testPreferences(folder.root, backgroundScope)
         val writeAnalytics = WriteAnalytics(analytics, preferences, fixedClock)
         val places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
-        val todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
+        val todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, authenticator, writeAnalytics, fixedClock)
         val categories = RoomCategoryRepository(database, database.categoryDao(), queue, fixedClock)
         val syncState = RoomSyncStateRepository(database.syncStateDao())
         syncState.set(SyncState(householdId = householdId))

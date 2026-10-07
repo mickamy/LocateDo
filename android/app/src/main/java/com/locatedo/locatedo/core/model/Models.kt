@@ -26,7 +26,9 @@ data class Todo(
     val title: String,
     val placeId: UUID,
     val assigneeId: UUID? = null,
+    val creatorId: UUID? = null,
     val completedAt: Instant? = null,
+    val completerId: UUID? = null,
     val createdAt: Instant,
     val updatedAt: Instant = createdAt,
 ) {

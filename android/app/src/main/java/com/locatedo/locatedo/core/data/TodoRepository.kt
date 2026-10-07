@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.data
 
 import androidx.room.withTransaction
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.database.TodoDao
 import com.locatedo.locatedo.core.database.TodoEntity
@@ -32,6 +33,7 @@ class RoomTodoRepository @Inject constructor(
     private val todoDao: TodoDao,
     private val proStatus: ProStatus,
     private val queue: WriteQueue,
+    private val authenticator: Authenticator,
     private val analytics: WriteAnalytics,
     private val clock: Clock,
 ) : TodoRepository {
@@ -67,8 +69,10 @@ class RoomTodoRepository @Inject constructor(
         }
     }
 
-    // Reopening counts against the free limit just like adding, so the server and the device agree.
+    // Reopening counts against the free limit just like adding, so the server and the device agree. The server
+    // records who checked it off; the device notes itself too, so the row is right before the next pull.
     override suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit? {
+        val userId = authenticator.current()?.userId
         val completion = database.withTransaction {
             val todo = todoDao.get(id.toString()) ?: return@withTransaction null
             val reopening = !completed && todo.completedAt != null
@@ -77,7 +81,14 @@ class RoomTodoRepository @Inject constructor(
             }
             val now = clock.instant()
             val completedAt = if (completed) now else null
-            todoDao.upsert(todo.copy(completedAt = completedAt?.toEpochMilli(), updatedAt = now.toEpochMilli()))
+            val completerId = if (completed) userId?.toString() else null
+            todoDao.upsert(
+                todo.copy(
+                    completedAt = completedAt?.toEpochMilli(),
+                    completerId = completerId,
+                    updatedAt = now.toEpochMilli(),
+                ),
+            )
             queue.enqueue(Write.completion(id, completedAt))
             Completion(todo, null)
         } ?: return null

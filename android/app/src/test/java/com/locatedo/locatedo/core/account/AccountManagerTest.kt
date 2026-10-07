@@ -89,7 +89,7 @@ class AccountManagerTest {
         queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
         val writeAnalytics = WriteAnalytics(FakeAnalytics(), testPreferences(folder.newFolder(), analyticsScope), fixedClock)
         places = RoomPlaceRepository(database, database.placeDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
-        todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, writeAnalytics, fixedClock)
+        todos = RoomTodoRepository(database, database.todoDao(), FakeProStatus(), queue, authenticator, writeAnalytics, fixedClock)
         categories = RoomCategoryRepository(database, database.categoryDao(), queue, fixedClock)
         syncState = RoomSyncStateRepository(database.syncStateDao())
         localData = LocalData(

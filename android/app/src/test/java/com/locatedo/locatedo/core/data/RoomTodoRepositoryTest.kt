@@ -53,7 +53,7 @@ class RoomTodoRepositoryTest {
         val queue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock)
         writeAnalytics = WriteAnalytics(analytics, testPreferences(folder.root, scope), fixedClock)
         places = RoomPlaceRepository(database, database.placeDao(), proStatus, queue, writeAnalytics, fixedClock)
-        repository = RoomTodoRepository(database, database.todoDao(), proStatus, queue, writeAnalytics, fixedClock)
+        repository = RoomTodoRepository(database, database.todoDao(), proStatus, queue, authenticator, writeAnalytics, fixedClock)
         places.add(store)
     }
 
@@ -131,6 +131,19 @@ class RoomTodoRepositoryTest {
         assertEquals(listOf(milk.id.toString(), milk.id.toString()), completions.map { it.id })
         assertEquals(listOf(true, false), completions.map { it.hasCompletedAt() })
         assertEquals(fixedNow, completions[0].completedAt.toInstant())
+    }
+
+    @Test
+    fun checkingOffNotesTheSignedInUserAndReopeningClearsIt() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+
+        repository.setCompleted(milk.id, true)
+        assertEquals(testSession.userId, repository.observeAll().first().single().completerId)
+
+        repository.setCompleted(milk.id, false)
+        assertNull(repository.observeAll().first().single().completerId)
     }
 
     @Test

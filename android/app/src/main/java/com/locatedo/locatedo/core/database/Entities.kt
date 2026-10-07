@@ -60,7 +60,9 @@ data class TodoEntity(
     val title: String,
     val placeId: String,
     val assigneeId: String?,
+    val creatorId: String? = null,
     val completedAt: Long?,
+    val completerId: String? = null,
     val createdAt: Long,
     val updatedAt: Long,
 )
