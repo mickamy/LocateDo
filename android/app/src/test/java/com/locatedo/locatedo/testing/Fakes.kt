@@ -100,8 +100,11 @@ class FakeGeofenceRegistrar : GeofenceRegistrar {
 
 class FakeArrivalNotifier : ArrivalNotifier {
     val notified = mutableListOf<Pair<Place, List<String>>>()
+    var allowed = true
 
     override fun prepare() = Unit
+
+    override fun canNotify(): Boolean = allowed
 
     override fun notifyArrival(place: Place, todoTitles: List<String>) {
         notified += place to todoTitles

@@ -8,6 +8,7 @@ enum class AnalyticsEvent(val key: String) {
     ALWAYS_PROMPT_ANSWERED("always_prompt_answered"),
     ARRIVAL_NOTIFIED("arrival_notified"),
     ARRIVAL_OPENED("arrival_opened"),
+    ARRIVAL_SUPPRESSED("arrival_suppressed"),
     DAILY_STATE("daily_state"),
     LIMIT_REACHED("limit_reached"),
     LOCATION_AUTH_CHANGED("location_auth_changed"),

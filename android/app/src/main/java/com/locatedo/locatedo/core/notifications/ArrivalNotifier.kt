@@ -21,6 +21,7 @@ import javax.inject.Singleton
 
 interface ArrivalNotifier {
     fun prepare()
+    fun canNotify(): Boolean
     fun notifyArrival(place: Place, todoTitles: List<String>)
 }
 
@@ -38,11 +39,16 @@ class AndroidArrivalNotifier @Inject constructor(
         manager.createNotificationChannel(channel)
     }
 
+    // Off for the whole app, or for the arrivals channel alone; either way nothing would be shown.
+    override fun canNotify(): Boolean {
+        if (!manager.areNotificationsEnabled()) {
+            return false
+        }
+        return manager.getNotificationChannelCompat(CHANNEL_ID)?.importance != NotificationManagerCompat.IMPORTANCE_NONE
+    }
+
     // One notification per place, replaced on the next arrival; tapping it opens the place on the home map.
     override fun notifyArrival(place: Place, todoTitles: List<String>) {
-        if (!manager.areNotificationsEnabled()) {
-            return
-        }
         val text = bodyText(todoTitles)
         val contentIntent = PendingIntent.getActivity(
             context,

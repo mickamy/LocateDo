@@ -95,6 +95,10 @@ class ArrivalHandlerTest {
         handler.arrived(listOf(store.id, office.id), near = here)
 
         assertEquals(listOf(office.id), notifier.notified.map { it.first.id })
+        val suppressed = analytics.values(AnalyticsEvent.ARRIVAL_SUPPRESSED)
+        assertEquals("no_open_todos", suppressed["reason"])
+        assertEquals(0L, suppressed["open_todos"])
+        assertEquals(1, analytics.count(AnalyticsEvent.ARRIVAL_SUPPRESSED))
     }
 
     @Test
@@ -107,6 +111,52 @@ class ArrivalHandlerTest {
 
         assertTrue(notifier.notified.isEmpty())
         assertFalse(preferences.promotions.first().hasReceivedArrivalNotification)
+        assertEquals(
+            mapOf("reason" to "recently_notified", "open_todos" to 1L, "category" to "none", "radius_m" to 100L),
+            analytics.values(AnalyticsEvent.ARRIVAL_SUPPRESSED),
+        )
+    }
+
+    @Test
+    fun onlyTodosForSomeoneElseAreReportedAsSuch() = runTest {
+        authenticator.signIn(testSession)
+        places.state.value = listOf(
+            PlaceWithTodos(store, listOf(todo("Milk", store).copy(assigneeId = UUID.randomUUID()))),
+        )
+
+        handler.arrived(listOf(store.id), near = here)
+
+        assertTrue(notifier.notified.isEmpty())
+        val suppressed = analytics.values(AnalyticsEvent.ARRIVAL_SUPPRESSED)
+        assertEquals("assigned_to_others", suppressed["reason"])
+        assertEquals(1L, suppressed["open_todos"])
+    }
+
+    @Test
+    fun withNotificationsOffNothingIsShownOrCountedAsNotified() = runTest {
+        notifier.allowed = false
+        places.state.value = listOf(PlaceWithTodos(store, listOf(todo("Milk", store))))
+
+        handler.arrived(listOf(store.id), near = here)
+
+        assertTrue(notifier.notified.isEmpty())
+        assertEquals(0, analytics.count(AnalyticsEvent.ARRIVAL_NOTIFIED))
+        assertEquals("notifications_off", analytics.values(AnalyticsEvent.ARRIVAL_SUPPRESSED)["reason"])
+        assertNull(places.state.value.single().place.lastNotifiedAt)
+        assertFalse(preferences.promotions.first().hasReceivedArrivalNotification)
+    }
+
+    @Test
+    fun overlappingReasonsReportOnlyTheFirst() = runTest {
+        notifier.allowed = false
+        places.state.value = listOf(
+            PlaceWithTodos(store.copy(lastNotifiedAt = now.minus(Duration.ofMinutes(10))), listOf(todo("Milk", store))),
+        )
+
+        handler.arrived(listOf(store.id), near = here)
+
+        assertEquals(1, analytics.count(AnalyticsEvent.ARRIVAL_SUPPRESSED))
+        assertEquals("recently_notified", analytics.values(AnalyticsEvent.ARRIVAL_SUPPRESSED)["reason"])
     }
 
     @Test
@@ -127,6 +177,7 @@ class ArrivalHandlerTest {
         handler.arrived(listOf(store.id), near = here)
 
         assertEquals(listOf("Bread", "Eggs"), notifier.notified.single().second)
+        assertEquals(0, analytics.count(AnalyticsEvent.ARRIVAL_SUPPRESSED))
     }
 
     @Test
