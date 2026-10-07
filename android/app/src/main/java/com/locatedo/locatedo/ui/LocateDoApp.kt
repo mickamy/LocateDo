@@ -86,6 +86,7 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     val pendingPlace by appViewModel.pendingPlace.collectAsStateWithLifecycle()
     val pendingInvite by appViewModel.pendingInvite.collectAsStateWithLifecycle()
     val pendingPaywall by appViewModel.pendingPaywall.collectAsStateWithLifecycle()
+    val pendingTodos by appViewModel.pendingTodos.collectAsStateWithLifecycle()
     val appStatus = LocalAppStatus.current
 
     when {
@@ -99,6 +100,8 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
             onInviteConsumed = appViewModel::inviteConsumed,
             pendingPaywall = pendingPaywall,
             onPaywallConsumed = appViewModel::paywallConsumed,
+            pendingTodos = pendingTodos,
+            onTodosConsumed = appViewModel::todosConsumed,
             showsMaintenanceBanner = appState.isSignedIn,
             onDismissMaintenanceBanner = appViewModel::dismissMaintenanceBanner,
         )
@@ -166,6 +169,8 @@ private fun Tabs(
     onInviteConsumed: (String) -> Unit,
     pendingPaywall: PaywallTrigger?,
     onPaywallConsumed: (PaywallTrigger) -> Unit,
+    pendingTodos: Boolean,
+    onTodosConsumed: () -> Unit,
     showsMaintenanceBanner: Boolean,
     onDismissMaintenanceBanner: () -> Unit,
 ) {
@@ -180,6 +185,13 @@ private fun Tabs(
         if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
             backStack.clear()
             backStack.add(HomeKey)
+        }
+    }
+    LaunchedEffect(pendingTodos) {
+        if (pendingTodos) {
+            backStack.clear()
+            backStack.add(TodosKey)
+            onTodosConsumed()
         }
     }
     LaunchedEffect(pendingInvite) {

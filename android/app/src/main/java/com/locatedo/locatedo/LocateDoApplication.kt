@@ -17,6 +17,7 @@ import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.geofence.GeofenceSync
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.notifications.CampaignNotifier
+import com.locatedo.locatedo.core.notifications.CompletionNotifier
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.push.PromotionsConsent
@@ -40,6 +41,8 @@ class LocateDoApplication : Application() {
     @Inject lateinit var notifier: ArrivalNotifier
 
     @Inject lateinit var campaignNotifier: CampaignNotifier
+
+    @Inject lateinit var completionNotifier: CompletionNotifier
 
     @Inject lateinit var geofenceSync: GeofenceSync
 
@@ -77,6 +80,7 @@ class LocateDoApplication : Application() {
         super.onCreate()
         notifier.prepare()
         campaignNotifier.prepare()
+        completionNotifier.prepare()
         applicationScope.launch {
             preferences.recordFirstLaunch(clock.instant())
             categories.ensureBuiltins()

@@ -24,6 +24,8 @@ import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.notifications.CampaignNotification
 import com.locatedo.locatedo.core.notifications.CampaignNotifier
+import com.locatedo.locatedo.core.notifications.CompletionNotice
+import com.locatedo.locatedo.core.notifications.CompletionNotifier
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.Permissions
@@ -118,6 +120,16 @@ class FakeCampaignNotifier : CampaignNotifier {
 
     override fun notify(campaign: CampaignNotification, sentAt: Instant) {
         notified += campaign to sentAt
+    }
+}
+
+class FakeCompletionNotifier : CompletionNotifier {
+    val notified = mutableListOf<CompletionNotice>()
+
+    override fun prepare() = Unit
+
+    override fun notify(notice: CompletionNotice, id: Int) {
+        notified += notice
     }
 }
 
