@@ -3,7 +3,7 @@ import Observation
 import UserNotifications
 
 @Observable
-final class MarketingConsent {
+final class PromotionsConsent {
     enum Source: String {
         case firstArrival = "first_arrival"
         case settings
@@ -26,21 +26,21 @@ final class MarketingConsent {
     }
 
     var isOn: Bool {
-        preferences.marketingConsent
+        preferences.promotionsConsent
     }
 
     @discardableResult
     func set(_ isOn: Bool, source: Source) -> Task<Void, Never>? {
-        guard isOn != preferences.marketingConsent else {
+        guard isOn != preferences.promotionsConsent else {
             return nil
         }
-        preferences.marketingConsent = isOn
+        preferences.promotionsConsent = isOn
         var value = "off"
         if isOn {
             value = "on"
         }
-        Analytics.log(.marketingConsentChanged, parameters: [.to: value, .source: source.rawValue])
-        Analytics.setUserProperty(DailyState.flag(isOn), for: .marketingConsent)
+        Analytics.log(.promotionsConsentChanged, parameters: [.to: value, .source: source.rawValue])
+        Analytics.setUserProperty(DailyState.flag(isOn), for: .promotionsConsent)
         let onChanged = onChanged
         return Task {
             await onChanged()
@@ -53,8 +53,8 @@ final class MarketingConsent {
 
     func shouldPrompt(notificationAuth: UNAuthorizationStatus, lastArrivalOpenedAt: Date?, now: Date) -> Bool {
         guard preferences.hasReceivedArrivalNotification,
-              !preferences.hasShownMarketingPrompt,
-              !preferences.marketingConsent,
+              !preferences.hasShownPromotionsPrompt,
+              !preferences.promotionsConsent,
               DailyState.NotificationAuth(notificationAuth) == .authorized else {
             return false
         }
@@ -65,8 +65,8 @@ final class MarketingConsent {
     }
 
     func promptShown(daysSinceInstall: Int, notificationAuth: UNAuthorizationStatus) {
-        preferences.hasShownMarketingPrompt = true
-        Analytics.log(.marketingPromptShown, parameters: [
+        preferences.hasShownPromotionsPrompt = true
+        Analytics.log(.promotionsPromptShown, parameters: [
             .daysSinceInstall: daysSinceInstall,
             .notificationAuth: DailyState.NotificationAuth(notificationAuth).rawValue
         ])
@@ -74,7 +74,7 @@ final class MarketingConsent {
 
     @discardableResult
     func answerPrompt(_ answer: Answer, after duration: TimeInterval) -> Task<Void, Never>? {
-        Analytics.log(.marketingPromptAnswered, parameters: [
+        Analytics.log(.promotionsPromptAnswered, parameters: [
             .result: answer.rawValue,
             .durationS: max(Int(duration), 0)
         ])

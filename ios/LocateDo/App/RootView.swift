@@ -12,10 +12,10 @@ struct RootView: View {
     @Environment(Authenticator.self) private var authenticator
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
-    @Environment(MarketingConsent.self) private var marketingConsent
+    @Environment(PromotionsConsent.self) private var promotionsConsent
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
-    @State private var isMarketingPromptPresented = false
+    @State private var isPromotionsPromptPresented = false
 
     var body: some View {
         Group {
@@ -77,8 +77,8 @@ struct RootView: View {
                 .sheet(item: $router.pendingPaywall) { trigger in
                     PaywallView(trigger: trigger)
                 }
-                .sheet(isPresented: $isMarketingPromptPresented) {
-                    MarketingConsentSheet()
+                .sheet(isPresented: $isPromotionsPromptPresented) {
+                    PromotionsConsentSheet()
                 }
     }
 
@@ -148,15 +148,15 @@ struct RootView: View {
                 authenticator: authenticator,
                 locationProvider: locationProvider,
                 notifier: notifier,
-                marketingConsent: marketingConsent.isOn
+                promotionsConsent: promotionsConsent.isOn
             )
-            presentMarketingPromptIfDue()
+            presentPromotionsPromptIfDue()
         }
     }
 
-    private func presentMarketingPromptIfDue() {
+    private func presentPromotionsPromptIfDue() {
         let now = Date()
-        let isDue = marketingConsent.shouldPrompt(
+        let isDue = promotionsConsent.shouldPrompt(
             notificationAuth: notifier.authorizationStatus,
             lastArrivalOpenedAt: notifier.lastOpenedAt,
             now: now
@@ -164,11 +164,11 @@ struct RootView: View {
         guard isDue, !isShowingSomethingElse else {
             return
         }
-        marketingConsent.promptShown(
+        promotionsConsent.promptShown(
             daysSinceInstall: InstallDate.daysSinceInstall(defaults: .standard, now: now),
             notificationAuth: notifier.authorizationStatus
         )
-        isMarketingPromptPresented = true
+        isPromotionsPromptPresented = true
     }
 
     private var isShowingSomethingElse: Bool {
@@ -217,7 +217,7 @@ struct RootView: View {
         .modelContainer(container)
         .environment(router)
         .environment(preferences)
-        .environment(MarketingConsent(preferences: preferences))
+        .environment(PromotionsConsent(preferences: preferences))
         .environment(locationProvider)
         .environment(notifier)
         .environment(GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider))

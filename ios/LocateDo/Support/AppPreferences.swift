@@ -9,9 +9,9 @@ final class AppPreferences {
         static let defaultRadiusMeters = "defaultRadiusMeters"
         static let pendingSessionEndedNotice = "pendingSessionEndedNotice"
         static let pendingRemovedNotice = "pendingRemovedNotice"
-        static let marketingConsent = "marketingConsent"
+        static let promotionsConsent = "promotionsConsent"
         static let receivedArrivalNotification = "receivedArrivalNotification"
-        static let shownMarketingPrompt = "shownMarketingPrompt"
+        static let shownPromotionsPrompt = "shownPromotionsPrompt"
     }
 
     private let defaults: UserDefaults
@@ -36,16 +36,16 @@ final class AppPreferences {
         didSet { defaults.set(hasPendingRemovedNotice, forKey: Key.pendingRemovedNotice) }
     }
 
-    var marketingConsent: Bool {
-        didSet { defaults.set(marketingConsent, forKey: Key.marketingConsent) }
+    var promotionsConsent: Bool {
+        didSet { defaults.set(promotionsConsent, forKey: Key.promotionsConsent) }
     }
 
     var hasReceivedArrivalNotification: Bool {
         didSet { defaults.set(hasReceivedArrivalNotification, forKey: Key.receivedArrivalNotification) }
     }
 
-    var hasShownMarketingPrompt: Bool {
-        didSet { defaults.set(hasShownMarketingPrompt, forKey: Key.shownMarketingPrompt) }
+    var hasShownPromotionsPrompt: Bool {
+        didSet { defaults.set(hasShownPromotionsPrompt, forKey: Key.shownPromotionsPrompt) }
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -54,9 +54,9 @@ final class AppPreferences {
         hasPromptedAlwaysLocation = defaults.bool(forKey: Key.promptedAlwaysLocation)
         hasPendingSessionEndedNotice = defaults.bool(forKey: Key.pendingSessionEndedNotice)
         hasPendingRemovedNotice = defaults.bool(forKey: Key.pendingRemovedNotice)
-        marketingConsent = defaults.bool(forKey: Key.marketingConsent)
+        promotionsConsent = defaults.bool(forKey: Key.promotionsConsent)
         hasReceivedArrivalNotification = defaults.bool(forKey: Key.receivedArrivalNotification)
-        hasShownMarketingPrompt = defaults.bool(forKey: Key.shownMarketingPrompt)
+        hasShownPromotionsPrompt = defaults.bool(forKey: Key.shownPromotionsPrompt)
         let storedRadius = defaults.double(forKey: Key.defaultRadiusMeters)
         defaultRadiusMeters = Place.radiusRange.contains(storedRadius) ? storedRadius : Place.defaultRadiusMeters
     }

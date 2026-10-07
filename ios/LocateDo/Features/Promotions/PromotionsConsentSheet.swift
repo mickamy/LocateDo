@@ -1,10 +1,10 @@
 import SwiftUI
 
-struct MarketingConsentSheet: View {
-    @Environment(MarketingConsent.self) private var consent
+struct PromotionsConsentSheet: View {
+    @Environment(PromotionsConsent.self) private var consent
     @Environment(\.dismiss) private var dismiss
     @State private var shownAt = Date()
-    @State private var answer: MarketingConsent.Answer = .dismissed
+    @State private var answer: PromotionsConsent.Answer = .dismissed
 
     var body: some View {
         VStack(spacing: 20) {
@@ -12,26 +12,26 @@ struct MarketingConsentSheet: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.tint)
                 .accessibilityHidden(true)
-            Text(.marketingPromptTitle)
+            Text(.promotionsPromptTitle)
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
-            Text(.marketingPromptMessage)
+            Text(.promotionsPromptMessage)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer(minLength: 0)
             Button {
                 close(with: .accepted)
             } label: {
-                Text(.marketingPromptAccept)
+                Text(.promotionsPromptAccept)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .accessibilityIdentifier("marketingPrompt.accept")
-            Button(.marketingPromptDecline) {
+            .accessibilityIdentifier("promotionsPrompt.accept")
+            Button(.promotionsPromptDecline) {
                 close(with: .declined)
             }
-            .accessibilityIdentifier("marketingPrompt.decline")
+            .accessibilityIdentifier("promotionsPrompt.decline")
         }
         .padding(32)
         .presentationDetents([.medium])
@@ -40,7 +40,7 @@ struct MarketingConsentSheet: View {
         }
     }
 
-    private func close(with answer: MarketingConsent.Answer) {
+    private func close(with answer: PromotionsConsent.Answer) {
         self.answer = answer
         dismiss()
     }

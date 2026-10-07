@@ -8,7 +8,7 @@ struct SettingsView: View {
     @Environment(ArrivalNotifier.self) private var notifier
     @Environment(AppPreferences.self) private var preferences
     @Environment(AccountManager.self) private var account
-    @Environment(MarketingConsent.self) private var marketingConsent
+    @Environment(PromotionsConsent.self) private var promotionsConsent
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
 
@@ -52,12 +52,12 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                         notificationAction
                     }
-                    Toggle(isOn: marketingConsentBinding) {
-                        Text(.settingsNotificationsMarketingTitle)
+                    Toggle(isOn: promotionsConsentBinding) {
+                        Text(.settingsNotificationsPromotionsTitle)
                     }
-                    .accessibilityIdentifier("settings.marketingConsent")
+                    .accessibilityIdentifier("settings.promotionsConsent")
                 } footer: {
-                    Text(.settingsNotificationsMarketingFooter)
+                    Text(.settingsNotificationsPromotionsFooter)
                 }
                 Section {
                     Slider(value: $preferences.defaultRadiusMeters, in: Place.radiusRange, step: 50) {
@@ -118,11 +118,11 @@ struct SettingsView: View {
         }
     }
 
-    private var marketingConsentBinding: Binding<Bool> {
+    private var promotionsConsentBinding: Binding<Bool> {
         Binding {
-            marketingConsent.isOn
+            promotionsConsent.isOn
         } set: { isOn in
-            marketingConsent.set(isOn, source: .settings)
+            promotionsConsent.set(isOn, source: .settings)
         }
     }
 

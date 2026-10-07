@@ -18,7 +18,7 @@ SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 
 USER_DIMENSIONS = [
     "plan", "location_auth", "household_members", "place_count", "open_todo_count", "signed_in", "app_build",
-    "marketing_consent",
+    "promotions_consent",
 ]
 EVENT_DIMENSIONS = [
     "source", "category", "via", "kind", "trigger", "from", "to", "notification_auth", "mode", "step", "reason", "result",
@@ -38,7 +38,7 @@ METRICS = {
     "assigned": "STANDARD",
     "signed_in": "STANDARD",
     "precise_location": "STANDARD",
-    "marketing_consent": "STANDARD",
+    "promotions_consent": "STANDARD",
     "radius_m": "METERS",
     "age_hours": "HOURS",
     "duration_s": "SECONDS",

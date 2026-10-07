@@ -89,7 +89,7 @@ struct DailyStateTests {
         #expect(properties[.plan] == "free")
         #expect(properties[.locationAuth] == "always")
         #expect(properties[.signedIn] == "1")
-        #expect(properties[.marketingConsent] == "1")
+        #expect(properties[.promotionsConsent] == "1")
     }
 
     @Test func theEventCarriesRawCounts() throws {
@@ -101,7 +101,7 @@ struct DailyStateTests {
         #expect(values["days_since_install"] as? Int == 12)
         #expect(values["precise_location"] as? Int == 1)
         #expect(values["notification_auth"] as? String == "authorized")
-        #expect(values["marketing_consent"] as? Int == 1)
+        #expect(values["promotions_consent"] as? Int == 1)
     }
 
     private static func subscription(isTrial: Bool) -> ProSubscription {
@@ -123,7 +123,7 @@ struct DailyStateTests {
         locationAuth: .always,
         preciseLocation: true,
         notificationAuth: .authorized,
-        marketingConsent: true
+        promotionsConsent: true
     )
 }
 

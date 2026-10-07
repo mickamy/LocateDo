@@ -32,7 +32,7 @@ recipients AS (
     ON d.event_date BETWEEN DATE_SUB(DATE(c.sent_at), INTERVAL 30 DAY) AND DATE(c.sent_at)
   WHERE TRUE
   QUALIFY ROW_NUMBER() OVER (PARTITION BY c.campaign_id, d.user_pseudo_id ORDER BY d.event_date DESC) = 1
-    AND d.marketing_consent
+    AND d.promotions_consent
     AND IF(STARTS_WITH(LOWER(d.language), 'ja'), 'ja', 'en') = c.language
 ),
 after_open AS (
@@ -51,10 +51,10 @@ opt_outs AS (
   SELECT
     r.campaign_id,
     COUNT(DISTINCT IF(
-      e.event_name = 'marketing_consent_changed' AND e.event_time >= c.sent_at, r.user_pseudo_id, NULL
+      e.event_name = 'promotions_consent_changed' AND e.event_time >= c.sent_at, r.user_pseudo_id, NULL
     )) AS consent_off_week_after,
     COUNT(DISTINCT IF(
-      e.event_name = 'marketing_consent_changed' AND e.event_time < c.sent_at, r.user_pseudo_id, NULL
+      e.event_name = 'promotions_consent_changed' AND e.event_time < c.sent_at, r.user_pseudo_id, NULL
     )) AS consent_off_week_before,
     COUNT(DISTINCT IF(
       e.event_name = 'notification_auth_changed' AND e.event_time >= c.sent_at, r.user_pseudo_id, NULL
@@ -67,7 +67,7 @@ opt_outs AS (
   JOIN `__PROJECT__.__DATASET__.events` AS e
     ON e.user_pseudo_id = r.user_pseudo_id
     AND e.event_time BETWEEN TIMESTAMP_SUB(c.sent_at, INTERVAL 7 DAY) AND TIMESTAMP_ADD(c.sent_at, INTERVAL 7 DAY)
-  WHERE (e.event_name = 'marketing_consent_changed' AND e.auth_to = 'off')
+  WHERE (e.event_name = 'promotions_consent_changed' AND e.auth_to = 'off')
     OR (e.event_name = 'notification_auth_changed' AND e.auth_to = 'denied')
   GROUP BY r.campaign_id
 ),

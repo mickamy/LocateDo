@@ -66,7 +66,7 @@ nonisolated struct DailyState: Equatable {
     var locationAuth: LocationAuth
     var preciseLocation: Bool
     var notificationAuth: NotificationAuth
-    var marketingConsent: Bool
+    var promotionsConsent: Bool
 
     var parameters: AnalyticsParameters {
         [
@@ -82,7 +82,7 @@ nonisolated struct DailyState: Equatable {
             .locationAuth: locationAuth.rawValue,
             .preciseLocation: preciseLocation,
             .notificationAuth: notificationAuth.rawValue,
-            .marketingConsent: marketingConsent
+            .promotionsConsent: promotionsConsent
         ]
     }
 
@@ -94,7 +94,7 @@ nonisolated struct DailyState: Equatable {
             .placeCount: Self.capped(counts.places, at: Self.placeCountCap),
             .openTodoCount: Self.capped(counts.openTodos, at: Self.openTodoCountCap),
             .signedIn: Self.flag(signedIn),
-            .marketingConsent: Self.flag(marketingConsent)
+            .promotionsConsent: Self.flag(promotionsConsent)
         ]
     }
 

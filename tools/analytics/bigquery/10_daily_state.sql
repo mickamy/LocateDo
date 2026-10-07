@@ -16,7 +16,7 @@ FROM (
     location_auth,
     precise_location = 1 AS precise_location,
     notification_auth,
-    marketing_consent = 1 AS marketing_consent,
+    promotions_consent = 1 AS promotions_consent,
     language,
     ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, event_date ORDER BY event_time DESC) AS rank
   FROM `__PROJECT__.__DATASET__.events`

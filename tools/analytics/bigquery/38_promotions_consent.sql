@@ -5,16 +5,16 @@ WITH per_user AS (
     u.user_pseudo_id,
     u.first_date,
     MIN(IF(e.event_name = 'arrival_notified', e.event_date, NULL)) AS first_arrival_date,
-    LOGICAL_OR(e.event_name = 'marketing_prompt_shown') AS prompted,
-    MAX(IF(e.event_name = 'marketing_prompt_answered', e.result, NULL)) AS answer,
+    LOGICAL_OR(e.event_name = 'promotions_prompt_shown') AS prompted,
+    MAX(IF(e.event_name = 'promotions_prompt_answered', e.result, NULL)) AS answer,
     LOGICAL_OR(
-      e.event_name = 'marketing_consent_changed' AND e.source = 'settings' AND e.auth_to = 'on'
+      e.event_name = 'promotions_consent_changed' AND e.source = 'settings' AND e.auth_to = 'on'
     ) AS turned_on_in_settings,
     LOGICAL_OR(
-      e.event_name = 'marketing_consent_changed' AND e.source = 'settings' AND e.auth_to = 'off'
+      e.event_name = 'promotions_consent_changed' AND e.source = 'settings' AND e.auth_to = 'off'
     ) AS turned_off_in_settings,
     ARRAY_AGG(
-      IF(e.event_name = 'daily_state', e.marketing_consent, NULL) IGNORE NULLS ORDER BY e.event_time DESC LIMIT 1
+      IF(e.event_name = 'daily_state', e.promotions_consent, NULL) IGNORE NULLS ORDER BY e.event_time DESC LIMIT 1
     )[SAFE_OFFSET(0)] AS latest_consent
   FROM `__PROJECT__.__DATASET__.users` AS u
   JOIN `__PROJECT__.__DATASET__.events` AS e USING (user_pseudo_id)

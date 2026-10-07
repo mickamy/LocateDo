@@ -18,7 +18,7 @@ category.move_down:
   platforms: [android]
 notification.channel_arrivals:
   platforms: [android]
-notification.channel_marketing:
+notification.channel_promotions:
   platforms: [android]
 settings.account.android_signed_in:
   platforms: [android]
