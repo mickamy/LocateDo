@@ -199,11 +199,26 @@ func (q *Queries) ListPlaceChanges(ctx context.Context, arg ListPlaceChangesPara
 }
 
 const listTodoChanges = `-- name: ListTodoChanges :many
-SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
-FROM todos
-WHERE household_id = $1
-  AND version > $2
-ORDER BY version
+SELECT t.id,
+       t.household_id,
+       t.place_id,
+       t.title,
+       t.assignee_id,
+       t.creator_id,
+       c.completer_id,
+       t.completed_at,
+       t.updated_at,
+       t.version
+FROM todos t
+         LEFT JOIN LATERAL (SELECT tc.completer_id
+                            FROM todo_completions tc
+                            WHERE tc.todo_id = t.id
+                              AND tc.reopened_at IS NULL
+                            ORDER BY tc.id DESC
+                            LIMIT 1) c ON true
+WHERE t.household_id = $1
+  AND t.version > $2
+ORDER BY t.version
 LIMIT $3
 `
 
@@ -213,21 +228,37 @@ type ListTodoChangesParams struct {
 	Limit       int32
 }
 
-func (q *Queries) ListTodoChanges(ctx context.Context, arg ListTodoChangesParams) ([]Todo, error) {
+type ListTodoChangesRow struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	PlaceID     uuid.UUID
+	Title       string
+	AssigneeID  *uuid.UUID
+	CreatorID   *uuid.UUID
+	CompleterID *uuid.UUID
+	CompletedAt *time.Time
+	UpdatedAt   time.Time
+	Version     int64
+}
+
+// The completer is the one of the latest completion not reopened.
+func (q *Queries) ListTodoChanges(ctx context.Context, arg ListTodoChangesParams) ([]ListTodoChangesRow, error) {
 	rows, err := q.db.Query(ctx, listTodoChanges, arg.HouseholdID, arg.Version, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Todo
+	var items []ListTodoChangesRow
 	for rows.Next() {
-		var i Todo
+		var i ListTodoChangesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.HouseholdID,
 			&i.PlaceID,
 			&i.Title,
 			&i.AssigneeID,
+			&i.CreatorID,
+			&i.CompleterID,
 			&i.CompletedAt,
 			&i.UpdatedAt,
 			&i.Version,

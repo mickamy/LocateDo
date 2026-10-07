@@ -315,6 +315,22 @@ func (q *Queries) ImportCategory(ctx context.Context, arg ImportCategoryParams) 
 	return err
 }
 
+const importCompletion = `-- name: ImportCompletion :exec
+INSERT INTO todo_completions (todo_id, completer_id, completed_at)
+VALUES ($1, $2, $3)
+`
+
+type ImportCompletionParams struct {
+	TodoID      uuid.UUID
+	CompleterID *uuid.UUID
+	CompletedAt time.Time
+}
+
+func (q *Queries) ImportCompletion(ctx context.Context, arg ImportCompletionParams) error {
+	_, err := q.db.Exec(ctx, importCompletion, arg.TodoID, arg.CompleterID, arg.CompletedAt)
+	return err
+}
+
 const importPlace = `-- name: ImportPlace :exec
 INSERT INTO places (id, household_id, name, lat, lng, radius_m, category_id, sort_order)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -346,8 +362,8 @@ func (q *Queries) ImportPlace(ctx context.Context, arg ImportPlaceParams) error 
 }
 
 const importTodo = `-- name: ImportTodo :exec
-INSERT INTO todos (id, household_id, place_id, title, assignee_id, completed_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id, completed_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type ImportTodoParams struct {
@@ -356,6 +372,7 @@ type ImportTodoParams struct {
 	PlaceID     uuid.UUID
 	Title       string
 	AssigneeID  *uuid.UUID
+	CreatorID   *uuid.UUID
 	CompletedAt *time.Time
 }
 
@@ -366,6 +383,7 @@ func (q *Queries) ImportTodo(ctx context.Context, arg ImportTodoParams) error {
 		arg.PlaceID,
 		arg.Title,
 		arg.AssigneeID,
+		arg.CreatorID,
 		arg.CompletedAt,
 	)
 	return err

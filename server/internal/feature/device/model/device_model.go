@@ -40,6 +40,9 @@ type Device struct {
 	APNsEnvironment   APNsEnvironment `fake:"{randomstring:[sandbox,production]}" map:"ApnsEnvironment"`
 	Language          Language        `fake:"{randomstring:[en,ja]}"`
 	PromotionsConsent bool
+	// CompletionNotices is nil when the app did not say, which keeps the
+	// device's setting.
+	CompletionNotices *bool
 	LastSeenAt        time.Time
 }
 

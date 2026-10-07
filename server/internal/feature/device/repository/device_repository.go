@@ -84,6 +84,7 @@ func (r device) Upsert(ctx context.Context, d model.Device) (uuid.UUID, error) {
 		ApnsEnvironment:       env,
 		Language:              string(d.Language),
 		PromotionsConsentedAt: consentedAt,
+		CompletionNotices:     d.CompletionNotices,
 		LastSeenAt:            d.LastSeenAt,
 	})
 	switch {
@@ -175,6 +176,7 @@ func toModel(row queries.Device) model.Device {
 		APNsEnvironment:   env,
 		Language:          model.Language(row.Language),
 		PromotionsConsent: row.PromotionsConsentedAt != nil,
+		CompletionNotices: &row.CompletionNotices,
 		LastSeenAt:        row.LastSeenAt,
 	}
 }

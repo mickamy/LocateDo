@@ -18,5 +18,6 @@ type Device struct {
 	ApnsEnvironment       *string
 	Language              string
 	PromotionsConsentedAt *time.Time
+	CompletionNotices     bool
 	LastSeenAt            time.Time
 }

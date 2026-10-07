@@ -1,5 +1,5 @@
 -- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
+SELECT id, household_id, place_id, title, assignee_id, creator_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2;
@@ -11,9 +11,10 @@ WHERE household_id = $1
   AND completed_at IS NULL;
 
 -- Writes nothing when the place is not in the household. An assignee who is
--- not a member resolves to NULL. completed_at is left alone on update.
+-- not a member resolves to NULL. completed_at and creator_id are left alone on
+-- update.
 -- name: UpsertTodo :execrows
-INSERT INTO todos (id, household_id, place_id, title, assignee_id)
+INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id)
 SELECT sqlc.arg(id)::uuid,
        sqlc.arg(household_id)::uuid,
        sqlc.arg(place_id)::uuid,
@@ -21,7 +22,8 @@ SELECT sqlc.arg(id)::uuid,
        (SELECT m.user_id
         FROM memberships m
         WHERE m.user_id = sqlc.narg(assignee_id)::uuid
-          AND m.household_id = sqlc.arg(household_id)::uuid)
+          AND m.household_id = sqlc.arg(household_id)::uuid),
+       sqlc.narg(creator_id)::uuid
 WHERE EXISTS (SELECT 1
               FROM places p
               WHERE p.id = sqlc.arg(place_id)::uuid
@@ -42,3 +44,13 @@ DELETE
 FROM todos
 WHERE id = $1
   AND household_id = $2;
+
+-- name: InsertCompletion :exec
+INSERT INTO todo_completions (todo_id, completer_id, completed_at)
+VALUES ($1, $2, $3);
+
+-- name: ReopenCompletions :exec
+UPDATE todo_completions
+SET reopened_at = $2
+WHERE todo_id = $1
+  AND reopened_at IS NULL;

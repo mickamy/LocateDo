@@ -15,9 +15,10 @@ import (
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 )
 
-// PutTodoInput carries the caller's household and the todo to write; the two
-// must agree.
+// PutTodoInput carries the caller and their household, and the todo to write;
+// the households must agree.
 type PutTodoInput struct {
+	UserID      uuid.UUID
 	HouseholdID uuid.UUID
 	Todo        model.Todo
 }
@@ -26,7 +27,7 @@ type PutTodoInput struct {
 // free household keeps every todo it has but cannot open one beyond the
 // limit; the limit is checked after the write so the transaction, not a
 // pre-check, enforces it. A todo for a place that is gone is dropped and
-// reported as success.
+// reported as success. A new todo records the caller as its creator.
 type PutTodo struct {
 	_          di.Infra              `di:"embed"`
 	transactor tx.Transactor         `di:""`
@@ -51,7 +52,9 @@ func (uc PutTodo) Do(ctx context.Context, in PutTodoInput) error {
 			return fmt.Errorf("find todo: %w", err)
 		}
 
-		written, err := todos.Upsert(ctx, in.Todo)
+		td := in.Todo
+		td.CreatorID = &in.UserID
+		written, err := todos.Upsert(ctx, td)
 		if err != nil {
 			return fmt.Errorf("upsert todo: %w", err)
 		}

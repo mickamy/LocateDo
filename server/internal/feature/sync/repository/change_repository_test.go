@@ -11,6 +11,7 @@ import (
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/sync/model"
 	"github.com/mickamy/LocateDo/internal/feature/sync/repository"
+	tmodel "github.com/mickamy/LocateDo/internal/feature/todo/model"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
 
@@ -62,6 +63,40 @@ func TestChanges_streamsEveryTableInVersionOrder(t *testing.T) {
 	}
 	slices.Sort(versions)
 	assert.Equal(t, versions, slices.Compact(slices.Clone(versions)), "no two rows share a version")
+}
+
+func TestChanges_todoCreatorAndCompleter(t *testing.T) {
+	t.Parallel()
+
+	// arrange: the owner adds a to-do, the member completes it, the owner reopens and completes it
+	d := tdb.New(t)
+	changes := repository.NewChanges(d.Reader)
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	memberID := d.Seeder.Member(t, h.ID)
+	reopened := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
+	open := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
+	_, err := d.Writer.Exec(t.Context(), "UPDATE todos SET creator_id = $1, completed_at = now() WHERE id = $2",
+		h.OwnerID, reopened)
+	require.NoError(t, err)
+	_, err = d.Writer.Exec(t.Context(),
+		`INSERT INTO todo_completions (todo_id, completer_id, completed_at, reopened_at)
+		 VALUES ($1, $2, now(), now()), ($1, $3, now(), NULL), ($4, $2, now(), now())`,
+		reopened, memberID, h.OwnerID, open)
+	require.NoError(t, err)
+
+	// act
+	todos, err := changes.Todos(t.Context(), h.ID, 0, 10)
+
+	// assert
+	require.NoError(t, err)
+	byID := map[uuid.UUID]tmodel.Todo{}
+	for _, td := range todos {
+		byID[td.ID] = td
+	}
+	assert.Equal(t, &h.OwnerID, byID[reopened].CreatorID)
+	assert.Equal(t, &h.OwnerID, byID[reopened].CompleterID, "the latest completion not reopened")
+	assert.Nil(t, byID[open].CreatorID, "a to-do from before creators were recorded")
+	assert.Nil(t, byID[open].CompleterID, "its only completion was reopened")
 }
 
 func TestChanges_cursorAndLimit(t *testing.T) {

@@ -13,16 +13,20 @@ import (
 	hrepository "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
+	"github.com/mickamy/LocateDo/internal/lib/clock"
 )
 
 type SetTodoCompletionInput struct {
+	UserID      uuid.UUID
 	HouseholdID uuid.UUID
 	TodoID      uuid.UUID
 	CompletedAt *time.Time
 }
 
-// SetTodoCompletion completes a todo or reopens it. Reopening counts as
-// adding an open todo for the free-tier limit. A missing todo is a no-op.
+// SetTodoCompletion completes a todo or reopens it. Completing an open todo
+// records the caller in its completions, and reopening marks them reopened.
+// Reopening counts as adding an open todo for the free-tier limit. A missing
+// todo is a no-op.
 type SetTodoCompletion struct {
 	_          di.Infra              `di:"embed"`
 	transactor tx.Transactor         `di:""`
@@ -49,9 +53,18 @@ func (uc SetTodoCompletion) Do(ctx context.Context, in SetTodoCompletionInput) e
 		if err := todos.SetCompletion(ctx, in.TodoID, householdID, in.CompletedAt); err != nil {
 			return fmt.Errorf("set completion: %w", err)
 		}
+		if in.CompletedAt != nil && current.CompletedAt == nil {
+			if err := todos.RecordCompletion(ctx, in.TodoID, in.UserID, *in.CompletedAt); err != nil {
+				return fmt.Errorf("record completion: %w", err)
+			}
+			return nil
+		}
 		reopening := in.CompletedAt == nil && current.CompletedAt != nil
 		if !reopening {
 			return nil
+		}
+		if err := todos.ReopenCompletions(ctx, in.TodoID, clock.Now(ctx)); err != nil {
+			return fmt.Errorf("reopen completions: %w", err)
 		}
 		n, err := todos.CountOpen(ctx, householdID)
 		if err != nil {

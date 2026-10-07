@@ -29,3 +29,26 @@ func completedAt(t *testing.T, d tdb.DB, id, householdID uuid.UUID) *time.Time {
 	require.NoError(t, err)
 	return got.CompletedAt
 }
+
+type completion struct {
+	completerID *uuid.UUID
+	completedAt time.Time
+	reopenedAt  *time.Time
+}
+
+func completions(t *testing.T, d tdb.DB, todoID uuid.UUID) []completion {
+	t.Helper()
+
+	rows, err := d.Writer.Query(t.Context(),
+		"SELECT completer_id, completed_at, reopened_at FROM todo_completions WHERE todo_id = $1 ORDER BY id", todoID)
+	require.NoError(t, err)
+	defer rows.Close()
+	var out []completion
+	for rows.Next() {
+		var c completion
+		require.NoError(t, rows.Scan(&c.completerID, &c.completedAt, &c.reopenedAt))
+		out = append(out, c)
+	}
+	require.NoError(t, rows.Err())
+	return out
+}

@@ -44,7 +44,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
 }
 
 const getTodo = `-- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, completed_at, updated_at, version
+SELECT id, household_id, place_id, title, assignee_id, creator_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2
@@ -64,11 +64,45 @@ func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (Todo, error) 
 		&i.PlaceID,
 		&i.Title,
 		&i.AssigneeID,
+		&i.CreatorID,
 		&i.CompletedAt,
 		&i.UpdatedAt,
 		&i.Version,
 	)
 	return i, err
+}
+
+const insertCompletion = `-- name: InsertCompletion :exec
+INSERT INTO todo_completions (todo_id, completer_id, completed_at)
+VALUES ($1, $2, $3)
+`
+
+type InsertCompletionParams struct {
+	TodoID      uuid.UUID
+	CompleterID *uuid.UUID
+	CompletedAt time.Time
+}
+
+func (q *Queries) InsertCompletion(ctx context.Context, arg InsertCompletionParams) error {
+	_, err := q.db.Exec(ctx, insertCompletion, arg.TodoID, arg.CompleterID, arg.CompletedAt)
+	return err
+}
+
+const reopenCompletions = `-- name: ReopenCompletions :exec
+UPDATE todo_completions
+SET reopened_at = $2
+WHERE todo_id = $1
+  AND reopened_at IS NULL
+`
+
+type ReopenCompletionsParams struct {
+	TodoID     uuid.UUID
+	ReopenedAt *time.Time
+}
+
+func (q *Queries) ReopenCompletions(ctx context.Context, arg ReopenCompletionsParams) error {
+	_, err := q.db.Exec(ctx, reopenCompletions, arg.TodoID, arg.ReopenedAt)
+	return err
 }
 
 const setTodoCompletion = `-- name: SetTodoCompletion :exec
@@ -90,7 +124,7 @@ func (q *Queries) SetTodoCompletion(ctx context.Context, arg SetTodoCompletionPa
 }
 
 const upsertTodo = `-- name: UpsertTodo :execrows
-INSERT INTO todos (id, household_id, place_id, title, assignee_id)
+INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id)
 SELECT $1::uuid,
        $2::uuid,
        $3::uuid,
@@ -98,7 +132,8 @@ SELECT $1::uuid,
        (SELECT m.user_id
         FROM memberships m
         WHERE m.user_id = $5::uuid
-          AND m.household_id = $2::uuid)
+          AND m.household_id = $2::uuid),
+       $6::uuid
 WHERE EXISTS (SELECT 1
               FROM places p
               WHERE p.id = $3::uuid
@@ -115,10 +150,12 @@ type UpsertTodoParams struct {
 	PlaceID     uuid.UUID
 	Title       string
 	AssigneeID  *uuid.UUID
+	CreatorID   *uuid.UUID
 }
 
 // Writes nothing when the place is not in the household. An assignee who is
-// not a member resolves to NULL. completed_at is left alone on update.
+// not a member resolves to NULL. completed_at and creator_id are left alone on
+// update.
 func (q *Queries) UpsertTodo(ctx context.Context, arg UpsertTodoParams) (int64, error) {
 	result, err := q.db.Exec(ctx, upsertTodo,
 		arg.ID,
@@ -126,6 +163,7 @@ func (q *Queries) UpsertTodo(ctx context.Context, arg UpsertTodoParams) (int64, 
 		arg.PlaceID,
 		arg.Title,
 		arg.AssigneeID,
+		arg.CreatorID,
 	)
 	if err != nil {
 		return 0, err

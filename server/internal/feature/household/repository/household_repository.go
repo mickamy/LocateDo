@@ -31,10 +31,11 @@ type Household interface {
 	// destination's category with the same key, or become uncategorized. Call
 	// it on a bound repository: it defers foreign-key checks to commit.
 	MoveContents(ctx context.Context, from, to uuid.UUID) error
-	// Import writes categories, places, and todos into the household. A place
-	// or todo referring to a row that is neither imported nor already there
-	// is an invalid argument.
-	Import(ctx context.Context, householdID uuid.UUID, c model.Contents) error
+	// Import writes categories, places, and todos into the household, with the
+	// user as the creator of every todo and the completer of completed ones. A
+	// place or todo referring to a row that is neither imported nor already
+	// there is an invalid argument.
+	Import(ctx context.Context, householdID, userID uuid.UUID, c model.Contents) error
 	Bind(tx tx.Tx) Household
 }
 
@@ -174,7 +175,7 @@ func (r household) MoveContents(ctx context.Context, from, to uuid.UUID) error {
 	return nil
 }
 
-func (r household) Import(ctx context.Context, householdID uuid.UUID, c model.Contents) error {
+func (r household) Import(ctx context.Context, householdID, userID uuid.UUID, c model.Contents) error {
 	for _, cat := range c.Categories {
 		err := r.q.ImportCategory(ctx, queries.ImportCategoryParams{
 			ID:          cat.ID,
@@ -211,10 +212,21 @@ func (r household) Import(ctx context.Context, householdID uuid.UUID, c model.Co
 			PlaceID:     t.Todo.PlaceID,
 			Title:       t.Todo.Title,
 			AssigneeID:  t.Todo.AssigneeID,
+			CreatorID:   &userID,
 			CompletedAt: t.CompletedAt,
 		})
 		if err != nil {
 			return importError("todo", t.Todo.ID, err)
+		}
+		if t.CompletedAt == nil {
+			continue
+		}
+		if err := r.q.ImportCompletion(ctx, queries.ImportCompletionParams{
+			TodoID:      t.Todo.ID,
+			CompleterID: &userID,
+			CompletedAt: *t.CompletedAt,
+		}); err != nil {
+			return importError("todo completion", t.Todo.ID, err)
 		}
 	}
 	return nil

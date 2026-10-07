@@ -18,5 +18,6 @@ func DeviceFromRegisterDeviceRequest(src *devicev1.RegisterDeviceRequest) model.
 		APNsEnvironment:   APNsEnvironmentFromDevicev1(src.GetApnsEnvironment()),
 		Language:          LanguageFromString(src.GetLanguage()),
 		PromotionsConsent: src.GetPromotionsConsent(),
+		CompletionNotices: src.CompletionNotices,
 	}
 }

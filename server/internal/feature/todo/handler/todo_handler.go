@@ -43,8 +43,12 @@ func (h *Todo) PutTodo(
 		return nil, cerrors.Map(aerrors.InvalidArgument(err.Error()))
 	}
 	td.HouseholdID = target
+	userID, err := caller.UserID(ctx)
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
 
-	if err := h.putTodo.Do(ctx, usecase.PutTodoInput{HouseholdID: householdID, Todo: td}); err != nil {
+	if err := h.putTodo.Do(ctx, usecase.PutTodoInput{UserID: userID, HouseholdID: householdID, Todo: td}); err != nil {
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&todov1.PutTodoResponse{}), nil
@@ -68,7 +72,13 @@ func (h *Todo) SetTodoCompletion(
 		completedAt = &at
 	}
 
+	userID, err := caller.UserID(ctx)
+	if err != nil {
+		return nil, cerrors.Map(err)
+	}
+
 	if err := h.setTodoCompletion.Do(ctx, usecase.SetTodoCompletionInput{
+		UserID:      userID,
 		HouseholdID: householdID,
 		TodoID:      id,
 		CompletedAt: completedAt,

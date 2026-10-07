@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"testing"
+	"time"
 	"uuid"
 
 	"github.com/stretchr/testify/assert"
@@ -10,6 +11,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/todo/usecase"
+	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
 
@@ -24,13 +26,17 @@ func TestSetTodoCompletion_completeThenReopen(t *testing.T) {
 
 	// act & assert
 	require.NoError(t, setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
-		HouseholdID: h.ID, TodoID: id, CompletedAt: &now,
+		UserID: h.OwnerID, HouseholdID: h.ID, TodoID: id, CompletedAt: &now,
 	}))
 	got := completedAt(t, d, id, h.ID)
 	require.NotNil(t, got)
 	assert.True(t, now.Equal(*got))
 
-	require.NoError(t, setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{HouseholdID: h.ID, TodoID: id}))
+	require.NoError(t, setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
+		UserID:      h.OwnerID,
+		HouseholdID: h.ID,
+		TodoID:      id,
+	}))
 	assert.Nil(t, completedAt(t, d, id, h.ID))
 }
 
@@ -60,7 +66,7 @@ func TestSetTodoCompletion_freeLimitOnReopen(t *testing.T) {
 
 			// act
 			err := usecase.NewSetTodoCompletion(d.Infra()).Do(t.Context(), usecase.SetTodoCompletionInput{
-				HouseholdID: h.ID, TodoID: done,
+				UserID: h.OwnerID, HouseholdID: h.ID, TodoID: done,
 			})
 
 			// assert
@@ -89,7 +95,7 @@ func TestSetTodoCompletion_completingIsAlwaysAllowed(t *testing.T) {
 
 	// act
 	err := usecase.NewSetTodoCompletion(d.Infra()).Do(t.Context(), usecase.SetTodoCompletionInput{
-		HouseholdID: h.ID, TodoID: last, CompletedAt: &now,
+		UserID: h.OwnerID, HouseholdID: h.ID, TodoID: last, CompletedAt: &now,
 	})
 
 	// assert
@@ -109,14 +115,48 @@ func TestSetTodoCompletion_missingOrForeignIsANoOp(t *testing.T) {
 
 	// act
 	missingErr := setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
-		HouseholdID: h.ID, TodoID: uuid.NewV7(), CompletedAt: &now,
+		UserID: h.OwnerID, HouseholdID: h.ID, TodoID: uuid.NewV7(), CompletedAt: &now,
 	})
 	foreignErr := setCompletion.Do(t.Context(), usecase.SetTodoCompletionInput{
-		HouseholdID: h.ID, TodoID: foreign, CompletedAt: &now,
+		UserID: h.OwnerID, HouseholdID: h.ID, TodoID: foreign, CompletedAt: &now,
 	})
 
 	// assert
 	require.NoError(t, missingErr)
 	require.NoError(t, foreignErr)
 	assert.Nil(t, completedAt(t, d, foreign, other.ID), "another household's todo is left alone")
+}
+
+func TestSetTodoCompletion_recordsEachCompletion(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	setCompletion := usecase.NewSetTodoCompletion(d.Infra())
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	memberID := d.Seeder.Member(t, h.ID)
+	id := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
+	ctx := clock.Set(t.Context(), clock.NewFixed(now.Add(time.Hour)))
+	later := now.Add(time.Minute)
+
+	// act: the member completes it (twice, as a retry would), the owner reopens it and completes it
+	for _, in := range []usecase.SetTodoCompletionInput{
+		{UserID: memberID, HouseholdID: h.ID, TodoID: id, CompletedAt: &now},
+		{UserID: memberID, HouseholdID: h.ID, TodoID: id, CompletedAt: &later},
+		{UserID: h.OwnerID, HouseholdID: h.ID, TodoID: id},
+		{UserID: h.OwnerID, HouseholdID: h.ID, TodoID: id, CompletedAt: &later},
+	} {
+		require.NoError(t, setCompletion.Do(ctx, in))
+	}
+
+	// assert
+	got := completions(t, d, id)
+	require.Len(t, got, 2, "completing a completed to-do adds no completion")
+	assert.Equal(t, &memberID, got[0].completerID)
+	assert.True(t, now.Equal(got[0].completedAt))
+	require.NotNil(t, got[0].reopenedAt)
+	assert.True(t, now.Add(time.Hour).Equal(*got[0].reopenedAt), "reopened at the server's time")
+	assert.Equal(t, &h.OwnerID, got[1].completerID)
+	assert.True(t, later.Equal(got[1].completedAt))
+	assert.Nil(t, got[1].reopenedAt)
 }
