@@ -69,10 +69,13 @@ services:
     logging: *logging
     restart: always
     volumes:
-      - /var/lib/locatedo-stg/postgres:/var/lib/postgresql
+      - db-data:/var/lib/postgresql
       - ./initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U admin -d locatedo" ]
       interval: 5s
       timeout: 5s
       retries: 10
+
+volumes:
+  db-data:
