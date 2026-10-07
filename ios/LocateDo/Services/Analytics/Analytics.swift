@@ -3,6 +3,7 @@ import FirebaseCore
 import Foundation
 
 nonisolated enum AnalyticsEvent: String {
+    case alwaysPromptAnswered = "always_prompt_answered"
     case arrivalNotified = "arrival_notified"
     case arrivalOpened = "arrival_opened"
     case campaignOpened = "campaign_opened"
@@ -14,6 +15,8 @@ nonisolated enum AnalyticsEvent: String {
     case promotionsPromptShown = "promotions_prompt_shown"
     case notificationAuthChanged = "notification_auth_changed"
     case onboardingCompleted = "onboarding_completed"
+    case permissionActionTapped = "permission_action_tapped"
+    case permissionBannerTapped = "permission_banner_tapped"
     case placeAdded = "place_added"
     case placeDeleted = "place_deleted"
     case todoAdded = "todo_added"
@@ -30,6 +33,7 @@ nonisolated enum AnalyticsEvent: String {
 }
 
 nonisolated enum AnalyticsParameter: String {
+    case action
     case ageDays = "age_days"
     case ageHours = "age_hours"
     case assigned

@@ -116,19 +116,8 @@ struct NearbyView: View {
         }
     }
 
-    private var permissionIssue: LocalizedStringResource? {
-        switch locationProvider.authorizationStatus {
-        case .authorizedWhenInUse:
-            return .homePermissionBannerLocation
-        case .denied, .restricted:
-            return .homePermissionBannerLocationDenied
-        default:
-            break
-        }
-        if notifier.authorizationStatus == .denied {
-            return .homePermissionBannerNotifications
-        }
-        return nil
+    private var permissionIssue: PermissionBanner? {
+        PermissionBanner(location: locationProvider.authorizationStatus, notifications: notifier.authorizationStatus)
     }
 
     private var list: some View {
@@ -136,10 +125,11 @@ struct NearbyView: View {
             if let permissionIssue {
                 Section {
                     Button {
+                        Analytics.log(.permissionBannerTapped, parameters: [.kind: permissionIssue.rawValue])
                         router.selectedTab = .settings
                     } label: {
                         Label {
-                            Text(permissionIssue)
+                            Text(permissionIssue.message)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)

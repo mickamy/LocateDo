@@ -1,8 +1,16 @@
 import SwiftUI
 
 struct AlwaysLocationPromptView: View {
+    private enum Answer: String {
+        case allow
+        case later
+        case dismissed
+    }
+
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(\.dismiss) private var dismiss
+    @State private var shownAt = Date()
+    @State private var answer: Answer = .dismissed
 
     var body: some View {
         VStack(spacing: 20) {
@@ -18,6 +26,7 @@ struct AlwaysLocationPromptView: View {
                 .multilineTextAlignment(.center)
             Spacer(minLength: 0)
             Button {
+                answer = .allow
                 locationProvider.requestAlwaysAuthorization()
                 dismiss()
             } label: {
@@ -27,6 +36,7 @@ struct AlwaysLocationPromptView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             Button(.alwaysPromptLater) {
+                answer = .later
                 dismiss()
             }
         }
@@ -34,5 +44,11 @@ struct AlwaysLocationPromptView: View {
         .padding(32)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
+        .onDisappear {
+            Analytics.log(.alwaysPromptAnswered, parameters: [
+                .result: answer.rawValue,
+                .durationS: max(Int(Date().timeIntervalSince(shownAt)), 0)
+            ])
+        }
     }
 }
