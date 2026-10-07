@@ -1,0 +1,72 @@
+name: infra-apply-google
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - deploy/tofu/google/**
+      - .github/workflows/infra-apply-google.yml
+  workflow_dispatch:
+    inputs:
+      action:
+        description: plan only, or plan and apply
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-apply-google
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PLAN_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.action == 'plan' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: deploy/tofu/google
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          install_args: opentofu
+      # AWS holds the state; Google Cloud holds the resources.
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ env.PLAN_ONLY == 'true' && 'locatedo-tofu-google-plan' || 'locatedo-tofu-google' }}
+          aws-region: us-west-2
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - run: tofu init -input=false
+
+      - name: Plan
+        run: |
+          tofu plan -input=false -no-color -out=tfplan | tee plan.txt
+          {
+            echo '```'
+            cat plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - if: env.PLAN_ONLY != 'true'
+        name: Apply the plan
+        run: tofu apply -input=false tfplan

@@ -1,17 +1,29 @@
-# One budget over the three projects, mailed to the billing account's administrators as spend passes each mark.
+# One budget per billing account, mailed to that account's administrators as its projects' spend passes each mark.
 locals {
   budget = {
-    currency_code = "USD"
-    units         = "10"
+    currency_code = "JPY"
+    units         = "1500"
+  }
+
+  # Which account pays for each project; dev and prod share one, staging sits on its own.
+  billing_accounts = {
+    dev  = "01EFFA-73EF68-A84673"
+    stg  = "012B29-7EEFEA-38C79E"
+    prod = "01EFFA-73EF68-A84673"
+  }
+
+  projects_by_billing_account = {
+    for env, account in local.billing_accounts : account => "projects/${data.google_project.each[env].number}"...
   }
 }
 
 resource "google_billing_budget" "locatedo" {
-  billing_account = data.google_project.each["prod"].billing_account
+  for_each        = local.projects_by_billing_account
+  billing_account = each.key
   display_name    = "LocateDo"
 
   budget_filter {
-    projects        = [for project in data.google_project.each : "projects/${project.number}"]
+    projects        = each.value
     calendar_period = "MONTH"
   }
 
