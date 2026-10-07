@@ -1,6 +1,9 @@
 # One-off: the last job the Pi's self-hosted runner takes. It registers the Pi with SSM as a hybrid node, installs
 # the AWS CLI the deploy script uses, removes the old staging stack, and stops the runner. Runs when this file is
 # pushed to dev; delete the file once it has passed.
+#
+# The runner's user has no sudo but is in the docker group, so the host steps run as root in the host's namespaces
+# from a privileged container.
 name: server-stg-bootstrap
 
 on:
@@ -24,14 +27,12 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      HOST_SHELL_IMAGE: debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
 
     steps:
       - name: Check the host
         run: |
-          if ! sudo -n true 2>/dev/null; then
-            echo "::error::passwordless sudo is unavailable; register the Pi by hand"
-            exit 1
-          fi
           arch=$(uname -m)
           if [ "${arch}" != aarch64 ]; then
             echo "::error::expected aarch64, got ${arch}"
@@ -41,7 +42,13 @@ jobs:
           echo "${PRETTY_NAME} (${arch})"
           docker compose version
 
-      - name: Register with SSM
+      # Staging's data is disposable; the first deploy starts from an empty database.
+      - name: Remove the old staging stack
+        run: |
+          docker compose -p server down -v --remove-orphans
+          docker image prune -af
+
+      - name: Register with SSM, install the AWS CLI, and stop the runner after this job
         env:
           ACTIVATION_ID: ${{ secrets.SSM_ACTIVATION_ID }}
           ACTIVATION_CODE: ${{ secrets.SSM_ACTIVATION_CODE }}
@@ -50,36 +57,30 @@ jobs:
             echo "::error::SSM_ACTIVATION_ID and SSM_ACTIVATION_CODE must be set in server-stg"
             exit 1
           fi
+          docker run --rm -i --privileged --pid=host --net=host -e ACTIVATION_ID -e ACTIVATION_CODE \
+            "${HOST_SHELL_IMAGE}" nsenter -t 1 -m -u -i -n -p -- bash -s <<'HOST'
+          set -euo pipefail
           work=$(mktemp -d)
           trap 'rm -rf "${work}"' EXIT
+
+          if ! command -v unzip >/dev/null || ! command -v curl >/dev/null; then
+            apt-get update -qq
+            apt-get install -y -qq unzip curl
+          fi
+
           curl -fsSL -o "${work}/amazon-ssm-agent.deb" \
             https://s3.us-west-2.amazonaws.com/amazon-ssm-us-west-2/latest/debian_arm64/amazon-ssm-agent.deb
-          sudo dpkg -i "${work}/amazon-ssm-agent.deb"
-          sudo systemctl stop amazon-ssm-agent
-          sudo amazon-ssm-agent -register -code "${ACTIVATION_CODE}" -id "${ACTIVATION_ID}" -region us-west-2 -y
-          sudo systemctl enable --now amazon-ssm-agent
+          dpkg -i "${work}/amazon-ssm-agent.deb"
+          systemctl stop amazon-ssm-agent
+          amazon-ssm-agent -register -code "${ACTIVATION_CODE}" -id "${ACTIVATION_ID}" -region us-west-2 -y
+          systemctl enable --now amazon-ssm-agent
 
-      - name: Install the AWS CLI
-        run: |
-          work=$(mktemp -d)
-          trap 'rm -rf "${work}"' EXIT
-          if ! command -v unzip >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq unzip
-          fi
           curl -fsSL -o "${work}/awscliv2.zip" https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip
           unzip -q "${work}/awscliv2.zip" -d "${work}"
-          sudo "${work}/aws/install" --update
+          "${work}/aws/install" --update
           aws --version
 
-      # Staging's data is disposable; the first deploy starts from an empty database.
-      - name: Remove the old staging stack
-        run: |
-          sudo docker compose -p server down -v --remove-orphans
-          sudo docker image prune -af
-
-      # A delay keeps the runner alive long enough to report this job's result.
-      - name: Stop the runner after this job
-        run: |
-          sudo systemd-run --unit locatedo-stop-runner --on-active=120 \
+          # A delay keeps the runner alive long enough to report this job's result.
+          systemd-run --unit locatedo-stop-runner --on-active=120 \
             /bin/sh -c "systemctl disable --now 'actions.runner.*'"
+          HOST
