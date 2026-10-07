@@ -30,6 +30,7 @@ data class AnalyticsRecord(
     val firstLaunchedAt: Instant? = null,
     val dailyStateReportedOn: String? = null,
     val lastReportedLocationAuth: String? = null,
+    val lastReportedNotificationAuth: String? = null,
 )
 
 // The last app status read, as served, plus what the user has already seen of it.
@@ -60,6 +61,7 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val firstLaunchedAt = longPreferencesKey("firstLaunchedAt")
         val dailyStateReportedOn = stringPreferencesKey("dailyStateReportedOn")
         val lastReportedLocationAuth = stringPreferencesKey("lastReportedLocationAuth")
+        val lastReportedNotificationAuth = stringPreferencesKey("lastReportedNotificationAuth")
         val appStatusDocument = stringPreferencesKey("appStatusDocument")
         val appStatusDismissedMaintenance = stringPreferencesKey("appStatusDismissedMaintenance")
         val appStatusShownNotices = stringSetPreferencesKey("appStatusShownNotices")
@@ -76,6 +78,7 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             firstLaunchedAt = preferences[Keys.firstLaunchedAt]?.let(Instant::ofEpochMilli),
             dailyStateReportedOn = preferences[Keys.dailyStateReportedOn],
             lastReportedLocationAuth = preferences[Keys.lastReportedLocationAuth],
+            lastReportedNotificationAuth = preferences[Keys.lastReportedNotificationAuth],
         )
     }
 
@@ -159,6 +162,10 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setLastReportedLocationAuth(key: String) {
         dataStore.edit { it[Keys.lastReportedLocationAuth] = key }
+    }
+
+    suspend fun setLastReportedNotificationAuth(key: String) {
+        dataStore.edit { it[Keys.lastReportedNotificationAuth] = key }
     }
 
     suspend fun setAppStatusDocument(json: String) {

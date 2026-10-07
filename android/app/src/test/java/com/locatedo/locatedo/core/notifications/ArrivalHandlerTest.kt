@@ -11,32 +11,55 @@ import com.locatedo.locatedo.testing.FakeArrivalNotifier
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testPreferences
 import com.locatedo.locatedo.testing.testSession
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class ArrivalHandlerTest {
+    @get:Rule
+    val folder = TemporaryFolder()
+
     private val now = Instant.parse("2026-10-06T00:00:00Z")
     private val places = FakePlaceRepository()
     private val notifier = FakeArrivalNotifier()
     private val authenticator = fakeAuthenticator()
     private val analytics = FakeAnalytics()
-    private val handler = ArrivalHandler(
-        places,
-        FakeCategoryRepository(),
-        notifier,
-        authenticator,
-        analytics,
-        Clock.fixed(now, ZoneOffset.UTC),
-    )
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val preferences by lazy { testPreferences(folder.root, scope) }
+    private val handler by lazy {
+        ArrivalHandler(
+            places,
+            FakeCategoryRepository(),
+            notifier,
+            authenticator,
+            analytics,
+            preferences,
+            Clock.fixed(now, ZoneOffset.UTC),
+        )
+    }
+    @After
+    fun tearDown() {
+        scope.cancel()
+    }
+
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0000, longitude = 139.0, createdAt = now)
     private val office = Place(id = uuidV7(now), name = "Office", latitude = 35.0100, longitude = 139.0, createdAt = now)
     private val here = Coordinate(35.0001, 139.0)
@@ -59,6 +82,7 @@ class ArrivalHandlerTest {
         assertEquals(1L, values["open_todos"])
         assertEquals("none", values["category"])
         assertEquals(100L, values["radius_m"])
+        assertTrue(preferences.promotions.first().hasReceivedArrivalNotification)
     }
 
     @Test
@@ -82,6 +106,7 @@ class ArrivalHandlerTest {
         handler.arrived(listOf(store.id), near = here)
 
         assertTrue(notifier.notified.isEmpty())
+        assertFalse(preferences.promotions.first().hasReceivedArrivalNotification)
     }
 
     @Test

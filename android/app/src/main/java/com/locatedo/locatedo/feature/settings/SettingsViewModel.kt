@@ -15,6 +15,7 @@ import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
+import com.locatedo.locatedo.core.push.PromotionsConsent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +51,7 @@ data class SettingsUiState(
     val isSignedIn: Boolean = false,
     val location: LocationAuth = LocationAuth.NOT_DETERMINED,
     val notifications: NotificationAuth = NotificationAuth.NOT_DETERMINED,
+    val promotionsConsent: Boolean = false,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
     val pro: ProUiState = ProUiState(),
 )
@@ -63,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     syncStateRepository: SyncStateRepository,
     membershipRepository: MembershipRepository,
     private val paywallRequests: PaywallRequests,
+    private val promotionsConsent: PromotionsConsent,
 ) : ViewModel() {
     private data class Restore(val isRestoring: Boolean = false, val result: RestoreResult? = null)
 
@@ -90,12 +93,14 @@ class SettingsViewModel @Inject constructor(
         permissions.observe(),
         authenticator.session,
         pro,
-    ) { stored, granted, session, pro ->
+        promotionsConsent.isOn,
+    ) { stored, granted, session, pro, promotions ->
         SettingsUiState(
             isLoading = false,
             isSignedIn = session != null,
             location = granted.location,
             notifications = granted.notifications,
+            promotionsConsent = promotions,
             defaultRadiusMeters = stored.defaultRadiusMeters,
             pro = pro,
         )
@@ -134,6 +139,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             permissions.markNotificationsRequested()
             permissions.refresh()
+        }
+    }
+
+    fun setPromotionsConsent(isOn: Boolean) {
+        viewModelScope.launch {
+            promotionsConsent.set(isOn, PromotionsConsent.Source.SETTINGS)
         }
     }
 

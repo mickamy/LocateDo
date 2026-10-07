@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
@@ -28,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -42,6 +45,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -133,6 +137,8 @@ fun SettingsScreen(
             HorizontalDivider()
             NotificationSection(
                 auth = uiState.notifications,
+                promotionsConsent = uiState.promotionsConsent,
+                onPromotionsConsentChange = viewModel::setPromotionsConsent,
                 onAllow = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -296,7 +302,13 @@ private fun LocationSection(
 }
 
 @Composable
-private fun NotificationSection(auth: NotificationAuth, onAllow: () -> Unit, onOpenSettings: () -> Unit) {
+private fun NotificationSection(
+    auth: NotificationAuth,
+    promotionsConsent: Boolean,
+    onPromotionsConsentChange: (Boolean) -> Unit,
+    onAllow: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
     ListItem(
         headlineContent = { Text(stringResource(R.string.settings_notifications_title)) },
         leadingContent = { Icon(Icons.Filled.Notifications, contentDescription = null) },
@@ -313,6 +325,18 @@ private fun NotificationSection(auth: NotificationAuth, onAllow: () -> Unit, onO
             SectionAction(stringResource(R.string.settings_open_settings), onOpenSettings)
         }
     }
+    // Usable without the notification permission; the rows above already offer to grant it.
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.settings_notifications_promotions_title)) },
+        modifier = Modifier.toggleable(
+            value = promotionsConsent,
+            role = Role.Switch,
+            onValueChange = onPromotionsConsentChange,
+        ),
+        supportingContent = { Text(stringResource(R.string.settings_notifications_promotions_footer)) },
+        leadingContent = { Icon(Icons.Filled.Campaign, contentDescription = null) },
+        trailingContent = { Switch(checked = promotionsConsent, onCheckedChange = null) },
+    )
 }
 
 // The slider edits a local copy and writes once the thumb is released.

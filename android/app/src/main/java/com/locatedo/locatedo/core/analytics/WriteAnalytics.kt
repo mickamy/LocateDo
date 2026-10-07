@@ -24,6 +24,9 @@ class WriteAnalytics @Inject constructor(
     @Volatile
     private var lastArrivalOpen: ArrivalOpen? = null
 
+    val lastArrivalOpenedAt: Instant?
+        get() = lastArrivalOpen?.openedAt
+
     suspend fun placeAdded(place: Place, category: Category?, placeCount: Int, source: PlaceSource?) {
         val parameters = mutableMapOf<AnalyticsParameter, Any>(
             AnalyticsParameter.PLACE_COUNT to placeCount,

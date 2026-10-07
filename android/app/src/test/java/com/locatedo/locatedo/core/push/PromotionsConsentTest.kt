@@ -43,16 +43,16 @@ class PromotionsConsentTest {
 
     @Test
     fun asksAfterTheFirstArrival() = runTest {
-        val (consent, _) = consent()
-        consent.arrivalNotified()
+        val (consent, preferences) = consent()
+        preferences.setReceivedArrivalNotification()
 
         assertTrue(consent.shouldPrompt(NotificationAuth.AUTHORIZED, lastArrivalOpenedAt = null, now = fixedNow))
     }
 
     @Test
     fun doesNotAskWithoutNotificationPermission() = runTest {
-        val (consent, _) = consent()
-        consent.arrivalNotified()
+        val (consent, preferences) = consent()
+        preferences.setReceivedArrivalNotification()
 
         assertFalse(consent.shouldPrompt(NotificationAuth.DENIED, lastArrivalOpenedAt = null, now = fixedNow))
         assertFalse(consent.shouldPrompt(NotificationAuth.NOT_DETERMINED, lastArrivalOpenedAt = null, now = fixedNow))
@@ -60,8 +60,8 @@ class PromotionsConsentTest {
 
     @Test
     fun waitsAfterAnArrivalNotificationWasOpened() = runTest {
-        val (consent, _) = consent()
-        consent.arrivalNotified()
+        val (consent, preferences) = consent()
+        preferences.setReceivedArrivalNotification()
         val quiet = PromotionsConsent.QUIET_PERIOD_AFTER_ARRIVAL_OPENED
 
         assertFalse(consent.shouldPrompt(NotificationAuth.AUTHORIZED, fixedNow.minusSeconds(60), fixedNow))
@@ -70,8 +70,8 @@ class PromotionsConsentTest {
 
     @Test
     fun asksOnlyOnce() = runTest {
-        val (consent, _) = consent()
-        consent.arrivalNotified()
+        val (consent, preferences) = consent()
+        preferences.setReceivedArrivalNotification()
 
         consent.promptShown(daysSinceInstall = 3, notificationAuth = NotificationAuth.AUTHORIZED)
 
@@ -84,8 +84,8 @@ class PromotionsConsentTest {
 
     @Test
     fun doesNotAskWhenAlreadyOn() = runTest {
-        val (consent, _) = consent()
-        consent.arrivalNotified()
+        val (consent, preferences) = consent()
+        preferences.setReceivedArrivalNotification()
         consent.set(true, PromotionsConsent.Source.SETTINGS)?.join()
 
         assertFalse(consent.shouldPrompt(NotificationAuth.AUTHORIZED, lastArrivalOpenedAt = null, now = fixedNow))

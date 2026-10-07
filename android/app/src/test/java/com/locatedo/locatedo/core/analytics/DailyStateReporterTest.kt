@@ -52,6 +52,8 @@ class DailyStateReporterTest {
         assertEquals(1L, values["open_todo_count"])
         assertEquals(1L, values["signed_in"])
         assertEquals("always", values["location_auth"])
+        assertEquals(0L, values["promotions_consent"])
+        assertEquals("0", analytics.userProperties[AnalyticsUserProperty.PROMOTIONS_CONSENT])
         assertEquals("1", analytics.userProperties[AnalyticsUserProperty.PLACE_COUNT])
         assertEquals("free", analytics.userProperties[AnalyticsUserProperty.PLAN])
         assertEquals(1, permissions.refreshCount)
@@ -80,6 +82,23 @@ class DailyStateReporterTest {
 
         reporter.report()
         assertEquals(1, analytics.count(AnalyticsEvent.LOCATION_AUTH_CHANGED))
+    }
+
+    @Test
+    fun aChangeOfNotificationPermissionIsReportedOnce() = runTest {
+        val reporter = reporter()
+        reporter.report()
+        assertTrue(analytics.names.none { it == AnalyticsEvent.NOTIFICATION_AUTH_CHANGED })
+
+        permissions.state.value = permissions.state.value.copy(notifications = NotificationAuth.DENIED)
+        reporter.report()
+
+        val values = analytics.values(AnalyticsEvent.NOTIFICATION_AUTH_CHANGED)
+        assertEquals("authorized", values["from"])
+        assertEquals("denied", values["to"])
+
+        reporter.report()
+        assertEquals(1, analytics.count(AnalyticsEvent.NOTIFICATION_AUTH_CHANGED))
     }
 
     private fun TestScope.reporter(): DailyStateReporter = DailyStateReporter(

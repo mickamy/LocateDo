@@ -15,6 +15,8 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -38,7 +40,13 @@ class PromotionsConsent @Inject constructor(
         DISMISSED("dismissed"),
     }
 
+    private val _promptDue = MutableStateFlow(false)
+
     val isOn: Flow<Boolean> = preferences.promotions.map { it.consent }
+
+    // Raised on a return to the foreground when the sheet should be offered; the app takes it whether or not it can
+    // show the sheet right now, and the next foreground tries again.
+    val promptDue: StateFlow<Boolean> = _promptDue
 
     // The server learns of the change on the application scope, so leaving the screen does not cancel it.
     suspend fun set(isOn: Boolean, source: Source): Job? {
@@ -60,10 +68,6 @@ class PromotionsConsent @Inject constructor(
         return scope.launch { registration.consentChanged() }
     }
 
-    suspend fun arrivalNotified() {
-        preferences.setReceivedArrivalNotification()
-    }
-
     suspend fun shouldPrompt(notificationAuth: NotificationAuth, lastArrivalOpenedAt: Instant?, now: Instant): Boolean {
         val record = preferences.promotions.first()
         if (!record.hasReceivedArrivalNotification || record.hasShownPrompt || record.consent) {
@@ -76,6 +80,16 @@ class PromotionsConsent @Inject constructor(
             return false
         }
         return true
+    }
+
+    suspend fun checkPrompt(notificationAuth: NotificationAuth, lastArrivalOpenedAt: Instant?, now: Instant) {
+        if (shouldPrompt(notificationAuth, lastArrivalOpenedAt, now)) {
+            _promptDue.value = true
+        }
+    }
+
+    fun takePrompt() {
+        _promptDue.value = false
     }
 
     suspend fun promptShown(daysSinceInstall: Int, notificationAuth: NotificationAuth) {

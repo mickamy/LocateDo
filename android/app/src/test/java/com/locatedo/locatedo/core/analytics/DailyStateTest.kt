@@ -104,6 +104,7 @@ class DailyStateTest {
         assertEquals("free", properties[AnalyticsUserProperty.PLAN])
         assertEquals("always", properties[AnalyticsUserProperty.LOCATION_AUTH])
         assertEquals("1", properties[AnalyticsUserProperty.SIGNED_IN])
+        assertEquals("1", properties[AnalyticsUserProperty.PROMOTIONS_CONSENT])
     }
 
     @Test
@@ -116,6 +117,17 @@ class DailyStateTest {
         assertEquals(12L, values["days_since_install"])
         assertEquals(1L, values["precise_location"])
         assertEquals("authorized", values["notification_auth"])
+        assertEquals(1L, values["promotions_consent"])
+    }
+
+    @Test
+    fun aNotificationPermissionChangeIsAPairOfKeys() {
+        assertEquals(null, NotificationAuthHistory.change(null, NotificationAuth.DENIED))
+        assertEquals(null, NotificationAuthHistory.change("authorized", NotificationAuth.AUTHORIZED))
+        assertEquals(
+            NotificationAuth.AUTHORIZED to NotificationAuth.DENIED,
+            NotificationAuthHistory.change("authorized", NotificationAuth.DENIED),
+        )
     }
 
     private val state = DailyState(
@@ -133,6 +145,7 @@ class DailyStateTest {
         locationAuth = LocationAuth.ALWAYS,
         preciseLocation = true,
         notificationAuth = NotificationAuth.AUTHORIZED,
+        promotionsConsent = true,
     )
 
     private fun subscription(isTrial: Boolean) =

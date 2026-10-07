@@ -8,6 +8,7 @@ import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.common.Nearby
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
+import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import java.time.Clock
@@ -23,6 +24,7 @@ class ArrivalHandler @Inject constructor(
     private val notifier: ArrivalNotifier,
     private val authenticator: Authenticator,
     private val analytics: Analytics,
+    private val preferences: AppPreferences,
     private val clock: Clock,
 ) {
     // Overlapping fences (a station, a mall) fire together; only the nearest place that has something to do is announced.
@@ -43,6 +45,7 @@ class ArrivalHandler @Inject constructor(
         }
         notifier.notifyArrival(entry.place, todos.map { it.title })
         placeRepository.markNotified(entry.place.id, now)
+        preferences.setReceivedArrivalNotification()
         val category = categoryRepository.observeAll().first().firstOrNull { it.id == entry.place.categoryId }
         analytics.log(
             AnalyticsEvent.ARRIVAL_NOTIFIED,

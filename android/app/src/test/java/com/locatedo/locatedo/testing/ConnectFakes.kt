@@ -40,14 +40,18 @@ import com.locatedo.household.v1.RemoveMemberResponse
 import com.locatedo.household.v1.createHouseholdResponse
 import com.locatedo.household.v1.createInviteResponse
 import com.locatedo.household.v1.household
+import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.api.AccessTokenStore
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.auth.Session
 import com.locatedo.locatedo.core.auth.SessionStore
 import com.locatedo.locatedo.core.data.fixedClock
 import com.locatedo.locatedo.core.data.fixedNow
+import com.locatedo.locatedo.core.datastore.AppPreferences
+import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.push.DisplayLanguage
 import com.locatedo.locatedo.core.push.InstallationIdSource
+import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.core.sync.toTimestamp
 import com.locatedo.place.v1.DeletePlaceRequest
 import com.locatedo.place.v1.DeletePlaceResponse
@@ -295,4 +299,14 @@ class FakeInstallationIdSource(var installationId: String? = null) : Installatio
 
 class FakeDisplayLanguage(var language: String = "en") : DisplayLanguage {
     override fun current(): String = language
+}
+
+fun testPromotionsConsent(
+    preferences: AppPreferences,
+    scope: CoroutineScope,
+    devices: FakeDeviceService = FakeDeviceService(),
+    analytics: Analytics = FakeAnalytics(),
+): PromotionsConsent {
+    val registration = DeviceRegistration(devices, fakeAuthenticator(), FakeInstallationIdSource("installation-1"), preferences, FakeDisplayLanguage())
+    return PromotionsConsent(preferences, registration, analytics, scope)
 }
