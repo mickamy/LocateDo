@@ -309,7 +309,7 @@ paywall:
   unavailable: "プランを読み込めませんでした。しばらくしてからお試しください。"
 update:
   title: "アップデートが必要です"
-  message: "このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。"
+  message: "このバージョンのアプリは使えなくなりました。最新のバージョンにアップデートしてください。"
   open_app_store: "App Store を開く"
   android_open_play: "Google Play を開く"
 maintenance:

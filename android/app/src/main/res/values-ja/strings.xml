@@ -277,7 +277,7 @@
     <string name="todo_list_no_places_message">やることは場所ごとに登録します。</string>
     <string name="todo_list_no_places_title">先に場所を追加してください</string>
     <string name="update_android_open_play">Google Play を開く</string>
-    <string name="update_message">このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。</string>
+    <string name="update_message">このバージョンのアプリは使えなくなりました。最新のバージョンにアップデートしてください。</string>
     <string name="update_open_app_store">App Store を開く</string>
     <string name="update_title">アップデートが必要です</string>
 </resources>
