@@ -156,13 +156,23 @@ final class GeofenceMonitor {
         }
         let openTodos = NotificationPolicy.notifiableTodos(place.openTodos, for: currentUserID())
         let now = Date()
-        let shouldNotify = NotificationPolicy.shouldNotify(
-            openTodoCount: openTodos.count,
+        await notifier.refreshAuthorizationStatus()
+        let suppression = NotificationPolicy.suppression(
+            openTodoCount: place.openTodos.count,
+            notifiableTodoCount: openTodos.count,
             lastNotifiedAt: place.lastNotifiedAt,
+            notificationsAllowed: DailyState.NotificationAuth(notifier.authorizationStatus) == .authorized,
             now: now
         )
-        guard shouldNotify else {
-            logger.notice("Skipped notification for \(place.name, privacy: .public): \(openTodos.count) open todos")
+        if let suppression {
+            Analytics.log(.arrivalSuppressed, parameters: [
+                .reason: suppression.rawValue,
+                .openTodos: place.openTodos.count,
+                .category: place.analyticsCategory,
+                .radiusM: Int(place.radiusMeters)
+            ])
+            let reason = suppression.rawValue
+            logger.notice("Skipped notification for \(place.name, privacy: .public): \(reason, privacy: .public)")
             return
         }
         await notifier.notifyArrival(at: place, todoTitles: openTodos.map(\.title))

@@ -7,19 +7,49 @@ struct NotificationPolicyTests {
     private let now = Date(timeIntervalSince1970: 100_000)
 
     @Test func staysQuietWithoutOpenTodos() {
-        #expect(!NotificationPolicy.shouldNotify(openTodoCount: 0, lastNotifiedAt: nil, now: now))
+        #expect(suppression(open: 0, notifiable: 0) == .noOpenTodos)
+    }
+
+    @Test func staysQuietWhenEveryOpenTodoIsSomeoneElses() {
+        #expect(suppression(open: 2, notifiable: 0) == .assignedToOthers)
     }
 
     @Test func notifiesTheFirstTime() {
-        #expect(NotificationPolicy.shouldNotify(openTodoCount: 1, lastNotifiedAt: nil, now: now))
+        #expect(suppression(open: 1, notifiable: 1) == nil)
     }
 
     @Test func respectsTheCooldown() {
         let tenMinutesAgo = now.addingTimeInterval(-10 * 60)
-        #expect(!NotificationPolicy.shouldNotify(openTodoCount: 2, lastNotifiedAt: tenMinutesAgo, now: now))
+        #expect(suppression(open: 2, notifiable: 2, lastNotifiedAt: tenMinutesAgo) == .recentlyNotified)
 
         let thirtyOneMinutesAgo = now.addingTimeInterval(-31 * 60)
-        #expect(NotificationPolicy.shouldNotify(openTodoCount: 2, lastNotifiedAt: thirtyOneMinutesAgo, now: now))
+        #expect(suppression(open: 2, notifiable: 2, lastNotifiedAt: thirtyOneMinutesAgo) == nil)
+    }
+
+    @Test func staysQuietWhenNotificationsAreOff() {
+        #expect(suppression(open: 1, notifiable: 1, notificationsAllowed: false) == .notificationsOff)
+    }
+
+    @Test func reasonsUseTheirReportedNames() {
+        #expect(NotificationPolicy.Suppression.noOpenTodos.rawValue == "no_open_todos")
+        #expect(NotificationPolicy.Suppression.assignedToOthers.rawValue == "assigned_to_others")
+        #expect(NotificationPolicy.Suppression.recentlyNotified.rawValue == "recently_notified")
+        #expect(NotificationPolicy.Suppression.notificationsOff.rawValue == "notifications_off")
+    }
+
+    private func suppression(
+        open: Int,
+        notifiable: Int,
+        lastNotifiedAt: Date? = nil,
+        notificationsAllowed: Bool = true
+    ) -> NotificationPolicy.Suppression? {
+        NotificationPolicy.suppression(
+            openTodoCount: open,
+            notifiableTodoCount: notifiable,
+            lastNotifiedAt: lastNotifiedAt,
+            notificationsAllowed: notificationsAllowed,
+            now: now
+        )
     }
 
     @Test func bodyListsUpToThreeTitles() {

@@ -1,17 +1,36 @@
 import Foundation
 
 nonisolated enum NotificationPolicy {
+    enum Suppression: String {
+        case noOpenTodos = "no_open_todos"
+        case assignedToOthers = "assigned_to_others"
+        case recentlyNotified = "recently_notified"
+        case notificationsOff = "notifications_off"
+    }
+
     static let cooldown: TimeInterval = 30 * 60
     static let maxTitles = 3
 
-    static func shouldNotify(openTodoCount: Int, lastNotifiedAt: Date?, now: Date) -> Bool {
+    static func suppression(
+        openTodoCount: Int,
+        notifiableTodoCount: Int,
+        lastNotifiedAt: Date?,
+        notificationsAllowed: Bool,
+        now: Date
+    ) -> Suppression? {
         guard openTodoCount > 0 else {
-            return false
+            return .noOpenTodos
         }
-        guard let lastNotifiedAt else {
-            return true
+        guard notifiableTodoCount > 0 else {
+            return .assignedToOthers
         }
-        return now.timeIntervalSince(lastNotifiedAt) >= cooldown
+        if let lastNotifiedAt, now.timeIntervalSince(lastNotifiedAt) < cooldown {
+            return .recentlyNotified
+        }
+        guard notificationsAllowed else {
+            return .notificationsOff
+        }
+        return nil
     }
 
     static func notifiableTodos(_ todos: [Todo], for userID: UUID?) -> [Todo] {

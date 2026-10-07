@@ -6,6 +6,7 @@ nonisolated enum AnalyticsEvent: String {
     case alwaysPromptAnswered = "always_prompt_answered"
     case arrivalNotified = "arrival_notified"
     case arrivalOpened = "arrival_opened"
+    case arrivalSuppressed = "arrival_suppressed"
     case campaignOpened = "campaign_opened"
     case dailyState = "daily_state"
     case limitReached = "limit_reached"
