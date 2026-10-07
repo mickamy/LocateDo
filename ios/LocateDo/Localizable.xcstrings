@@ -1126,38 +1126,20 @@
         }
       }
     },
-    "notification.check_off" : {
-      "comment" : "Button under the checklist shown when the arrival notification is pressed and held; count is how many to-dos are checked.",
+    "notification.check_off_checked" : {
+      "comment" : "Button under the checklist shown when the arrival notification is pressed and held; completes the to-dos checked in it.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Check off %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Check off %lld"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark checked as done"
           }
         },
         "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld 件を完了"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェックしたものを完了にする"
           }
         }
       }

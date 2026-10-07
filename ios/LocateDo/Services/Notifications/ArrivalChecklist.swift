@@ -1,6 +1,6 @@
 import Foundation
 
-// Shared with the notification content extension, which reads the items and names the check-off action.
+// Shared with the notification content extension, which shows the items as a checklist.
 nonisolated struct ArrivalChecklist: Equatable {
     struct Item: Equatable, Identifiable {
         let id: UUID
@@ -8,13 +8,19 @@ nonisolated struct ArrivalChecklist: Equatable {
     }
 
     static let category = "arrival"
+    static let checkOffAction = "checkOff"
     static let itemsKey = "todos"
-    private static let actionPrefix = "complete:"
+    static let categoryIconKey = "categoryIcon"
+    static let categoryColorKey = "categoryColor"
 
     let items: [Item]
+    let categoryIcon: String?
+    let categoryColor: String?
 
-    init(items: [Item]) {
+    init(items: [Item], categoryIcon: String? = nil, categoryColor: String? = nil) {
         self.items = items
+        self.categoryIcon = categoryIcon
+        self.categoryColor = categoryColor
     }
 
     init?(userInfo: [AnyHashable: Any]) {
@@ -32,26 +38,20 @@ nonisolated struct ArrivalChecklist: Equatable {
             return nil
         }
         self.items = items
+        categoryIcon = userInfo[Self.categoryIconKey] as? String
+        categoryColor = userInfo[Self.categoryColorKey] as? String
     }
 
-    var encodedItems: [[String: String]] {
-        items.map { ["id": $0.id.uuidString, "title": $0.title] }
-    }
-
-    static func actionIdentifier(checking ids: [UUID]) -> String {
-        actionPrefix + ids.map(\.uuidString).joined(separator: ",")
-    }
-
-    static func checkedIDs(inAction identifier: String) -> [UUID]? {
-        guard identifier.hasPrefix(actionPrefix) else {
-            return nil
+    var userInfo: [String: Any] {
+        var info: [String: Any] = [
+            Self.itemsKey: items.map { ["id": $0.id.uuidString, "title": $0.title] }
+        ]
+        if let categoryIcon {
+            info[Self.categoryIconKey] = categoryIcon
         }
-        let ids = identifier.dropFirst(actionPrefix.count)
-            .split(separator: ",")
-            .compactMap { UUID(uuidString: String($0)) }
-        guard !ids.isEmpty else {
-            return nil
+        if let categoryColor {
+            info[Self.categoryColorKey] = categoryColor
         }
-        return ids
+        return info
     }
 }

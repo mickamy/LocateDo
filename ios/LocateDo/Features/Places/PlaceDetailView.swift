@@ -1,6 +1,7 @@
 import MapKit
 import SwiftData
 import SwiftUI
+import TipKit
 
 struct PlaceDetailView: View {
     @Environment(LocalWrites.self) private var writes
@@ -21,6 +22,7 @@ struct PlaceDetailView: View {
     @State private var isEditing = false
     @State private var isAddingTodo = false
     @State private var isConfirmingDelete = false
+    private let checkOffTip = CheckOffTip()
 
     init(place: Place) {
         self.place = place
@@ -45,6 +47,7 @@ struct PlaceDetailView: View {
                 }
             }
             Section {
+                TipView(checkOffTip)
                 if todos.isEmpty {
                     Text(.placeDetailNoTodos)
                         .foregroundStyle(.secondary)
@@ -103,7 +106,7 @@ struct PlaceDetailView: View {
                     Button {
                         Task {
                             await notifier.requestAuthorization()
-                            await notifier.notifyArrival(at: place, todoTitles: place.openTodos.map(\.title), after: 10)
+                            await notifier.notifyArrival(at: place, todos: place.openTodos, after: 10)
                         }
                     } label: {
                         Label {

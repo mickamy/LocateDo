@@ -100,6 +100,43 @@ struct LocalWritesTests {
         #expect(todo.completerID == nil)
     }
 
+    @Test func checkingOffFromTheNotificationCompletesOnlyWhatIsStillOpen() throws {
+        let fixture = try Fixture()
+        let me = UUID.v7()
+        fixture.writes.currentUserID = { me }
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let milk = Todo(title: "Milk", place: place)
+        let eggs = Todo(title: "Eggs", place: place)
+        let bread = Todo(title: "Bread", place: place)
+        fixture.writes.add(milk)
+        fixture.writes.add(eggs)
+        fixture.writes.add(bread)
+        fixture.writes.toggleCompletion(eggs)
+        let eggsCompletedAt = eggs.completedAt
+        let before = try fixture.queue().count
+        let now = Date(timeIntervalSince1970: 2_000)
+
+        let completed = fixture.writes.checkOff([milk.id, eggs.id, UUID()], now: now)
+
+        #expect(completed == 1)
+        #expect(milk.completedAt == now)
+        #expect(milk.completerID == me)
+        #expect(eggs.completedAt == eggsCompletedAt)
+        #expect(bread.completedAt == nil)
+        #expect(try fixture.queue().dropFirst(before).map(\.kind) == [.setTodoCompletion])
+    }
+
+    @Test func checkingOffNothingOpenWritesNothing() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let queued = fixture.probe.queued
+
+        #expect(fixture.writes.checkOff([UUID()]) == 0)
+        #expect(fixture.probe.queued == queued)
+    }
+
     @Test func changingTheAssigneeQueuesAPut() throws {
         let fixture = try Fixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)

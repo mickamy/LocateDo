@@ -5,11 +5,13 @@ import UserNotificationsUI
 
 final class NotificationViewController: UIViewController, UNNotificationContentExtension {
     private let selection = ChecklistSelection()
+    private let arrivalSelection = ArrivalSelection.shared()
+    private var requestID: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         selection.onChange = { [weak self] ids in
-            self?.offerCheckOff(ids)
+            self?.keep(ids)
         }
         let host = UIHostingController(rootView: ChecklistView(selection: selection))
         host.sizingOptions = .preferredContentSize
@@ -33,8 +35,16 @@ final class NotificationViewController: UIViewController, UNNotificationContentE
 
     func didReceive(_ notification: UNNotification) {
         let content = notification.request.content
+        requestID = notification.request.identifier
+        // A checklist left open earlier for the same place must not carry over.
+        keep([])
         selection.placeName = content.title
-        selection.items = ArrivalChecklist(userInfo: content.userInfo)?.items ?? []
+        guard let checklist = ArrivalChecklist(userInfo: content.userInfo) else {
+            return
+        }
+        selection.items = checklist.items
+        selection.systemImage = CategoryAppearance.systemImage(forIcon: checklist.categoryIcon)
+        selection.tint = CategoryAppearance.tint(forColor: checklist.categoryColor)
     }
 
     // Every action, including the check-off one, goes on to the app, which does the writing.
@@ -45,16 +55,10 @@ final class NotificationViewController: UIViewController, UNNotificationContentE
         completion(.dismissAndForwardAction)
     }
 
-    private func offerCheckOff(_ ids: [UUID]) {
-        guard !ids.isEmpty else {
-            extensionContext?.notificationActions = []
+    private func keep(_ ids: [UUID]) {
+        guard let requestID else {
             return
         }
-        extensionContext?.notificationActions = [
-            UNNotificationAction(
-                identifier: ArrivalChecklist.actionIdentifier(checking: ids),
-                title: String(localized: .notificationCheckOff(ids.count))
-            )
-        ]
+        arrivalSelection?.save(ids, for: requestID)
     }
 }

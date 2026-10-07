@@ -102,6 +102,30 @@ final class LocalWrites {
         return nil
     }
 
+    // From the arrival notification's checklist; to-dos someone else already checked off are skipped.
+    @discardableResult
+    func checkOff(_ todoIDs: [UUID], now: Date = .now) -> Int {
+        var completed: [Todo] = []
+        for id in todoIDs {
+            var descriptor = FetchDescriptor<Todo>(predicate: #Predicate { $0.id == id })
+            descriptor.fetchLimit = 1
+            guard let todo = try? context.fetch(descriptor).first, !todo.isCompleted else {
+                continue
+            }
+            todo.complete(by: currentUserID(), at: now)
+            completed.append(todo)
+        }
+        if completed.isEmpty {
+            return 0
+        }
+        commit(completed.map { .completion(of: $0) })
+        for todo in completed {
+            logCompletion(of: todo, via: .action, now: now)
+        }
+        updateCountProperties()
+        return completed.count
+    }
+
     func arrivalOpened(placeID: UUID, at now: Date = .now) {
         lastArrivalOpen = ArrivalOpen(placeID: placeID, openedAt: now)
     }
@@ -187,6 +211,10 @@ final class LocalWrites {
         if let lastArrivalOpen {
             via = lastArrivalOpen.via(completingAt: todo.place?.id, now: now)
         }
+        logCompletion(of: todo, via: via, now: now)
+    }
+
+    private func logCompletion(of todo: Todo, via: CompletionVia, now: Date) {
         let ageHours = Int(now.timeIntervalSince(todo.createdAt) / 3_600)
         analytics.log(.todoCompleted, parameters: [
             .via: via.rawValue,

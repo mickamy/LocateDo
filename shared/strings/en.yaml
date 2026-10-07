@@ -230,10 +230,7 @@ notification:
       one: "+{count:int} more"
       other: "+{count:int} more"
   press_and_hold_hint: "Press and hold to check things off"
-  check_off:
-    plural:
-      one: "Check off {count:int}"
-      other: "Check off {count:int}"
+  check_off_checked: "Mark checked as done"
   android_check_off_all:
     plural:
       one: "Mark all {count:int} as done"

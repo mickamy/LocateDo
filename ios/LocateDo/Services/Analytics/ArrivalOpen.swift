@@ -3,6 +3,7 @@ import Foundation
 nonisolated enum CompletionVia: String {
     case notification
     case app
+    case action
 }
 
 // A to-do checked off at the notified place soon after opening the arrival notification counts as done through it.

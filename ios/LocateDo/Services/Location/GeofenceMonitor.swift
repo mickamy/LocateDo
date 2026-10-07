@@ -175,7 +175,7 @@ final class GeofenceMonitor {
             logger.notice("Skipped notification for \(place.name, privacy: .public): \(reason, privacy: .public)")
             return
         }
-        await notifier.notifyArrival(at: place, todoTitles: openTodos.map(\.title))
+        await notifier.notifyArrival(at: place, todos: openTodos)
         place.lastNotifiedAt = now
         try? context.save()
         onNotified()

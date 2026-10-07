@@ -4,15 +4,25 @@ import Testing
 @testable import LocateDo
 
 struct ArrivalChecklistTests {
-    @Test func itemsSurviveTheNotificationPayload() throws {
-        let checklist = ArrivalChecklist(items: [
-            .init(id: UUID(), title: "Milk"),
-            .init(id: UUID(), title: "Detergent")
-        ])
+    @Test func itemsAndCategorySurviveTheNotificationPayload() throws {
+        let checklist = ArrivalChecklist(
+            items: [.init(id: UUID(), title: "Milk"), .init(id: UUID(), title: "Detergent")],
+            categoryIcon: "cart",
+            categoryColor: "orange"
+        )
 
-        let read = try #require(ArrivalChecklist(userInfo: [ArrivalChecklist.itemsKey: checklist.encodedItems]))
+        let read = try #require(ArrivalChecklist(userInfo: checklist.userInfo))
 
         #expect(read == checklist)
+    }
+
+    @Test func aPlaceWithoutACategoryHasNone() throws {
+        let checklist = ArrivalChecklist(items: [.init(id: UUID(), title: "Milk")])
+
+        let read = try #require(ArrivalChecklist(userInfo: checklist.userInfo))
+
+        #expect(read.categoryIcon == nil)
+        #expect(read.categoryColor == nil)
     }
 
     @Test func malformedItemsAreSkipped() throws {
@@ -29,19 +39,5 @@ struct ArrivalChecklistTests {
     @Test func notificationsWithoutItemsHaveNoChecklist() {
         #expect(ArrivalChecklist(userInfo: ["placeID": UUID().uuidString]) == nil)
         #expect(ArrivalChecklist(userInfo: [ArrivalChecklist.itemsKey: [[String: String]]()]) == nil)
-    }
-
-    @Test func theActionCarriesTheCheckedIDs() {
-        let ids = [UUID(), UUID()]
-
-        let identifier = ArrivalChecklist.actionIdentifier(checking: ids)
-
-        #expect(ArrivalChecklist.checkedIDs(inAction: identifier) == ids)
-    }
-
-    @Test func otherActionsCheckNothing() {
-        #expect(ArrivalChecklist.checkedIDs(inAction: "com.apple.UNNotificationDefaultActionIdentifier") == nil)
-        #expect(ArrivalChecklist.checkedIDs(inAction: "complete:") == nil)
-        #expect(ArrivalChecklist.checkedIDs(inAction: "complete:nope") == nil)
     }
 }
