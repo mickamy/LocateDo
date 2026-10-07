@@ -60,6 +60,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.locatedo.locatedo.BuildConfig
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.SystemSettings
@@ -150,6 +151,8 @@ fun HomeScreen(
                     onDeleteTodo = viewModel::deleteTodo,
                     members = uiState.members,
                     onAssignTodo = viewModel::setAssignee,
+                    showsDebugTools = BuildConfig.DEBUG_TOOLS,
+                    onSimulateArrival = { after -> viewModel.simulateArrival(selected.place.id, after) },
                 )
             } else {
                 HomeSheet(

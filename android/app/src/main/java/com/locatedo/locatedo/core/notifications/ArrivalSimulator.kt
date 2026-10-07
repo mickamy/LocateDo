@@ -1,0 +1,43 @@
+package com.locatedo.locatedo.core.notifications
+
+import com.locatedo.locatedo.core.common.di.ApplicationScope
+import com.locatedo.locatedo.core.data.PlaceRepository
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import java.time.Duration
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+// Debug and staging only: arrives at a place as if its geofence fired, through the same rules.
+interface ArrivalSimulator {
+    fun arrive(placeId: UUID, after: Duration)
+}
+
+// Runs on the application scope, so a delayed arrival still comes after leaving the app or locking the screen.
+@Singleton
+class DefaultArrivalSimulator @Inject constructor(
+    private val placeRepository: PlaceRepository,
+    private val arrivalHandler: ArrivalHandler,
+    @param:ApplicationScope private val scope: CoroutineScope,
+) : ArrivalSimulator {
+    override fun arrive(placeId: UUID, after: Duration) {
+        scope.launch {
+            delay(after.toMillis())
+            placeRepository.markNotified(placeId, null)
+            arrivalHandler.arrived(listOf(placeId), near = null)
+        }
+    }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class ArrivalSimulatorModule {
+    @Binds
+    abstract fun arrivalSimulator(simulator: DefaultArrivalSimulator): ArrivalSimulator
+}

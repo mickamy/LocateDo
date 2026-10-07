@@ -22,6 +22,7 @@ import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
+import com.locatedo.locatedo.core.notifications.ArrivalSimulator
 import com.locatedo.locatedo.core.notifications.CampaignNotification
 import com.locatedo.locatedo.core.notifications.CampaignNotifier
 import com.locatedo.locatedo.core.notifications.CompletionNotice
@@ -37,6 +38,7 @@ import com.locatedo.locatedo.core.sharing.HouseholdManager
 import com.locatedo.locatedo.core.sharing.Invite
 import com.locatedo.locatedo.core.sync.SyncEngine
 import java.io.File
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -76,7 +78,7 @@ class FakePlaceRepository : PlaceRepository {
         state.value = state.value.filter { it.place.id != id }
     }
 
-    override suspend fun markNotified(id: UUID, at: Instant) {
+    override suspend fun markNotified(id: UUID, at: Instant?) {
         state.value = state.value.map { if (it.place.id == id) it.copy(place = it.place.copy(lastNotifiedAt = at)) else it }
     }
 }
@@ -131,6 +133,14 @@ class FakeCampaignNotifier : CampaignNotifier {
 
     override fun notify(campaign: CampaignNotification, sentAt: Instant) {
         notified += campaign to sentAt
+    }
+}
+
+class FakeArrivalSimulator : ArrivalSimulator {
+    val arrivals = mutableListOf<Pair<UUID, Duration>>()
+
+    override fun arrive(placeId: UUID, after: Duration) {
+        arrivals += placeId to after
     }
 }
 
