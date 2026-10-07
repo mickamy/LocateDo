@@ -70,7 +70,7 @@ struct AcceptInviteView: View {
                         Text(.sharingSignInMessage)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                        AppleSignInButton()
+                        SignInButtons()
                     }
                     .listRowBackground(Color.clear)
                 }

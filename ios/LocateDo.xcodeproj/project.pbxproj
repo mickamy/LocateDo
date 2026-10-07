@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */; };
 		3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BC7A1D03075000000D47174 /* FirebaseCrashlytics */; };
+		3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97921B8CF49F7EB4924EBD /* GoogleSignIn */; };
 		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
 		3BF1AEC43071100000D47174 /* Connect in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC23071100000D47174 /* Connect */; };
 		3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC33071100000D47174 /* SwiftProtobuf */; };
@@ -80,6 +82,8 @@
 				3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */,
 				3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */,
 				3BFCD2D53072600A00811294 /* RevenueCat in Frameworks */,
+				3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */,
+				3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */,
 				3BF1AEC43071100000D47174 /* Connect in Frameworks */,
 				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
 			);
@@ -156,6 +160,8 @@
 				3BF1AEC23071100000D47174 /* Connect */,
 				3BF1AEC33071100000D47174 /* SwiftProtobuf */,
 				3BFCD2D43072600A00811294 /* RevenueCat */,
+				3B97921B8CF49F7EB4924EBD /* GoogleSignIn */,
+				3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */,
 			);
 			productName = LocateDo;
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
@@ -220,6 +226,7 @@
 				3BF1AEC03071100000D47174 /* XCRemoteSwiftPackageReference "connect-swift" */,
 				3BF1AEC13071100000D47174 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 				3BFCD2D33072600A00811294 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3BB55BF13070E8CE008A116A /* Products */;
@@ -367,6 +374,9 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "http://localhost:8080";
 				LOCATEDO_APP_STATUS_URL = "https://locatedo.com/app-status-stg.json";
+				LOCATEDO_GOOGLE_CLIENT_ID = "15768665811-8p8epr3jnjc9o7u5kjdc3s8encqojqn6.apps.googleusercontent.com";
+				LOCATEDO_GOOGLE_SERVER_CLIENT_ID = "15768665811-butqb8dsgllkm9e4ni0fo8sld9jepv7u.apps.googleusercontent.com";
+				LOCATEDO_GOOGLE_URL_SCHEME = "com.googleusercontent.apps.15768665811-8p8epr3jnjc9o7u5kjdc3s8encqojqn6";
 				LOCATEDO_REVENUECAT_API_KEY = test_lqvPOSuItMaeQPmgcTBlMFVumra;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.dev;
@@ -422,6 +432,9 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api.locatedo.com";
 				LOCATEDO_APP_STATUS_URL = "https://locatedo.com/app-status.json";
+				LOCATEDO_GOOGLE_CLIENT_ID = "44680780234-vmgjblfmhf06v9oev1q1ung53j9adchs.apps.googleusercontent.com";
+				LOCATEDO_GOOGLE_SERVER_CLIENT_ID = "44680780234-mdnjqmlqu23rgas8dhojvoq6pcnoulq8.apps.googleusercontent.com";
+				LOCATEDO_GOOGLE_URL_SCHEME = "com.googleusercontent.apps.44680780234-vmgjblfmhf06v9oev1q1ung53j9adchs";
 				LOCATEDO_REVENUECAT_API_KEY = appl_qsTIyTqIrypCAUeieBVRdhcJFEd;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo;
@@ -618,6 +631,9 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api-stg.locatedo.com";
 				LOCATEDO_APP_STATUS_URL = "https://locatedo.com/app-status-stg.json";
+				LOCATEDO_GOOGLE_CLIENT_ID = "238700922224-i1stnficvcng8ecgfp97oc92dtg71h86.apps.googleusercontent.com";
+				LOCATEDO_GOOGLE_SERVER_CLIENT_ID = "238700922224-fiiu5qmdjv88rio10h1etfovg2i90ece.apps.googleusercontent.com";
+				LOCATEDO_GOOGLE_URL_SCHEME = "com.googleusercontent.apps.238700922224-i1stnficvcng8ecgfp97oc92dtg71h86";
 				LOCATEDO_REVENUECAT_API_KEY = appl_qsTIyTqIrypCAUeieBVRdhcJFEd;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg;
@@ -806,6 +822,14 @@
 				minimumVersion = 12.19.2;
 			};
 		};
+		3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.0.0;
+			};
+		};
 		3BF1AEC03071100000D47174 /* XCRemoteSwiftPackageReference "connect-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/connectrpc/connect-swift";
@@ -833,6 +857,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		3B97921B8CF49F7EB4924EBD /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
 		3BC7A1D03075000000D47174 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3BE4DEC03071FD240011CA7E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

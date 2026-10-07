@@ -51,40 +51,6 @@ final class AccountManager {
         pendingAdoption != nil
     }
 
-    func signInWithApple(
-        identityToken: String,
-        authorizationCode: String,
-        nonce: String,
-        displayName: String?
-    ) async throws {
-        isWorking = true
-        defer { isWorking = false }
-
-        var request = Locatedo_Account_V1_SignInWithAppleRequest()
-        request.identityToken = identityToken
-        request.authorizationCode = authorizationCode
-        request.nonce = nonce
-        if let displayName, !displayName.isEmpty {
-            request.displayName = displayName
-        }
-        let response = try await account.signInWithApple(request: request, headers: [:]).result.get()
-        guard let session = Session(response.session) else {
-            throw AuthError.invalidSession
-        }
-
-        if response.hasHouseholdID, let householdID = UUID(uuidString: response.householdID) {
-            let adoption = PendingAdoption(session: session, householdID: householdID)
-            if try hasUserData() {
-                pendingAdoption = adoption
-                return
-            }
-            try await adopt(adoption)
-            return
-        }
-        try authenticator.signIn(session)
-        try await uploadLocalDataIfNeeded()
-    }
-
     func confirmReplacingLocalData() async throws {
         guard let adoption = pendingAdoption else {
             return
@@ -272,5 +238,63 @@ final class AccountManager {
         for write in try context.fetch(FetchDescriptor<PendingWrite>()) {
             context.delete(write)
         }
+    }
+}
+
+extension AccountManager {
+    func signInWithApple(
+        identityToken: String,
+        authorizationCode: String,
+        nonce: String,
+        displayName: String?
+    ) async throws {
+        isWorking = true
+        defer { isWorking = false }
+
+        var request = Locatedo_Account_V1_SignInWithAppleRequest()
+        request.identityToken = identityToken
+        request.authorizationCode = authorizationCode
+        request.nonce = nonce
+        if let displayName, !displayName.isEmpty {
+            request.displayName = displayName
+        }
+        let response = try await account.signInWithApple(request: request, headers: [:]).result.get()
+        var householdID: String?
+        if response.hasHouseholdID {
+            householdID = response.householdID
+        }
+        try await finishSignIn(response.session, householdID: householdID)
+    }
+
+    func signInWithGoogle(idToken: String, nonce: String) async throws {
+        isWorking = true
+        defer { isWorking = false }
+
+        var request = Locatedo_Account_V1_SignInWithGoogleRequest()
+        request.idToken = idToken
+        request.nonce = nonce
+        let response = try await account.signInWithGoogle(request: request, headers: [:]).result.get()
+        var householdID: String?
+        if response.hasHouseholdID {
+            householdID = response.householdID
+        }
+        try await finishSignIn(response.session, householdID: householdID)
+    }
+
+    private func finishSignIn(_ proto: Locatedo_Account_V1_Session, householdID raw: String?) async throws {
+        guard let session = Session(proto) else {
+            throw AuthError.invalidSession
+        }
+        if let raw, let householdID = UUID(uuidString: raw) {
+            let adoption = PendingAdoption(session: session, householdID: householdID)
+            if try hasUserData() {
+                pendingAdoption = adoption
+                return
+            }
+            try await adopt(adoption)
+            return
+        }
+        try authenticator.signIn(session)
+        try await uploadLocalDataIfNeeded()
     }
 }

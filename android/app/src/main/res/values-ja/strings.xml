@@ -169,7 +169,7 @@
     <string name="settings_account_delete_confirm_message">アカウントとサーバーに保存されたデータを削除します。この端末の場所とやることも消えます。</string>
     <string name="settings_account_delete_confirm_title">アカウントを削除しますか？</string>
     <string name="settings_account_delete_failed">アカウントを削除できませんでした。もう一度お試しください。</string>
-    <string name="settings_account_description">Apple でサインインすると、場所とやることをアカウントに保存できます。</string>
+    <string name="settings_account_description">サインインすると、場所とやることをアカウントに保存できます。</string>
     <string name="settings_account_not_signed_in">未サインイン</string>
     <string name="settings_account_replace">置き換える</string>
     <string name="settings_account_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この iPhone の場所とやることはアカウントのデータに置き換わります。</string>
@@ -179,7 +179,7 @@
     <string name="settings_account_sign_out_confirm_message">この iPhone の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_sign_out_confirm_title">サインアウトしますか？</string>
     <string name="settings_account_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この iPhone の場所とやることは消えます。</string>
-    <string name="settings_account_signed_in">Apple でサインイン中</string>
+    <string name="settings_account_signed_in">サインイン中</string>
     <string name="settings_account_title">アカウント</string>
     <string name="settings_default_radius_label">通知の範囲（半径）の初期値</string>
     <string name="settings_default_radius_title">新しい場所</string>
@@ -230,7 +230,7 @@
     <string name="sharing_benefit_plan_title">1 つの契約で全員が使える</string>
     <string name="sharing_failed">共有の設定を変更できませんでした。もう一度お試しください。</string>
     <string name="sharing_full">1 つの世帯に入れるのは 6 人までです。</string>
-    <string name="sharing_intro_message">Apple でサインインすると、場所とやることを家族と共有できます。</string>
+    <string name="sharing_intro_message">サインインすると、場所とやることを家族と共有できます。</string>
     <string name="sharing_intro_title">家族と一緒に使う</string>
     <string name="sharing_invite">招待する</string>
     <string name="sharing_invite_expiry">招待リンクは 72 時間有効です。</string>
@@ -255,7 +255,7 @@
     <plurals name="sharing_shared_header_title">
         <item quantity="other">%1$d 人で共有しています</item>
     </plurals>
-    <string name="sharing_sign_in_message">場所とやることを家族と共有するには、Apple でサインインしてください。</string>
+    <string name="sharing_sign_in_message">場所とやることを家族と共有するには、サインインしてください。</string>
     <string name="sharing_title">家族と共有</string>
     <string name="sharing_unnamed_member">メンバー</string>
     <string name="sharing_you">自分</string>

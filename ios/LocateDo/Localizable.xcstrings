@@ -2425,13 +2425,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sign in with Apple to keep your places and to-dos in your account."
+            "value" : "Sign in to keep your places and to-dos in your account."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple でサインインすると、場所とやることをアカウントに保存できます。"
+            "value" : "サインインすると、場所とやることをアカウントに保存できます。"
           }
         }
       }
@@ -2595,13 +2595,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Signed in with Apple"
+            "value" : "Signed in"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple でサインイン中"
+            "value" : "サインイン中"
           }
         }
       }
@@ -3360,13 +3360,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sign in with Apple to share places and to-dos with your family."
+            "value" : "Sign in to share places and to-dos with your family."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple でサインインすると、場所とやることを家族と共有できます。"
+            "value" : "サインインすると、場所とやることを家族と共有できます。"
           }
         }
       }
@@ -3753,13 +3753,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sign in with Apple to share places and to-dos with your family."
+            "value" : "Sign in to share places and to-dos with your family."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場所とやることを家族と共有するには、Apple でサインインしてください。"
+            "value" : "場所とやることを家族と共有するには、サインインしてください。"
           }
         }
       }

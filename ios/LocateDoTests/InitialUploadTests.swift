@@ -47,16 +47,16 @@ struct InitialUploadTests {
     }
 }
 
-struct AppleSignInNonceTests {
+struct SignInNonceTests {
     @Test func makesDistinctHexNoncesWithinTheServerLimits() {
-        let first = AppleSignInNonce.make()
-        let second = AppleSignInNonce.make()
+        let first = SignInNonce.make()
+        let second = SignInNonce.make()
         #expect(first != second)
         #expect(first.count == 64)
         #expect(first.allSatisfy { $0.isHexDigit })
     }
 
     @Test func hashesWithSHA256() {
-        #expect(AppleSignInNonce.sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        #expect(SignInNonce.sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
     }
 }

@@ -47,7 +47,7 @@ struct SharingIntroView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                AppleSignInButton()
+                SignInButtons()
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 28)

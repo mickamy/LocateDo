@@ -204,6 +204,7 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         var signInResult: Result<Locatedo_Account_V1_SignInWithAppleResponse, ConnectError> =
             .failure(ConnectError(code: .unimplemented, message: nil))
         var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest?
+        var lastGoogleSignIn: Locatedo_Account_V1_SignInWithGoogleRequest?
         var deleteCalls = 0
         var syncEntitlementCalls = 0
         var refreshDelay: Duration?
@@ -223,6 +224,10 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
 
     var lastSignIn: Locatedo_Account_V1_SignInWithAppleRequest? {
         state.withLock { $0.lastSignIn }
+    }
+
+    var lastGoogleSignIn: Locatedo_Account_V1_SignInWithGoogleRequest? {
+        state.withLock { $0.lastGoogleSignIn }
     }
 
     var deleteCalls: Int {
@@ -287,7 +292,18 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         request: Locatedo_Account_V1_SignInWithGoogleRequest,
         headers: Connect.Headers
     ) async -> ResponseMessage<Locatedo_Account_V1_SignInWithGoogleResponse> {
-        ResponseMessage(result: .failure(ConnectError(code: .unimplemented, message: nil)))
+        let result = state.withLock { state in
+            state.lastGoogleSignIn = request
+            return state.signInResult
+        }
+        return ResponseMessage(result: result.map { apple in
+            var response = Locatedo_Account_V1_SignInWithGoogleResponse()
+            response.session = apple.session
+            if apple.hasHouseholdID {
+                response.householdID = apple.householdID
+            }
+            return response
+        })
     }
 
     func deleteAccount(

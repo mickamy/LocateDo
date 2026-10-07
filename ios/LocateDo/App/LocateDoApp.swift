@@ -146,6 +146,7 @@ struct LocateDoApp: App {
 
     private func startServices() {
         InstallDate.record(defaults: .standard, now: .now)
+        GoogleSignInSetup.configure()
         geofence.start()
         network.start()
         entitlements.start()
