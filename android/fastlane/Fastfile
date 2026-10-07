@@ -28,6 +28,17 @@ SCREENSHOT_HEADLINES = {
   },
 }.freeze
 
+# Taps the element whose accessibility label is the app's string `name` in that language, wherever it is drawn.
+def tap_label(name, language)
+  values = language == "en" ? "values" : "values-#{language}"
+  label = File.read(File.join(ROOT, "app/src/main/res/#{values}/strings.xml"))[/name="#{name}">([^<]+)</, 1]
+  screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
+  node = screen.scan(/<node [^>]*>/).find { |n| n.include?("content-desc=\"#{label}\"") }
+  UI.user_error!("No element labeled #{label.inspect} on screen") if node.nil?
+  x1, y1, x2, y2 = node[/bounds="([^"]+)"/, 1].scan(/\d+/).map(&:to_i)
+  adb("shell", "input", "tap", ((x1 + x2) / 2).to_s, ((y1 + y2) / 2).to_s)
+end
+
 # Where the emulator stands; the seeded places sit around it (debug ScreenshotSeed).
 SCREENSHOT_LOCATIONS = {
   "en-US" => { language: "en", latitude: 37.3230, longitude: -122.0322 },
@@ -38,7 +49,16 @@ def adb(*args)
   Fastlane::Actions.sh(File.join(SDK, "platform-tools/adb"), "-s", SCREENSHOT_SERIAL, *args, log: false)
 end
 
+# A stray tap or key can land on the launcher or another app; stop rather than publish that as a screenshot, and
+# show the app's last crash, since the throwaway emulator and its logs are gone afterwards.
 def capture(path)
+  top = adb("shell", "dumpsys", "activity", "activities").lines.find { |line| line.include?("topResumedActivity") }
+  unless top&.include?(SCREENSHOT_PACKAGE)
+    crash = adb("logcat", "-d", "-b", "crash").lines.last(20).join
+    screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
+    texts = screen.scan(/ text="([^"]+)"/).flatten.join(" | ")
+    UI.user_error!("#{File.basename(path)}: #{SCREENSHOT_PACKAGE} is not in front (#{top&.strip})\n#{texts}\n#{crash}")
+  end
   adb("shell", "screencap", "-p", "/sdcard/screenshot.png")
   adb("pull", "/sdcard/screenshot.png", path)
 end
@@ -97,6 +117,8 @@ platform :android do
     FileUtils.rm_rf(raw)
     with_screenshot_emulator do
       adb("install", "-r", apk)
+      # The Google app finishes setting itself up on a fresh emulator and takes the screen in the middle of a run.
+      adb("shell", "pm", "disable-user", "--user", "0", "com.google.android.googlequicksearchbox")
       %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
         adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
       end
@@ -218,7 +240,8 @@ platform :android do
         "--es", "placeId", "0199a6f0-0000-7000-8000-000000000001")
     sleep(8)
     capture(File.join(dir, "03-Place.png"))
-    adb("shell", "input", "keyevent", "BACK")
+    # The sheet's close button, not BACK: BACK sometimes left the app, and the next taps landed on the launcher.
+    tap_label("common_done", language)
     sleep(2)
 
     adb("shell", "input", "tap", "540", "2270")
