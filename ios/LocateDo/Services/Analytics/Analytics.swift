@@ -59,6 +59,7 @@ nonisolated enum AnalyticsParameter: String {
 }
 
 nonisolated enum AnalyticsUserProperty: String {
+    case appBuild = "app_build"
     case householdMembers = "household_members"
     case locationAuth = "location_auth"
     case openTodoCount = "open_todo_count"
@@ -126,6 +127,8 @@ nonisolated enum Analytics {
         }
         FirebaseApp.configure(options: options)
         CrashReporting.configure(configuration: configuration)
+        // The exported app version is only the marketing version, so builds of the same version look alike.
+        setUserProperty(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String, for: .appBuild)
     }
 
     static func log(_ event: AnalyticsEvent, parameters: AnalyticsParameters = [:]) {

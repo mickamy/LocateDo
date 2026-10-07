@@ -17,7 +17,9 @@ KEY_PATH = "ios/fastlane/credentials/locatedo-firebase-adminsdk-fbsvc-3085ceab82
 API = "https://analyticsadmin.googleapis.com/v1beta"
 SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 
-USER_DIMENSIONS = ["plan", "location_auth", "household_members", "place_count", "open_todo_count", "signed_in"]
+USER_DIMENSIONS = [
+    "plan", "location_auth", "household_members", "place_count", "open_todo_count", "signed_in", "app_build",
+]
 EVENT_DIMENSIONS = [
     "source", "category", "via", "kind", "trigger", "from", "to", "notification_auth", "mode", "step", "reason", "result",
     "household_plan",
