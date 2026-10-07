@@ -10,6 +10,8 @@ always_prompt.android_choose:
   platforms: [android]
 settings.location.android_needs_always:
   platforms: [android]
+home.permission_banner.android_location:
+  platforms: [android]
 permission.android_background:
   platforms: [android]
 category.move_up:

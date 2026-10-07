@@ -59,6 +59,7 @@
         <item quantity="one">%1$d open to-do</item>
         <item quantity="other">%1$d open to-dos</item>
     </plurals>
+    <string name="home_permission_banner_android_location">Set location to “%1$s” to get reminders while the app is closed.</string>
     <string name="home_permission_banner_location">Allow “Always” location to get reminders while the app is closed.</string>
     <string name="home_permission_banner_location_denied">Allow location access in Settings to get reminders.</string>
     <string name="home_permission_banner_notifications">Allow notifications to get reminders.</string>

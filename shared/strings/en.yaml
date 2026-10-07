@@ -163,6 +163,7 @@ home:
     location: "Allow “Always” location to get reminders while the app is closed."
     location_denied: "Allow location access in Settings to get reminders."
     notifications: "Allow notifications to get reminders."
+    android_location: "Set location to “{option}” to get reminders while the app is closed."
   empty:
     title: "No places yet"
     message: "Add a place to get reminded when you arrive."

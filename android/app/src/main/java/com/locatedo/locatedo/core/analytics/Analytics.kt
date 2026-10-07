@@ -14,6 +14,7 @@ enum class AnalyticsEvent(val key: String) {
     NOTIFICATION_AUTH_CHANGED("notification_auth_changed"),
     ONBOARDING_COMPLETED("onboarding_completed"),
     PERMISSION_ACTION_TAPPED("permission_action_tapped"),
+    PERMISSION_BANNER_TAPPED("permission_banner_tapped"),
     PLACE_ADDED("place_added"),
     PLACE_DELETED("place_deleted"),
     TODO_ADDED("todo_added"),

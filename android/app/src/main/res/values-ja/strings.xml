@@ -56,6 +56,7 @@
     <plurals name="home_open_summary">
         <item quantity="other">未完了の TODO が %1$d 件あります</item>
     </plurals>
+    <string name="home_permission_banner_android_location">アプリを閉じている間もお知らせするには、位置情報を「%1$s」にしてください。</string>
     <string name="home_permission_banner_location">アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。</string>
     <string name="home_permission_banner_location_denied">お知らせを受け取るには、設定で位置情報を許可してください。</string>
     <string name="home_permission_banner_notifications">お知らせを受け取るには、通知を許可してください。</string>

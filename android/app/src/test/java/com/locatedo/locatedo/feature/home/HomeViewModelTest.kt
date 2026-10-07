@@ -1,5 +1,7 @@
 package com.locatedo.locatedo.feature.home
 
+import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
@@ -11,12 +13,18 @@ import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.permissions.LocationAuth
+import com.locatedo.locatedo.core.permissions.NotificationAuth
+import com.locatedo.locatedo.core.permissions.Permissions
+import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeGeocodingRepository
 import com.locatedo.locatedo.testing.FakeLocationRepository
 import com.locatedo.locatedo.testing.FakeMembershipRepository
+import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakeTodoRepository
+import com.locatedo.locatedo.testing.SettableClock
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -47,6 +55,9 @@ class HomeViewModelTest {
     private val geocoding = FakeGeocodingRepository(GeocodedPlace(name = null, address = "1 Main St"))
     private val requests = PlaceSelectionRequests()
     private val paywalls = PaywallRequests()
+    private val permissions = FakePermissionsRepository(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED)
+    private val analytics = FakeAnalytics()
+    private val clock = SettableClock(Instant.parse("2026-10-06T00:00:00Z"))
     private val grocery = Category(id = uuidV7(now), name = "Grocery", icon = "cart", color = "green", sortOrder = 0, updatedAt = now)
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.6580, longitude = 139.7016, categoryId = grocery.id, createdAt = now)
     private val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
@@ -66,7 +77,7 @@ class HomeViewModelTest {
     @Test
     fun startsLoadingThenShowsPlacesWithTheirCategories() = runTest(dispatcher) {
         places.state.value = emptyList()
-        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls, permissions, analytics, clock)
         assertTrue(viewModel.uiState.value.isLoading)
 
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
@@ -162,8 +173,53 @@ class HomeViewModelTest {
         assertNull(requests.pending.value)
     }
 
+    @Test
+    fun theBannerFollowsThePermissions() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        assertNull(viewModel.uiState.value.permissionBanner)
+
+        permissions.state.value = Permissions(LocationAuth.WHEN_IN_USE, NotificationAuth.DENIED)
+
+        assertEquals(PermissionBanner.LOCATION_ALWAYS, viewModel.uiState.value.permissionBanner)
+    }
+
+    @Test
+    fun tappingTheAllTheTimeBannerExplainsFirstAndLogsTheTapAndTheAnswer() = runTest(dispatcher) {
+        permissions.state.value = Permissions(LocationAuth.WHEN_IN_USE, NotificationAuth.AUTHORIZED)
+        val viewModel = viewModel()
+
+        viewModel.permissionBannerTapped(PermissionBanner.LOCATION_ALWAYS)
+
+        assertTrue(viewModel.isExplainingAlwaysLocation.value)
+        assertEquals(mapOf("kind" to "location_always"), analytics.values(AnalyticsEvent.PERMISSION_BANNER_TAPPED))
+
+        clock.now = clock.now.plusSeconds(4)
+        viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.DISMISSED)
+        viewModel.dismissAlwaysLocation()
+
+        assertFalse(viewModel.isExplainingAlwaysLocation.value)
+        assertEquals(
+            mapOf("result" to "dismissed", "duration_s" to 4L),
+            analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
+        )
+    }
+
+    @Test
+    fun theOtherBannersOnlyLogTheTap() = runTest(dispatcher) {
+        val viewModel = viewModel()
+
+        viewModel.permissionBannerTapped(PermissionBanner.LOCATION_DENIED)
+        viewModel.permissionBannerTapped(PermissionBanner.NOTIFICATIONS)
+
+        assertFalse(viewModel.isExplainingAlwaysLocation.value)
+        assertEquals(
+            listOf(mapOf("kind" to "location_denied"), mapOf("kind" to "notifications")),
+            analytics.events.filter { it.first == AnalyticsEvent.PERMISSION_BANNER_TAPPED }.map { it.second },
+        )
+    }
+
     private fun TestScope.viewModel(): HomeViewModel {
-        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls, permissions, analytics, clock)
         subscribe(viewModel)
         return viewModel
     }
