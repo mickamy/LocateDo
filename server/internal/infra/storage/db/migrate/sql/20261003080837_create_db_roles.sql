@@ -35,23 +35,33 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO lo
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO locatedo_reader;
 
 -- +goose Down
--- DROP OWNED revokes every privilege granted to these roles in the current
--- database and on shared objects (CONNECT), including per-object grants and
--- default-privilege entries that schema-level REVOKE would miss. The roles
--- own no objects here. Existence checks keep the down runnable when roles
--- were removed out-of-band.
+-- Roles are shared by every database in the cluster, so this only takes back
+-- what the up granted in this database (DROP OWNED would also strip CONNECT on
+-- other databases) and drops a role only when nothing else still depends on it.
+-- Existence checks keep the down runnable when roles were removed out-of-band.
 -- +goose StatementBegin
 DO
 $$
+DECLARE
+    role_name text;
 BEGIN
-        IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'locatedo_writer') THEN
-            DROP OWNED BY locatedo_writer;
-        END IF;
-        IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'locatedo_reader') THEN
-            DROP OWNED BY locatedo_reader;
-        END IF;
+    FOREACH role_name IN ARRAY ARRAY ['locatedo_writer', 'locatedo_reader']
+        LOOP
+            IF EXISTS (SELECT FROM pg_roles WHERE rolname = role_name) THEN
+                EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM %I', role_name);
+                EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM %I', role_name);
+                EXECUTE format('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM %I', role_name);
+                EXECUTE format('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM %I', role_name);
+                EXECUTE format('REVOKE USAGE ON SCHEMA public FROM %I', role_name);
+                EXECUTE format('REVOKE CONNECT ON DATABASE %I FROM %I', current_database(), role_name);
+                IF NOT EXISTS (SELECT
+                               FROM pg_shdepend
+                               WHERE refclassid = 'pg_authid'::regclass
+                                 AND refobjid = (SELECT oid FROM pg_roles WHERE rolname = role_name)) THEN
+                    EXECUTE format('DROP ROLE %I', role_name);
+                END IF;
+            END IF;
+        END LOOP;
 END
 $$;
 -- +goose StatementEnd
-DROP ROLE IF EXISTS locatedo_writer;
-DROP ROLE IF EXISTS locatedo_reader;
