@@ -42,6 +42,16 @@ func NewReconcileEntitlements(infra di.Infra) *ReconcileEntitlements {
 	}
 }
 
+// NewReportOutbox initializes dependencies and constructs ReportOutbox.
+func NewReportOutbox(infra di.Infra) *ReportOutbox {
+	reader := infra.Reader
+	messages := outbox.NewRepository(reader)
+
+	return &ReportOutbox{
+		messages: messages,
+	}
+}
+
 // NewRevokeAppleToken initializes dependencies and constructs RevokeAppleToken.
 func NewRevokeAppleToken(infra di.Infra, lib di.Lib) *RevokeAppleToken {
 	apple := infra.Apple

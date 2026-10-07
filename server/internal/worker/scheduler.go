@@ -24,6 +24,7 @@ type Tasks []Task
 const (
 	sweepInterval     = time.Hour
 	reconcileInterval = 24 * time.Hour
+	reportInterval    = 5 * time.Minute
 )
 
 func NewTasks(
@@ -31,12 +32,14 @@ func NewTasks(
 	refreshTokens *job.SweepRefreshTokens,
 	deadMessages *job.SweepDeadMessages,
 	entitlements *job.ReconcileEntitlements,
+	outboxHealth *job.ReportOutbox,
 ) Tasks {
 	return Tasks{
 		{Name: "sweep_tombstones", Interval: sweepInterval, Run: tombstones.Run},
 		{Name: "sweep_refresh_tokens", Interval: sweepInterval, Run: refreshTokens.Run},
 		{Name: "sweep_dead_messages", Interval: sweepInterval, Run: deadMessages.Run},
 		{Name: "reconcile_entitlements", Interval: reconcileInterval, Run: entitlements.Run},
+		{Name: "report_outbox", Interval: reportInterval, Run: outboxHealth.Run},
 	}
 }
 

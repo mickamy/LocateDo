@@ -129,9 +129,10 @@ func (c Consumer) finish(ctx context.Context, messages outbox.Repository, m outb
 
 	attempt := m.Attempts + 1
 	if errors.Is(handleErr, errUnknownKind) || attempt >= MaxAttempts {
-		if err := messages.Kill(ctx, m.ID, handleErr.Error()); err != nil {
+		if err := messages.Kill(ctx, m.ID, clock.Now(ctx), handleErr.Error()); err != nil {
 			return fmt.Errorf("kill: %w", err)
 		}
+		logger.Error(ctx, "outbox message dead", "id", m.ID, "kind", m.Kind, "attempts", attempt, "error", handleErr)
 		return nil
 	}
 	logger.Warn(ctx, "outbox delivery failed", "id", m.ID, "attempt", attempt, "error", handleErr)

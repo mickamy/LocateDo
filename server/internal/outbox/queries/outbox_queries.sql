@@ -41,12 +41,25 @@ WHERE m.id = $1
 DELETE
 FROM outbox_messages
 WHERE status = 'dead'
-  AND created_at < $1;
+  AND dead_at < sqlc.arg(before)::timestamptz;
 
 -- name: KillMessage :exec
 UPDATE outbox_messages
 SET attempts    = attempts + 1,
     status      = 'dead',
     lease_until = NULL,
-    last_error  = $2
-WHERE id = $1;
+    dead_at     = sqlc.arg(dead_at)::timestamptz,
+    last_error  = sqlc.arg(last_error)
+WHERE id = sqlc.arg(id);
+
+-- Overdue: due pending messages and running ones whose lease ran out, measured
+-- from when they should have been taken. Oldest: anything not yet delivered.
+-- name: GetOutboxHealth :one
+SELECT coalesce(extract(EPOCH FROM sqlc.arg(now)::timestamptz - min(CASE
+    WHEN status = 'pending' AND run_at <= sqlc.arg(now) THEN run_at
+    WHEN status = 'running' AND lease_until <= sqlc.arg(now) THEN lease_until
+    END)), 0)::bigint                                                            AS overdue_seconds,
+       coalesce(extract(EPOCH FROM sqlc.arg(now)::timestamptz - min(created_at)
+                                    FILTER (WHERE status IN ('pending', 'running'))), 0)::bigint AS oldest_seconds,
+       count(*) FILTER (WHERE status = 'dead' AND dead_at > sqlc.arg(dead_since)::timestamptz)::bigint       AS dead
+FROM outbox_messages;

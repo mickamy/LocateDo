@@ -172,12 +172,14 @@ CREATE TABLE outbox_messages
     last_error  text,
     -- A claimed message is running until then; past it, its worker is presumed dead.
     lease_until timestamptz,
+    dead_at     timestamptz CHECK ((status = 'dead') = (dead_at IS NOT NULL)),
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE UNIQUE INDEX outbox_messages_pending_dedupe_key_idx ON outbox_messages (dedupe_key) WHERE status = 'pending';
 CREATE INDEX outbox_messages_pending_run_at_idx ON outbox_messages (run_at) WHERE status = 'pending';
 CREATE INDEX outbox_messages_running_lease_until_idx ON outbox_messages (lease_until) WHERE status = 'running';
+CREATE INDEX outbox_messages_dead_at_idx ON outbox_messages (dead_at) WHERE status = 'dead';
 CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
 
 -- +goose Down

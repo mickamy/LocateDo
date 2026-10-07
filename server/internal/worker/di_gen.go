@@ -22,7 +22,8 @@ func NewWorker(infra di.Infra, lib di.Lib) *Worker {
 	sweepRefreshTokens := job.NewSweepRefreshTokens(infra)
 	sweepDeadMessages := job.NewSweepDeadMessages(infra)
 	reconcileEntitlements := job.NewReconcileEntitlements(infra)
-	tasks := NewTasks(sweepTombstones, sweepRefreshTokens, sweepDeadMessages, reconcileEntitlements)
+	reportOutbox := job.NewReportOutbox(infra)
+	tasks := NewTasks(sweepTombstones, sweepRefreshTokens, sweepDeadMessages, reconcileEntitlements, reportOutbox)
 	scheduler := NewScheduler(tasks)
 
 	return &Worker{
