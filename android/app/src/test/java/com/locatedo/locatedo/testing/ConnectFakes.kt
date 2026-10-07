@@ -7,6 +7,10 @@ import com.connectrpc.ResponseMessage
 import com.locatedo.account.v1.AccountServiceClientInterface
 import com.locatedo.account.v1.DeleteAccountRequest
 import com.locatedo.account.v1.DeleteAccountResponse
+import com.locatedo.account.v1.DeleteAccountWithAppleRequest
+import com.locatedo.account.v1.DeleteAccountWithAppleResponse
+import com.locatedo.account.v1.DeleteAccountWithGoogleRequest
+import com.locatedo.account.v1.DeleteAccountWithGoogleResponse
 import com.locatedo.account.v1.RefreshTokenRequest
 import com.locatedo.account.v1.RefreshTokenResponse
 import com.locatedo.account.v1.SignInWithAppleRequest
@@ -131,6 +135,16 @@ class FakeAccountService : AccountServiceClientInterface {
         deleteCalls += 1
         return success(DeleteAccountResponse.getDefaultInstance())
     }
+
+    override suspend fun deleteAccountWithApple(
+        request: DeleteAccountWithAppleRequest,
+        headers: Headers,
+    ): ResponseMessage<DeleteAccountWithAppleResponse> = failure(Code.UNIMPLEMENTED)
+
+    override suspend fun deleteAccountWithGoogle(
+        request: DeleteAccountWithGoogleRequest,
+        headers: Headers,
+    ): ResponseMessage<DeleteAccountWithGoogleResponse> = failure(Code.UNIMPLEMENTED)
 
     override suspend fun syncEntitlement(request: SyncEntitlementRequest, headers: Headers): ResponseMessage<SyncEntitlementResponse> {
         syncEntitlementCalls += 1
