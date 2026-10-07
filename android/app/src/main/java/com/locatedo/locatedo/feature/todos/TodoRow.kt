@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.feature.todos
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
@@ -60,7 +62,9 @@ fun TodoRow(
         enableDismissFromStartToEnd = false,
         onDismiss = { onDelete() },
     ) {
-        Box {
+        // The row's start padding sits outside ListItem's own background, so the box paints it; otherwise the red
+        // swipe background shows through as a strip.
+        Box(modifier = Modifier.background(ListItemDefaults.containerColor)) {
             ListItem(
                 headlineContent = {
                     Text(
