@@ -4,11 +4,12 @@ package job
 
 import (
 	"github.com/mickamy/LocateDo/internal/di"
-	repository3 "github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository4 "github.com/mickamy/LocateDo/internal/feature/account/repository"
+	repository3 "github.com/mickamy/LocateDo/internal/feature/campaign/repository"
 	"github.com/mickamy/LocateDo/internal/feature/device/repository"
 	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
-	repository4 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
+	repository5 "github.com/mickamy/LocateDo/internal/feature/sync/repository"
 	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
@@ -63,6 +64,26 @@ func NewRevokeAppleToken(infra di.Infra, lib di.Lib) *RevokeAppleToken {
 	}
 }
 
+// NewSendCampaign initializes dependencies and constructs SendCampaign.
+func NewSendCampaign(infra di.Infra) *SendCampaign {
+	transactor := infra.Transactor
+	reader := infra.Reader
+	campaigns := repository3.NewCampaign(reader)
+	deliveries := repository3.NewDelivery(reader)
+	devices := repository.NewDevice(reader)
+	apns := infra.APNs
+	fcm := infra.FCM
+
+	return &SendCampaign{
+		transactor: transactor,
+		campaigns:  campaigns,
+		deliveries: deliveries,
+		devices:    devices,
+		apns:       apns,
+		fcm:        fcm,
+	}
+}
+
 // NewSweepAnonymousDevices initializes dependencies and constructs SweepAnonymousDevices.
 func NewSweepAnonymousDevices(infra di.Infra) *SweepAnonymousDevices {
 	transactor := infra.Transactor
@@ -91,7 +112,7 @@ func NewSweepDeadMessages(infra di.Infra) *SweepDeadMessages {
 func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	refreshTokens := repository3.NewRefreshToken(reader)
+	refreshTokens := repository4.NewRefreshToken(reader)
 
 	return &SweepRefreshTokens{
 		transactor:    transactor,
@@ -103,7 +124,7 @@ func NewSweepRefreshTokens(infra di.Infra) *SweepRefreshTokens {
 func NewSweepTombstones(infra di.Infra) *SweepTombstones {
 	transactor := infra.Transactor
 	reader := infra.Reader
-	tombstones := repository4.NewTombstones(reader)
+	tombstones := repository5.NewTombstones(reader)
 
 	return &SweepTombstones{
 		transactor: transactor,

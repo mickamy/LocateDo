@@ -27,6 +27,8 @@ type Campaign struct {
 	URL         string
 	TargetCount int
 	CreatedAt   time.Time
+	// SentAt is nil until every device has been tried.
+	SentAt *time.Time
 }
 
 func (c Campaign) Validate() error {

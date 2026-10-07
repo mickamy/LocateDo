@@ -25,6 +25,11 @@ type Campaign interface {
 	FindLastSentAt(ctx context.Context, language dmodel.Language) (time.Time, error)
 	CountUnsent(ctx context.Context, language dmodel.Language) (int, error)
 	Insert(ctx context.Context, c model.Campaign) (uuid.UUID, error)
+	Find(ctx context.Context, id uuid.UUID) (model.Campaign, error)
+	AddUnregistered(ctx context.Context, id uuid.UUID) error
+	// Finish marks the campaign sent and records its counts, reading sent and
+	// uncertain ones from the deliveries; a sent campaign is left as it is.
+	Finish(ctx context.Context, id uuid.UUID, at time.Time, failed int) error
 	Bind(tx tx.Tx) Campaign
 }
 
@@ -95,4 +100,45 @@ func (r campaign) Insert(ctx context.Context, c model.Campaign) (uuid.UUID, erro
 		return uuid.UUID{}, fmt.Errorf("insert campaign: %w", err)
 	}
 	return id, nil
+}
+
+func (r campaign) Find(ctx context.Context, id uuid.UUID) (model.Campaign, error) {
+	row, err := r.q.FindCampaign(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Campaign{}, aerrors.NotFound("campaign")
+	}
+	if err != nil {
+		return model.Campaign{}, fmt.Errorf("find campaign: %w", err)
+	}
+	c := model.Campaign{
+		ID:          row.ID,
+		Language:    dmodel.Language(row.Language),
+		Title:       row.Title,
+		Body:        row.Body,
+		TargetCount: int(row.TargetCount),
+		CreatedAt:   row.CreatedAt,
+		SentAt:      row.SentAt,
+	}
+	if row.Url != nil {
+		c.URL = *row.Url
+	}
+	return c, nil
+}
+
+func (r campaign) AddUnregistered(ctx context.Context, id uuid.UUID) error {
+	if err := r.q.AddUnregistered(ctx, id); err != nil {
+		return fmt.Errorf("add unregistered: %w", err)
+	}
+	return nil
+}
+
+func (r campaign) Finish(ctx context.Context, id uuid.UUID, at time.Time, failed int) error {
+	if err := r.q.FinishCampaign(ctx, queries.FinishCampaignParams{
+		ID:          id,
+		SentAt:      at,
+		FailedCount: int32(failed), //nolint:gosec // device counts stay far below 2^31
+	}); err != nil {
+		return fmt.Errorf("finish campaign: %w", err)
+	}
+	return nil
 }

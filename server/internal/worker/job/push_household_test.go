@@ -155,9 +155,11 @@ func TestSyncTriggers_enqueueOnePendingPushPerHousehold(t *testing.T) {
 type fakePusher struct {
 	fail map[string]error
 
-	mu   sync.Mutex
-	woke []string
-	envs map[string]apns.Environment
+	mu       sync.Mutex
+	woke     []string
+	envs     map[string]apns.Environment
+	promoted []string
+	promos   map[string]apns.Promotion
 }
 
 var _ apns.Pusher = (*fakePusher)(nil)
@@ -176,8 +178,30 @@ func (f *fakePusher) Wake(_ context.Context, env apns.Environment, token string,
 	return nil
 }
 
-func (f *fakePusher) Promote(context.Context, apns.Environment, string, apns.Promotion, time.Time) error {
+func (f *fakePusher) Promote(_ context.Context, _ apns.Environment, token string, p apns.Promotion, _ time.Time) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.promoted = append(f.promoted, token)
+	if f.promos == nil {
+		f.promos = map[string]apns.Promotion{}
+	}
+	f.promos[token] = p
 	return nil
+}
+
+func (f *fakePusher) promotedTokens() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.promoted)
+}
+
+func (f *fakePusher) promotion(token string) apns.Promotion {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.promos[token]
 }
 
 func (f *fakePusher) woken() []string {
@@ -195,8 +219,10 @@ func (f *fakePusher) environment(token string) apns.Environment {
 type fakeFCM struct {
 	fail map[string]error
 
-	mu   sync.Mutex
-	woke []string
+	mu       sync.Mutex
+	woke     []string
+	promoted []string
+	promos   map[string]fcm.Promotion
 }
 
 var _ fcm.Pusher = (*fakeFCM)(nil)
@@ -211,8 +237,30 @@ func (f *fakeFCM) Wake(_ context.Context, token string, _ time.Time) error {
 	return nil
 }
 
-func (f *fakeFCM) Promote(context.Context, string, fcm.Promotion, time.Time) error {
+func (f *fakeFCM) Promote(_ context.Context, token string, p fcm.Promotion, _ time.Time) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.promoted = append(f.promoted, token)
+	if f.promos == nil {
+		f.promos = map[string]fcm.Promotion{}
+	}
+	f.promos[token] = p
 	return nil
+}
+
+func (f *fakeFCM) promotedTokens() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.promoted)
+}
+
+func (f *fakeFCM) promotion(token string) fcm.Promotion {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.promos[token]
 }
 
 func (f *fakeFCM) woken() []string {

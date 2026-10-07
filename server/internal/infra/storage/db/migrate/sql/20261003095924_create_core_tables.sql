@@ -78,15 +78,19 @@ CREATE TABLE campaigns
     sent_count         integer,
     unregistered_count integer,
     failed_count       integer,
+    uncertain_count    integer,
     created_at         timestamptz NOT NULL DEFAULT now(),
     sent_at            timestamptz
 );
 
+-- Written before the push goes out, so a device is never sent a campaign twice;
+-- sent_at stays NULL when it is unknown whether the push reached the service.
 CREATE TABLE campaign_deliveries
 (
-    campaign_id uuid        NOT NULL REFERENCES campaigns (id) ON DELETE CASCADE,
-    device_id   uuid        NOT NULL REFERENCES devices (id) ON DELETE CASCADE,
-    sent_at     timestamptz NOT NULL DEFAULT now(),
+    campaign_id  uuid        NOT NULL REFERENCES campaigns (id) ON DELETE CASCADE,
+    device_id    uuid        NOT NULL REFERENCES devices (id) ON DELETE CASCADE,
+    attempted_at timestamptz NOT NULL,
+    sent_at      timestamptz,
     PRIMARY KEY (campaign_id, device_id)
 );
 

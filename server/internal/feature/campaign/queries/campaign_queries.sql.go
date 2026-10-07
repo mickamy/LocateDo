@@ -12,6 +12,37 @@ import (
 	"uuid"
 )
 
+const addUnregistered = `-- name: AddUnregistered :exec
+UPDATE campaigns
+SET unregistered_count = COALESCE(unregistered_count, 0) + 1
+WHERE id = $1
+`
+
+func (q *Queries) AddUnregistered(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, addUnregistered, id)
+	return err
+}
+
+const claimDelivery = `-- name: ClaimDelivery :execrows
+INSERT INTO campaign_deliveries (campaign_id, device_id, attempted_at)
+VALUES ($1, $2, $3)
+ON CONFLICT DO NOTHING
+`
+
+type ClaimDeliveryParams struct {
+	CampaignID  uuid.UUID
+	DeviceID    uuid.UUID
+	AttemptedAt time.Time
+}
+
+func (q *Queries) ClaimDelivery(ctx context.Context, arg ClaimDeliveryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, claimDelivery, arg.CampaignID, arg.DeviceID, arg.AttemptedAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const countAudience = `-- name: CountAudience :many
 SELECT platform, count(*) AS devices
 FROM devices
@@ -59,6 +90,39 @@ func (q *Queries) CountUnsent(ctx context.Context, language string) (int64, erro
 	return count, err
 }
 
+const findCampaign = `-- name: FindCampaign :one
+SELECT id, language, title, body, url, target_count, created_at, sent_at
+FROM campaigns
+WHERE id = $1
+`
+
+type FindCampaignRow struct {
+	ID          uuid.UUID
+	Language    string
+	Title       string
+	Body        string
+	Url         *string
+	TargetCount int32
+	CreatedAt   time.Time
+	SentAt      *time.Time
+}
+
+func (q *Queries) FindCampaign(ctx context.Context, id uuid.UUID) (FindCampaignRow, error) {
+	row := q.db.QueryRow(ctx, findCampaign, id)
+	var i FindCampaignRow
+	err := row.Scan(
+		&i.ID,
+		&i.Language,
+		&i.Title,
+		&i.Body,
+		&i.Url,
+		&i.TargetCount,
+		&i.CreatedAt,
+		&i.SentAt,
+	)
+	return i, err
+}
+
 const findLastSentAt = `-- name: FindLastSentAt :one
 SELECT sent_at
 FROM campaigns
@@ -73,6 +137,34 @@ func (q *Queries) FindLastSentAt(ctx context.Context, language string) (*time.Ti
 	var sent_at *time.Time
 	err := row.Scan(&sent_at)
 	return sent_at, err
+}
+
+const finishCampaign = `-- name: FinishCampaign :exec
+UPDATE campaigns
+SET sent_at            = $1::timestamptz,
+    sent_count         = (SELECT count(*)
+                          FROM campaign_deliveries cd
+                          WHERE cd.campaign_id = $2
+                            AND cd.sent_at IS NOT NULL),
+    unregistered_count = COALESCE(unregistered_count, 0),
+    failed_count       = $3::integer,
+    uncertain_count    = (SELECT count(*)
+                          FROM campaign_deliveries cd
+                          WHERE cd.campaign_id = $2
+                            AND cd.sent_at IS NULL)
+WHERE id = $2
+  AND sent_at IS NULL
+`
+
+type FinishCampaignParams struct {
+	SentAt      time.Time
+	ID          uuid.UUID
+	FailedCount int32
+}
+
+func (q *Queries) FinishCampaign(ctx context.Context, arg FinishCampaignParams) error {
+	_, err := q.db.Exec(ctx, finishCampaign, arg.SentAt, arg.ID, arg.FailedCount)
+	return err
 }
 
 const insertCampaign = `-- name: InsertCampaign :one
@@ -102,4 +194,99 @@ func (q *Queries) InsertCampaign(ctx context.Context, arg InsertCampaignParams) 
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const listRecipients = `-- name: ListRecipients :many
+SELECT d.id, d.platform, d.push_token, d.apns_environment
+FROM devices d
+WHERE d.language = $1
+  AND d.promotions_consented_at IS NOT NULL
+  AND d.id > $2
+  AND NOT EXISTS (SELECT 1
+                  FROM campaign_deliveries cd
+                  WHERE cd.campaign_id = $3
+                    AND cd.device_id = d.id)
+ORDER BY d.id
+LIMIT $4
+`
+
+type ListRecipientsParams struct {
+	Language   string
+	After      uuid.UUID
+	CampaignID uuid.UUID
+	PageSize   int32
+}
+
+type ListRecipientsRow struct {
+	ID              uuid.UUID
+	Platform        string
+	PushToken       string
+	ApnsEnvironment *string
+}
+
+// Devices consenting in the campaign's language that it has not reached, after
+// the given device id.
+func (q *Queries) ListRecipients(ctx context.Context, arg ListRecipientsParams) ([]ListRecipientsRow, error) {
+	rows, err := q.db.Query(ctx, listRecipients,
+		arg.Language,
+		arg.After,
+		arg.CampaignID,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListRecipientsRow
+	for rows.Next() {
+		var i ListRecipientsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Platform,
+			&i.PushToken,
+			&i.ApnsEnvironment,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markDelivered = `-- name: MarkDelivered :exec
+UPDATE campaign_deliveries
+SET sent_at = $3
+WHERE campaign_id = $1
+  AND device_id = $2
+`
+
+type MarkDeliveredParams struct {
+	CampaignID uuid.UUID
+	DeviceID   uuid.UUID
+	SentAt     *time.Time
+}
+
+func (q *Queries) MarkDelivered(ctx context.Context, arg MarkDeliveredParams) error {
+	_, err := q.db.Exec(ctx, markDelivered, arg.CampaignID, arg.DeviceID, arg.SentAt)
+	return err
+}
+
+const releaseDelivery = `-- name: ReleaseDelivery :exec
+DELETE
+FROM campaign_deliveries
+WHERE campaign_id = $1
+  AND device_id = $2
+`
+
+type ReleaseDeliveryParams struct {
+	CampaignID uuid.UUID
+	DeviceID   uuid.UUID
+}
+
+func (q *Queries) ReleaseDelivery(ctx context.Context, arg ReleaseDeliveryParams) error {
+	_, err := q.db.Exec(ctx, releaseDelivery, arg.CampaignID, arg.DeviceID)
+	return err
 }
