@@ -1,3 +1,4 @@
+import Connect
 import Foundation
 import OSLog
 import SwiftProtobuf
