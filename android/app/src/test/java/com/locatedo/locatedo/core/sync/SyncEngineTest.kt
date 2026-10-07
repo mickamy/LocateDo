@@ -190,6 +190,7 @@ class SyncEngineTest {
         assertEquals(com.locatedo.locatedo.core.model.Plan.PRO, state.plan)
         val pulled = database.placeDao().observeWithTodos(placeId.toString()).first()
         assertEquals(1, pulled?.todos?.size)
+        assertEquals("2 changes, cursor 10 → 12", fixture.engine.lastPullSummary.value)
     }
 
     @Test
@@ -202,6 +203,7 @@ class SyncEngineTest {
 
         assertEquals(0, database.placeDao().count())
         assertEquals(30L, fixture.syncState.get().cursor)
+        assertTrue(fixture.engine.lastPullSummary.value.orEmpty().endsWith(", reset"))
     }
 
     @Test
@@ -215,6 +217,7 @@ class SyncEngineTest {
         assertEquals(listOf(0L, 1L), pulls.cursors)
         assertEquals(0L, fixture.syncState.get().cursor)
         assertEquals(0, database.placeDao().count())
+        assertTrue(fixture.engine.lastPullSummary.value.orEmpty().startsWith("failed: "))
     }
 
     @Test

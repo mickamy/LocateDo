@@ -6,6 +6,7 @@ import com.locatedo.locatedo.core.database.PendingWriteEntity
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -20,6 +21,8 @@ class WriteQueue @Inject constructor(
     private val _queued = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     val queued: SharedFlow<Unit> = _queued
+
+    val size: Flow<Int> = dao.observeCount()
 
     // Meant to run inside the transaction that made the local change, so the two land together.
     suspend fun enqueue(writes: List<Write>) {

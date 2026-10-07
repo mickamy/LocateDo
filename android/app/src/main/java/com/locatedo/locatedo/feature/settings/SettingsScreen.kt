@@ -189,6 +189,10 @@ fun SettingsScreen(
                 },
                 leadingContent = { Icon(Icons.Filled.PrivacyTip, contentDescription = null) },
             )
+            if (BuildConfig.DEBUG_TOOLS) {
+                HorizontalDivider()
+                DebugSection()
+            }
         }
     }
 
@@ -398,7 +402,7 @@ private fun notificationStatus(auth: NotificationAuth): String = when (auth) {
 }
 
 @Composable
-private fun SectionHeader(text: String) {
+internal fun SectionHeader(text: String) {
     Text(
         text = text,
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 4.dp),

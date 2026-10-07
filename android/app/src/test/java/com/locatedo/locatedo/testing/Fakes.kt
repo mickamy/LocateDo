@@ -267,6 +267,7 @@ class FakeTodoRepository : TodoRepository {
 class FakeSyncEngine : SyncEngine {
     override val limitRejected = MutableSharedFlow<FreeLimit>()
     override val removed = MutableSharedFlow<Unit>()
+    override val lastPullSummary = MutableStateFlow<String?>(null)
     var syncs = 0
     var drains = 0
 
