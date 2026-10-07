@@ -33,6 +33,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
+        <!-- Pushes are addressed to the Firebase installation ID, an FCM API that stays off until enabled here. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="true" />
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
             android:value="${CRASHLYTICS_COLLECTION_ENABLED}" />
