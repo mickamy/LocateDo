@@ -61,6 +61,9 @@ android {
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+                keepRules {
+                    files.add(file("proguard-rules.pro"))
+                }
             }
             signingConfig = signingConfigs.findByName("upload")
             manifestPlaceholders["CRASHLYTICS_COLLECTION_ENABLED"] = "true"
