@@ -47,7 +47,7 @@ import com.locatedo.locatedo.feature.todos.TodoRow
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.AssigneeChoice
 import com.locatedo.locatedo.ui.components.assigneeChoices
-import com.locatedo.locatedo.ui.components.assigneeName
+import com.locatedo.locatedo.ui.components.todoDetail
 import java.util.UUID
 
 // Google Maps' place sheet: a header, a row of action chips, then the content; here the content is the to-dos.
@@ -135,7 +135,7 @@ fun PlaceDetailSheet(
                 todo = todo,
                 onToggle = { onToggleTodo(todo.id, it) },
                 onDelete = { onDeleteTodo(todo.id) },
-                assigneeName = assigneeName(members, todo.assigneeId),
+                detail = todoDetail(members, todo),
                 assignees = assignees,
                 onAssign = { onAssignTodo(todo.id, it) },
             )
@@ -206,7 +206,7 @@ private fun CompletedTodos(
                 todo = todo,
                 onToggle = { onToggle(todo.id, it) },
                 onDelete = { onDelete(todo.id) },
-                assigneeName = assigneeName(members, todo.assigneeId),
+                detail = todoDetail(members, todo),
                 assignees = assignees,
                 onAssign = { onAssign(todo.id, it) },
             )
