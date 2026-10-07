@@ -74,10 +74,10 @@ class LocateDoApplication : Application() {
                 accountManager.endSession()
             }
         }
-        // A household whose creation failed last time, an installation the server has not seen yet, and the store's
-        // view of the signed-in user.
+        // The store's view of the signed-in user, a household whose creation failed last time, and an installation
+        // the server has not seen yet.
         applicationScope.launch {
-            authenticator.current()?.let { entitlements.logIn(it.userId) }
+            accountManager.linkPurchases()
             try {
                 accountManager.uploadLocalDataIfNeeded()
             } catch (e: Exception) {

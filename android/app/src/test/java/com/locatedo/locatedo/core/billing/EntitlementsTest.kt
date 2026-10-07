@@ -36,8 +36,9 @@ class EntitlementsTest {
         val source = FakeEntitlementSource(FakeEntitlementSource.ANNUAL)
         val entitlements = Entitlements(source, FakeAnalytics(), this)
 
-        entitlements.logIn(UUID.fromString("0199BD00-0000-7000-8000-000000000001"))
+        val linked = entitlements.logIn(UUID.fromString("0199BD00-0000-7000-8000-000000000001"))
 
+        assertTrue(linked)
         assertEquals(listOf("0199bd00-0000-7000-8000-000000000001"), source.loggedIn)
         assertTrue(entitlements.hasEntitlement)
     }
@@ -61,8 +62,9 @@ class EntitlementsTest {
         source.failure = IllegalStateException("offline")
         val entitlements = Entitlements(source, FakeAnalytics(), this)
 
-        entitlements.logIn(UUID.randomUUID())
+        val linked = entitlements.logIn(UUID.randomUUID())
 
+        assertFalse(linked)
         assertFalse(entitlements.hasEntitlement)
     }
 

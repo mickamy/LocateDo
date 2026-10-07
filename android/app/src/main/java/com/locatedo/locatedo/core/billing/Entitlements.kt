@@ -41,13 +41,16 @@ class Entitlements @Inject constructor(
         }
     }
 
-    // The store's app user id is the server's user id, so iOS and Android see one subscription.
-    suspend fun logIn(userId: UUID) {
+    // The store's app user id is the server's user id, so iOS and Android see one subscription. Returns false when
+    // the store could not link the user.
+    suspend fun logIn(userId: UUID): Boolean {
         try {
             _subscription.value = source.logIn(ProtoInput.id(userId))
             attachAnalytics()
+            return true
         } catch (e: Exception) {
             Log.w(TAG, "RevenueCat logIn failed", e)
+            return false
         }
     }
 
