@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -144,6 +145,32 @@ class RoomTodoRepositoryTest {
 
         repository.setCompleted(milk.id, false)
         assertNull(repository.observeAll().first().single().completerId)
+    }
+
+    @Test
+    fun checkingOffFromANotificationQueuesItAndSaysSo() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+
+        assertTrue(repository.checkOff(milk.id))
+
+        val checkedOff = repository.observeAll().first().single()
+        assertEquals(fixedNow, checkedOff.completedAt)
+        assertEquals(testSession.userId, checkedOff.completerId)
+        assertEquals(milk.id.toString(), database.queuedWrites().filterIsInstance<Write.SetTodoCompletion>().single().request.id)
+        assertEquals("action", analytics.values(AnalyticsEvent.TODO_COMPLETED)["via"])
+    }
+
+    @Test
+    fun checkingOffWhatIsAlreadyDoneOrGoneChangesNothing() = runTest {
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+        repository.setCompleted(milk.id, true)
+
+        assertFalse(repository.checkOff(milk.id))
+        assertFalse(repository.checkOff(UUID.randomUUID()))
+        assertEquals(1, analytics.count(AnalyticsEvent.TODO_COMPLETED))
     }
 
     @Test

@@ -64,9 +64,13 @@ class WriteAnalytics @Inject constructor(
         )
     }
 
-    fun todoCompleted(todo: Todo, openTodoCount: Int) {
+    // A check-off from a notification button says so; otherwise a recent arrival tap decides.
+    fun todoCompleted(todo: Todo, openTodoCount: Int, action: Boolean = false) {
         val now = clock.instant()
-        val via = lastArrivalOpen?.via(todo.placeId, now) ?: CompletionVia.APP
+        var via = lastArrivalOpen?.via(todo.placeId, now) ?: CompletionVia.APP
+        if (action) {
+            via = CompletionVia.ACTION
+        }
         val ageHours = Duration.between(todo.createdAt, now).toHours().coerceAtLeast(0)
         analytics.log(
             AnalyticsEvent.TODO_COMPLETED,

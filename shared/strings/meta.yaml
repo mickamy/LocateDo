@@ -24,6 +24,8 @@ notification.channel_promotions:
   platforms: [android]
 notification.channel_household:
   platforms: [android]
+notification.android_check_off_all:
+  platforms: [android]
 settings.account.android_sign_in:
   platforms: [android]
 settings.account.android_apple_sign_in:

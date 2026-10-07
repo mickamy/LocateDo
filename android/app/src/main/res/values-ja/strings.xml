@@ -76,6 +76,9 @@
     <string name="maintenance_unavailable">サーバーのメンテナンス中のため、今は使えません。%1$s 以降にお試しください。</string>
     <string name="maintenance_upcoming">%1$s〜%2$s はサーバーのメンテナンスのため同期を止めます。</string>
     <string name="map_empty_message">追加した場所がここに表示されます。</string>
+    <plurals name="notification_android_check_off_all">
+        <item quantity="other">%1$d 件すべて完了</item>
+    </plurals>
     <string name="notification_arrived_title">%1$sに到着しました</string>
     <string name="notification_channel_arrivals">到着のお知らせ</string>
     <string name="notification_channel_household">家族の更新</string>

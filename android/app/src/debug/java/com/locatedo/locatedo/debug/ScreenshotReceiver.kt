@@ -20,6 +20,7 @@ import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -84,7 +85,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
                 entry.todos.forEachIndexed { todoIndex, title ->
                     graph.todoDao().upsert(
                         TodoEntity(
-                            id = UUID.nameUUIDFromBytes("$placeId/$todoIndex".toByteArray()).toString(),
+                            id = todoId(ScreenshotSeed.placeId(index), todoIndex).toString(),
                             title = title,
                             placeId = placeId,
                             assigneeId = null,
@@ -114,8 +115,11 @@ class ScreenshotReceiver : BroadcastReceiver() {
             longitude = center.second + entry.longitudeOffset,
             createdAt = Instant.now(),
         )
+        val todos = entry.todos.mapIndexed { index, title ->
+            Todo(id = todoId(place.id, index), title = title, placeId = place.id, createdAt = place.createdAt)
+        }
         graph.arrivalNotifier().prepare()
-        graph.arrivalNotifier().notifyArrival(place, entry.todos)
+        graph.arrivalNotifier().notifyArrival(place, todos)
     }
 
     // Geofences follow the fused provider, which an emulator's `geo fix` does not reach while no app asks for GPS.
@@ -132,6 +136,8 @@ class ScreenshotReceiver : BroadcastReceiver() {
         client.setMockMode(true).await()
         client.setMockLocation(location).await()
     }
+
+    private fun todoId(placeId: UUID, index: Int): UUID = UUID.nameUUIDFromBytes("$placeId/$index".toByteArray())
 
     private companion object {
         const val ACTION_SEED = "seed"

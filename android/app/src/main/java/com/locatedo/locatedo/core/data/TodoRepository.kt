@@ -24,6 +24,9 @@ interface TodoRepository {
     suspend fun add(todo: Todo): FreeLimit?
     suspend fun update(todo: Todo)
     suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit?
+
+    // Checks off from an arrival notification; false when the to-do is gone or someone already checked it off.
+    suspend fun checkOff(id: UUID): Boolean
     suspend fun delete(ids: List<UUID>)
 }
 
@@ -101,6 +104,29 @@ class RoomTodoRepository @Inject constructor(
         }
         reportCounts()
         return null
+    }
+
+    override suspend fun checkOff(id: UUID): Boolean {
+        val userId = authenticator.current()?.userId
+        val before = database.withTransaction {
+            val todo = todoDao.get(id.toString())
+            if (todo == null || todo.completedAt != null) {
+                return@withTransaction null
+            }
+            val now = clock.instant()
+            todoDao.upsert(
+                todo.copy(
+                    completedAt = now.toEpochMilli(),
+                    completerId = userId?.toString(),
+                    updatedAt = now.toEpochMilli(),
+                ),
+            )
+            queue.enqueue(Write.completion(id, now))
+            todo
+        } ?: return false
+        analytics.todoCompleted(before.asModel(), todoDao.countOpen(), action = true)
+        reportCounts()
+        return true
     }
 
     override suspend fun delete(ids: List<UUID>) {

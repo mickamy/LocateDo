@@ -89,6 +89,9 @@
             android:name=".core.geofence.GeofenceReceiver"
             android:exported="false" />
         <receiver
+            android:name=".core.notifications.ArrivalActionReceiver"
+            android:exported="false" />
+        <receiver
             android:name=".core.geofence.BootReceiver"
             android:exported="false">
             <intent-filter>

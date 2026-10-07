@@ -102,14 +102,25 @@ class FakeGeofenceRegistrar : GeofenceRegistrar {
 
 class FakeArrivalNotifier : ArrivalNotifier {
     val notified = mutableListOf<Pair<Place, List<String>>>()
+    val silent = mutableListOf<Pair<Place, List<String>>>()
+    val cancelled = mutableListOf<UUID>()
     var allowed = true
 
     override fun prepare() = Unit
 
     override fun canNotify(): Boolean = allowed
 
-    override fun notifyArrival(place: Place, todoTitles: List<String>) {
-        notified += place to todoTitles
+    override fun notifyArrival(place: Place, todos: List<Todo>, silent: Boolean) {
+        val shown = place to todos.map { it.title }
+        if (silent) {
+            this.silent += shown
+        } else {
+            notified += shown
+        }
+    }
+
+    override fun cancelArrival(placeId: UUID) {
+        cancelled += placeId
     }
 }
 
@@ -226,6 +237,15 @@ class FakeTodoRepository : TodoRepository {
             if (it.id == id) it.copy(completedAt = if (completed) Instant.EPOCH else null) else it
         }
         return null
+    }
+
+    override suspend fun checkOff(id: UUID): Boolean {
+        val todo = state.value.firstOrNull { it.id == id }
+        if (todo == null || todo.isCompleted) {
+            return false
+        }
+        state.value = state.value.map { if (it.id == id) it.copy(completedAt = Instant.EPOCH) else it }
+        return true
     }
 
     override suspend fun delete(ids: List<UUID>) {

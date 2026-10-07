@@ -234,6 +234,10 @@ notification:
     plural:
       one: "Check off {count:int}"
       other: "Check off {count:int}"
+  android_check_off_all:
+    plural:
+      one: "Mark all {count:int} as done"
+      other: "Mark all {count:int} as done"
 category:
   shopping: "Shopping"
   work: "Work"
