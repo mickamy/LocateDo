@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 
 // Turns a raw simulator screenshot into an App Store image: a headline over a soft blue background,
 // with the screenshot below it, rounded and shadowed, running off the bottom edge.
-//   swift compose.swift <raw.png> <output.png> <headline> [--language <code>]
+//   swift compose.swift <raw.png> <output.png> <headline> [--language <code>] [--corner <ratio of the width>]
 
 func color(_ hex: UInt32, alpha: CGFloat = 1) -> CGColor {
     CGColor(
@@ -47,12 +47,19 @@ func headline(_ text: String, language: String, fontSize: CGFloat, width: CGFloa
 
 let arguments = Array(CommandLine.arguments.dropFirst())
 guard arguments.count >= 3 else {
-    FileHandle.standardError.write(Data("usage: swift compose.swift <raw.png> <output.png> <headline> [--language <code>]\n".utf8))
+    FileHandle.standardError.write(Data(
+        "usage: swift compose.swift <raw.png> <output.png> <headline> [--language <code>] [--corner <ratio>]\n".utf8
+    ))
     exit(2)
 }
 var language = "en"
 if let index = arguments.firstIndex(of: "--language"), index + 1 < arguments.count {
     language = arguments[index + 1]
+}
+// iPhones round their screens more than Android phones, whose status bar sits closer to the corner.
+var cornerRatio: CGFloat = 0.12
+if let index = arguments.firstIndex(of: "--corner"), index + 1 < arguments.count, let ratio = Double(arguments[index + 1]) {
+    cornerRatio = CGFloat(ratio)
 }
 guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: arguments[0]) as CFURL, nil),
       let shot = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
@@ -100,7 +107,7 @@ context.translateBy(x: margin, y: bandBottom + (bandTop - bandBottom - textSize.
 CTFrameDraw(textFrame, context)
 context.restoreGState()
 
-let corner = shotWidth * 0.12
+let corner = shotWidth * cornerRatio
 let shape = CGPath(roundedRect: shotRect, cornerWidth: corner, cornerHeight: corner, transform: nil)
 context.saveGState()
 context.setShadow(offset: CGSize(width: 0, height: -size.width * 0.012), blur: size.width * 0.05, color: color(0x0B1B33, alpha: 0.22))
