@@ -103,6 +103,40 @@ public object RegisterDeviceRequestKt {
     public fun clearApnsEnvironment() {
       _builder.clearApnsEnvironment()
     }
+
+    /**
+     * `bool promotions_consent = 4 [json_name = "promotionsConsent"];`
+     */
+    public var promotionsConsent: kotlin.Boolean
+      @kotlin.jvm.JvmName("getPromotionsConsent")
+        get() = _builder.promotionsConsent
+      @kotlin.jvm.JvmName("setPromotionsConsent")
+        set(value) {
+        _builder.promotionsConsent = value
+      }
+    /**
+     * `bool promotions_consent = 4 [json_name = "promotionsConsent"];`
+     */
+    public fun clearPromotionsConsent() {
+      _builder.clearPromotionsConsent()
+    }
+
+    /**
+     * `string language = 5 [json_name = "language", (.buf.validate.field) = { ... }`
+     */
+    public var language: kotlin.String
+      @kotlin.jvm.JvmName("getLanguage")
+        get() = _builder.language
+      @kotlin.jvm.JvmName("setLanguage")
+        set(value) {
+        _builder.language = value
+      }
+    /**
+     * `string language = 5 [json_name = "language", (.buf.validate.field) = { ... }`
+     */
+    public fun clearLanguage() {
+      _builder.clearLanguage()
+    }
   }
 }
 public inline fun com.locatedo.device.v1.RegisterDeviceRequest.copy(block: `com.locatedo.device.v1`.RegisterDeviceRequestKt.Dsl.() -> kotlin.Unit): com.locatedo.device.v1.RegisterDeviceRequest =

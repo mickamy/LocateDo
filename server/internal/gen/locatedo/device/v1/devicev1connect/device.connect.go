@@ -40,6 +40,8 @@ const (
 
 // DeviceServiceClient is a client for the locatedo.device.v1.DeviceService service.
 type DeviceServiceClient interface {
+	// The access token is optional. Without one the device is registered
+	// anonymously, and the server keeps it only while promotions_consent is on.
 	RegisterDevice(context.Context, *connect.Request[v1.RegisterDeviceRequest]) (*connect.Response[v1.RegisterDeviceResponse], error)
 }
 
@@ -75,6 +77,8 @@ func (c *deviceServiceClient) RegisterDevice(ctx context.Context, req *connect.R
 
 // DeviceServiceHandler is an implementation of the locatedo.device.v1.DeviceService service.
 type DeviceServiceHandler interface {
+	// The access token is optional. Without one the device is registered
+	// anonymously, and the server keeps it only while promotions_consent is on.
 	RegisterDevice(context.Context, *connect.Request[v1.RegisterDeviceRequest]) (*connect.Response[v1.RegisterDeviceResponse], error)
 }
 

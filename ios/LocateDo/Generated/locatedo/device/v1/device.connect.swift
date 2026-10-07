@@ -11,6 +11,8 @@ import SwiftProtobuf
 
 internal protocol Locatedo_Device_V1_DeviceServiceClientInterface: Sendable {
 
+    /// The access token is optional. Without one the device is registered
+    /// anonymously, and the server keeps it only while promotions_consent is on.
     @available(iOS 13, *)
     func `registerDevice`(request: Locatedo_Device_V1_RegisterDeviceRequest, headers: Connect.Headers) async -> ResponseMessage<Locatedo_Device_V1_RegisterDeviceResponse>
 }

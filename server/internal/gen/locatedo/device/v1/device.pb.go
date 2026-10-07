@@ -125,10 +125,12 @@ type RegisterDeviceRequest struct {
 	Platform Platform               `protobuf:"varint,1,opt,name=platform,proto3,enum=locatedo.device.v1.Platform" json:"platform,omitempty"`
 	// What the push service targets: the APNs device token on iOS, the Firebase
 	// installation ID on Android.
-	PushToken       string          `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
-	ApnsEnvironment ApnsEnvironment `protobuf:"varint,3,opt,name=apns_environment,json=apnsEnvironment,proto3,enum=locatedo.device.v1.ApnsEnvironment" json:"apns_environment,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	PushToken         string          `protobuf:"bytes,2,opt,name=push_token,json=pushToken,proto3" json:"push_token,omitempty"`
+	ApnsEnvironment   ApnsEnvironment `protobuf:"varint,3,opt,name=apns_environment,json=apnsEnvironment,proto3,enum=locatedo.device.v1.ApnsEnvironment" json:"apns_environment,omitempty"`
+	PromotionsConsent bool            `protobuf:"varint,4,opt,name=promotions_consent,json=promotionsConsent,proto3" json:"promotions_consent,omitempty"`
+	Language          string          `protobuf:"bytes,5,opt,name=language,proto3" json:"language,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *RegisterDeviceRequest) Reset() {
@@ -182,6 +184,20 @@ func (x *RegisterDeviceRequest) GetApnsEnvironment() ApnsEnvironment {
 	return ApnsEnvironment_APNS_ENVIRONMENT_UNSPECIFIED
 }
 
+func (x *RegisterDeviceRequest) GetPromotionsConsent() bool {
+	if x != nil {
+		return x.PromotionsConsent
+	}
+	return false
+}
+
+func (x *RegisterDeviceRequest) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
 type RegisterDeviceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -222,14 +238,16 @@ var File_locatedo_device_v1_device_proto protoreflect.FileDescriptor
 
 const file_locatedo_device_v1_device_proto_rawDesc = "" +
 	"\n" +
-	"\x1flocatedo/device/v1/device.proto\x12\x12locatedo.device.v1\x1a\x1bbuf/validate/validate.proto\"\x8c\x03\n" +
+	"\x1flocatedo/device/v1/device.proto\x12\x12locatedo.device.v1\x1a\x1bbuf/validate/validate.proto\"\xe9\x03\n" +
 	"\x15RegisterDeviceRequest\x12D\n" +
 	"\bplatform\x18\x01 \x01(\x0e2\x1c.locatedo.device.v1.PlatformB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\bplatform\x12)\n" +
 	"\n" +
 	"push_token\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\tpushToken\x12X\n" +
-	"\x10apns_environment\x18\x03 \x01(\x0e2#.locatedo.device.v1.ApnsEnvironmentB\b\xbaH\x05\x82\x01\x02\x10\x01R\x0fapnsEnvironment:\xa7\x01\xbaH\xa3\x01\x1a\xa0\x01\n" +
+	"\x10apns_environment\x18\x03 \x01(\x0e2#.locatedo.device.v1.ApnsEnvironmentB\b\xbaH\x05\x82\x01\x02\x10\x01R\x0fapnsEnvironment\x12-\n" +
+	"\x12promotions_consent\x18\x04 \x01(\bR\x11promotionsConsent\x12,\n" +
+	"\blanguage\x18\x05 \x01(\tB\x10\xbaH\r\xd8\x01\x01r\bR\x02enR\x02jaR\blanguage:\xa7\x01\xbaH\xa3\x01\x1a\xa0\x01\n" +
 	"(register_device_request.apns_environment\x12>apns_environment is required on iOS and not allowed on Android\x1a4(this.platform == 1) == (this.apns_environment != 0)\"\x18\n" +
 	"\x16RegisterDeviceResponse*L\n" +
 	"\bPlatform\x12\x18\n" +

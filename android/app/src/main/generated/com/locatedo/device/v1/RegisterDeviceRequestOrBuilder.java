@@ -53,4 +53,22 @@ public interface RegisterDeviceRequestOrBuilder extends
    * @return The apnsEnvironment.
    */
   com.locatedo.device.v1.ApnsEnvironment getApnsEnvironment();
+
+  /**
+   * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+   * @return The promotionsConsent.
+   */
+  boolean getPromotionsConsent();
+
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   * @return The language.
+   */
+  java.lang.String getLanguage();
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   * @return The bytes for language.
+   */
+  com.google.protobuf.ByteString
+      getLanguageBytes();
 }
