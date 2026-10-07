@@ -28,9 +28,10 @@ jobs:
       - name: Boot the simulator while building
         run: xcrun simctl boot "$SIMULATOR" || true
       # hashFiles walks the whole workspace and has timed out here, so the one file is hashed directly.
+      # xcodebuild -version takes minutes on a fresh runner, so the build number comes from version.plist.
       - id: xcode
         run: |
-          echo "version=$(xcodebuild -version | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          echo "version=$(/usr/libexec/PlistBuddy -c 'Print :ProductBuildVersion' "$(xcode-select -p)/../version.plist")" >> "$GITHUB_OUTPUT"
           echo "packages=$(shasum -a 256 ios/LocateDo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
