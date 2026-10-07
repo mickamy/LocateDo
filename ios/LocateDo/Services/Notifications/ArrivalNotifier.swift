@@ -8,6 +8,8 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored var onOpened: (UUID) -> Void = { _ in }
     @ObservationIgnored private(set) var lastOpenedAt: Date?
     @ObservationIgnored var onCampaignLink: (URL) -> Void = { _ in }
+    @ObservationIgnored var onCheckOff: ([UUID]) async -> Void = { _ in }
+    @ObservationIgnored var selection = ArrivalSelection.shared()
 
     private let router: AppRouter
     private let center = UNUserNotificationCenter.current()
@@ -18,6 +20,18 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         self.router = router
         super.init()
         center.delegate = self
+        center.setNotificationCategories([
+            UNNotificationCategory(
+                identifier: ArrivalChecklist.category,
+                actions: [
+                    UNNotificationAction(
+                        identifier: ArrivalChecklist.checkOffAction,
+                        title: String(localized: .notificationCheckOffChecked)
+                    )
+                ],
+                intentIdentifiers: []
+            )
+        ])
     }
 
     func refreshAuthorizationStatus() async {
@@ -29,14 +43,24 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         await refreshAuthorizationStatus()
     }
 
-    func notifyArrival(at place: Place, todoTitles: [String], after delay: TimeInterval? = nil) async {
+    func notifyArrival(at place: Place, todos: [Todo], after delay: TimeInterval? = nil) async {
+        let checklist = ArrivalChecklist(
+            items: todos.map { ArrivalChecklist.Item(id: $0.id, title: $0.title) },
+            categoryIcon: place.category?.icon,
+            categoryColor: place.category?.color
+        )
         let content = UNMutableNotificationContent()
         content.title = String(localized: .notificationArrivedTitle(place.name))
-        content.body = NotificationPolicy.body(todoTitles: todoTitles)
+        // Actions only show on press and hold, so every arrival notification says so.
+        content.body = NotificationPolicy.body(todoTitles: todos.map(\.title))
+            + "\n" + String(localized: .notificationPressAndHoldHint)
         content.sound = .default
         content.interruptionLevel = .timeSensitive
         content.threadIdentifier = place.id.uuidString
-        content.userInfo = [Self.placeIDKey: place.id.uuidString]
+        content.categoryIdentifier = ArrivalChecklist.category
+        var userInfo = checklist.userInfo
+        userInfo[Self.placeIDKey] = place.id.uuidString
+        content.userInfo = userInfo
         var trigger: UNNotificationTrigger?
         if let delay {
             trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
@@ -69,7 +93,15 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         let latency = max(Int(Date().timeIntervalSince(response.notification.date)), 0)
-        if userInfo["type"] as? String == "completion" {
+        if response.actionIdentifier == ArrivalChecklist.checkOffAction {
+            let requestID = response.notification.request.identifier
+            Task { @MainActor in
+                let todoIDs = selection?.take(for: requestID) ?? []
+                if !todoIDs.isEmpty {
+                    await onCheckOff(todoIDs)
+                }
+            }
+        } else if userInfo["type"] as? String == "completion" {
             var count = 1
             if let sent = userInfo["count"] as? Int {
                 count = sent

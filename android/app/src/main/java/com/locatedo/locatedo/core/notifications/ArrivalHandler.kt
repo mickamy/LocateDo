@@ -62,7 +62,7 @@ class ArrivalHandler @Inject constructor(
             )
             return false
         }
-        notifier.notifyArrival(entry.place, todos.map { it.title })
+        notifier.notifyArrival(entry.place, todos)
         placeRepository.markNotified(entry.place.id, now)
         preferences.setReceivedArrivalNotification()
         analytics.log(

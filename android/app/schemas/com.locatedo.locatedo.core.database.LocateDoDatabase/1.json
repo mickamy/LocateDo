@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e63823499a41fff521e8fe293e2a179d",
+    "identityHash": "3ba7870ce9fdc397d293e75cb2df1540",
     "entities": [
       {
         "tableName": "categories",
@@ -152,7 +152,7 @@
       },
       {
         "tableName": "todos",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `placeId` TEXT NOT NULL, `assigneeId` TEXT, `completedAt` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`placeId`) REFERENCES `places`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `placeId` TEXT NOT NULL, `assigneeId` TEXT, `creatorId` TEXT, `completedAt` INTEGER, `completerId` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`placeId`) REFERENCES `places`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -178,9 +178,19 @@
             "affinity": "TEXT"
           },
           {
+            "fieldPath": "creatorId",
+            "columnName": "creatorId",
+            "affinity": "TEXT"
+          },
+          {
             "fieldPath": "completedAt",
             "columnName": "completedAt",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "completerId",
+            "columnName": "completerId",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "createdAt",
@@ -348,7 +358,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e63823499a41fff521e8fe293e2a179d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3ba7870ce9fdc397d293e75cb2df1540')"
     ]
   }
 }

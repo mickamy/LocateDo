@@ -4,11 +4,17 @@ skip_docs
 APP_IDENTIFIER = "com.locatedo.LocateDo"
 STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
 DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
+NOTIFICATION_CONTENT_SUFFIX = ".NotificationContent"
 PROJECT = "LocateDo.xcodeproj"
 # One build folder for every UI-test lane, so later runs and other languages only build what changed.
 UI_TEST_DERIVED_DATA = File.expand_path("../build/ui-tests/DerivedData", __dir__)
 # Archives build here so the Crashlytics upload-symbols tool from the SPM checkout has a fixed path.
 ARCHIVE_DERIVED_DATA = File.expand_path("../build/archive/DerivedData", __dir__)
+
+# The app and its notification content extension, which is signed with its own profile.
+def signed_identifiers(app_identifier)
+  [app_identifier, "#{app_identifier}#{NOTIFICATION_CONTENT_SUFFIX}"]
+end
 
 def simulator_udid(device)
   devices = JSON.parse(`xcrun simctl list devices available --json`)["devices"]
@@ -80,7 +86,7 @@ end
 
 platform :ios do
   # produce still wants an Apple ID login, so this talks to the API directly.
-  desc "Create the App IDs (with push notifications) and point at the App Store Connect record"
+  desc "Create the App IDs (the apps with push notifications, and their notification extensions) and point at the App Store Connect record"
   lane :bootstrap do
     api_key
     connect_api
@@ -90,6 +96,17 @@ platform :ios do
       STAGING_APP_IDENTIFIER => "LocateDo Staging",
       DEV_APP_IDENTIFIER => "LocateDo Dev"
     }.each do |identifier, name|
+      extension = "#{identifier}#{NOTIFICATION_CONTENT_SUFFIX}"
+      if Spaceship::ConnectAPI::BundleId.find(extension)
+        UI.message("#{extension} already exists")
+      else
+        Spaceship::ConnectAPI::BundleId.create(
+          name: "#{name} Notification Content",
+          platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
+          identifier: extension
+        )
+        UI.success("Created #{extension}")
+      end
       bundle = Spaceship::ConnectAPI::BundleId.find(identifier) ||
         Spaceship::ConnectAPI::BundleId.create(
           name: name,
@@ -112,18 +129,43 @@ platform :ios do
     end
   end
 
-  desc "Create or sync the distribution certificate, the App Store profile, and the staging Ad Hoc profile"
-  lane :certificates do
+  # App groups cannot be created with an App Store Connect API key, so this logs in with the Apple ID.
+  desc "Create the app groups and turn them on for the apps and their notification extensions (asks for an Apple ID login)"
+  lane :app_groups do
+    Spaceship::Portal.login(ENV.fetch("FASTLANE_USER"))
+    Spaceship::Portal.select_team(team_id: ENV.fetch("APPLE_TEAM_ID"))
+    {
+      APP_IDENTIFIER => "LocateDo",
+      STAGING_APP_IDENTIFIER => "LocateDo Staging",
+      DEV_APP_IDENTIFIER => "LocateDo Dev"
+    }.each do |identifier, name|
+      group_id = "group.#{identifier}"
+      group = Spaceship::Portal.app_group.find(group_id) ||
+        Spaceship::Portal.app_group.create!(group_id: group_id, name: "#{name} Group")
+      signed_identifiers(identifier).each do |bundle_identifier|
+        app = Spaceship::Portal.app.find(bundle_identifier)
+        UI.user_error!("No App ID #{bundle_identifier}; run bootstrap first") unless app
+        app = app.update_service(Spaceship::Portal.app_service.app_group.on)
+        app.associate_groups([group])
+        UI.success("#{bundle_identifier} uses #{group_id}")
+      end
+    end
+  end
+
+  desc "Create or sync the distribution certificate, the App Store profile, and the staging Ad Hoc profile (force:true after a capability change)"
+  lane :certificates do |options|
     api_key
-    match(type: "appstore", app_identifier: APP_IDENTIFIER)
-    match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, force_for_new_devices: true)
+    force = options.fetch(:force, false)
+    match(type: "appstore", app_identifier: signed_identifiers(APP_IDENTIFIER), force: force)
+    match(type: "adhoc", app_identifier: signed_identifiers(STAGING_APP_IDENTIFIER), force: force,
+          force_for_new_devices: true)
   end
 
   desc "Register a device for Ad Hoc builds and refresh the staging Ad Hoc profile (name:, udid:)"
   lane :add_device do |options|
     api_key
     register_device(name: options.fetch(:name), udid: options.fetch(:udid))
-    match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, force_for_new_devices: true)
+    match(type: "adhoc", app_identifier: signed_identifiers(STAGING_APP_IDENTIFIER), force_for_new_devices: true)
   end
 
   desc "List the devices registered to the team"
@@ -159,7 +201,7 @@ platform :ios do
   lane :delete_bundle_ids do |options|
     api_key
     wanted = options.fetch(:identifiers).split(",").map(&:strip)
-    protected = [APP_IDENTIFIER, STAGING_APP_IDENTIFIER, DEV_APP_IDENTIFIER]
+    protected = [APP_IDENTIFIER, STAGING_APP_IDENTIFIER, DEV_APP_IDENTIFIER].flat_map { |identifier| signed_identifiers(identifier) }
     UI.user_error!("Refusing to delete #{(wanted & protected).join(', ')}") unless (wanted & protected).empty?
     registered = bundle_identifiers
     targets = wanted.map do |identifier|
@@ -175,7 +217,7 @@ platform :ios do
   lane :beta do
     setup_ci if is_ci
     api_key
-    match(type: "appstore", app_identifier: APP_IDENTIFIER, readonly: true)
+    match(type: "appstore", app_identifier: signed_identifiers(APP_IDENTIFIER), readonly: true)
     build_number = latest_testflight_build_number(initial_build_number: 0) + 1
     archive(
       app_identifier: APP_IDENTIFIER,
@@ -193,7 +235,7 @@ platform :ios do
   lane :firebase do
     setup_ci if is_ci
     # Read-only match never contacts the developer portal, so staging needs no App Store Connect key.
-    match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, readonly: true)
+    match(type: "adhoc", app_identifier: signed_identifiers(STAGING_APP_IDENTIFIER), readonly: true)
     archive(
       app_identifier: STAGING_APP_IDENTIFIER,
       scheme: "stg",
@@ -453,14 +495,15 @@ platform :ios do
 
   # The Release and Staging configurations carry the match profiles in the project; Debug stays automatic.
   private_lane :archive do |options|
-    app_identifier = options.fetch(:app_identifier)
-    profile_name = ENV.fetch("sigh_#{app_identifier}_#{options[:profile_type]}_profile-name")
+    profiles = signed_identifiers(options.fetch(:app_identifier)).to_h do |identifier|
+      [identifier, ENV.fetch("sigh_#{identifier}_#{options[:profile_type]}_profile-name")]
+    end
     build_app(
       project: PROJECT,
       scheme: options.fetch(:scheme),
       configuration: options.fetch(:configuration),
       export_method: options[:export_method],
-      export_options: { provisioningProfiles: { app_identifier => profile_name } },
+      export_options: { provisioningProfiles: profiles },
       output_directory: "build",
       derived_data_path: ARCHIVE_DERIVED_DATA,
       xcargs: "CURRENT_PROJECT_VERSION=#{options[:build_number]}"

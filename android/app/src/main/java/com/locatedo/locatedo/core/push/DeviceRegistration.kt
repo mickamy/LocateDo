@@ -81,6 +81,7 @@ class DeviceRegistration @Inject constructor(
             platform = Platform.PLATFORM_ANDROID
             pushToken = id
             promotionsConsent = consent
+            completionNotices = preferences.completionNotices.first()
             language = this@DeviceRegistration.language.current()
         }
         try {

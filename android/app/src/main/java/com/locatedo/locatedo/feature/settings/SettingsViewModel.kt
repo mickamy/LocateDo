@@ -21,6 +21,7 @@ import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
+import com.locatedo.locatedo.core.push.CompletionNotices
 import com.locatedo.locatedo.core.push.PromotionsConsent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
@@ -59,6 +60,7 @@ data class SettingsUiState(
     val location: LocationAuth = LocationAuth.NOT_DETERMINED,
     val notifications: NotificationAuth = NotificationAuth.NOT_DETERMINED,
     val promotionsConsent: Boolean = false,
+    val completionNotices: Boolean = true,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
     val pro: ProUiState = ProUiState(),
 )
@@ -73,6 +75,7 @@ class SettingsViewModel @Inject constructor(
     membershipRepository: MembershipRepository,
     private val paywallRequests: PaywallRequests,
     private val promotionsConsent: PromotionsConsent,
+    private val completionNotices: CompletionNotices,
     private val analytics: Analytics,
     clock: Clock,
 ) : ViewModel() {
@@ -108,14 +111,15 @@ class SettingsViewModel @Inject constructor(
         permissions.observe(),
         authenticator.session,
         pro,
-        promotionsConsent.isOn,
-    ) { stored, granted, session, pro, promotions ->
+        combine(promotionsConsent.isOn, completionNotices.isOn, ::Pair),
+    ) { stored, granted, session, pro, (promotions, completion) ->
         SettingsUiState(
             isLoading = false,
             isSignedIn = session != null,
             location = granted.location,
             notifications = granted.notifications,
             promotionsConsent = promotions,
+            completionNotices = completion,
             defaultRadiusMeters = stored.defaultRadiusMeters,
             pro = pro,
         )
@@ -176,6 +180,12 @@ class SettingsViewModel @Inject constructor(
     fun setPromotionsConsent(isOn: Boolean) {
         viewModelScope.launch {
             promotionsConsent.set(isOn, PromotionsConsent.Source.SETTINGS)
+        }
+    }
+
+    fun setCompletionNotices(isOn: Boolean) {
+        viewModelScope.launch {
+            completionNotices.set(isOn)
         }
     }
 

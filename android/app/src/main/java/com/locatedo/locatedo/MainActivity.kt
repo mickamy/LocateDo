@@ -19,6 +19,7 @@ import com.locatedo.locatedo.core.auth.AppleSignInRequests
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.notifications.CampaignHandler
 import com.locatedo.locatedo.core.notifications.CampaignNotification
+import com.locatedo.locatedo.core.notifications.CompletionHandler
 import com.locatedo.locatedo.core.sharing.InviteLink
 import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.ui.LocateDoApp
@@ -44,6 +45,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var campaignHandler: CampaignHandler
 
+    @Inject lateinit var completionHandler: CompletionHandler
+
     @Inject lateinit var appleSignInRequests: AppleSignInRequests
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +56,7 @@ class MainActivity : ComponentActivity() {
         finishAppleSignIn(intent)
         openInviteLink(intent)
         openCampaign(intent)
+        openCompletion(intent)
         setContent {
             val status by appStatus.state.collectAsStateWithLifecycle()
             CompositionLocalProvider(LocalAnalytics provides analytics, LocalAppStatus provides status) {
@@ -69,6 +73,7 @@ class MainActivity : ComponentActivity() {
         finishAppleSignIn(intent)
         openInviteLink(intent)
         openCampaign(intent)
+        openCompletion(intent)
     }
 
     // Sign in with Apple returns as <applicationId>://auth/apple#…, before any invite link handling clears the data.
@@ -100,6 +105,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // A household member checked off to-dos this user added; the to-do tab shows them.
+    private fun openCompletion(intent: Intent?) {
+        val count = intent?.getIntExtra(EXTRA_COMPLETION_COUNT, 0) ?: return
+        if (count <= 0) {
+            return
+        }
+        intent.removeExtra(EXTRA_COMPLETION_COUNT)
+        completionHandler.opened(count)
+    }
+
     // An invite link through App Links; the data is cleared so a recreated activity does not offer it twice.
     private fun openInviteLink(intent: Intent?) {
         val link = intent?.data ?: return
@@ -125,12 +140,18 @@ class MainActivity : ComponentActivity() {
         private const val EXTRA_CAMPAIGN_ID = "campaignId"
         private const val EXTRA_CAMPAIGN_URL = "campaignUrl"
         private const val EXTRA_SENT_AT = "sentAt"
+        private const val EXTRA_COMPLETION_COUNT = "completionCount"
         private const val TAG = "LocateDo"
 
         fun placeIntent(context: Context, placeId: UUID, notifiedAt: Instant): Intent =
             Intent(context, MainActivity::class.java)
                 .putExtra(EXTRA_PLACE_ID, placeId.toString())
                 .putExtra(EXTRA_NOTIFIED_AT, notifiedAt.toEpochMilli())
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
+        fun completionIntent(context: Context, count: Int): Intent =
+            Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_COMPLETION_COUNT, count)
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
         fun campaignIntent(context: Context, campaign: CampaignNotification, sentAt: Instant): Intent {

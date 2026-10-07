@@ -7,6 +7,7 @@ import java.util.UUID
 enum class CompletionVia(val key: String) {
     NOTIFICATION("notification"),
     APP("app"),
+    ACTION("action"),
 }
 
 // A to-do checked off at the notified place soon after opening the arrival notification counts as done through it.

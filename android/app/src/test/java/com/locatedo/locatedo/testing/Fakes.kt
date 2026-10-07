@@ -22,8 +22,11 @@ import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
+import com.locatedo.locatedo.core.notifications.ArrivalSimulator
 import com.locatedo.locatedo.core.notifications.CampaignNotification
 import com.locatedo.locatedo.core.notifications.CampaignNotifier
+import com.locatedo.locatedo.core.notifications.CompletionNotice
+import com.locatedo.locatedo.core.notifications.CompletionNotifier
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.Permissions
@@ -35,6 +38,7 @@ import com.locatedo.locatedo.core.sharing.HouseholdManager
 import com.locatedo.locatedo.core.sharing.Invite
 import com.locatedo.locatedo.core.sync.SyncEngine
 import java.io.File
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -74,7 +78,7 @@ class FakePlaceRepository : PlaceRepository {
         state.value = state.value.filter { it.place.id != id }
     }
 
-    override suspend fun markNotified(id: UUID, at: Instant) {
+    override suspend fun markNotified(id: UUID, at: Instant?) {
         state.value = state.value.map { if (it.place.id == id) it.copy(place = it.place.copy(lastNotifiedAt = at)) else it }
     }
 }
@@ -100,14 +104,25 @@ class FakeGeofenceRegistrar : GeofenceRegistrar {
 
 class FakeArrivalNotifier : ArrivalNotifier {
     val notified = mutableListOf<Pair<Place, List<String>>>()
+    val silent = mutableListOf<Pair<Place, List<String>>>()
+    val cancelled = mutableListOf<UUID>()
     var allowed = true
 
     override fun prepare() = Unit
 
     override fun canNotify(): Boolean = allowed
 
-    override fun notifyArrival(place: Place, todoTitles: List<String>) {
-        notified += place to todoTitles
+    override fun notifyArrival(place: Place, todos: List<Todo>, silent: Boolean) {
+        val shown = place to todos.map { it.title }
+        if (silent) {
+            this.silent += shown
+        } else {
+            notified += shown
+        }
+    }
+
+    override fun cancelArrival(placeId: UUID) {
+        cancelled += placeId
     }
 }
 
@@ -118,6 +133,24 @@ class FakeCampaignNotifier : CampaignNotifier {
 
     override fun notify(campaign: CampaignNotification, sentAt: Instant) {
         notified += campaign to sentAt
+    }
+}
+
+class FakeArrivalSimulator : ArrivalSimulator {
+    val arrivals = mutableListOf<Pair<UUID, Duration>>()
+
+    override fun arrive(placeId: UUID, after: Duration) {
+        arrivals += placeId to after
+    }
+}
+
+class FakeCompletionNotifier : CompletionNotifier {
+    val notified = mutableListOf<CompletionNotice>()
+
+    override fun prepare() = Unit
+
+    override fun notify(notice: CompletionNotice, id: Int) {
+        notified += notice
     }
 }
 
@@ -216,6 +249,15 @@ class FakeTodoRepository : TodoRepository {
         return null
     }
 
+    override suspend fun checkOff(id: UUID): Boolean {
+        val todo = state.value.firstOrNull { it.id == id }
+        if (todo == null || todo.isCompleted) {
+            return false
+        }
+        state.value = state.value.map { if (it.id == id) it.copy(completedAt = Instant.EPOCH) else it }
+        return true
+    }
+
     override suspend fun delete(ids: List<UUID>) {
         deleted += ids
         state.value = state.value.filter { it.id !in ids }
@@ -225,6 +267,7 @@ class FakeTodoRepository : TodoRepository {
 class FakeSyncEngine : SyncEngine {
     override val limitRejected = MutableSharedFlow<FreeLimit>()
     override val removed = MutableSharedFlow<Unit>()
+    override val lastPullSummary = MutableStateFlow<String?>(null)
     var syncs = 0
     var drains = 0
 

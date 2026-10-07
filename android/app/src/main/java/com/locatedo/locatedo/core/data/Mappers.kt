@@ -49,7 +49,9 @@ internal fun TodoEntity.asModel() = Todo(
     title = title,
     placeId = UUID.fromString(placeId),
     assigneeId = assigneeId?.let(UUID::fromString),
+    creatorId = creatorId?.let(UUID::fromString),
     completedAt = completedAt?.let(Instant::ofEpochMilli),
+    completerId = completerId?.let(UUID::fromString),
     createdAt = Instant.ofEpochMilli(createdAt),
     updatedAt = Instant.ofEpochMilli(updatedAt),
 )
@@ -59,7 +61,9 @@ internal fun Todo.asEntity() = TodoEntity(
     title = title,
     placeId = placeId.toString(),
     assigneeId = assigneeId?.toString(),
+    creatorId = creatorId?.toString(),
     completedAt = completedAt?.toEpochMilli(),
+    completerId = completerId?.toString(),
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
 )

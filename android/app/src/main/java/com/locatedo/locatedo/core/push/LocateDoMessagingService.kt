@@ -7,6 +7,8 @@ import com.google.firebase.messaging.RemoteMessage
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.notifications.CampaignHandler
 import com.locatedo.locatedo.core.notifications.CampaignNotification
+import com.locatedo.locatedo.core.notifications.CompletionHandler
+import com.locatedo.locatedo.core.notifications.CompletionNotice
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -22,6 +24,7 @@ interface PushEntryPoint {
     fun deviceRegistration(): DeviceRegistration
     fun pushMessages(): PushMessages
     fun campaignHandler(): CampaignHandler
+    fun completionHandler(): CompletionHandler
 
     @ApplicationScope
     fun applicationScope(): CoroutineScope
@@ -42,10 +45,18 @@ class LocateDoMessagingService : FirebaseMessagingService() {
         }
     }
 
-    // A campaign is posted before returning, since the process may be stopped right after; anything else asks for a
+    // A notice is posted before returning, since the process may be stopped right after; anything else asks for a
     // sync.
     override fun onMessageReceived(message: RemoteMessage) {
         val graph = PushEntryPoint.from(this)
+        val completion = CompletionNotice.from(message.data)
+        if (completion != null) {
+            val id = message.messageId?.hashCode() ?: message.sentTime.hashCode()
+            runBlocking {
+                graph.completionHandler().received(completion, id)
+            }
+            return
+        }
         val campaign = CampaignNotification.from(message.data)
         if (campaign == null) {
             graph.pushMessages().notifyReceived()

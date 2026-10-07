@@ -50,12 +50,22 @@ fun placeChange(id: UUID, version: Long, categoryId: UUID? = null, name: String 
     }
 }
 
-fun todoChange(id: UUID, placeId: UUID, version: Long, title: String = "Milk", completedAt: Instant? = null): Change = change {
+fun todoChange(
+    id: UUID,
+    placeId: UUID,
+    version: Long,
+    title: String = "Milk",
+    completedAt: Instant? = null,
+    creatorId: UUID? = null,
+    completerId: UUID? = null,
+): Change = change {
     todo = todo {
         this.id = id.toString()
         this.placeId = placeId.toString()
         this.title = title
         completedAt?.let { this.completedAt = it.toTimestamp() }
+        creatorId?.let { this.creatorId = it.toString() }
+        completerId?.let { this.completerId = it.toString() }
         updatedAt = updated.toTimestamp()
         this.version = version
     }

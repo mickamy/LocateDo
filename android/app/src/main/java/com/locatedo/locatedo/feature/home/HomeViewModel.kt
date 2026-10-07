@@ -25,9 +25,11 @@ import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.notifications.ArrivalSimulator
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
+import java.time.Duration
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -77,6 +79,7 @@ class HomeViewModel @Inject constructor(
     private val selectionRequests: PlaceSelectionRequests,
     private val paywallRequests: PaywallRequests,
     private val permissions: PermissionsRepository,
+    private val arrivalSimulator: ArrivalSimulator,
     private val analytics: Analytics,
     clock: Clock,
 ) : ViewModel() {
@@ -171,6 +174,8 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    fun simulateArrival(placeId: UUID, after: Duration) = arrivalSimulator.arrive(placeId, after)
 
     fun clearSelection() {
         selectedId.value = null

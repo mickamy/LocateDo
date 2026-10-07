@@ -30,7 +30,8 @@ interface PlaceRepository {
     suspend fun add(place: Place, source: PlaceSource? = null): FreeLimit?
     suspend fun update(place: Place)
     suspend fun delete(id: UUID)
-    suspend fun markNotified(id: UUID, at: Instant)
+    // Null forgets the last notification, as the debug arrival does.
+    suspend fun markNotified(id: UUID, at: Instant?)
 }
 
 @Singleton
@@ -92,8 +93,8 @@ class RoomPlaceRepository @Inject constructor(
         reportCounts()
     }
 
-    override suspend fun markNotified(id: UUID, at: Instant) {
-        placeDao.setLastNotifiedAt(id.toString(), at.toEpochMilli())
+    override suspend fun markNotified(id: UUID, at: Instant?) {
+        placeDao.setLastNotifiedAt(id.toString(), at?.toEpochMilli())
     }
 
     private suspend fun reportCounts() {

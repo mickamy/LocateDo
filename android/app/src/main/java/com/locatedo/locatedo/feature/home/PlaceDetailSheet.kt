@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,7 +49,8 @@ import com.locatedo.locatedo.feature.todos.TodoRow
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.AssigneeChoice
 import com.locatedo.locatedo.ui.components.assigneeChoices
-import com.locatedo.locatedo.ui.components.assigneeName
+import com.locatedo.locatedo.ui.components.todoDetail
+import java.time.Duration
 import java.util.UUID
 
 // Google Maps' place sheet: a header, a row of action chips, then the content; here the content is the to-dos.
@@ -62,6 +65,8 @@ fun PlaceDetailSheet(
     onDeleteTodo: (UUID) -> Unit,
     members: List<Membership> = emptyList(),
     onAssignTodo: (UUID, UUID?) -> Unit = { _, _ -> },
+    showsDebugTools: Boolean = false,
+    onSimulateArrival: (Duration) -> Unit = {},
 ) {
     TrackScreen(AnalyticsScreen.PLACE_DETAIL)
     val assignees = assigneeChoices(members)
@@ -95,7 +100,7 @@ fun PlaceDetailSheet(
                     )
                 }
             }
-            PlaceMenu(onDelete = onDelete)
+            PlaceMenu(onDelete = onDelete, showsDebugTools = showsDebugTools, onSimulateArrival = onSimulateArrival)
             IconButton(onClick = onClose) {
                 Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_done))
             }
@@ -135,7 +140,7 @@ fun PlaceDetailSheet(
                 todo = todo,
                 onToggle = { onToggleTodo(todo.id, it) },
                 onDelete = { onDeleteTodo(todo.id) },
-                assigneeName = assigneeName(members, todo.assigneeId),
+                detail = todoDetail(members, todo),
                 assignees = assignees,
                 onAssign = { onAssignTodo(todo.id, it) },
             )
@@ -156,7 +161,7 @@ fun PlaceDetailSheet(
 
 // Deleting is rare and cannot be undone, so it sits behind the menu instead of next to the everyday actions.
 @Composable
-private fun PlaceMenu(onDelete: () -> Unit) {
+private fun PlaceMenu(onDelete: () -> Unit, showsDebugTools: Boolean, onSimulateArrival: (Duration) -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { isExpanded = true }) {
@@ -171,6 +176,25 @@ private fun PlaceMenu(onDelete: () -> Unit) {
                 },
                 leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
             )
+            // Debug and staging builds: an arrival now, or in 10 seconds to lock the screen first.
+            if (showsDebugTools) {
+                DropdownMenuItem(
+                    text = { Text("Simulate arrival (debug)") },
+                    onClick = {
+                        isExpanded = false
+                        onSimulateArrival(Duration.ZERO)
+                    },
+                    leadingIcon = { Icon(Icons.Filled.MyLocation, contentDescription = null) },
+                )
+                DropdownMenuItem(
+                    text = { Text("Simulate arrival in 10 s (debug)") },
+                    onClick = {
+                        isExpanded = false
+                        onSimulateArrival(Duration.ofSeconds(10))
+                    },
+                    leadingIcon = { Icon(Icons.Filled.Timer, contentDescription = null) },
+                )
+            }
         }
     }
 }
@@ -206,7 +230,7 @@ private fun CompletedTodos(
                 todo = todo,
                 onToggle = { onToggle(todo.id, it) },
                 onDelete = { onDelete(todo.id) },
-                assigneeName = assigneeName(members, todo.assigneeId),
+                detail = todoDetail(members, todo),
                 assignees = assignees,
                 onAssign = { onAssign(todo.id, it) },
             )

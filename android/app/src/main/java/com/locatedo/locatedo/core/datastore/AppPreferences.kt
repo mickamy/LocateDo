@@ -68,6 +68,7 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val promotionsConsent = booleanPreferencesKey("promotionsConsent")
         val receivedArrivalNotification = booleanPreferencesKey("receivedArrivalNotification")
         val shownPromotionsPrompt = booleanPreferencesKey("shownPromotionsPrompt")
+        val completionNotices = booleanPreferencesKey("completionNotices")
     }
 
     // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
@@ -97,6 +98,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             hasShownPrompt = preferences[Keys.shownPromotionsPrompt] ?: false,
         )
     }
+
+    // Per device, like the promotions consent.
+    val completionNotices: Flow<Boolean> = dataStore.data.map { it[Keys.completionNotices] ?: true }
 
     val data: Flow<UserPreferences> = dataStore.data.map { preferences ->
         val radius = preferences[Keys.defaultRadiusMeters]
@@ -190,6 +194,10 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setShownPromotionsPrompt() {
         dataStore.edit { it[Keys.shownPromotionsPrompt] = true }
+    }
+
+    suspend fun setCompletionNotices(isOn: Boolean) {
+        dataStore.edit { it[Keys.completionNotices] = isOn }
     }
 
     suspend fun reset() {

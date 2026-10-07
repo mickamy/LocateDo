@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.data
 
 import androidx.room.withTransaction
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.database.TodoDao
 import com.locatedo.locatedo.core.database.TodoEntity
@@ -23,6 +24,9 @@ interface TodoRepository {
     suspend fun add(todo: Todo): FreeLimit?
     suspend fun update(todo: Todo)
     suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit?
+
+    // Checks off from an arrival notification; false when the to-do is gone or someone already checked it off.
+    suspend fun checkOff(id: UUID): Boolean
     suspend fun delete(ids: List<UUID>)
 }
 
@@ -32,6 +36,7 @@ class RoomTodoRepository @Inject constructor(
     private val todoDao: TodoDao,
     private val proStatus: ProStatus,
     private val queue: WriteQueue,
+    private val authenticator: Authenticator,
     private val analytics: WriteAnalytics,
     private val clock: Clock,
 ) : TodoRepository {
@@ -67,8 +72,10 @@ class RoomTodoRepository @Inject constructor(
         }
     }
 
-    // Reopening counts against the free limit just like adding, so the server and the device agree.
+    // Reopening counts against the free limit just like adding, so the server and the device agree. The server
+    // records who checked it off; the device notes itself too, so the row is right before the next pull.
     override suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit? {
+        val userId = authenticator.current()?.userId
         val completion = database.withTransaction {
             val todo = todoDao.get(id.toString()) ?: return@withTransaction null
             val reopening = !completed && todo.completedAt != null
@@ -77,7 +84,14 @@ class RoomTodoRepository @Inject constructor(
             }
             val now = clock.instant()
             val completedAt = if (completed) now else null
-            todoDao.upsert(todo.copy(completedAt = completedAt?.toEpochMilli(), updatedAt = now.toEpochMilli()))
+            val completerId = if (completed) userId?.toString() else null
+            todoDao.upsert(
+                todo.copy(
+                    completedAt = completedAt?.toEpochMilli(),
+                    completerId = completerId,
+                    updatedAt = now.toEpochMilli(),
+                ),
+            )
             queue.enqueue(Write.completion(id, completedAt))
             Completion(todo, null)
         } ?: return null
@@ -90,6 +104,29 @@ class RoomTodoRepository @Inject constructor(
         }
         reportCounts()
         return null
+    }
+
+    override suspend fun checkOff(id: UUID): Boolean {
+        val userId = authenticator.current()?.userId
+        val before = database.withTransaction {
+            val todo = todoDao.get(id.toString())
+            if (todo == null || todo.completedAt != null) {
+                return@withTransaction null
+            }
+            val now = clock.instant()
+            todoDao.upsert(
+                todo.copy(
+                    completedAt = now.toEpochMilli(),
+                    completerId = userId?.toString(),
+                    updatedAt = now.toEpochMilli(),
+                ),
+            )
+            queue.enqueue(Write.completion(id, now))
+            todo
+        } ?: return false
+        analytics.todoCompleted(before.asModel(), todoDao.countOpen(), action = true)
+        reportCounts()
+        return true
     }
 
     override suspend fun delete(ids: List<UUID>) {

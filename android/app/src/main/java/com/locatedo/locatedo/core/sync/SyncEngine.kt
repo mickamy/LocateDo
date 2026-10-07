@@ -27,7 +27,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,6 +40,9 @@ interface SyncEngine {
 
     // The server denies this user the household while the session is still valid: the member was removed.
     val removed: SharedFlow<Unit>
+
+    // What the last pull brought, for the debug section.
+    val lastPullSummary: StateFlow<String?>
 
     fun start()
 
@@ -69,6 +74,7 @@ class DefaultSyncEngine @Inject constructor(
 
     private val _limitRejected = MutableSharedFlow<FreeLimit>(extraBufferCapacity = 1)
     private val _removed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val _lastPullSummary = MutableStateFlow<String?>(null)
     private val runs = Mutex()
     private var inFlight: Job? = null
     private var rerunRequested = false
@@ -79,6 +85,8 @@ class DefaultSyncEngine @Inject constructor(
     override val limitRejected: SharedFlow<FreeLimit> = _limitRejected
 
     override val removed: SharedFlow<Unit> = _removed
+
+    override val lastPullSummary: StateFlow<String?> = _lastPullSummary
 
     override fun start() {
         scope.launch {
@@ -219,6 +227,7 @@ class DefaultSyncEngine @Inject constructor(
             fetchChanges(householdId, state.cursor)
         } catch (e: ConnectException) {
             noteIfPermissionDenied(e)
+            _lastPullSummary.value = "failed: ${e.code}"
             Log.w(TAG, "Pull failed", e)
             return
         } catch (e: SignedOutException) {
@@ -232,7 +241,12 @@ class DefaultSyncEngine @Inject constructor(
             applier.apply(pulled.changes, pulled.reset)
             syncState.set(current.copy(cursor = pulled.cursor, plan = pulled.plan))
         }
-        Log.i(TAG, "Pulled ${pulled.changes.size} changes, cursor ${state.cursor} -> ${pulled.cursor}${if (pulled.reset) ", reset" else ""}")
+        var summary = "${pulled.changes.size} changes, cursor ${state.cursor} → ${pulled.cursor}"
+        if (pulled.reset) {
+            summary += ", reset"
+        }
+        _lastPullSummary.value = summary
+        Log.i(TAG, "Pulled $summary")
     }
 
     private suspend fun fetchChanges(householdId: UUID, after: Long): Pulled {

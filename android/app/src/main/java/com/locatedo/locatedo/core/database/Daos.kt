@@ -131,6 +131,9 @@ interface PendingWriteDao {
     @Query("SELECT COUNT(*) FROM pending_writes")
     suspend fun count(): Int
 
+    @Query("SELECT COUNT(*) FROM pending_writes")
+    fun observeCount(): Flow<Int>
+
     @Query("UPDATE pending_writes SET attempts = attempts + 1 WHERE sequence = :sequence")
     suspend fun recordAttempt(sequence: Long)
 

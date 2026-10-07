@@ -33,6 +33,8 @@ enum class AnalyticsEvent(val key: String) {
     PROMOTIONS_PROMPT_ANSWERED("promotions_prompt_answered"),
     PROMOTIONS_CONSENT_CHANGED("promotions_consent_changed"),
     CAMPAIGN_OPENED("campaign_opened"),
+    COMPLETION_NOTICES_CHANGED("completion_notices_changed"),
+    COMPLETION_NOTICE_OPENED("completion_notice_opened"),
 }
 
 enum class AnalyticsParameter(val key: String) {
@@ -42,6 +44,7 @@ enum class AnalyticsParameter(val key: String) {
     ASSIGNED("assigned"),
     CAMPAIGN_ID("campaign_id"),
     CATEGORY("category"),
+    COUNT("count"),
     COMPLETED_TODO_COUNT_7D("completed_todo_count_7d"),
     CUSTOM_CATEGORY_COUNT("custom_category_count"),
     DAYS_SINCE_INSTALL("days_since_install"),

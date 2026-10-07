@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import TipKit
 import UIKit
 
 @main
@@ -117,6 +118,10 @@ struct LocateDoApp: App {
     private func connectNotifications() {
         notifier.onOpened = { [writes] placeID in
             writes.arrivalOpened(placeID: placeID)
+            CheckOffTip.openedFromArrival = true
+        }
+        notifier.onCheckOff = { [writes, sync] todoIDs in
+            await Self.checkOff(todoIDs, writes: writes, sync: sync)
         }
         notifier.onCampaignLink = { url in
             UIApplication.shared.open(url)
@@ -146,6 +151,7 @@ struct LocateDoApp: App {
 
     private func startServices() {
         InstallDate.record(defaults: .standard, now: .now)
+        try? Tips.configure()
         GoogleSignInSetup.configure()
         geofence.start()
         network.start()
@@ -264,6 +270,15 @@ struct LocateDoApp: App {
 }
 
 extension LocateDoApp {
+    // The app was woken in the background by the notification's action, so it asks for time to send the writes.
+    private static func checkOff(_ todoIDs: [UUID], writes: LocalWrites, sync: SyncEngine) async {
+        let task = UIApplication.shared.beginBackgroundTask(withName: "check-off")
+        writes.checkOff(todoIDs)
+        CheckOffTip().invalidate(reason: .actionPerformed)
+        await sync.drain()
+        UIApplication.shared.endBackgroundTask(task)
+    }
+
     private static func makeDevices(
         api: APIClient,
         authenticator: Authenticator,

@@ -17,6 +17,7 @@ import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.Permissions
 import com.locatedo.locatedo.testing.FakeAnalytics
+import com.locatedo.locatedo.testing.FakeArrivalSimulator
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeGeocodingRepository
 import com.locatedo.locatedo.testing.FakeLocationRepository
@@ -25,6 +26,7 @@ import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakeTodoRepository
 import com.locatedo.locatedo.testing.SettableClock
+import java.time.Duration
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,6 +58,7 @@ class HomeViewModelTest {
     private val requests = PlaceSelectionRequests()
     private val paywalls = PaywallRequests()
     private val permissions = FakePermissionsRepository(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED)
+    private val arrivals = FakeArrivalSimulator()
     private val analytics = FakeAnalytics()
     private val clock = SettableClock(Instant.parse("2026-10-06T00:00:00Z"))
     private val grocery = Category(id = uuidV7(now), name = "Grocery", icon = "cart", color = "green", sortOrder = 0, updatedAt = now)
@@ -77,7 +80,7 @@ class HomeViewModelTest {
     @Test
     fun startsLoadingThenShowsPlacesWithTheirCategories() = runTest(dispatcher) {
         places.state.value = emptyList()
-        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls, permissions, analytics, clock)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls, permissions, arrivals, analytics, clock)
         assertTrue(viewModel.uiState.value.isLoading)
 
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
@@ -218,8 +221,17 @@ class HomeViewModelTest {
         )
     }
 
+    @Test
+    fun aDebugArrivalIsHandedOnWithItsDelay() = runTest(dispatcher) {
+        val viewModel = viewModel()
+
+        viewModel.simulateArrival(store.id, Duration.ofSeconds(10))
+
+        assertEquals(listOf(store.id to Duration.ofSeconds(10)), arrivals.arrivals)
+    }
+
     private fun TestScope.viewModel(): HomeViewModel {
-        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls, permissions, analytics, clock)
+        val viewModel = HomeViewModel(places, categories, memberships, todos, location, geocoding, requests, paywalls, permissions, arrivals, analytics, clock)
         subscribe(viewModel)
         return viewModel
     }

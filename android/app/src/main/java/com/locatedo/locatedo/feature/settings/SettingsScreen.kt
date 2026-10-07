@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -144,6 +145,9 @@ fun SettingsScreen(
                 auth = uiState.notifications,
                 promotionsConsent = uiState.promotionsConsent,
                 onPromotionsConsentChange = viewModel::setPromotionsConsent,
+                showsCompletionNotices = uiState.isSignedIn,
+                completionNotices = uiState.completionNotices,
+                onCompletionNoticesChange = viewModel::setCompletionNotices,
                 onAllow = {
                     viewModel.permissionActionTapped(PermissionKind.NOTIFICATIONS, PermissionAction.REQUEST)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -185,6 +189,10 @@ fun SettingsScreen(
                 },
                 leadingContent = { Icon(Icons.Filled.PrivacyTip, contentDescription = null) },
             )
+            if (BuildConfig.DEBUG_TOOLS) {
+                HorizontalDivider()
+                DebugSection()
+            }
         }
     }
 
@@ -313,6 +321,9 @@ private fun NotificationSection(
     auth: NotificationAuth,
     promotionsConsent: Boolean,
     onPromotionsConsentChange: (Boolean) -> Unit,
+    showsCompletionNotices: Boolean,
+    completionNotices: Boolean,
+    onCompletionNoticesChange: (Boolean) -> Unit,
     onAllow: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -344,6 +355,20 @@ private fun NotificationSection(
         leadingContent = { Icon(Icons.Filled.Campaign, contentDescription = null) },
         trailingContent = { Switch(checked = promotionsConsent, onCheckedChange = null) },
     )
+    // Only signed-in devices hear about the household.
+    if (showsCompletionNotices) {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_notifications_completion_title)) },
+            modifier = Modifier.toggleable(
+                value = completionNotices,
+                role = Role.Switch,
+                onValueChange = onCompletionNoticesChange,
+            ),
+            supportingContent = { Text(stringResource(R.string.settings_notifications_completion_footer)) },
+            leadingContent = { Icon(Icons.Filled.TaskAlt, contentDescription = null) },
+            trailingContent = { Switch(checked = completionNotices, onCheckedChange = null) },
+        )
+    }
 }
 
 // The slider edits a local copy and writes once the thumb is released.
@@ -377,7 +402,7 @@ private fun notificationStatus(auth: NotificationAuth): String = when (auth) {
 }
 
 @Composable
-private fun SectionHeader(text: String) {
+internal fun SectionHeader(text: String) {
     Text(
         text = text,
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 4.dp),

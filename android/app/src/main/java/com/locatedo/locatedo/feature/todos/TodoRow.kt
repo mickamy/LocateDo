@@ -47,7 +47,7 @@ fun TodoRow(
     todo: Todo,
     onToggle: (Boolean) -> Unit,
     onDelete: () -> Unit,
-    assigneeName: String? = null,
+    detail: String? = null,
     assignees: List<AssigneeChoice> = emptyList(),
     onAssign: (UUID?) -> Unit = {},
 ) {
@@ -103,7 +103,7 @@ fun TodoRow(
                         }
                     }
                     .padding(start = 8.dp),
-                supportingContent = assigneeName?.let { name -> { Text(name) } },
+                supportingContent = detail?.let { text -> { Text(text) } },
                 leadingContent = { Checkbox(checked = todo.isCompleted, onCheckedChange = null) },
             )
             DropdownMenu(expanded = isChoosingAssignee, onDismissRequest = { isChoosingAssignee = false }) {

@@ -13,6 +13,7 @@ import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
+import com.locatedo.locatedo.core.common.TodosRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
@@ -58,6 +59,7 @@ class AppViewModel @Inject constructor(
     selectionRequests: PlaceSelectionRequests,
     private val inviteRequests: InviteRequests,
     private val paywallRequests: PaywallRequests,
+    private val todosRequests: TodosRequests,
     sync: SyncEngine,
     authenticator: Authenticator,
     private val appStatus: AppStatusStore,
@@ -81,6 +83,9 @@ class AppViewModel @Inject constructor(
 
     // Some screen hit a free limit, or the server refused a queued write; either way the paywall explains.
     val pendingPaywall: StateFlow<PaywallTrigger?> = paywallRequests.pending
+
+    // A tapped completion notice; the tabs switch to the to-do list.
+    val pendingTodos: StateFlow<Boolean> = todosRequests.pending
 
     val uiState: StateFlow<AppUiState> = combine(
         preferences.data,
@@ -147,6 +152,7 @@ class AppViewModel @Inject constructor(
             pendingPlace.value != null ||
             pendingInvite.value != null ||
             pendingPaywall.value != null ||
+            pendingTodos.value ||
             status.requiresUpdate ||
             status.pendingNotice != null
     }
@@ -182,6 +188,8 @@ class AppViewModel @Inject constructor(
     fun inviteConsumed(token: String) = inviteRequests.consume(token)
 
     fun paywallConsumed(trigger: PaywallTrigger) = paywallRequests.consume(trigger)
+
+    fun todosConsumed() = todosRequests.consume()
 
     fun dismissMaintenanceBanner() {
         viewModelScope.launch {

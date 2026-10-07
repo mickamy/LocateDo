@@ -76,6 +76,9 @@
     <string name="maintenance_unavailable">サーバーのメンテナンス中のため、今は使えません。%1$s 以降にお試しください。</string>
     <string name="maintenance_upcoming">%1$s〜%2$s はサーバーのメンテナンスのため同期を止めます。</string>
     <string name="map_empty_message">追加した場所がここに表示されます。</string>
+    <plurals name="notification_android_check_off_all">
+        <item quantity="other">%1$d 件すべて完了</item>
+    </plurals>
     <string name="notification_arrived_title">%1$sに到着しました</string>
     <string name="notification_channel_arrivals">到着のお知らせ</string>
     <string name="notification_channel_household">家族の更新</string>
@@ -154,7 +157,7 @@
     <string name="settings_account_android_apple_sign_in">Appleでサインイン</string>
     <string name="settings_account_android_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この端末の場所とやることはアカウントのデータに置き換わります。</string>
     <string name="settings_account_android_replace_confirm_title">この端末のデータを置き換えますか？</string>
-    <string name="settings_account_android_sign_in">Google でサインイン</string>
+    <string name="settings_account_android_sign_in">Google でログイン</string>
     <string name="settings_account_android_sign_out_confirm_message">この端末の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_android_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この端末の場所とやることは消えます。</string>
     <string name="settings_account_benefits_android_privacy_message">現在地がこの端末の外に出ることはありません。メールアドレスもいただきません。</string>

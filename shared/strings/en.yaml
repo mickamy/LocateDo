@@ -104,6 +104,7 @@ settings:
     signed_in: "Signed in"
     not_signed_in: "Not signed in"
     description: "Sign in to keep your places and to-dos in your account."
+    google_sign_in: "Sign in with Google"
     android_sign_in: "Sign in with Google"
     android_apple_sign_in: "Sign in with Apple"
     benefits:
@@ -196,6 +197,8 @@ place:
     delete: "Delete place"
     delete_confirm_title: "Delete “{name}”?"
     delete_confirm_message: "Its to-dos will be deleted too."
+    check_off_tip_title: "Check things off from the notification"
+    check_off_tip_message: "Next time, press and hold the arrival notification to check things off without opening the app."
 todo:
   completed_by: "Checked off by {name}"
   editor:
@@ -227,6 +230,12 @@ notification:
     plural:
       one: "+{count:int} more"
       other: "+{count:int} more"
+  press_and_hold_hint: "Press and hold to check things off"
+  check_off_checked: "Mark checked as done"
+  android_check_off_all:
+    plural:
+      one: "Mark all {count:int} as done"
+      other: "Mark all {count:int} as done"
 category:
   shopping: "Shopping"
   work: "Work"

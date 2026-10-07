@@ -22,6 +22,7 @@ import com.locatedo.locatedo.testing.FakeSyncStateRepository
 import com.locatedo.locatedo.testing.InMemorySessionStore
 import com.locatedo.locatedo.testing.SettableClock
 import com.locatedo.locatedo.testing.testPreferences
+import com.locatedo.locatedo.testing.testCompletionNotices
 import com.locatedo.locatedo.testing.testPromotionsConsent
 import java.time.Clock
 import java.time.Instant
@@ -220,6 +221,7 @@ class SettingsViewModelTest {
             FakeMembershipRepository(),
             paywalls,
             testPromotionsConsent(preferences, backgroundScope),
+            testCompletionNotices(preferences, backgroundScope),
             analytics,
             clock,
         )

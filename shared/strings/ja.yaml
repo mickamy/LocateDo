@@ -102,7 +102,8 @@ settings:
     signed_in: "サインイン中"
     not_signed_in: "未サインイン"
     description: "サインインすると、場所とやることをアカウントに保存できます。"
-    android_sign_in: "Google でサインイン"
+    google_sign_in: "Google でログイン"
+    android_sign_in: "Google でログイン"
     android_apple_sign_in: "Appleでサインイン"
     benefits:
       sync_title: "リストを失わない"
@@ -193,6 +194,8 @@ place:
     delete: "この場所を削除"
     delete_confirm_title: "「{name}」を削除しますか？"
     delete_confirm_message: "この場所のやることも削除されます。"
+    check_off_tip_title: "通知から完了できます"
+    check_off_tip_message: "次からは、到着のお知らせを長押しすると、アプリを開かずに完了できます。"
 todo:
   completed_by: "{name}が完了"
   editor:
@@ -223,6 +226,11 @@ notification:
   more:
     plural:
       other: "他 {count} 件"
+  press_and_hold_hint: "長押しで、そのまま完了できます"
+  check_off_checked: "チェックしたものを完了にする"
+  android_check_off_all:
+    plural:
+      other: "{count} 件すべて完了"
 category:
   shopping: "買い物"
   work: "仕事"

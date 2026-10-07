@@ -1,5 +1,10 @@
 git_url(ENV.fetch("MATCH_GIT_URL"))
 storage_mode("git")
 type("appstore")
-app_identifier(["com.locatedo.LocateDo", "com.locatedo.LocateDo.stg"])
+app_identifier([
+  "com.locatedo.LocateDo",
+  "com.locatedo.LocateDo.NotificationContent",
+  "com.locatedo.LocateDo.stg",
+  "com.locatedo.LocateDo.stg.NotificationContent"
+])
 readonly(ENV["CI"] == "true")

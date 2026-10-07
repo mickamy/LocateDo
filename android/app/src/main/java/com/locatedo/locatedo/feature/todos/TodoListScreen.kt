@@ -43,7 +43,7 @@ import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.assigneeChoices
-import com.locatedo.locatedo.ui.components.assigneeName
+import com.locatedo.locatedo.ui.components.todoDetail
 import java.util.UUID
 
 // Google Maps' saved lists: filter chips on top, one section per place, and a button to add more.
@@ -169,7 +169,7 @@ private fun TodoGroups(
                     todo = todo,
                     onToggle = { onToggle(todo.id, it) },
                     onDelete = { onDelete(todo.id) },
-                    assigneeName = assigneeName(members, todo.assigneeId),
+                    detail = todoDetail(members, todo),
                     assignees = assignees,
                     onAssign = { onAssign(todo.id, it) },
                 )

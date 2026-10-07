@@ -1126,6 +1126,24 @@
         }
       }
     },
+    "notification.check_off_checked" : {
+      "comment" : "Button under the checklist shown when the arrival notification is pressed and held; completes the to-dos checked in it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark checked as done"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "チェックしたものを完了にする"
+          }
+        }
+      }
+    },
     "notification.more" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1157,6 +1175,23 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "notification.press_and_hold_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press and hold to check things off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長押しで、そのまま完了できます"
           }
         }
       }
@@ -1718,6 +1753,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "やることを追加"
+          }
+        }
+      }
+    },
+    "place.detail.check_off_tip_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next time, press and hold the arrival notification to check things off without opening the app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次からは、到着のお知らせを長押しすると、アプリを開かずに完了できます。"
+          }
+        }
+      }
+    },
+    "place.detail.check_off_tip_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check things off from the notification"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知から完了できます"
           }
         }
       }
@@ -2432,6 +2501,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サインインすると、場所とやることをアカウントに保存できます。"
+          }
+        }
+      }
+    },
+    "settings.account.google_sign_in" : {
+      "comment" : "Label on the Sign in with Google button, as Google words it in each language.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Google"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google でログイン"
           }
         }
       }

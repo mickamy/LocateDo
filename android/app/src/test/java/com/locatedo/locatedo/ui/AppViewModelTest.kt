@@ -4,6 +4,7 @@ import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
+import com.locatedo.locatedo.core.common.TodosRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
@@ -239,6 +240,7 @@ class AppViewModelTest {
         selections,
         invites,
         PaywallRequests(),
+        TodosRequests(),
         FakeSyncEngine(),
         fakeAuthenticator(),
         appStatusStore(preferences, scope = backgroundScope),

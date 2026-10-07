@@ -92,6 +92,25 @@ class ChangeApplierTest {
     }
 
     @Test
+    fun keepsWhoAddedATodoAndWhoCheckedItOffUntilItIsReopened() = runTest {
+        val store = place("Store")
+        val milk = todo("Milk", store.id)
+        database.placeDao().upsert(store.asEntity())
+        val creator = uuidV7(created)
+        val completer = uuidV7(created)
+
+        apply(todoChange(milk.id, store.id, version = 2, completedAt = updated, creatorId = creator, completerId = completer))
+        val completed = checkNotNull(database.todoDao().get(milk.id.toString()))
+        assertEquals(creator.toString(), completed.creatorId)
+        assertEquals(completer.toString(), completed.completerId)
+
+        apply(todoChange(milk.id, store.id, version = 3, creatorId = creator))
+        val reopened = checkNotNull(database.todoDao().get(milk.id.toString()))
+        assertEquals(creator.toString(), reopened.creatorId)
+        assertNull(reopened.completerId)
+    }
+
+    @Test
     fun unknownCategoryLeavesThePlaceUncategorizedAndOrphanTodosAreSkipped() = runTest {
         val placeId = uuidV7()
 

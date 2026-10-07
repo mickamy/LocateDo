@@ -24,6 +24,8 @@ notification.channel_promotions:
   platforms: [android]
 notification.channel_household:
   platforms: [android]
+notification.android_check_off_all:
+  platforms: [android]
 settings.account.android_sign_in:
   platforms: [android]
 settings.account.android_apple_sign_in:
@@ -57,3 +59,15 @@ paywall.android_renewal_note:
   platforms: [android]
 update.android_open_play:
   platforms: [android]
+place.detail.check_off_tip_title:
+  platforms: [ios]
+place.detail.check_off_tip_message:
+  platforms: [ios]
+notification.press_and_hold_hint:
+  platforms: [ios]
+notification.check_off_checked:
+  comment: "Button under the checklist shown when the arrival notification is pressed and held; completes the to-dos checked in it."
+  platforms: [ios]
+settings.account.google_sign_in:
+  comment: "Label on the Sign in with Google button, as Google words it in each language."
+  platforms: [ios]

@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */; };
+		3B4035565436DCDDB455DF0A /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3BB27CCE4CA73E84455B7789 /* UserNotifications.framework */; };
+		3B4FF38872539949B9CE28DD /* UserNotificationsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B18D74FE5D745A602C3D98C /* UserNotificationsUI.framework */; };
 		3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BC7A1D03075000000D47174 /* FirebaseCrashlytics */; };
+		3BDC392E6FB8C36F911AEF86 /* LocateDoNotificationContent.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97921B8CF49F7EB4924EBD /* GoogleSignIn */; };
 		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
 		3BF1AEC43071100000D47174 /* Connect in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEC23071100000D47174 /* Connect */; };
@@ -24,6 +26,13 @@
 			remoteGlobalIDString = 3BB55BEF3070E8CE008A116A;
 			remoteInfo = LocateDo;
 		};
+		3B53537F6C319C41BFA0D3A4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3BCDF0A76C001024B16FC70D;
+			remoteInfo = LocateDoNotificationContent;
+		};
 		3BF628993073C9D40025FB46 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
@@ -33,13 +42,45 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		3B0629E481FACA2B0FB2492A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				3BDC392E6FB8C36F911AEF86 /* LocateDoNotificationContent.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		3B18D74FE5D745A602C3D98C /* UserNotificationsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotificationsUI.framework; path = System/Library/Frameworks/UserNotificationsUI.framework; sourceTree = SDKROOT; };
 		3B34EEAF3071027900D47174 /* LocateDoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BB27CCE4CA73E84455B7789 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		3BB55BF03070E8CE008A116A /* LocateDo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocateDo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LocateDoNotificationContent.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3B3608EA8F3965B3743F014D /* Exceptions for "LocateDoNotificationContent" folder in "LocateDoNotificationContent" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */;
+		};
+		3B9DCDFD65D6E5DB661234B0 /* Exceptions for "LocateDo" folder in "LocateDoNotificationContent" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Localizable.xcstrings,
+				Services/Notifications/ArrivalChecklist.swift,
+				Services/Notifications/ArrivalSelection.swift,
+				Support/CategoryAppearance.swift,
+			);
+			target = 3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */;
+		};
 		3BB55BFD3070E8CE008A116A /* Exceptions for "LocateDo" folder in "LocateDo" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -50,6 +91,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3B3608EA8F3965B3743F014D /* Exceptions for "LocateDoNotificationContent" folder in "LocateDoNotificationContent" target */,
+			);
+			path = LocateDoNotificationContent;
+			sourceTree = "<group>";
+		};
 		3B34EEB03071027900D47174 /* LocateDoTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LocateDoTests;
@@ -59,6 +108,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3BB55BFD3070E8CE008A116A /* Exceptions for "LocateDo" folder in "LocateDo" target */,
+				3B9DCDFD65D6E5DB661234B0 /* Exceptions for "LocateDo" folder in "LocateDoNotificationContent" target */,
 			);
 			path = LocateDo;
 			sourceTree = "<group>";
@@ -76,6 +126,13 @@
 			files = (
 			);
 		};
+		3BAE5079AB3509D8B3D83296 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				3B4035565436DCDDB455DF0A /* UserNotifications.framework in Frameworks */,
+				3B4FF38872539949B9CE28DD /* UserNotificationsUI.framework in Frameworks */,
+			);
+		};
 		3BB55BED3070E8CE008A116A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -83,7 +140,6 @@
 				3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */,
 				3BFCD2D53072600A00811294 /* RevenueCat in Frameworks */,
 				3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */,
-				3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */,
 				3BF1AEC43071100000D47174 /* Connect in Frameworks */,
 				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
 			);
@@ -101,8 +157,10 @@
 			children = (
 				3BB55BF23070E8CE008A116A /* LocateDo */,
 				3B34EEB03071027900D47174 /* LocateDoTests */,
+				3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */,
 				3BF628963073C9D40025FB46 /* LocateDoUITests */,
 				3BB55BF13070E8CE008A116A /* Products */,
+				3BE0A48395DDCF4B898BF96D /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -112,8 +170,18 @@
 				3BB55BF03070E8CE008A116A /* LocateDo.app */,
 				3B34EEAF3071027900D47174 /* LocateDoTests.xctest */,
 				3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */,
+				3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		3BE0A48395DDCF4B898BF96D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3BB27CCE4CA73E84455B7789 /* UserNotifications.framework */,
+				3B18D74FE5D745A602C3D98C /* UserNotificationsUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -147,8 +215,12 @@
 				3BB55BEC3070E8CE008A116A /* Sources */,
 				3BB55BED3070E8CE008A116A /* Frameworks */,
 				3BB55BEE3070E8CE008A116A /* Resources */,
+				3B0629E481FACA2B0FB2492A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				3B2E3A12296871E97E8B1073 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3BB55BF23070E8CE008A116A /* LocateDo */,
@@ -161,11 +233,28 @@
 				3BF1AEC33071100000D47174 /* SwiftProtobuf */,
 				3BFCD2D43072600A00811294 /* RevenueCat */,
 				3B97921B8CF49F7EB4924EBD /* GoogleSignIn */,
-				3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */,
 			);
 			productName = LocateDo;
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
 			productType = "com.apple.product-type.application";
+		};
+		3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3B47C29C5FDD786AC1046AAF /* Build configuration list for PBXNativeTarget "LocateDoNotificationContent" */;
+			buildPhases = (
+				3B6407E38708F1C4414BC5DB /* Sources */,
+				3BAE5079AB3509D8B3D83296 /* Frameworks */,
+				3B712EEE1BFF32EB7AAA3B58 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */,
+			);
+			name = LocateDoNotificationContent;
+			productName = LocateDoNotificationContent;
+			productReference = 3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		3BF628943073C9D40025FB46 /* LocateDoUITests */ = {
 			isa = PBXNativeTarget;
@@ -205,6 +294,9 @@
 					3BB55BEF3070E8CE008A116A = {
 						CreatedOnToolsVersion = 27.0;
 					};
+					3BCDF0A76C001024B16FC70D = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					3BF628943073C9D40025FB46 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 3BB55BEF3070E8CE008A116A;
@@ -236,12 +328,18 @@
 				3BB55BEF3070E8CE008A116A /* LocateDo */,
 				3B34EEAE3071027900D47174 /* LocateDoTests */,
 				3BF628943073C9D40025FB46 /* LocateDoUITests */,
+				3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3B34EEAD3071027900D47174 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		3B712EEE1BFF32EB7AAA3B58 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -264,6 +362,11 @@
 			files = (
 			);
 		};
+		3B6407E38708F1C4414BC5DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		3BB55BEC3070E8CE008A116A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -277,6 +380,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		3B2E3A12296871E97E8B1073 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */;
+			targetProxy = 3B53537F6C319C41BFA0D3A4 /* PBXContainerItemProxy */;
+		};
 		3B34EEB43071027900D47174 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
@@ -339,6 +447,76 @@
 			};
 			name = Release;
 		};
+		3B508D13233063F8F11483F4 /* Staging configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LocateDoNotificationContent/LocateDoNotificationContent.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_STYLE[sdk=iphonesimulator*]" = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocateDoNotificationContent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocateDoNotificationContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCATEDO_APP_GROUP = group.com.locatedo.LocateDo.stg;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg.NotificationContent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "match AdHoc com.locatedo.LocateDo.stg.NotificationContent";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphonesimulator*]" = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "STAGING $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Staging;
+		};
+		3BB1B352AC4DC8F00554C745 /* Debug configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LocateDoNotificationContent/LocateDoNotificationContent.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocateDoNotificationContent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocateDoNotificationContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCATEDO_APP_GROUP = group.com.locatedo.LocateDo.dev;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.dev.NotificationContent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		3BB55BFF3070E8CE008A116A /* Debug configuration for PBXNativeTarget "LocateDo" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -373,6 +551,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "http://localhost:8080";
+				LOCATEDO_APP_GROUP = group.com.locatedo.LocateDo.dev;
 				LOCATEDO_APP_STATUS_URL = "https://locatedo.com/app-status-stg.json";
 				LOCATEDO_GOOGLE_CLIENT_ID = "15768665811-8p8epr3jnjc9o7u5kjdc3s8encqojqn6.apps.googleusercontent.com";
 				LOCATEDO_GOOGLE_SERVER_CLIENT_ID = "15768665811-butqb8dsgllkm9e4ni0fo8sld9jepv7u.apps.googleusercontent.com";
@@ -431,6 +610,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api.locatedo.com";
+				LOCATEDO_APP_GROUP = group.com.locatedo.LocateDo;
 				LOCATEDO_APP_STATUS_URL = "https://locatedo.com/app-status.json";
 				LOCATEDO_GOOGLE_CLIENT_ID = "44680780234-vmgjblfmhf06v9oev1q1ung53j9adchs.apps.googleusercontent.com";
 				LOCATEDO_GOOGLE_SERVER_CLIENT_ID = "44680780234-mdnjqmlqu23rgas8dhojvoq6pcnoulq8.apps.googleusercontent.com";
@@ -568,6 +748,43 @@
 			};
 			name = Release;
 		};
+		3BCE468E71FD07D45CDC46FC /* Release configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LocateDoNotificationContent/LocateDoNotificationContent.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_STYLE[sdk=iphonesimulator*]" = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocateDoNotificationContent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocateDoNotificationContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCATEDO_APP_GROUP = group.com.locatedo.LocateDo;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.NotificationContent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "match AppStore com.locatedo.LocateDo.NotificationContent";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphonesimulator*]" = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		3BF1AEBB3071100000D47174 /* Staging configuration for PBXNativeTarget "LocateDoTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -630,6 +847,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LOCATEDO_API_BASE_URL = "https://api-stg.locatedo.com";
+				LOCATEDO_APP_GROUP = group.com.locatedo.LocateDo.stg;
 				LOCATEDO_APP_STATUS_URL = "https://locatedo.com/app-status-stg.json";
 				LOCATEDO_GOOGLE_CLIENT_ID = "238700922224-i1stnficvcng8ecgfp97oc92dtg71h86.apps.googleusercontent.com";
 				LOCATEDO_GOOGLE_SERVER_CLIENT_ID = "238700922224-fiiu5qmdjv88rio10h1etfovg2i90ece.apps.googleusercontent.com";
@@ -784,6 +1002,15 @@
 			);
 			defaultConfigurationName = Release;
 		};
+		3B47C29C5FDD786AC1046AAF /* Build configuration list for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3BB1B352AC4DC8F00554C745 /* Debug configuration for PBXNativeTarget "LocateDoNotificationContent" */,
+				3BCE468E71FD07D45CDC46FC /* Release configuration for PBXNativeTarget "LocateDoNotificationContent" */,
+				3B508D13233063F8F11483F4 /* Staging configuration for PBXNativeTarget "LocateDoNotificationContent" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		3BB55BEB3070E8CE008A116A /* Build configuration list for PBXProject "LocateDo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -857,11 +1084,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignInSwift;
-		};
 		3B97921B8CF49F7EB4924EBD /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

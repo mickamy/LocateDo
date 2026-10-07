@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <application>
+    <!-- Reaching the local server at 10.0.2.2 counts as local network access from API 37. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+
+    <application android:networkSecurityConfig="@xml/network_security_config">
         <!-- Exported so adb can reach it; debug builds only. -->
         <receiver
             android:name=".debug.ScreenshotReceiver"

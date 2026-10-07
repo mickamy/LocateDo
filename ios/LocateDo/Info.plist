@@ -2,20 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>FirebaseAutomaticScreenReportingEnabled</key>
-	<false/>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>LocateDoAppStatusURL</key>
-	<string>$(LOCATEDO_APP_STATUS_URL)</string>
-	<key>LocateDoAPIBaseURL</key>
-	<string>$(LOCATEDO_API_BASE_URL)</string>
-	<key>LocateDoAPSEnvironment</key>
-	<string>$(APS_ENVIRONMENT)</string>
-	<key>LocateDoGoogleClientID</key>
-	<string>$(LOCATEDO_GOOGLE_CLIENT_ID)</string>
-	<key>LocateDoGoogleServerClientID</key>
-	<string>$(LOCATEDO_GOOGLE_SERVER_CLIENT_ID)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -25,10 +11,24 @@
 			</array>
 		</dict>
 	</array>
-	<key>LocateDoRevenueCatAPIKey</key>
-	<string>$(LOCATEDO_REVENUECAT_API_KEY)</string>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
+	<key>LocateDoAPIBaseURL</key>
+	<string>$(LOCATEDO_API_BASE_URL)</string>
+	<key>LocateDoAPSEnvironment</key>
+	<string>$(APS_ENVIRONMENT)</string>
+	<key>LocateDoAppGroup</key>
+	<string>$(LOCATEDO_APP_GROUP)</string>
+	<key>LocateDoAppStatusURL</key>
+	<string>$(LOCATEDO_APP_STATUS_URL)</string>
 	<key>LocateDoConfiguration</key>
 	<string>$(CONFIGURATION)</string>
+	<key>LocateDoGoogleClientID</key>
+	<string>$(LOCATEDO_GOOGLE_CLIENT_ID)</string>
+	<key>LocateDoGoogleServerClientID</key>
+	<string>$(LOCATEDO_GOOGLE_SERVER_CLIENT_ID)</string>
+	<key>LocateDoRevenueCatAPIKey</key>
+	<string>$(LOCATEDO_REVENUECAT_API_KEY)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

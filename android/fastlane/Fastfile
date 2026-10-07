@@ -28,13 +28,29 @@ SCREENSHOT_HEADLINES = {
   },
 }.freeze
 
+def app_string(name, language)
+  values = language == "en" ? "values" : "values-#{language}"
+  File.read(File.join(ROOT, "app/src/main/res/#{values}/strings.xml"))[/name="#{name}">([^<]+)</, 1]
+end
+
 # Taps the element whose accessibility label is the app's string `name` in that language, wherever it is drawn.
 def tap_label(name, language)
-  values = language == "en" ? "values" : "values-#{language}"
-  label = File.read(File.join(ROOT, "app/src/main/res/#{values}/strings.xml"))[/name="#{name}">([^<]+)</, 1]
+  label = app_string(name, language)
+  tap_node("label #{label.inspect}") { |node| node.include?("content-desc=\"#{label}\"") }
+end
+
+# Taps the element showing `text` (a string or a pattern), in the app or in system screens.
+def tap_text(text)
+  tap_node("text #{text.inspect}") do |node|
+    shown = node[/ text="([^"]*)"/, 1]
+    text.is_a?(Regexp) ? text.match?(shown.to_s) : shown == text
+  end
+end
+
+def tap_node(description)
   screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
-  node = screen.scan(/<node [^>]*>/).find { |n| n.include?("content-desc=\"#{label}\"") }
-  UI.user_error!("No element labeled #{label.inspect} on screen") if node.nil?
+  node = screen.scan(/<node [^>]*>/).find { |n| yield(n) }
+  UI.user_error!("No element with #{description} on screen") if node.nil?
   x1, y1, x2, y2 = node[/bounds="([^"]+)"/, 1].scan(/\d+/).map(&:to_i)
   adb("shell", "input", "tap", ((x1 + x2) / 2).to_s, ((y1 + y2) / 2).to_s)
 end
@@ -146,6 +162,64 @@ platform :android do
       end
     end
     compose_screenshots(raw)
+  end
+
+  desc "Record the background location walkthrough for Play's declaration into build/location-video (needs ffmpeg)"
+  lane :location_video do
+    build(task: "assemble", build_type: "Debug", version_code: 1)
+    apk = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    work = File.join(ROOT, "build/location-video")
+    FileUtils.rm_rf(work)
+    FileUtils.mkdir_p(work)
+    location = SCREENSHOT_LOCATIONS.fetch("en-US")
+    # The first seeded place, the grocery store.
+    grocery = { latitude: location.fetch(:latitude) + 0.0030, longitude: location.fetch(:longitude) }
+    with_screenshot_emulator do
+      adb("install", "-r", apk)
+      adb("shell", "pm", "disable-user", "--user", "0", "com.google.android.googlequicksearchbox")
+      adb("shell", "appops", "set", SCREENSHOT_PACKAGE, "android:mock_location", "allow")
+      # Background location is left out: asking for it is what the video shows.
+      %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION POST_NOTIFICATIONS].each do |permission|
+        adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
+      end
+      # A fresh emulator has Google Location Accuracy off, and geofences then fail with GEOFENCE_NOT_AVAILABLE.
+      adb("shell", "am", "start", "-a", "com.google.android.gms.location.settings.LOCATION_ACCURACY")
+      sleep(3)
+      tap_text("Improve Location Accuracy")
+      sleep(2)
+      adb("shell", "cmd", "locale", "set-app-locales", SCREENSHOT_PACKAGE, "--locales", "en-US")
+      adb("emu", "geo", "fix", location.fetch(:longitude).to_s, location.fetch(:latitude).to_s)
+      adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "seed", "--es", "language", "en")
+      sleep(3)
+      adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity")
+      sleep(15)
+      tap_label("home_my_location", "en")
+      sleep(8)
+
+      record(File.join(work, "ask.mp4")) do
+        sleep(2)
+        tap_text(/\ASet location to/)
+        # Long enough to read the disclosure.
+        sleep(6)
+        tap_text(app_string("settings_open_settings", "en"))
+        sleep(3)
+        tap_text(/\AAllow all the time\z/)
+        sleep(2)
+        adb("shell", "input", "keyevent", "KEYCODE_BACK")
+        sleep(3)
+        adb("shell", "input", "keyevent", "KEYCODE_HOME")
+        sleep(2)
+      end
+
+      # The geofence fires on DWELL, about two minutes after arriving; a card stands in for the wait.
+      wait_for_notification(grocery)
+      record(File.join(work, "arrive.mp4")) do
+        sleep(1)
+        adb("shell", "cmd", "statusbar", "expand-notifications")
+        sleep(5)
+      end
+    end
+    compose_location_video(work)
   end
 
   # Play's API cannot upload to an app that has no build yet, so the first AAB goes up through Play Console.
@@ -289,6 +363,58 @@ platform :android do
       end
       sh("oxipng", "-o", "4", "--strip", "safe", "-q", "-r", output)
     end
+  end
+
+  # screenrecord finishes the file only when stopped with SIGINT.
+  def record(path)
+    recorder = Process.spawn(File.join(SDK, "platform-tools/adb"), "-s", SCREENSHOT_SERIAL,
+                             "shell", "screenrecord", "--time-limit", "180", "/sdcard/clip.mp4",
+                             out: File::NULL, err: File::NULL)
+    sleep(1)
+    begin
+      yield
+    ensure
+      adb("shell", "pkill", "-INT", "screenrecord")
+      Process.wait(recorder)
+    end
+    sleep(1)
+    adb("pull", "/sdcard/clip.mp4", path)
+  end
+
+  # Keeps reporting the place as the current location (debug ScreenshotReceiver), since a geofence only dwells on
+  # fresh fixes.
+  def wait_for_notification(place)
+    deadline = Time.now + 300
+    until adb("shell", "dumpsys", "notification").include?("pkg=#{SCREENSHOT_PACKAGE}")
+      if Time.now > deadline
+        background = adb("shell", "dumpsys", "package", SCREENSHOT_PACKAGE).lines.grep(/BACKGROUND_LOCATION/).join
+        logs = adb("logcat", "-d", "-s", "Geofence", "GeofenceSync", "GeofencingClient").lines.last(30).join
+        UI.user_error!("No arrival notification within 5 minutes\n#{background}\n#{logs}")
+      end
+      adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "move",
+          "--es", "latitude", place.fetch(:latitude).to_s, "--es", "longitude", place.fetch(:longitude).to_s)
+      sleep(5)
+    end
+  end
+
+  def compose_location_video(work)
+    ask = File.join(work, "ask.mp4")
+    width, height = sh("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                       "-of", "csv=p=0", ask, log: false).strip.split(",")
+    card = File.join(work, "card.png")
+    # U+2011 keeps "to-dos" from breaking at its hyphen.
+    sh("swift", File.join(ROOT, "../tools/video/caption.swift"), card, width, height,
+       "StopBy stays closed. About two minutes after the phone arrives at the grocery store, " \
+       "a notification lists that place's to‑dos.",
+       "--card", "--title", "Arriving at the store",
+       "--icon", File.join(ROOT, "fastlane/metadata/android/en-US/images/icon.png"))
+    scale = "scale=#{width}:#{height},setsar=1,fps=30,format=yuv420p"
+    output = File.join(work, "location.mp4")
+    sh("ffmpeg", "-v", "error", "-y",
+       "-i", ask, "-loop", "1", "-t", "5", "-i", card, "-i", File.join(work, "arrive.mp4"),
+       "-filter_complex", "[0]#{scale}[a];[1]#{scale}[b];[2]#{scale}[c];[a][b][c]concat=n=3:v=1:a=0",
+       "-c:v", "libx264", "-crf", "20", "-movflags", "+faststart", output)
+    UI.success("Wrote #{output}")
   end
 
   private_lane :changelog do
