@@ -1,12 +1,8 @@
 name: server-deploy-stg
 
 on:
-  pull_request:
-    paths:
-      - "server/**"
-      - ".github/workflows/server-deploy-stg.yml"
   push:
-    branches: [main, dev]
+    branches: [dev]
     paths:
       - "server/**"
       - ".github/workflows/server-deploy-stg.yml"
@@ -22,7 +18,7 @@ permissions:
 jobs:
   deploy:
     runs-on: self-hosted
-    environment: stg
+    environment: server-stg
 
     steps:
       - name: Checkout repository

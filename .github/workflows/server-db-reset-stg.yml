@@ -18,7 +18,7 @@ jobs:
   reset:
     if: inputs.confirm == 'reset'
     runs-on: self-hosted
-    environment: stg
+    environment: server-stg
     timeout-minutes: 10
     env:
       COMPOSE_FILE: compose.stg.yaml

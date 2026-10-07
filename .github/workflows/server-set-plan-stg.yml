@@ -24,7 +24,7 @@ concurrency:
 jobs:
   set-plan:
     runs-on: self-hosted
-    environment: stg
+    environment: server-stg
     timeout-minutes: 10
 
     steps:
