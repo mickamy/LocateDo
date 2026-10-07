@@ -20,6 +20,8 @@ public  final class Todo extends
     placeId_ = "";
     title_ = "";
     assigneeId_ = "";
+    creatorId_ = "";
+    completerId_ = "";
   }
   private int bitField0_;
   public static final int ID_FIELD_NUMBER = 1;
@@ -383,6 +385,140 @@ public  final class Todo extends
   private void clearVersion() {
 
     version_ = 0L;
+  }
+
+  public static final int CREATOR_ID_FIELD_NUMBER = 9;
+  private java.lang.String creatorId_;
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @return Whether the creatorId field is set.
+   */
+  @java.lang.Override
+  public boolean hasCreatorId() {
+    return ((bitField0_ & 0x00000008) != 0);
+  }
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @return The creatorId.
+   */
+  @java.lang.Override
+  public java.lang.String getCreatorId() {
+    return creatorId_;
+  }
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @return The bytes for creatorId.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getCreatorIdBytes() {
+    return com.google.protobuf.ByteString.copyFromUtf8(creatorId_);
+  }
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @param value The creatorId to set.
+   */
+  private void setCreatorId(
+      java.lang.String value) {
+    java.util.Objects.requireNonNull(value);
+    bitField0_ |= 0x00000008;
+    creatorId_ = value;
+  }
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   */
+  private void clearCreatorId() {
+    bitField0_ = (bitField0_ & ~0x00000008);
+    creatorId_ = getDefaultInstance().getCreatorId();
+  }
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @param value The bytes for creatorId to set.
+   */
+  private void setCreatorIdBytes(
+      com.google.protobuf.ByteString value) {
+    checkByteStringIsUtf8(value);
+    creatorId_ = value.toStringUtf8();
+    bitField0_ |= 0x00000008;
+  }
+
+  public static final int COMPLETER_ID_FIELD_NUMBER = 10;
+  private java.lang.String completerId_;
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @return Whether the completerId field is set.
+   */
+  @java.lang.Override
+  public boolean hasCompleterId() {
+    return ((bitField0_ & 0x00000010) != 0);
+  }
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @return The completerId.
+   */
+  @java.lang.Override
+  public java.lang.String getCompleterId() {
+    return completerId_;
+  }
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @return The bytes for completerId.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getCompleterIdBytes() {
+    return com.google.protobuf.ByteString.copyFromUtf8(completerId_);
+  }
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @param value The completerId to set.
+   */
+  private void setCompleterId(
+      java.lang.String value) {
+    java.util.Objects.requireNonNull(value);
+    bitField0_ |= 0x00000010;
+    completerId_ = value;
+  }
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   */
+  private void clearCompleterId() {
+    bitField0_ = (bitField0_ & ~0x00000010);
+    completerId_ = getDefaultInstance().getCompleterId();
+  }
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @param value The bytes for completerId to set.
+   */
+  private void setCompleterIdBytes(
+      com.google.protobuf.ByteString value) {
+    checkByteStringIsUtf8(value);
+    completerId_ = value.toStringUtf8();
+    bitField0_ |= 0x00000010;
   }
 
   public static com.locatedo.todo.v1.Todo parseFrom(
@@ -857,6 +993,144 @@ public  final class Todo extends
       return this;
     }
 
+    /**
+     * <pre>
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * </pre>
+     *
+     * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+     * @return Whether the creatorId field is set.
+     */
+    @java.lang.Override
+    public boolean hasCreatorId() {
+      return instance.hasCreatorId();
+    }
+    /**
+     * <pre>
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * </pre>
+     *
+     * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+     * @return The creatorId.
+     */
+    @java.lang.Override
+    public java.lang.String getCreatorId() {
+      return instance.getCreatorId();
+    }
+    /**
+     * <pre>
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * </pre>
+     *
+     * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+     * @return The bytes for creatorId.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getCreatorIdBytes() {
+      return instance.getCreatorIdBytes();
+    }
+    /**
+     * <pre>
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * </pre>
+     *
+     * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+     * @param value The creatorId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setCreatorId(
+        java.lang.String value) {
+      copyOnWrite();
+      instance.setCreatorId(value);
+      return this;
+    }
+    /**
+     * <pre>
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * </pre>
+     *
+     * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearCreatorId() {
+      copyOnWrite();
+      instance.clearCreatorId();
+      return this;
+    }
+    /**
+     * <pre>
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * </pre>
+     *
+     * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+     * @param value The bytes for creatorId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setCreatorIdBytes(
+        com.google.protobuf.ByteString value) {
+      copyOnWrite();
+      instance.setCreatorIdBytes(value);
+      return this;
+    }
+
+    /**
+     * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+     * @return Whether the completerId field is set.
+     */
+    @java.lang.Override
+    public boolean hasCompleterId() {
+      return instance.hasCompleterId();
+    }
+    /**
+     * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+     * @return The completerId.
+     */
+    @java.lang.Override
+    public java.lang.String getCompleterId() {
+      return instance.getCompleterId();
+    }
+    /**
+     * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+     * @return The bytes for completerId.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getCompleterIdBytes() {
+      return instance.getCompleterIdBytes();
+    }
+    /**
+     * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+     * @param value The completerId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setCompleterId(
+        java.lang.String value) {
+      copyOnWrite();
+      instance.setCompleterId(value);
+      return this;
+    }
+    /**
+     * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearCompleterId() {
+      copyOnWrite();
+      instance.clearCompleterId();
+      return this;
+    }
+    /**
+     * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+     * @param value The bytes for completerId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setCompleterIdBytes(
+        com.google.protobuf.ByteString value) {
+      copyOnWrite();
+      instance.setCompleterIdBytes(value);
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.todo.v1.Todo)
   }
   @java.lang.Override
@@ -882,10 +1156,13 @@ public  final class Todo extends
             "completedAt_",
             "updatedAt_",
             "version_",
+            "creatorId_",
+            "completerId_",
           };
           java.lang.String info =
-              "\u0000\b\u0000\u0001\u0001\b\b\u0000\u0000\u0000\u0001\u0208\u0002\u0208\u0003\u0208" +
-              "\u0004\u0208\u0005\u1208\u0000\u0006\u1009\u0001\u0007\u1009\u0002\b\u0002";
+              "\u0000\n\u0000\u0001\u0001\n\n\u0000\u0000\u0000\u0001\u0208\u0002\u0208\u0003\u0208" +
+              "\u0004\u0208\u0005\u1208\u0000\u0006\u1009\u0001\u0007\u1009\u0002\b\u0002\t\u1208" +
+              "\u0003\n\u1208\u0004";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {

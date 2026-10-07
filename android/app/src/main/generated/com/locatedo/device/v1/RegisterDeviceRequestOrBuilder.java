@@ -71,4 +71,25 @@ public interface RegisterDeviceRequestOrBuilder extends
    */
   com.google.protobuf.ByteString
       getLanguageBytes();
+
+  /**
+   * <pre>
+   * Whether to be told when a household member checks off a to-do the user
+   * added. Unset leaves the device's setting as it is (on for a new device).
+   * </pre>
+   *
+   * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+   * @return Whether the completionNotices field is set.
+   */
+  boolean hasCompletionNotices();
+  /**
+   * <pre>
+   * Whether to be told when a household member checks off a to-do the user
+   * added. Unset leaves the device's setting as it is (on for a new device).
+   * </pre>
+   *
+   * <code>optional bool completion_notices = 6 [json_name = "completionNotices"];</code>
+   * @return The completionNotices.
+   */
+  boolean getCompletionNotices();
 }

@@ -102,4 +102,50 @@ public interface TodoOrBuilder extends
    * @return The version.
    */
   long getVersion();
+
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @return Whether the creatorId field is set.
+   */
+  boolean hasCreatorId();
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @return The creatorId.
+   */
+  java.lang.String getCreatorId();
+  /**
+   * <pre>
+   * Recorded by the server from the caller; unset for to-dos from before it did.
+   * </pre>
+   *
+   * <code>optional string creator_id = 9 [json_name = "creatorId"];</code>
+   * @return The bytes for creatorId.
+   */
+  com.google.protobuf.ByteString
+      getCreatorIdBytes();
+
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @return Whether the completerId field is set.
+   */
+  boolean hasCompleterId();
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @return The completerId.
+   */
+  java.lang.String getCompleterId();
+  /**
+   * <code>optional string completer_id = 10 [json_name = "completerId"];</code>
+   * @return The bytes for completerId.
+   */
+  com.google.protobuf.ByteString
+      getCompleterIdBytes();
 }

@@ -24,15 +24,18 @@ const (
 )
 
 type Todo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	HouseholdId   string                 `protobuf:"bytes,2,opt,name=household_id,json=householdId,proto3" json:"household_id,omitempty"`
-	PlaceId       string                 `protobuf:"bytes,3,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
-	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
-	AssigneeId    *string                `protobuf:"bytes,5,opt,name=assignee_id,json=assigneeId,proto3,oneof" json:"assignee_id,omitempty"`
-	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version       int64                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	HouseholdId string                 `protobuf:"bytes,2,opt,name=household_id,json=householdId,proto3" json:"household_id,omitempty"`
+	PlaceId     string                 `protobuf:"bytes,3,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
+	Title       string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	AssigneeId  *string                `protobuf:"bytes,5,opt,name=assignee_id,json=assigneeId,proto3,oneof" json:"assignee_id,omitempty"`
+	CompletedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
+	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Version     int64                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
+	// Recorded by the server from the caller; unset for to-dos from before it did.
+	CreatorId     *string `protobuf:"bytes,9,opt,name=creator_id,json=creatorId,proto3,oneof" json:"creator_id,omitempty"`
+	CompleterId   *string `protobuf:"bytes,10,opt,name=completer_id,json=completerId,proto3,oneof" json:"completer_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -121,6 +124,20 @@ func (x *Todo) GetVersion() int64 {
 		return x.Version
 	}
 	return 0
+}
+
+func (x *Todo) GetCreatorId() string {
+	if x != nil && x.CreatorId != nil {
+		return *x.CreatorId
+	}
+	return ""
+}
+
+func (x *Todo) GetCompleterId() string {
+	if x != nil && x.CompleterId != nil {
+		return *x.CompleterId
+	}
+	return ""
 }
 
 type TodoInput struct {
@@ -452,7 +469,7 @@ var File_locatedo_todo_v1_todo_proto protoreflect.FileDescriptor
 
 const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\n" +
-	"\x1blocatedo/todo/v1/todo.proto\x12\x10locatedo.todo.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xca\x02\n" +
+	"\x1blocatedo/todo/v1/todo.proto\x12\x10locatedo.todo.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb6\x03\n" +
 	"\x04Todo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fhousehold_id\x18\x02 \x01(\tR\vhouseholdId\x12\x19\n" +
@@ -463,9 +480,15 @@ const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\fcompleted_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampH\x01R\vcompletedAt\x88\x01\x01\x129\n" +
 	"\n" +
 	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x18\n" +
-	"\aversion\x18\b \x01(\x03R\aversionB\x0e\n" +
+	"\aversion\x18\b \x01(\x03R\aversion\x12\"\n" +
+	"\n" +
+	"creator_id\x18\t \x01(\tH\x02R\tcreatorId\x88\x01\x01\x12&\n" +
+	"\fcompleter_id\x18\n" +
+	" \x01(\tH\x03R\vcompleterId\x88\x01\x01B\x0e\n" +
 	"\f_assignee_idB\x0f\n" +
-	"\r_completed_at\"\xac\x01\n" +
+	"\r_completed_atB\r\n" +
+	"\v_creator_idB\x0f\n" +
+	"\r_completer_id\"\xac\x01\n" +
 	"\tTodoInput\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12#\n" +
 	"\bplace_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\aplaceId\x12 \n" +

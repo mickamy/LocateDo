@@ -45,6 +45,10 @@ message RegisterDeviceRequest {
     }
   ];
 
+  // Whether to be told when a household member checks off a to-do the user
+  // added. Unset leaves the device's setting as it is (on for a new device).
+  optional bool completion_notices = 6;
+
   option (buf.validate.message).cel = {
     id: "register_device_request.apns_environment"
     message: "apns_environment is required on iOS and not allowed on Android"

@@ -79,6 +79,16 @@ func TodoToTodov1(src model4.Todo) *todov1.Todo {
 	if v4 := src.CompletedAt; v4 != nil {
 		v3 = converters.TimeToTimestamp(*v4)
 	}
+	var v5 *string
+	if v6 := src.CreatorID; v6 != nil {
+		v7 := converters.UUIDToString(*v6)
+		v5 = &v7
+	}
+	var v8 *string
+	if v9 := src.CompleterID; v9 != nil {
+		v10 := converters.UUIDToString(*v9)
+		v8 = &v10
+	}
 	return &todov1.Todo{
 		Id:          converters.UUIDToString(src.ID),
 		HouseholdId: converters.UUIDToString(src.HouseholdID),
@@ -88,6 +98,8 @@ func TodoToTodov1(src model4.Todo) *todov1.Todo {
 		CompletedAt: v3,
 		UpdatedAt:   converters.TimeToTimestamp(src.UpdatedAt),
 		Version:     src.Version,
+		CreatorId:   v5,
+		CompleterId: v8,
 	}
 }
 

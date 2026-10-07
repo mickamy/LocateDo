@@ -137,6 +137,45 @@ public object RegisterDeviceRequestKt {
     public fun clearLanguage() {
       _builder.clearLanguage()
     }
+
+    /**
+     * ```
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * ```
+     *
+     * `optional bool completion_notices = 6 [json_name = "completionNotices"];`
+     */
+    public var completionNotices: kotlin.Boolean
+      @kotlin.jvm.JvmName("getCompletionNotices")
+        get() = _builder.completionNotices
+      @kotlin.jvm.JvmName("setCompletionNotices")
+        set(value) {
+        _builder.completionNotices = value
+      }
+    /**
+     * ```
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * ```
+     *
+     * `optional bool completion_notices = 6 [json_name = "completionNotices"];`
+     */
+    public fun clearCompletionNotices() {
+      _builder.clearCompletionNotices()
+    }
+    /**
+     * ```
+     * Whether to be told when a household member checks off a to-do the user
+     * added. Unset leaves the device's setting as it is (on for a new device).
+     * ```
+     *
+     * `optional bool completion_notices = 6 [json_name = "completionNotices"];`
+     * @return Whether the completionNotices field is set.
+     */
+    public fun hasCompletionNotices(): kotlin.Boolean {
+      return _builder.hasCompletionNotices()
+    }
   }
 }
 public inline fun com.locatedo.device.v1.RegisterDeviceRequest.copy(block: `com.locatedo.device.v1`.RegisterDeviceRequestKt.Dsl.() -> kotlin.Unit): com.locatedo.device.v1.RegisterDeviceRequest =

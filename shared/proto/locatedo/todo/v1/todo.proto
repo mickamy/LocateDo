@@ -22,6 +22,9 @@ message Todo {
   optional google.protobuf.Timestamp completed_at = 6;
   google.protobuf.Timestamp updated_at = 7;
   int64 version = 8;
+  // Recorded by the server from the caller; unset for to-dos from before it did.
+  optional string creator_id = 9;
+  optional string completer_id = 10;
 }
 
 message TodoInput {

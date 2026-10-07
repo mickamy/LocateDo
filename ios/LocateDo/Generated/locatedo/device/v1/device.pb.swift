@@ -113,9 +113,22 @@ nonisolated struct Locatedo_Device_V1_RegisterDeviceRequest: Sendable {
 
   var language: String = String()
 
+  /// Whether to be told when a household member checks off a to-do the user
+  /// added. Unset leaves the device's setting as it is (on for a new device).
+  var completionNotices: Bool {
+    get {_completionNotices ?? false}
+    set {_completionNotices = newValue}
+  }
+  /// Returns true if `completionNotices` has been explicitly set.
+  var hasCompletionNotices: Bool {self._completionNotices != nil}
+  /// Clears the value of `completionNotices`. Subsequent reads from it will return its default value.
+  mutating func clearCompletionNotices() {self._completionNotices = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
+
+  fileprivate var _completionNotices: Bool? = nil
 }
 
 nonisolated struct Locatedo_Device_V1_RegisterDeviceResponse: Sendable {
@@ -142,7 +155,7 @@ nonisolated extension Locatedo_Device_V1_ApnsEnvironment: SwiftProtobuf._ProtoNa
 
 nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}platform\0\u{3}push_token\0\u{3}apns_environment\0\u{3}promotions_consent\0\u{1}language\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}platform\0\u{3}push_token\0\u{3}apns_environment\0\u{3}promotions_consent\0\u{1}language\0\u{3}completion_notices\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -155,12 +168,17 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
       case 3: try { try decoder.decodeSingularEnumField(value: &self.apnsEnvironment) }()
       case 4: try { try decoder.decodeSingularBoolField(value: &self.promotionsConsent) }()
       case 5: try { try decoder.decodeSingularStringField(value: &self.language) }()
+      case 6: try { try decoder.decodeSingularBoolField(value: &self._completionNotices) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.platform != .unspecified {
       try visitor.visitSingularEnumField(value: self.platform, fieldNumber: 1)
     }
@@ -176,6 +194,9 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
     if !self.language.isEmpty {
       try visitor.visitSingularStringField(value: self.language, fieldNumber: 5)
     }
+    try { if let v = self._completionNotices {
+      try visitor.visitSingularBoolField(value: v, fieldNumber: 6)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -185,6 +206,7 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
     if lhs.apnsEnvironment != rhs.apnsEnvironment {return false}
     if lhs.promotionsConsent != rhs.promotionsConsent {return false}
     if lhs.language != rhs.language {return false}
+    if lhs._completionNotices != rhs._completionNotices {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

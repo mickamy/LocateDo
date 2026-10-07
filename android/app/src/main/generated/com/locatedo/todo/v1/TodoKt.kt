@@ -191,6 +191,66 @@ public object TodoKt {
     public fun clearVersion() {
       _builder.clearVersion()
     }
+
+    /**
+     * ```
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * ```
+     *
+     * `optional string creator_id = 9 [json_name = "creatorId"];`
+     */
+    public var creatorId: kotlin.String
+      @kotlin.jvm.JvmName("getCreatorId")
+        get() = _builder.creatorId
+      @kotlin.jvm.JvmName("setCreatorId")
+        set(value) {
+        _builder.creatorId = value
+      }
+    /**
+     * ```
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * ```
+     *
+     * `optional string creator_id = 9 [json_name = "creatorId"];`
+     */
+    public fun clearCreatorId() {
+      _builder.clearCreatorId()
+    }
+    /**
+     * ```
+     * Recorded by the server from the caller; unset for to-dos from before it did.
+     * ```
+     *
+     * `optional string creator_id = 9 [json_name = "creatorId"];`
+     * @return Whether the creatorId field is set.
+     */
+    public fun hasCreatorId(): kotlin.Boolean {
+      return _builder.hasCreatorId()
+    }
+
+    /**
+     * `optional string completer_id = 10 [json_name = "completerId"];`
+     */
+    public var completerId: kotlin.String
+      @kotlin.jvm.JvmName("getCompleterId")
+        get() = _builder.completerId
+      @kotlin.jvm.JvmName("setCompleterId")
+        set(value) {
+        _builder.completerId = value
+      }
+    /**
+     * `optional string completer_id = 10 [json_name = "completerId"];`
+     */
+    public fun clearCompleterId() {
+      _builder.clearCompleterId()
+    }
+    /**
+     * `optional string completer_id = 10 [json_name = "completerId"];`
+     * @return Whether the completerId field is set.
+     */
+    public fun hasCompleterId(): kotlin.Boolean {
+      return _builder.hasCompleterId()
+    }
   }
 }
 public inline fun com.locatedo.todo.v1.Todo.copy(block: `com.locatedo.todo.v1`.TodoKt.Dsl.() -> kotlin.Unit): com.locatedo.todo.v1.Todo =
