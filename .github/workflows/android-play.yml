@@ -61,3 +61,7 @@ jobs:
           CI: "true"
           ORG_GRADLE_PROJECT_LOCATEDO_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      - run: bundle exec fastlane metadata
+        env:
+          CI: "true"
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}

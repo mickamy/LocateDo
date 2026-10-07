@@ -38,6 +38,17 @@ platform :android do
     )
   end
 
+  desc "Upload the store listing (text and images in fastlane/metadata) to Google Play"
+  lane :metadata do
+    upload_to_play_store(
+      json_key_data: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON").unpack1("m"),
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      sync_image_upload: true
+    )
+  end
+
   # Play's API cannot upload to an app that has no build yet, so the first AAB goes up through Play Console.
   desc "Build the Release AAB without uploading it"
   lane :build_release do
