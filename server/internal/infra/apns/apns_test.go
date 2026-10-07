@@ -12,6 +12,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
@@ -104,6 +105,64 @@ func TestClient_Wake(t *testing.T) {
 	issuer, err := parsed.Claims.GetIssuer()
 	require.NoError(t, err)
 	assert.Equal(t, teamID, issuer)
+}
+
+func TestClient_Promote(t *testing.T) {
+	t.Parallel()
+
+	campaignID := uuid.MustParse("019a0000-0000-7000-8000-000000000001")
+	tests := map[string]struct {
+		url  string
+		want string
+	}{
+		"with a URL": {
+			url: "https://locatedo.com/news",
+			want: `{"aps":{"alert":{"title":"New","body":"Try it"},"interruption-level":"passive","thread-id":"campaign"},` +
+				`"campaign_id":"019a0000-0000-7000-8000-000000000001","url":"https://locatedo.com/news"}`,
+		},
+		"without a URL": {
+			url: "",
+			want: `{"aps":{"alert":{"title":"New","body":"Try it"},"interruption-level":"passive","thread-id":"campaign"},` +
+				`"campaign_id":"019a0000-0000-7000-8000-000000000001"}`,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			f := newFakeAPNs(t)
+			p := apns.Promotion{CampaignID: campaignID, Title: "New", Body: "Try it", URL: tt.url}
+
+			// act
+			err := f.client(f.key).Promote(t.Context(), apns.Sandbox, "abc123", p, now)
+
+			// assert
+			require.NoError(t, err)
+			require.Len(t, f.requests, 1)
+			r := f.requests[0]
+			assert.Equal(t, "/3/device/abc123", r.path)
+			assert.Equal(t, topic, r.topic)
+			assert.Equal(t, "alert", r.pushType)
+			assert.Equal(t, "5", r.priority)
+			assert.JSONEq(t, tt.want, r.body)
+		})
+	}
+}
+
+func TestClient_Promote_unregistered(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+	f.status = http.StatusGone
+	f.reason = "Unregistered"
+
+	// act
+	err := f.client(f.key).Promote(t.Context(), apns.Production, "abc123", apns.Promotion{Title: "t", Body: "b"}, now)
+
+	// assert
+	require.ErrorIs(t, err, apns.ErrUnregistered)
 }
 
 func TestClient_Wake_picksTheHostByEnvironment(t *testing.T) {

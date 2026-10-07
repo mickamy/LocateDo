@@ -14,6 +14,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
@@ -91,6 +92,51 @@ func TestClient_Wake(t *testing.T) {
 	fake.assertAssertion(t)
 }
 
+func TestClient_Promote(t *testing.T) {
+	t.Parallel()
+
+	campaignID := uuid.MustParse("019a0000-0000-7000-8000-000000000001")
+	tests := map[string]struct {
+		url  string
+		want map[string]string
+	}{
+		"with a URL": {
+			url: "https://locatedo.com/news",
+			want: map[string]string{
+				"type": "campaign", "campaign_id": campaignID.String(), "title": "New", "body": "Try it",
+				"url": "https://locatedo.com/news",
+			},
+		},
+		"without a URL": {
+			url: "",
+			want: map[string]string{
+				"type": "campaign", "campaign_id": campaignID.String(), "title": "New", "body": "Try it",
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			fake := newFakeFCM(t)
+			client := fake.client(t)
+			p := fcm.Promotion{CampaignID: campaignID, Title: "New", Body: "Try it", URL: tt.url}
+
+			// act
+			err := client.Promote(t.Context(), "installation-1", p, now)
+
+			// assert
+			require.NoError(t, err)
+			sent := fake.lastMessage()
+			assert.Equal(t, "installation-1", sent.Message.Fid)
+			assert.Equal(t, tt.want, sent.Message.Data)
+			assert.Equal(t, "normal", sent.Message.Android.Priority)
+			assert.Nil(t, sent.Message.Notification, "the app builds the notification itself")
+		})
+	}
+}
+
 func TestClient_Wake_reusesTheAccessTokenUntilItExpires(t *testing.T) {
 	t.Parallel()
 
@@ -156,9 +202,10 @@ func TestClient_Wake_notConfigured(t *testing.T) {
 
 type sentMessage struct {
 	Message struct {
-		Fid     string            `json:"fid"`
-		Data    map[string]string `json:"data"`
-		Android struct {
+		Fid          string            `json:"fid"`
+		Data         map[string]string `json:"data"`
+		Notification map[string]any    `json:"notification"`
+		Android      struct {
 			Priority string `json:"priority"`
 		} `json:"android"`
 	} `json:"message"`

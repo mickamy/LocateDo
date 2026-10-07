@@ -176,6 +176,10 @@ func (f *fakePusher) Wake(_ context.Context, env apns.Environment, token string,
 	return nil
 }
 
+func (f *fakePusher) Promote(context.Context, apns.Environment, string, apns.Promotion, time.Time) error {
+	return nil
+}
+
 func (f *fakePusher) woken() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -204,6 +208,10 @@ func (f *fakeFCM) Wake(_ context.Context, token string, _ time.Time) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.woke = append(f.woke, token)
+	return nil
+}
+
+func (f *fakeFCM) Promote(context.Context, string, fcm.Promotion, time.Time) error {
 	return nil
 }
 

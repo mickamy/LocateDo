@@ -1,4 +1,4 @@
-// Package fcm sends silent data messages through Firebase Cloud Messaging.
+// Package fcm sends data messages through Firebase Cloud Messaging.
 package fcm
 
 import (
@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -41,6 +42,17 @@ type Pusher interface {
 	// Wake sends the installation a data message that lets the app pull in
 	// the background.
 	Wake(ctx context.Context, installationID string, now time.Time) error
+	// Promote sends a promotional campaign for the app to show as a
+	// notification once it has checked its own consent.
+	Promote(ctx context.Context, installationID string, p Promotion, now time.Time) error
+}
+
+type Promotion struct {
+	CampaignID uuid.UUID
+	Title      string
+	Body       string
+	// URL is opened on tap when set.
+	URL string
 }
 
 var _ Pusher = Client{}
@@ -110,6 +122,23 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 }
 
 func (c Client) Wake(ctx context.Context, installationID string, now time.Time) error {
+	return c.send(ctx, installationID, map[string]string{"reason": "sync"}, now)
+}
+
+func (c Client) Promote(ctx context.Context, installationID string, p Promotion, now time.Time) error {
+	data := map[string]string{
+		"type":        "campaign",
+		"campaign_id": p.CampaignID.String(),
+		"title":       p.Title,
+		"body":        p.Body,
+	}
+	if p.URL != "" {
+		data["url"] = p.URL
+	}
+	return c.send(ctx, installationID, data, now)
+}
+
+func (c Client) send(ctx context.Context, installationID string, data map[string]string, now time.Time) error {
 	account := c.cfg.ServiceAccount
 	if account == nil {
 		logger.Debug(ctx, "fcm is not configured; dropping push", "installation_id", installationID)
@@ -123,7 +152,7 @@ func (c Client) Wake(ctx context.Context, installationID string, now time.Time) 
 	body, err := json.Marshal(map[string]any{
 		"message": map[string]any{
 			"fid":     installationID,
-			"data":    map[string]string{"reason": "sync"},
+			"data":    data,
 			"android": map[string]string{"priority": "normal"},
 		},
 	})

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -43,6 +44,16 @@ const (
 type Pusher interface {
 	// Wake sends a silent push that lets the app run in the background.
 	Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error
+	// Promote shows a quiet notification for a promotional campaign.
+	Promote(ctx context.Context, env Environment, deviceToken string, p Promotion, now time.Time) error
+}
+
+type Promotion struct {
+	CampaignID uuid.UUID
+	Title      string
+	Body       string
+	// URL is opened on tap when set.
+	URL string
 }
 
 var _ Pusher = Client{}
@@ -56,7 +67,7 @@ type Config struct {
 	PrivateKey    *ecdsa.PrivateKey
 }
 
-// Client sends background pushes over APNs with token-based authentication.
+// Client sends pushes over APNs with token-based authentication.
 type Client struct {
 	cfg   Config
 	http  *http.Client
@@ -70,8 +81,38 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 var background = []byte(`{"aps":{"content-available":1}}`)
 
 func (c Client) Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error {
+	return c.send(ctx, env, deviceToken, "background", background, now)
+}
+
+func (c Client) Promote(ctx context.Context, env Environment, deviceToken string, p Promotion, now time.Time) error {
+	payload := map[string]any{
+		"aps": map[string]any{
+			"alert":              map[string]string{"title": p.Title, "body": p.Body},
+			"interruption-level": "passive",
+			"thread-id":          "campaign",
+		},
+		"campaign_id": p.CampaignID.String(),
+	}
+	if p.URL != "" {
+		payload["url"] = p.URL
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("encode promotion: %w", err)
+	}
+	return c.send(ctx, env, deviceToken, "alert", body, now)
+}
+
+func (c Client) send(
+	ctx context.Context,
+	env Environment,
+	deviceToken string,
+	pushType string,
+	body []byte,
+	now time.Time,
+) error {
 	if c.cfg.PrivateKey == nil {
-		logger.Debug(ctx, "apns is not configured; dropping push", "token", deviceToken)
+		logger.Debug(ctx, "apns is not configured; dropping push", "token", deviceToken, "push_type", pushType)
 		return nil
 	}
 	var baseURL string
@@ -89,13 +130,13 @@ func (c Client) Wake(ctx context.Context, env Environment, deviceToken string, n
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		baseURL+"/3/device/"+deviceToken, bytes.NewReader(background))
+		baseURL+"/3/device/"+deviceToken, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("new request: %w", err)
 	}
 	req.Header.Set("Authorization", "bearer "+bearer)
 	req.Header.Set("Apns-Topic", c.cfg.Topic)
-	req.Header.Set("Apns-Push-Type", "background")
+	req.Header.Set("Apns-Push-Type", pushType)
 	req.Header.Set("Apns-Priority", "5")
 	req.Header.Set("Content-Type", "application/json")
 
@@ -111,8 +152,8 @@ func (c Client) Wake(ctx context.Context, env Environment, deviceToken string, n
 	var apiErr struct {
 		Reason string `json:"reason"`
 	}
-	body, _ := io.ReadAll(io.LimitReader(res.Body, maxResponseBytes))
-	_ = json.Unmarshal(body, &apiErr)
+	raw, _ := io.ReadAll(io.LimitReader(res.Body, maxResponseBytes))
+	_ = json.Unmarshal(raw, &apiErr)
 	if res.StatusCode == http.StatusGone || apiErr.Reason == "BadDeviceToken" {
 		return fmt.Errorf("%w: %s", ErrUnregistered, apiErr.Reason)
 	}
