@@ -15,6 +15,7 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.geofence.GeofenceSync
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
+import com.locatedo.locatedo.core.notifications.CampaignNotifier
 import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.push.PushMessages
 import com.locatedo.locatedo.core.sharing.HouseholdManager
@@ -33,6 +34,8 @@ class LocateDoApplication : Application() {
     @Inject lateinit var categories: CategoryRepository
 
     @Inject lateinit var notifier: ArrivalNotifier
+
+    @Inject lateinit var campaignNotifier: CampaignNotifier
 
     @Inject lateinit var geofenceSync: GeofenceSync
 
@@ -63,6 +66,7 @@ class LocateDoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         notifier.prepare()
+        campaignNotifier.prepare()
         applicationScope.launch {
             preferences.recordFirstLaunch(clock.instant())
             categories.ensureBuiltins()

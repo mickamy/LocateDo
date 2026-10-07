@@ -27,18 +27,21 @@ enum class AnalyticsEvent(val key: String) {
     PROMOTIONS_PROMPT_SHOWN("promotions_prompt_shown"),
     PROMOTIONS_PROMPT_ANSWERED("promotions_prompt_answered"),
     PROMOTIONS_CONSENT_CHANGED("promotions_consent_changed"),
+    CAMPAIGN_OPENED("campaign_opened"),
 }
 
 enum class AnalyticsParameter(val key: String) {
     AGE_DAYS("age_days"),
     AGE_HOURS("age_hours"),
     ASSIGNED("assigned"),
+    CAMPAIGN_ID("campaign_id"),
     CATEGORY("category"),
     COMPLETED_TODO_COUNT_7D("completed_todo_count_7d"),
     CUSTOM_CATEGORY_COUNT("custom_category_count"),
     DAYS_SINCE_INSTALL("days_since_install"),
     DURATION_S("duration_s"),
     FROM("from"),
+    HAS_URL("has_url"),
     HOUSEHOLD_MEMBERS("household_members"),
     KIND("kind"),
     LATENCY_S("latency_s"),

@@ -1,18 +1,23 @@
 package com.locatedo.locatedo
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
+import com.locatedo.locatedo.core.notifications.CampaignHandler
+import com.locatedo.locatedo.core.notifications.CampaignNotification
 import com.locatedo.locatedo.core.sharing.InviteLink
 import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.ui.LocateDoApp
@@ -36,11 +41,14 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var appStatus: AppStatusStore
 
+    @Inject lateinit var campaignHandler: CampaignHandler
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         openRequestedPlace(intent)
         openInviteLink(intent)
+        openCampaign(intent)
         setContent {
             val status by appStatus.state.collectAsStateWithLifecycle()
             CompositionLocalProvider(LocalAnalytics provides analytics, LocalAppStatus provides status) {
@@ -55,6 +63,26 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         openRequestedPlace(intent)
         openInviteLink(intent)
+        openCampaign(intent)
+    }
+
+    // A promotional push; its link, if any, opens in the browser over the app.
+    private fun openCampaign(intent: Intent?) {
+        val campaignId = intent?.getStringExtra(EXTRA_CAMPAIGN_ID) ?: return
+        val url = CampaignNotification.httpsUrl(intent.getStringExtra(EXTRA_CAMPAIGN_URL))
+        val sentAt = intent.getLongExtra(EXTRA_SENT_AT, -1).takeIf { it > 0 }?.let(Instant::ofEpochMilli)
+        intent.removeExtra(EXTRA_CAMPAIGN_ID)
+        intent.removeExtra(EXTRA_CAMPAIGN_URL)
+        intent.removeExtra(EXTRA_SENT_AT)
+        campaignHandler.opened(campaignId, hasUrl = url != null, sentAt = sentAt)
+        if (url == null) {
+            return
+        }
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        } catch (e: ActivityNotFoundException) {
+            Log.w(TAG, "No browser for the campaign link", e)
+        }
     }
 
     // An invite link through App Links; the data is cleared so a recreated activity does not offer it twice.
@@ -79,11 +107,24 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val EXTRA_PLACE_ID = "placeId"
         private const val EXTRA_NOTIFIED_AT = "notifiedAt"
+        private const val EXTRA_CAMPAIGN_ID = "campaignId"
+        private const val EXTRA_CAMPAIGN_URL = "campaignUrl"
+        private const val EXTRA_SENT_AT = "sentAt"
+        private const val TAG = "LocateDo"
 
         fun placeIntent(context: Context, placeId: UUID, notifiedAt: Instant): Intent =
             Intent(context, MainActivity::class.java)
                 .putExtra(EXTRA_PLACE_ID, placeId.toString())
                 .putExtra(EXTRA_NOTIFIED_AT, notifiedAt.toEpochMilli())
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
+        fun campaignIntent(context: Context, campaign: CampaignNotification, sentAt: Instant): Intent {
+            val intent = Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_CAMPAIGN_ID, campaign.id)
+                .putExtra(EXTRA_SENT_AT, sentAt.toEpochMilli())
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            campaign.url?.let { intent.putExtra(EXTRA_CAMPAIGN_URL, it) }
+            return intent
+        }
     }
 }
