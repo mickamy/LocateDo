@@ -39,6 +39,7 @@ METRICS = {
     "signed_in": "STANDARD",
     "precise_location": "STANDARD",
     "promotions_consent": "STANDARD",
+    "count": "STANDARD",
     "radius_m": "METERS",
     "age_hours": "HOURS",
     "duration_s": "SECONDS",

@@ -48,6 +48,7 @@ SELECT
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'precise_location') AS precise_location,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'promotions_consent') AS promotions_consent,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'has_url') AS has_url,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'count') AS count,
   -- Sent by RevenueCat's Firebase integration on its rc_* events.
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'product_id') AS product_id,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'currency') AS currency,
