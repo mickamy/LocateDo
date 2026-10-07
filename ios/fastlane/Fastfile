@@ -301,11 +301,12 @@ platform :ios do
     compose_screenshots
   end
 
-  # Headlines for the App Store images, by screenshot name.
+  # Headlines for the App Store images, by screenshot name. Break long ones by hand with \n; compose.swift
+  # refuses to wrap on its own.
   SCREENSHOT_HEADLINES = {
     "en-US" => {
-      "01-Arrival" => "Reminded the moment you arrive",
-      "02-Nearby" => "See what's waiting nearby",
+      "01-Arrival" => "Reminded the moment\nyou arrive",
+      "02-Nearby" => "See what's waiting\nnearby",
       "03-Place" => "A list for every store",
       "04-Map" => "Your places on one map",
       "05-Todos" => "Every to-do in one place",
@@ -315,7 +316,7 @@ platform :ios do
       "02-Nearby" => "近くの用事がひと目で",
       "03-Place" => "お店ごとの買い物リスト",
       "04-Map" => "場所はマップでも",
-      "05-Todos" => "やることをまとめてチェック",
+      "05-Todos" => "やることを\nまとめてチェック",
     },
   }.freeze
 

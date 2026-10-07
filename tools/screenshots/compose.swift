@@ -37,7 +37,12 @@ func headline(_ text: String, language: String, fontSize: CGFloat, width: CGFloa
     let constraint = CGSize(width: width, height: .greatestFiniteMagnitude)
     let size = CTFramesetterSuggestFrameSizeWithConstraints(setter, CFRange(location: 0, length: 0), nil, constraint, nil)
     let path = CGPath(rect: CGRect(origin: .zero, size: CGSize(width: width, height: ceil(size.height))), transform: nil)
-    return (CTFramesetterCreateFrame(setter, CFRange(location: 0, length: 0), path, nil), size)
+    let frame = CTFramesetterCreateFrame(setter, CFRange(location: 0, length: 0), path, nil)
+    let lines = CFArrayGetCount(CTFrameGetLines(frame))
+    if lines != text.split(separator: "\n").count {
+        fatalError("\"\(text)\" does not fit; break it by hand with \\n")
+    }
+    return (frame, size)
 }
 
 let arguments = Array(CommandLine.arguments.dropFirst())
