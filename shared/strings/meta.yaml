@@ -57,3 +57,12 @@ paywall.android_renewal_note:
   platforms: [android]
 update.android_open_play:
   platforms: [android]
+place.detail.check_off_tip_title:
+  platforms: [ios]
+place.detail.check_off_tip_message:
+  platforms: [ios]
+notification.press_and_hold_hint:
+  platforms: [ios]
+notification.check_off:
+  comment: "Button under the checklist shown when the arrival notification is pressed and held; count is how many to-dos are checked."
+  platforms: [ios]

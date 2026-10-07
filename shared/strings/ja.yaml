@@ -193,6 +193,8 @@ place:
     delete: "この場所を削除"
     delete_confirm_title: "「{name}」を削除しますか？"
     delete_confirm_message: "この場所のやることも削除されます。"
+    check_off_tip_title: "通知から完了できます"
+    check_off_tip_message: "次からは、到着のお知らせを長押しすると、アプリを開かずに完了できます。"
 todo:
   completed_by: "{name}が完了"
   editor:
@@ -223,6 +225,10 @@ notification:
   more:
     plural:
       other: "他 {count} 件"
+  press_and_hold_hint: "長押しで、そのまま完了できます"
+  check_off:
+    plural:
+      other: "{count} 件を完了"
 category:
   shopping: "買い物"
   work: "仕事"

@@ -1126,6 +1126,42 @@
         }
       }
     },
+    "notification.check_off" : {
+      "comment" : "Button under the checklist shown when the arrival notification is pressed and held; count is how many to-dos are checked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Check off %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Check off %lld"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 件を完了"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "notification.more" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1157,6 +1193,23 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "notification.press_and_hold_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press and hold to check things off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長押しで、そのまま完了できます"
           }
         }
       }
@@ -1718,6 +1771,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "やることを追加"
+          }
+        }
+      }
+    },
+    "place.detail.check_off_tip_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next time, press and hold the arrival notification to check things off without opening the app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次からは、到着のお知らせを長押しすると、アプリを開かずに完了できます。"
+          }
+        }
+      }
+    },
+    "place.detail.check_off_tip_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check things off from the notification"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知から完了できます"
           }
         }
       }

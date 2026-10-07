@@ -196,6 +196,8 @@ place:
     delete: "Delete place"
     delete_confirm_title: "Delete “{name}”?"
     delete_confirm_message: "Its to-dos will be deleted too."
+    check_off_tip_title: "Check things off from the notification"
+    check_off_tip_message: "Next time, press and hold the arrival notification to check things off without opening the app."
 todo:
   completed_by: "Checked off by {name}"
   editor:
@@ -227,6 +229,11 @@ notification:
     plural:
       one: "+{count:int} more"
       other: "+{count:int} more"
+  press_and_hold_hint: "Press and hold to check things off"
+  check_off:
+    plural:
+      one: "Check off {count:int}"
+      other: "Check off {count:int}"
 category:
   shopping: "Shopping"
   work: "Work"
