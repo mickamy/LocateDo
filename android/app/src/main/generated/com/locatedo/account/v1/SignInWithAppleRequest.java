@@ -217,6 +217,49 @@ public  final class SignInWithAppleRequest extends
 
   }
 
+  public static final int CLIENT_FIELD_NUMBER = 5;
+  private int client_;
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   * @return The enum numeric value on the wire for client.
+   */
+  @java.lang.Override
+  public int getClientValue() {
+    return client_;
+  }
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   * @return The client.
+   */
+  @java.lang.Override
+  public com.locatedo.account.v1.AppleClient getClient() {
+    com.locatedo.account.v1.AppleClient result = com.locatedo.account.v1.AppleClient.forNumber(client_);
+    return result == null ? com.locatedo.account.v1.AppleClient.UNRECOGNIZED : result;
+  }
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   * @param value The enum numeric value on the wire for client to set.
+   */
+  private void setClientValue(int value) {
+      client_ = value;
+  }
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   * @param value The client to set.
+   * @throws IllegalArgumentException if UNRECOGNIZED is provided.
+   */
+  private void setClient(com.locatedo.account.v1.AppleClient value) {
+    client_ = value.getNumber();
+
+  }
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   */
+  private void clearClient() {
+
+    client_ = 0;
+  }
+
   public static com.locatedo.account.v1.SignInWithAppleRequest parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -518,6 +561,53 @@ public  final class SignInWithAppleRequest extends
       return this;
     }
 
+    /**
+     * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+     * @return The enum numeric value on the wire for client.
+     */
+    @java.lang.Override
+    public int getClientValue() {
+      return instance.getClientValue();
+    }
+    /**
+     * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+     * @param value The client to set.
+     * @throws IllegalArgumentException if UNRECOGNIZED is provided.
+     * @return This builder for chaining.
+     */
+    public Builder setClientValue(int value) {
+      copyOnWrite();
+      instance.setClientValue(value);
+      return this;
+    }
+    /**
+     * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+     * @return The client.
+     */
+    @java.lang.Override
+    public com.locatedo.account.v1.AppleClient getClient() {
+      return instance.getClient();
+    }
+    /**
+     * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+     * @param value The enum numeric value on the wire for client to set.
+     * @return This builder for chaining.
+     */
+    public Builder setClient(com.locatedo.account.v1.AppleClient value) {
+      copyOnWrite();
+      instance.setClient(value);
+      return this;
+    }
+    /**
+     * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearClient() {
+      copyOnWrite();
+      instance.clearClient();
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.account.v1.SignInWithAppleRequest)
   }
   @java.lang.Override
@@ -539,10 +629,11 @@ public  final class SignInWithAppleRequest extends
             "displayName_",
             "authorizationCode_",
             "nonce_",
+            "client_",
           };
           java.lang.String info =
-              "\u0000\u0004\u0000\u0001\u0001\u0004\u0004\u0000\u0000\u0000\u0001\u0208\u0002\u1208" +
-              "\u0000\u0003\u0208\u0004\u0208";
+              "\u0000\u0005\u0000\u0001\u0001\u0005\u0005\u0000\u0000\u0000\u0001\u0208\u0002\u1208" +
+              "\u0000\u0003\u0208\u0004\u0208\u0005\f";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {

@@ -34,7 +34,7 @@ func (h RevokeAppleToken) Handle(ctx context.Context, m outbox.Message) error {
 	if err != nil {
 		return fmt.Errorf("open apple token: %w", err)
 	}
-	if err := h.apple.Revoke(ctx, string(refreshToken), clock.Now(ctx)); err != nil {
+	if err := h.apple.Revoke(ctx, r.Client, string(refreshToken), clock.Now(ctx)); err != nil {
 		return fmt.Errorf("revoke apple token: %w", err)
 	}
 	logger.Info(ctx, "revoked apple token", "user_id", r.UserID)

@@ -31,6 +31,14 @@ message Session {
   bool new_user = 5;
 }
 
+// The client Apple issued the identity token and authorization code to.
+enum AppleClient {
+  // The app's Bundle ID, as the iOS app signs in.
+  APPLE_CLIENT_UNSPECIFIED = 0;
+  // The Services ID, as the Android app signs in through Apple's web sign-in.
+  APPLE_CLIENT_SERVICES = 1;
+}
+
 message SignInWithAppleRequest {
   string identity_token = 1 [(buf.validate.field).string.min_len = 1];
   optional string display_name = 2 [(buf.validate.field).string.max_len = 100];
@@ -39,6 +47,7 @@ message SignInWithAppleRequest {
     min_len: 16
     max_len: 128
   }];
+  AppleClient client = 5 [(buf.validate.field).enum.defined_only = true];
 }
 
 message SignInWithAppleResponse {

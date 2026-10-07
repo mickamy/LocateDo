@@ -34,6 +34,7 @@ CREATE TABLE apple_tokens
 (
     user_id                  uuid PRIMARY KEY     REFERENCES users (id) ON DELETE CASCADE,
     refresh_token_ciphertext bytea       NOT NULL,
+    client                   text        NOT NULL CHECK (client IN ('app', 'services')),
     updated_at               timestamptz NOT NULL DEFAULT now()
 );
 

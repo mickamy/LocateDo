@@ -103,16 +103,21 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (int64, error) {
 }
 
 const getAppleToken = `-- name: GetAppleToken :one
-SELECT refresh_token_ciphertext
+SELECT refresh_token_ciphertext, client
 FROM apple_tokens
 WHERE user_id = $1
 `
 
-func (q *Queries) GetAppleToken(ctx context.Context, userID uuid.UUID) ([]byte, error) {
+type GetAppleTokenRow struct {
+	RefreshTokenCiphertext []byte
+	Client                 string
+}
+
+func (q *Queries) GetAppleToken(ctx context.Context, userID uuid.UUID) (GetAppleTokenRow, error) {
 	row := q.db.QueryRow(ctx, getAppleToken, userID)
-	var refresh_token_ciphertext []byte
-	err := row.Scan(&refresh_token_ciphertext)
-	return refresh_token_ciphertext, err
+	var i GetAppleTokenRow
+	err := row.Scan(&i.RefreshTokenCiphertext, &i.Client)
+	return i, err
 }
 
 const getRefreshTokenByHash = `-- name: GetRefreshTokenByHash :one
@@ -163,20 +168,22 @@ func (q *Queries) GetUserByIdentity(ctx context.Context, arg GetUserByIdentityPa
 }
 
 const upsertAppleToken = `-- name: UpsertAppleToken :exec
-INSERT INTO apple_tokens (user_id, refresh_token_ciphertext)
-VALUES ($1, $2)
+INSERT INTO apple_tokens (user_id, refresh_token_ciphertext, client)
+VALUES ($1, $2, $3)
 ON CONFLICT (user_id) DO UPDATE
     SET refresh_token_ciphertext = excluded.refresh_token_ciphertext,
+        client                   = excluded.client,
         updated_at               = now()
 `
 
 type UpsertAppleTokenParams struct {
 	UserID                 uuid.UUID
 	RefreshTokenCiphertext []byte
+	Client                 string
 }
 
 func (q *Queries) UpsertAppleToken(ctx context.Context, arg UpsertAppleTokenParams) error {
-	_, err := q.db.Exec(ctx, upsertAppleToken, arg.UserID, arg.RefreshTokenCiphertext)
+	_, err := q.db.Exec(ctx, upsertAppleToken, arg.UserID, arg.RefreshTokenCiphertext, arg.Client)
 	return err
 }
 

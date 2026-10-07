@@ -46,13 +46,14 @@ FROM refresh_tokens
 WHERE expires_at < $1;
 
 -- name: UpsertAppleToken :exec
-INSERT INTO apple_tokens (user_id, refresh_token_ciphertext)
-VALUES ($1, $2)
+INSERT INTO apple_tokens (user_id, refresh_token_ciphertext, client)
+VALUES ($1, $2, $3)
 ON CONFLICT (user_id) DO UPDATE
     SET refresh_token_ciphertext = excluded.refresh_token_ciphertext,
+        client                   = excluded.client,
         updated_at               = now();
 
 -- name: GetAppleToken :one
-SELECT refresh_token_ciphertext
+SELECT refresh_token_ciphertext, client
 FROM apple_tokens
 WHERE user_id = $1;

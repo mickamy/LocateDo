@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
+	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
+	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/infra/storage/tx"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -19,19 +21,21 @@ func TestAppleToken_saveAndFind(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	u := createUser(t, d, repository.NewUser(d.Reader), "apple-sub")
-	apple := repository.NewAppleToken(d.Reader)
+	tokens := repository.NewAppleToken(d.Reader)
+	second := model.AppleToken{Sealed: []byte("sealed-2"), Client: apple.ClientServices}
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, []byte("sealed-1")))
-		require.NoError(t, apple.Bind(tx).Save(t.Context(), u.ID, []byte("sealed-2")))
+		first := model.AppleToken{Sealed: []byte("sealed-1"), Client: apple.ClientApp}
+		require.NoError(t, tokens.Bind(tx).Save(t.Context(), u.ID, first))
+		require.NoError(t, tokens.Bind(tx).Save(t.Context(), u.ID, second))
 	})
 
 	// assert
-	got, err := apple.Find(t.Context(), u.ID)
+	got, err := tokens.Find(t.Context(), u.ID)
 	require.NoError(t, err)
-	assert.Equal(t, []byte("sealed-2"), got)
+	assert.Equal(t, second, got)
 
-	_, err = apple.Find(t.Context(), uuid.NewV7())
+	_, err = tokens.Find(t.Context(), uuid.NewV7())
 	require.ErrorIs(t, err, aerrors.ErrNotFound)
 }

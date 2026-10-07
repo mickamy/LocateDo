@@ -34,6 +34,7 @@ func TestRevokeAppleToken_deliversThroughTheConsumer(t *testing.T) {
 	payload, err := json.Marshal(model.AppleRevocation{
 		UserID:      userID,
 		SealedToken: lib.Box.Seal([]byte("apple-refresh:abc"), userID[:]),
+		Client:      apple.ClientServices,
 	})
 	require.NoError(t, err)
 	messages := outbox.NewRepository(d.Reader)
@@ -52,7 +53,7 @@ func TestRevokeAppleToken_deliversThroughTheConsumer(t *testing.T) {
 	// assert
 	require.NoError(t, err)
 	assert.True(t, delivered)
-	assert.Equal(t, []string{"apple-refresh:abc"}, fake.revoked)
+	assert.Equal(t, []revocation{{kind: apple.ClientServices, token: "apple-refresh:abc"}}, fake.revoked)
 }
 
 func TestRevokeAppleToken_Handle_rejectsAGarbledPayload(t *testing.T) {
@@ -71,25 +72,28 @@ func TestRevokeAppleToken_Handle_rejectsAGarbledPayload(t *testing.T) {
 	require.Error(t, err)
 }
 
+type revocation struct {
+	kind  apple.ClientKind
+	token string
+}
+
 type fakeApple struct {
-	revoked []string
+	revoked []revocation
 }
 
 var _ apple.Auth = (*fakeApple)(nil)
 
-func (*fakeApple) VerifyIdentityToken(context.Context, string, string, time.Time) (apple.Identity, error) {
+func (*fakeApple) VerifyIdentityToken(
+	context.Context, apple.ClientKind, string, string, time.Time,
+) (apple.Identity, error) {
 	return apple.Identity{}, errors.New("not used")
 }
 
-func (*fakeApple) VerifyWebIdentityToken(context.Context, string, string, time.Time) (apple.Identity, error) {
-	return apple.Identity{}, errors.New("not used")
-}
-
-func (*fakeApple) ExchangeCode(context.Context, string, time.Time) (string, error) {
+func (*fakeApple) ExchangeCode(context.Context, apple.ClientKind, string, time.Time) (string, error) {
 	return "", errors.New("not used")
 }
 
-func (f *fakeApple) Revoke(_ context.Context, refreshToken string, _ time.Time) error {
-	f.revoked = append(f.revoked, refreshToken)
+func (f *fakeApple) Revoke(_ context.Context, kind apple.ClientKind, refreshToken string, _ time.Time) error {
+	f.revoked = append(f.revoked, revocation{kind: kind, token: refreshToken})
 	return nil
 }

@@ -62,4 +62,15 @@ public interface SignInWithAppleRequestOrBuilder extends
    */
   com.google.protobuf.ByteString
       getNonceBytes();
+
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   * @return The enum numeric value on the wire for client.
+   */
+  int getClientValue();
+  /**
+   * <code>.locatedo.account.v1.AppleClient client = 5 [json_name = "client", (.buf.validate.field) = { ... }</code>
+   * @return The client.
+   */
+  com.locatedo.account.v1.AppleClient getClient();
 }

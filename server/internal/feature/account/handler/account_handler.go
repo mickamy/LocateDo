@@ -13,6 +13,7 @@ import (
 	dmapper "github.com/mickamy/LocateDo/internal/feature/device/mapper"
 	accountv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/account/v1/accountv1connect"
+	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/lib/caller"
 	"github.com/mickamy/LocateDo/internal/lib/ptr"
 )
@@ -43,6 +44,7 @@ func (h *Account) SignInWithApple(
 		AuthorizationCode: req.Msg.GetAuthorizationCode(),
 		Nonce:             req.Msg.GetNonce(),
 		DisplayName:       req.Msg.GetDisplayName(),
+		Client:            appleClient(req.Msg.GetClient()),
 	})
 	if err != nil {
 		return nil, cerrors.Map(err)
@@ -155,4 +157,11 @@ func (h *Account) SyncEntitlement(
 		return nil, cerrors.Map(err)
 	}
 	return connect.NewResponse(&accountv1.SyncEntitlementResponse{}), nil
+}
+
+func appleClient(c accountv1.AppleClient) apple.ClientKind {
+	if c == accountv1.AppleClient_APPLE_CLIENT_SERVICES {
+		return apple.ClientServices
+	}
+	return apple.ClientApp
 }
