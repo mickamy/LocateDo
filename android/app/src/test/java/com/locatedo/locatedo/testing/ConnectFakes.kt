@@ -52,6 +52,7 @@ import com.locatedo.locatedo.core.auth.SessionStore
 import com.locatedo.locatedo.core.data.fixedClock
 import com.locatedo.locatedo.core.data.fixedNow
 import com.locatedo.locatedo.core.datastore.AppPreferences
+import com.locatedo.locatedo.core.push.CompletionNotices
 import com.locatedo.locatedo.core.push.DeviceRegistration
 import com.locatedo.locatedo.core.push.DisplayLanguage
 import com.locatedo.locatedo.core.push.InstallationIdSource
@@ -327,4 +328,15 @@ fun testPromotionsConsent(
 ): PromotionsConsent {
     val registration = DeviceRegistration(devices, fakeAuthenticator(), FakeInstallationIdSource("installation-1"), preferences, FakeDisplayLanguage())
     return PromotionsConsent(preferences, registration, analytics, scope)
+}
+
+fun testCompletionNotices(preferences: AppPreferences, scope: CoroutineScope): CompletionNotices {
+    val registration = DeviceRegistration(
+        FakeDeviceService(),
+        fakeAuthenticator(),
+        FakeInstallationIdSource("installation-1"),
+        preferences,
+        FakeDisplayLanguage(),
+    )
+    return CompletionNotices(preferences, registration, FakeAnalytics(), scope)
 }
