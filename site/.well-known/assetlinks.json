@@ -8,5 +8,28 @@
         "C4:6E:29:E9:78:42:B6:5C:86:F9:B7:D8:2C:1E:61:03:1A:69:1E:22:FC:E1:78:DA:24:68:FA:E9:A6:B5:F0:8E"
       ]
     }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.locatedo.locatedo.stg",
+      "sha256_cert_fingerprints": [
+        "29:E2:A5:5E:AA:3D:4C:58:56:9F:EA:8F:B4:FF:3D:5E:EF:1C:7F:10:DA:79:19:FA:67:A7:64:5E:FF:BE:D2:FF"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.locatedo.locatedo",
+      "sha256_cert_fingerprints": [
+        "F3:AF:F3:61:F1:25:CE:38:EC:E0:ED:40:04:54:09:DF:25:83:36:EE:DF:3E:E2:EA:CE:B8:A9:48:7F:B5:32:0E",
+        "DF:80:C6:1F:D2:CA:FB:52:DA:AA:8F:F1:A7:51:19:E4:C2:B2:EB:EF:EF:EB:77:72:3D:16:10:C2:49:C3:CB:CE",
+        "0D:68:48:3E:51:17:1B:37:FB:EF:3D:1D:90:27:2F:F3:35:AA:B4:F0:73:88:5C:BF:55:54:4E:1B:01:56:29:1E",
+        "B1:EF:8F:5F:C3:19:93:4F:C8:61:A7:C9:EF:48:35:0A:27:95:6D:71:82:AF:67:3D:CE:C0:15:51:19:7A:1E:17"
+      ]
+    }
   }
 ]
