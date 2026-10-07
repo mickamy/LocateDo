@@ -34,9 +34,14 @@ const (
 	maxResponseBytes = 1 << 16
 )
 
+// ErrNotDelivered means the message surely did not reach FCM: it failed
+// before being sent, or FCM answered with an error. Other errors leave it
+// unknown.
+var ErrNotDelivered = errors.New("fcm: message not delivered")
+
 // ErrUnregistered means the installation is no longer registered with FCM;
 // the caller should forget it.
-var ErrUnregistered = errors.New("fcm: installation is no longer registered")
+var ErrUnregistered = fmt.Errorf("%w: installation is no longer registered", ErrNotDelivered)
 
 type Pusher interface {
 	// Wake sends the installation a data message that lets the app pull in
@@ -146,7 +151,7 @@ func (c Client) send(ctx context.Context, installationID string, data map[string
 	}
 	bearer, err := c.token.get(ctx, c, now)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrNotDelivered, err)
 	}
 
 	body, err := json.Marshal(map[string]any{
@@ -157,12 +162,12 @@ func (c Client) send(ctx context.Context, installationID string, data map[string
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("encode message: %w", err)
+		return fmt.Errorf("%w: encode message: %w", ErrNotDelivered, err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
 		c.cfg.BaseURL+"/v1/projects/"+account.ProjectID+"/messages:send", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("new request: %w", err)
+		return fmt.Errorf("%w: new request: %w", ErrNotDelivered, err)
 	}
 	req.Header.Set("Authorization", "Bearer "+bearer)
 	req.Header.Set("Content-Type", "application/json")
@@ -195,7 +200,7 @@ func (c Client) send(ctx context.Context, installationID string, data map[string
 	if res.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("%w: %s", ErrUnregistered, apiErr.Error.Message)
 	}
-	return fmt.Errorf("status %d: %s", res.StatusCode, apiErr.Error.Message)
+	return fmt.Errorf("%w: status %d: %s", ErrNotDelivered, res.StatusCode, apiErr.Error.Message)
 }
 
 type accessToken struct {

@@ -181,7 +181,25 @@ func TestClient_Wake_otherFailure(t *testing.T) {
 	// assert
 	require.Error(t, err)
 	require.NotErrorIs(t, err, fcm.ErrUnregistered)
+	require.ErrorIs(t, err, fcm.ErrNotDelivered, "FCM answered, so the message surely did not go out")
 	assert.ErrorContains(t, err, "503")
+}
+
+func TestClient_Wake_connectionLostLeavesTheOutcomeUnknown(t *testing.T) {
+	t.Parallel()
+
+	// arrange: the access token is cached, then the server goes away
+	fake := newFakeFCM(t)
+	client := fake.client(t)
+	require.NoError(t, client.Wake(t.Context(), "installation-1", now))
+	fake.srv.Close()
+
+	// act
+	err := client.Wake(t.Context(), "installation-1", now)
+
+	// assert
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, fcm.ErrNotDelivered)
 }
 
 func TestClient_Wake_notConfigured(t *testing.T) {

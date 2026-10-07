@@ -30,7 +30,7 @@ const (
 var now = time.Date(2026, 10, 4, 12, 0, 0, 0, time.UTC)
 
 type request struct {
-	path, authorization, topic, pushType, priority, body string
+	path, authorization, topic, pushType, priority, collapseID, body string
 }
 
 type fakeAPNs struct {
@@ -58,6 +58,7 @@ func newFakeAPNs(t *testing.T) *fakeAPNs {
 			topic:         r.Header.Get("Apns-Topic"),
 			pushType:      r.Header.Get("Apns-Push-Type"),
 			priority:      r.Header.Get("Apns-Priority"),
+			collapseID:    r.Header.Get("Apns-Collapse-Id"),
 			body:          string(body),
 		})
 		f.mu.Unlock()
@@ -93,6 +94,7 @@ func TestClient_Wake(t *testing.T) {
 	assert.Equal(t, topic, r.topic)
 	assert.Equal(t, "background", r.pushType)
 	assert.Equal(t, "5", r.priority)
+	assert.Empty(t, r.collapseID)
 	assert.JSONEq(t, `{"aps":{"content-available":1}}`, r.body)
 
 	raw, ok := cutBearer(r.authorization)
@@ -145,6 +147,7 @@ func TestClient_Promote(t *testing.T) {
 			assert.Equal(t, topic, r.topic)
 			assert.Equal(t, "alert", r.pushType)
 			assert.Equal(t, "5", r.priority)
+			assert.Equal(t, campaignID.String(), r.collapseID, "a repeated push replaces the shown one")
 			assert.JSONEq(t, tt.want, r.body)
 		})
 	}
@@ -247,9 +250,26 @@ func TestClient_Wake_errors(t *testing.T) {
 			// assert
 			require.Error(t, err)
 			assert.Equal(t, tt.unregistered, errorIsUnregistered(err))
+			require.ErrorIs(t, err, apns.ErrNotDelivered, "APNs answered, so the push surely did not go out")
 			assert.Contains(t, err.Error(), tt.reason)
 		})
 	}
+}
+
+func TestClient_Wake_connectionLostLeavesTheOutcomeUnknown(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	f := newFakeAPNs(t)
+	c := f.client(f.key)
+	f.srv.Close()
+
+	// act
+	err := c.Wake(t.Context(), apns.Production, "abc123", now)
+
+	// assert
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, apns.ErrNotDelivered)
 }
 
 func TestClient_Wake_notConfigured(t *testing.T) {

@@ -28,9 +28,13 @@ const (
 	maxResponseBytes = 1 << 16
 )
 
+// ErrNotDelivered means the push surely did not reach APNs: it failed before
+// being sent, or APNs answered with an error. Other errors leave it unknown.
+var ErrNotDelivered = errors.New("apns: push not delivered")
+
 // ErrUnregistered means the device token is no longer valid for this app;
 // the caller should forget it.
-var ErrUnregistered = errors.New("apns: device token is no longer valid")
+var ErrUnregistered = fmt.Errorf("%w: device token is no longer valid", ErrNotDelivered)
 
 // Environment is the APNs environment a device token was issued for: Xcode
 // builds get sandbox tokens, TestFlight and App Store builds production ones.
@@ -81,7 +85,7 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 var background = []byte(`{"aps":{"content-available":1}}`)
 
 func (c Client) Wake(ctx context.Context, env Environment, deviceToken string, now time.Time) error {
-	return c.send(ctx, env, deviceToken, "background", background, now)
+	return c.send(ctx, env, deviceToken, "background", "", background, now)
 }
 
 func (c Client) Promote(ctx context.Context, env Environment, deviceToken string, p Promotion, now time.Time) error {
@@ -98,9 +102,9 @@ func (c Client) Promote(ctx context.Context, env Environment, deviceToken string
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("encode promotion: %w", err)
+		return fmt.Errorf("%w: encode promotion: %w", ErrNotDelivered, err)
 	}
-	return c.send(ctx, env, deviceToken, "alert", body, now)
+	return c.send(ctx, env, deviceToken, "alert", p.CampaignID.String(), body, now)
 }
 
 func (c Client) send(
@@ -108,6 +112,7 @@ func (c Client) send(
 	env Environment,
 	deviceToken string,
 	pushType string,
+	collapseID string,
 	body []byte,
 	now time.Time,
 ) error {
@@ -122,22 +127,25 @@ func (c Client) send(
 	case Production:
 		baseURL = c.cfg.ProductionURL
 	default:
-		return fmt.Errorf("unknown APNs environment %q", env)
+		return fmt.Errorf("%w: unknown APNs environment %q", ErrNotDelivered, env)
 	}
 	bearer, err := c.token.get(c.cfg, now)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrNotDelivered, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
 		baseURL+"/3/device/"+deviceToken, bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("new request: %w", err)
+		return fmt.Errorf("%w: new request: %w", ErrNotDelivered, err)
 	}
 	req.Header.Set("Authorization", "bearer "+bearer)
 	req.Header.Set("Apns-Topic", c.cfg.Topic)
 	req.Header.Set("Apns-Push-Type", pushType)
 	req.Header.Set("Apns-Priority", "5")
+	if collapseID != "" {
+		req.Header.Set("Apns-Collapse-Id", collapseID)
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := c.http.Do(req)
@@ -157,7 +165,7 @@ func (c Client) send(
 	if res.StatusCode == http.StatusGone || apiErr.Reason == "BadDeviceToken" {
 		return fmt.Errorf("%w: %s", ErrUnregistered, apiErr.Reason)
 	}
-	return fmt.Errorf("status %d: %s", res.StatusCode, apiErr.Reason)
+	return fmt.Errorf("%w: status %d: %s", ErrNotDelivered, res.StatusCode, apiErr.Reason)
 }
 
 type providerToken struct {
