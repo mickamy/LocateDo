@@ -12,6 +12,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/account/model"
 	"github.com/mickamy/LocateDo/internal/feature/account/repository"
 	"github.com/mickamy/LocateDo/internal/feature/account/usecase"
+	hmodel "github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/infra/apple"
 	"github.com/mickamy/LocateDo/internal/outbox"
 	"github.com/mickamy/LocateDo/test/tdb"
@@ -73,6 +74,56 @@ func TestDeleteAccount_revokesWithTheServicesID(t *testing.T) {
 	var revocation model.AppleRevocation
 	require.NoError(t, json.Unmarshal(payload, &revocation))
 	assert.Equal(t, apple.ClientServices, revocation.Client)
+}
+
+func TestDeleteAccount_ownerWithTheirOwnTodos(t *testing.T) {
+	t.Parallel()
+
+	// arrange: the owner added a to-do, completed it, and took it on
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	todoID := d.Seeder.CompletedTodo(t, h.ID, d.Seeder.Place(t, h.ID))
+	_, err := d.Writer.Exec(t.Context(), "UPDATE todos SET creator_id = $1, assignee_id = $1 WHERE id = $2",
+		h.OwnerID, todoID)
+	require.NoError(t, err)
+	_, err = d.Writer.Exec(t.Context(),
+		"INSERT INTO todo_completions (todo_id, completer_id, completed_at) VALUES ($1, $2, now())", todoID, h.OwnerID)
+	require.NoError(t, err)
+
+	// act
+	err = usecase.NewDeleteAccount(d.Infra()).Do(fixedClock(t), usecase.DeleteAccountInput{UserID: h.OwnerID})
+
+	// assert
+	require.NoError(t, err)
+	var households int
+	require.NoError(t, d.Writer.QueryRow(t.Context(), "SELECT count(*) FROM households").Scan(&households))
+	assert.Zero(t, households)
+}
+
+func TestDeleteAccount_memberLeavesTheirTodosBehind(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	member := d.Seeder.Member(t, h.ID)
+	todoID := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
+	_, err := d.Writer.Exec(t.Context(), "UPDATE todos SET creator_id = $1, assignee_id = $1 WHERE id = $2",
+		member, todoID)
+	require.NoError(t, err)
+	before := d.Seeder.Version(t, h.ID)
+
+	// act
+	err = usecase.NewDeleteAccount(d.Infra()).Do(fixedClock(t), usecase.DeleteAccountInput{UserID: member})
+
+	// assert
+	require.NoError(t, err)
+	var creator, assignee *uuid.UUID
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT creator_id, assignee_id FROM todos WHERE id = $1", todoID).Scan(&creator, &assignee))
+	assert.Nil(t, creator)
+	assert.Nil(t, assignee)
+	assert.Greater(t, d.Seeder.Version(t, h.ID), before, "the other members sync the change")
 }
 
 func TestDeleteAccount_withoutAppleToken(t *testing.T) {
