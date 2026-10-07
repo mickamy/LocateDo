@@ -1,4 +1,5 @@
 import base64
+import glob
 import json
 import os
 import subprocess
@@ -10,6 +11,15 @@ import urllib.request
 
 def _b64(data):
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+
+def default_key_path():
+    """The production Firebase admin key in ios/fastlane/credentials, whatever its key ID."""
+    paths = glob.glob("ios/fastlane/credentials/locatedo-firebase-adminsdk-*.json")
+    if len(paths) != 1:
+        raise SystemExit(f"Expected one locatedo-firebase-adminsdk-*.json in ios/fastlane/credentials, found {len(paths)}; "
+                         "pass the key path as an argument instead.")
+    return paths[0]
 
 
 def access_token(key_path, scope):
