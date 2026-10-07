@@ -104,6 +104,7 @@ settings:
     signed_in: "Signed in"
     not_signed_in: "Not signed in"
     description: "Sign in to keep your places and to-dos in your account."
+    google_sign_in: "Sign in with Google"
     android_sign_in: "Sign in with Google"
     android_apple_sign_in: "Sign in with Apple"
     benefits:

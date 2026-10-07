@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */; };
 		3B4035565436DCDDB455DF0A /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3BB27CCE4CA73E84455B7789 /* UserNotifications.framework */; };
 		3B4FF38872539949B9CE28DD /* UserNotificationsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B18D74FE5D745A602C3D98C /* UserNotificationsUI.framework */; };
 		3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BC7A1D03075000000D47174 /* FirebaseCrashlytics */; };
@@ -141,7 +140,6 @@
 				3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */,
 				3BFCD2D53072600A00811294 /* RevenueCat in Frameworks */,
 				3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */,
-				3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */,
 				3BF1AEC43071100000D47174 /* Connect in Frameworks */,
 				3BF1AEC53071100000D47174 /* SwiftProtobuf in Frameworks */,
 			);
@@ -235,7 +233,6 @@
 				3BF1AEC33071100000D47174 /* SwiftProtobuf */,
 				3BFCD2D43072600A00811294 /* RevenueCat */,
 				3B97921B8CF49F7EB4924EBD /* GoogleSignIn */,
-				3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */,
 			);
 			productName = LocateDo;
 			productReference = 3BB55BF03070E8CE008A116A /* LocateDo.app */;
@@ -1087,11 +1084,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignInSwift;
-		};
 		3B97921B8CF49F7EB4924EBD /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3BE79778B223CFA9359DCFEA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

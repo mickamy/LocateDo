@@ -102,6 +102,7 @@ settings:
     signed_in: "サインイン中"
     not_signed_in: "未サインイン"
     description: "サインインすると、場所とやることをアカウントに保存できます。"
+    google_sign_in: "Google でサインイン"
     android_sign_in: "Google でサインイン"
     android_apple_sign_in: "Appleでサインイン"
     benefits:

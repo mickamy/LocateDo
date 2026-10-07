@@ -2505,6 +2505,24 @@
         }
       }
     },
+    "settings.account.google_sign_in" : {
+      "comment" : "Label on the Sign in with Google button, as Google words it in each language.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Google"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google でサインイン"
+          }
+        }
+      }
+    },
     "settings.account.not_signed_in" : {
       "extractionState" : "manual",
       "localizations" : {

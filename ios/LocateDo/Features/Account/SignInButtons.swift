@@ -1,6 +1,5 @@
 import AuthenticationServices
 import GoogleSignIn
-import GoogleSignInSwift
 import OSLog
 import SwiftUI
 import UIKit
@@ -49,20 +48,40 @@ struct SignInButtons: View {
         account.isWorking || appStatus.activeMaintenance != nil
     }
 
+    // Shaped like the Apple button; colors and logo follow Google's sign-in branding guidelines.
     private var googleButton: some View {
-        var scheme = GoogleSignInButtonColorScheme.light
-        if colorScheme == .dark {
-            scheme = .dark
-        }
-        var state = GoogleSignInButtonState.normal
-        if isDisabled {
-            state = .disabled
-        }
-        return GoogleSignInButton(scheme: scheme, style: .wide, state: state) {
+        let isDark = colorScheme == .dark
+        return Button {
             signInWithGoogle()
+        } label: {
+            HStack(spacing: 10) {
+                Image(.googleLogo)
+                    .resizable()
+                    .frame(width: 18, height: 18)
+                    .accessibilityHidden(true)
+                Text(.settingsAccountGoogleSignIn)
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(isDark ? Self.googleDarkText : Self.googleLightText)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(isDark ? Self.googleDarkFill : Color.white, in: .capsule)
+            .overlay {
+                Capsule()
+                    .strokeBorder(isDark ? Self.googleDarkStroke : Self.googleLightStroke, lineWidth: 1)
+            }
         }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.5 : 1)
         .accessibilityIdentifier("account.signInWithGoogle")
     }
+
+    private static let googleLightText = Color(red: 0x1F / 255, green: 0x1F / 255, blue: 0x1F / 255)
+    private static let googleLightStroke = Color(red: 0x74 / 255, green: 0x77 / 255, blue: 0x75 / 255)
+    private static let googleDarkFill = Color(red: 0x13 / 255, green: 0x13 / 255, blue: 0x14 / 255)
+    private static let googleDarkText = Color(red: 0xE3 / 255, green: 0xE3 / 255, blue: 0xE3 / 255)
+    private static let googleDarkStroke = Color(red: 0x8E / 255, green: 0x91 / 255, blue: 0x8F / 255)
 
     private var appleButton: some View {
         ZStack {

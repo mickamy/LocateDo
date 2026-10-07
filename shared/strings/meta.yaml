@@ -68,3 +68,6 @@ notification.press_and_hold_hint:
 notification.check_off_checked:
   comment: "Button under the checklist shown when the arrival notification is pressed and held; completes the to-dos checked in it."
   platforms: [ios]
+settings.account.google_sign_in:
+  comment: "Label on the Sign in with Google button, as Google words it in each language."
+  platforms: [ios]
