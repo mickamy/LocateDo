@@ -298,6 +298,20 @@ nonisolated final class FakeAccountService: Locatedo_Account_V1_AccountServiceCl
         return ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountResponse()))
     }
 
+    func deleteAccountWithApple(
+        request: Locatedo_Account_V1_DeleteAccountWithAppleRequest,
+        headers: Connect.Headers
+    ) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountWithAppleResponse> {
+        ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountWithAppleResponse()))
+    }
+
+    func deleteAccountWithGoogle(
+        request: Locatedo_Account_V1_DeleteAccountWithGoogleRequest,
+        headers: Connect.Headers
+    ) async -> ResponseMessage<Locatedo_Account_V1_DeleteAccountWithGoogleResponse> {
+        ResponseMessage(result: .success(Locatedo_Account_V1_DeleteAccountWithGoogleResponse()))
+    }
+
     func syncEntitlement(
         request: Locatedo_Account_V1_SyncEntitlementRequest,
         headers: Connect.Headers
