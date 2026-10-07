@@ -20,6 +20,10 @@ SELECT
   LOGICAL_OR(e.event_name = 'limit_reached') AS reached_limit,
   LOGICAL_OR(e.event_name = 'paywall_purchased') AS purchased_in_app,
   LOGICAL_OR(e.event_name = 'rc_trial_started_event') AS started_trial,
+  -- Trials last 7 days, so a conversion can only be judged 8 days after the start.
+  LOGICAL_OR(
+    e.event_name = 'rc_trial_started_event' AND e.event_time <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 8 DAY)
+  ) AS trial_ended,
   LOGICAL_OR(e.event_name = 'rc_trial_converted_event') AS converted_trial,
   -- Paid on the device while the server still said free, so writes and invites stalled (app versions that send the event only).
   LOGICAL_OR(e.event_name = 'sync_blocked_by_plan') AS blocked_by_plan,
