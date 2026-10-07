@@ -35,6 +35,7 @@ data class DailyState(
     val locationAuth: LocationAuth,
     val preciseLocation: Boolean,
     val notificationAuth: NotificationAuth,
+    val promotionsConsent: Boolean,
 ) {
     enum class PlanState(val key: String) {
         FREE("free"),
@@ -65,6 +66,7 @@ data class DailyState(
             AnalyticsParameter.LOCATION_AUTH to locationAuth.analyticsKey,
             AnalyticsParameter.PRECISE_LOCATION to preciseLocation,
             AnalyticsParameter.NOTIFICATION_AUTH to notificationAuth.analyticsKey,
+            AnalyticsParameter.PROMOTIONS_CONSENT to promotionsConsent,
         )
 
     val userProperties: Map<AnalyticsUserProperty, String>
@@ -74,12 +76,20 @@ data class DailyState(
             AnalyticsUserProperty.HOUSEHOLD_MEMBERS to counts.householdMembers.toString(),
             AnalyticsUserProperty.PLACE_COUNT to capped(counts.places, PLACE_COUNT_CAP),
             AnalyticsUserProperty.OPEN_TODO_COUNT to capped(counts.openTodos, OPEN_TODO_COUNT_CAP),
-            AnalyticsUserProperty.SIGNED_IN to if (signedIn) "1" else "0",
+            AnalyticsUserProperty.SIGNED_IN to flag(signedIn),
+            AnalyticsUserProperty.PROMOTIONS_CONSENT to flag(promotionsConsent),
         )
 
     companion object {
         const val PLACE_COUNT_CAP = 20
         const val OPEN_TODO_COUNT_CAP = 30
+
+        fun flag(value: Boolean): String {
+            if (value) {
+                return "1"
+            }
+            return "0"
+        }
 
         fun capped(count: Int, cap: Int): String {
             if (count >= cap) {
@@ -124,6 +134,16 @@ object DailyStateSchedule {
         reportedOn != day(now, zone)
 
     fun day(now: Instant, zone: ZoneId = ZoneId.systemDefault()): String = now.atZone(zone).toLocalDate().toString()
+}
+
+object NotificationAuthHistory {
+    fun change(lastReported: String?, current: NotificationAuth): Pair<NotificationAuth, NotificationAuth>? {
+        val previous = NotificationAuth.entries.firstOrNull { it.analyticsKey == lastReported } ?: return null
+        if (previous == current) {
+            return null
+        }
+        return previous to current
+    }
 }
 
 object LocationAuthHistory {

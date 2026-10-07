@@ -61,12 +61,17 @@ func openAppleToken(t *testing.T, d tdb.DB, lib di.Lib, userID uuid.UUID) string
 	return string(plain)
 }
 
-func registerDevice(t *testing.T, d tdb.DB, userID uuid.UUID) dmodel.Device {
+func registerDevice(t *testing.T, d tdb.DB, userID uuid.UUID, promotionsConsent bool) dmodel.Device {
 	t.Helper()
 
-	device := dfixture.Device(func(m *dmodel.Device) { m.UserID = userID; m.LastSeenAt = now })
+	device := dfixture.Device(func(m *dmodel.Device) {
+		m.UserID = new(userID)
+		m.PromotionsConsent = promotionsConsent
+		m.LastSeenAt = now
+	})
 	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, drepository.NewDevice(d.Reader).Bind(tx).Upsert(t.Context(), device))
+		_, err := drepository.NewDevice(d.Reader).Bind(tx).Upsert(t.Context(), device)
+		require.NoError(t, err)
 	})
 	return device
 }

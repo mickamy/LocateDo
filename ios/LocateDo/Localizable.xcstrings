@@ -2062,6 +2062,74 @@
         }
       }
     },
+    "promotions_prompt.accept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "受け取る"
+          }
+        }
+      }
+    },
+    "promotions_prompt.decline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Now"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今はいい"
+          }
+        }
+      }
+    },
+    "promotions_prompt.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We’ll occasionally let you know about new features, updates, and offers. You can turn this off anytime in Settings."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。"
+          }
+        }
+      }
+    },
+    "promotions_prompt.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Want news from StopBy?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ちかメモからのお知らせを受け取りますか？"
+          }
+        }
+      }
+    },
     "removed.message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2789,6 +2857,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未設定"
+          }
+        }
+      }
+    },
+    "settings.notifications.promotions_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occasional notifications about new features, updates, and offers. Arrival reminders work either way."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新機能やアップデート、キャンペーンをときどきお知らせします。到着のお知らせはどちらでも届きます。"
+          }
+        }
+      }
+    },
+    "settings.notifications.promotions_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "News and offers"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新機能・キャンペーンのお知らせ"
           }
         }
       }

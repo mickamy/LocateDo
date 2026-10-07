@@ -66,6 +66,7 @@ nonisolated struct DailyState: Equatable {
     var locationAuth: LocationAuth
     var preciseLocation: Bool
     var notificationAuth: NotificationAuth
+    var promotionsConsent: Bool
 
     var parameters: AnalyticsParameters {
         [
@@ -80,23 +81,28 @@ nonisolated struct DailyState: Equatable {
             .signedIn: signedIn,
             .locationAuth: locationAuth.rawValue,
             .preciseLocation: preciseLocation,
-            .notificationAuth: notificationAuth.rawValue
+            .notificationAuth: notificationAuth.rawValue,
+            .promotionsConsent: promotionsConsent
         ]
     }
 
     var userProperties: [AnalyticsUserProperty: String] {
-        var signedInValue = "0"
-        if signedIn {
-            signedInValue = "1"
-        }
-        return [
+        [
             .plan: plan.rawValue,
             .locationAuth: locationAuth.rawValue,
             .householdMembers: String(counts.householdMembers),
             .placeCount: Self.capped(counts.places, at: Self.placeCountCap),
             .openTodoCount: Self.capped(counts.openTodos, at: Self.openTodoCountCap),
-            .signedIn: signedInValue
+            .signedIn: Self.flag(signedIn),
+            .promotionsConsent: Self.flag(promotionsConsent)
         ]
+    }
+
+    static func flag(_ value: Bool) -> String {
+        if value {
+            return "1"
+        }
+        return "0"
     }
 
     static func capped(_ count: Int, at cap: Int) -> String {
@@ -157,14 +163,16 @@ nonisolated enum DailyStateSchedule {
     }
 }
 
-nonisolated enum LocationAuthHistory {
-    static let key = "lastReportedLocationAuth"
+nonisolated enum AuthHistory {
+    static let locationKey = "lastReportedLocationAuth"
+    static let notificationKey = "lastReportedNotificationAuth"
 
-    static func change(
-        to current: DailyState.LocationAuth,
+    static func change<Auth: RawRepresentable & Equatable>(
+        to current: Auth,
+        key: String,
         defaults: UserDefaults
-    ) -> (from: DailyState.LocationAuth, to: DailyState.LocationAuth)? {
-        let previous = defaults.string(forKey: key).flatMap(DailyState.LocationAuth.init(rawValue:))
+    ) -> (from: Auth, to: Auth)? where Auth.RawValue == String {
+        let previous = defaults.string(forKey: key).flatMap(Auth.init(rawValue:))
         defaults.set(current.rawValue, forKey: key)
         guard let previous, previous != current else {
             return nil

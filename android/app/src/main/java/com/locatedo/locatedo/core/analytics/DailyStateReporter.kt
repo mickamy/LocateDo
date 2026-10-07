@@ -47,6 +47,7 @@ class DailyStateReporter @Inject constructor(
             locationAuth = granted.location,
             preciseLocation = locationRepository.hasPrecisePermission(),
             notificationAuth = granted.notifications,
+            promotionsConsent = preferences.promotions.first().consent,
         )
         LocationAuthHistory.change(record.lastReportedLocationAuth, state.locationAuth)?.let { (from, to) ->
             analytics.log(
@@ -55,6 +56,13 @@ class DailyStateReporter @Inject constructor(
             )
         }
         preferences.setLastReportedLocationAuth(state.locationAuth.analyticsKey)
+        NotificationAuthHistory.change(record.lastReportedNotificationAuth, state.notificationAuth)?.let { (from, to) ->
+            analytics.log(
+                AnalyticsEvent.NOTIFICATION_AUTH_CHANGED,
+                mapOf(AnalyticsParameter.FROM to from.analyticsKey, AnalyticsParameter.TO to to.analyticsKey),
+            )
+        }
+        preferences.setLastReportedNotificationAuth(state.notificationAuth.analyticsKey)
         for ((property, value) in state.userProperties) {
             analytics.setUserProperty(property, value)
         }

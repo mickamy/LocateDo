@@ -13,6 +13,10 @@ import com.connectrpc.StreamType
 public class DeviceServiceClient(
   private val client: ProtocolClientInterface,
 ) : DeviceServiceClientInterface {
+  /**
+   *  The access token is optional. Without one the device is registered
+   *  anonymously, and the server keeps it only while promotions_consent is on.
+   */
   override suspend fun registerDevice(request: RegisterDeviceRequest, headers: Headers): ResponseMessage<RegisterDeviceResponse> = client.unary(
     request,
     headers,

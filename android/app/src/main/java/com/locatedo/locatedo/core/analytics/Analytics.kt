@@ -10,6 +10,7 @@ enum class AnalyticsEvent(val key: String) {
     DAILY_STATE("daily_state"),
     LIMIT_REACHED("limit_reached"),
     LOCATION_AUTH_CHANGED("location_auth_changed"),
+    NOTIFICATION_AUTH_CHANGED("notification_auth_changed"),
     ONBOARDING_COMPLETED("onboarding_completed"),
     PLACE_ADDED("place_added"),
     PLACE_DELETED("place_deleted"),
@@ -24,18 +25,24 @@ enum class AnalyticsEvent(val key: String) {
     PURCHASE_CANCELED("purchase_cancelled"),
     PURCHASE_FAILED("purchase_failed"),
     RESTORE_COMPLETED("restore_completed"),
+    PROMOTIONS_PROMPT_SHOWN("promotions_prompt_shown"),
+    PROMOTIONS_PROMPT_ANSWERED("promotions_prompt_answered"),
+    PROMOTIONS_CONSENT_CHANGED("promotions_consent_changed"),
+    CAMPAIGN_OPENED("campaign_opened"),
 }
 
 enum class AnalyticsParameter(val key: String) {
     AGE_DAYS("age_days"),
     AGE_HOURS("age_hours"),
     ASSIGNED("assigned"),
+    CAMPAIGN_ID("campaign_id"),
     CATEGORY("category"),
     COMPLETED_TODO_COUNT_7D("completed_todo_count_7d"),
     CUSTOM_CATEGORY_COUNT("custom_category_count"),
     DAYS_SINCE_INSTALL("days_since_install"),
     DURATION_S("duration_s"),
     FROM("from"),
+    HAS_URL("has_url"),
     HOUSEHOLD_MEMBERS("household_members"),
     KIND("kind"),
     LATENCY_S("latency_s"),
@@ -49,6 +56,7 @@ enum class AnalyticsParameter(val key: String) {
     PLACES_WITH_OPEN_TODOS("places_with_open_todos"),
     PLAN("plan"),
     PRECISE_LOCATION("precise_location"),
+    PROMOTIONS_CONSENT("promotions_consent"),
     RADIUS_M("radius_m"),
     REASON("reason"),
     RESULT("result"),
@@ -66,6 +74,7 @@ enum class AnalyticsUserProperty(val key: String) {
     OPEN_TODO_COUNT("open_todo_count"),
     PLACE_COUNT("place_count"),
     PLAN("plan"),
+    PROMOTIONS_CONSENT("promotions_consent"),
     SIGNED_IN("signed_in"),
 }
 

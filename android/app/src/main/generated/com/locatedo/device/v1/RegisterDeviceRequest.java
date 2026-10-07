@@ -16,6 +16,7 @@ public  final class RegisterDeviceRequest extends
     RegisterDeviceRequestOrBuilder {
   private RegisterDeviceRequest() {
     pushToken_ = "";
+    language_ = "";
   }
   public static final int PLATFORM_FIELD_NUMBER = 1;
   private int platform_;
@@ -173,6 +174,79 @@ public  final class RegisterDeviceRequest extends
   private void clearApnsEnvironment() {
 
     apnsEnvironment_ = 0;
+  }
+
+  public static final int PROMOTIONS_CONSENT_FIELD_NUMBER = 4;
+  private boolean promotionsConsent_;
+  /**
+   * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+   * @return The promotionsConsent.
+   */
+  @java.lang.Override
+  public boolean getPromotionsConsent() {
+    return promotionsConsent_;
+  }
+  /**
+   * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+   * @param value The promotionsConsent to set.
+   */
+  private void setPromotionsConsent(boolean value) {
+    
+    promotionsConsent_ = value;
+  }
+  /**
+   * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+   */
+  private void clearPromotionsConsent() {
+
+    promotionsConsent_ = false;
+  }
+
+  public static final int LANGUAGE_FIELD_NUMBER = 5;
+  private java.lang.String language_;
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   * @return The language.
+   */
+  @java.lang.Override
+  public java.lang.String getLanguage() {
+    return language_;
+  }
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   * @return The bytes for language.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getLanguageBytes() {
+    return com.google.protobuf.ByteString.copyFromUtf8(language_);
+  }
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   * @param value The language to set.
+   */
+  private void setLanguage(
+      java.lang.String value) {
+    java.util.Objects.requireNonNull(value);
+
+    language_ = value;
+  }
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   */
+  private void clearLanguage() {
+
+    language_ = getDefaultInstance().getLanguage();
+  }
+  /**
+   * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+   * @param value The bytes for language to set.
+   */
+  private void setLanguageBytes(
+      com.google.protobuf.ByteString value) {
+    checkByteStringIsUtf8(value);
+    language_ = value.toStringUtf8();
+
   }
 
   public static com.locatedo.device.v1.RegisterDeviceRequest parseFrom(
@@ -440,6 +514,83 @@ public  final class RegisterDeviceRequest extends
       return this;
     }
 
+    /**
+     * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+     * @return The promotionsConsent.
+     */
+    @java.lang.Override
+    public boolean getPromotionsConsent() {
+      return instance.getPromotionsConsent();
+    }
+    /**
+     * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+     * @param value The promotionsConsent to set.
+     * @return This builder for chaining.
+     */
+    public Builder setPromotionsConsent(boolean value) {
+      copyOnWrite();
+      instance.setPromotionsConsent(value);
+      return this;
+    }
+    /**
+     * <code>bool promotions_consent = 4 [json_name = "promotionsConsent"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearPromotionsConsent() {
+      copyOnWrite();
+      instance.clearPromotionsConsent();
+      return this;
+    }
+
+    /**
+     * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+     * @return The language.
+     */
+    @java.lang.Override
+    public java.lang.String getLanguage() {
+      return instance.getLanguage();
+    }
+    /**
+     * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for language.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getLanguageBytes() {
+      return instance.getLanguageBytes();
+    }
+    /**
+     * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+     * @param value The language to set.
+     * @return This builder for chaining.
+     */
+    public Builder setLanguage(
+        java.lang.String value) {
+      copyOnWrite();
+      instance.setLanguage(value);
+      return this;
+    }
+    /**
+     * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearLanguage() {
+      copyOnWrite();
+      instance.clearLanguage();
+      return this;
+    }
+    /**
+     * <code>string language = 5 [json_name = "language", (.buf.validate.field) = { ... }</code>
+     * @param value The bytes for language to set.
+     * @return This builder for chaining.
+     */
+    public Builder setLanguageBytes(
+        com.google.protobuf.ByteString value) {
+      copyOnWrite();
+      instance.setLanguageBytes(value);
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.device.v1.RegisterDeviceRequest)
   }
   @java.lang.Override
@@ -459,10 +610,12 @@ public  final class RegisterDeviceRequest extends
             "platform_",
             "pushToken_",
             "apnsEnvironment_",
+            "promotionsConsent_",
+            "language_",
           };
           java.lang.String info =
-              "\u0000\u0003\u0000\u0000\u0001\u0003\u0003\u0000\u0000\u0000\u0001\f\u0002\u0208" +
-              "\u0003\f";
+              "\u0000\u0005\u0000\u0000\u0001\u0005\u0005\u0000\u0000\u0000\u0001\f\u0002\u0208" +
+              "\u0003\f\u0004\u0007\u0005\u0208";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {

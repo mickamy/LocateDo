@@ -425,7 +425,9 @@ func (x *RefreshTokenResponse) GetHouseholdId() string {
 type SignOutRequest struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	RefreshToken string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	// Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+	// Set when the device is registered for push. If the registration belongs to
+	// the token's owner, it is detached from them while it consents to promotions
+	// and removed otherwise.
 	Device        *SignOutRequest_Device `protobuf:"bytes,2,opt,name=device,proto3" json:"device,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

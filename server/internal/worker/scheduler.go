@@ -31,6 +31,7 @@ func NewTasks(
 	tombstones *job.SweepTombstones,
 	refreshTokens *job.SweepRefreshTokens,
 	deadMessages *job.SweepDeadMessages,
+	anonymousDevices *job.SweepAnonymousDevices,
 	entitlements *job.ReconcileEntitlements,
 	outboxHealth *job.ReportOutbox,
 ) Tasks {
@@ -38,6 +39,7 @@ func NewTasks(
 		{Name: "sweep_tombstones", Interval: sweepInterval, Run: tombstones.Run},
 		{Name: "sweep_refresh_tokens", Interval: sweepInterval, Run: refreshTokens.Run},
 		{Name: "sweep_dead_messages", Interval: sweepInterval, Run: deadMessages.Run},
+		{Name: "sweep_anonymous_devices", Interval: sweepInterval, Run: anonymousDevices.Run},
 		{Name: "reconcile_entitlements", Interval: reconcileInterval, Run: entitlements.Run},
 		{Name: "report_outbox", Interval: reportInterval, Run: outboxHealth.Run},
 	}

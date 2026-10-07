@@ -96,6 +96,22 @@ class AppPreferencesTest {
         )
     }
 
+    @Test
+    fun promotionsConsentSurvivesAReset() = runTest {
+        val preferences = preferences()
+        assertEquals(PromotionsRecord(), preferences.promotions.first())
+
+        preferences.setPromotionsConsent(true)
+        preferences.setReceivedArrivalNotification()
+        preferences.setShownPromotionsPrompt()
+        preferences.reset()
+
+        assertEquals(
+            PromotionsRecord(consent = true, hasReceivedArrivalNotification = true, hasShownPrompt = true),
+            preferences.promotions.first(),
+        )
+    }
+
     private fun TestScope.preferences(): AppPreferences {
         val store = PreferenceDataStoreFactory.create(
             scope = TestScope(UnconfinedTestDispatcher(testScheduler)),

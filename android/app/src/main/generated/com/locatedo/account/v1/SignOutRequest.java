@@ -514,7 +514,9 @@ public  final class SignOutRequest extends
   private com.locatedo.account.v1.SignOutRequest.Device device_;
   /**
    * <pre>
-   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push. If the registration belongs to
+   * the token's owner, it is detached from them while it consents to promotions
+   * and removed otherwise.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -525,7 +527,9 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push. If the registration belongs to
+   * the token's owner, it is detached from them while it consents to promotions
+   * and removed otherwise.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -536,7 +540,9 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push. If the registration belongs to
+   * the token's owner, it is detached from them while it consents to promotions
+   * and removed otherwise.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -548,7 +554,9 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push. If the registration belongs to
+   * the token's owner, it is detached from them while it consents to promotions
+   * and removed otherwise.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -567,7 +575,9 @@ public  final class SignOutRequest extends
   }
   /**
    * <pre>
-   * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+   * Set when the device is registered for push. If the registration belongs to
+   * the token's owner, it is detached from them while it consents to promotions
+   * and removed otherwise.
    * </pre>
    *
    * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -725,7 +735,9 @@ public  final class SignOutRequest extends
 
     /**
      * <pre>
-     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push. If the registration belongs to
+     * the token's owner, it is detached from them while it consents to promotions
+     * and removed otherwise.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -736,7 +748,9 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push. If the registration belongs to
+     * the token's owner, it is detached from them while it consents to promotions
+     * and removed otherwise.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -747,7 +761,9 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push. If the registration belongs to
+     * the token's owner, it is detached from them while it consents to promotions
+     * and removed otherwise.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -759,7 +775,9 @@ public  final class SignOutRequest extends
       }
     /**
      * <pre>
-     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push. If the registration belongs to
+     * the token's owner, it is detached from them while it consents to promotions
+     * and removed otherwise.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -772,7 +790,9 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push. If the registration belongs to
+     * the token's owner, it is detached from them while it consents to promotions
+     * and removed otherwise.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>
@@ -784,7 +804,9 @@ public  final class SignOutRequest extends
     }
     /**
      * <pre>
-     * Set when the device is registered for push; the registration is removed if it belongs to the token's owner.
+     * Set when the device is registered for push. If the registration belongs to
+     * the token's owner, it is detached from them while it consents to promotions
+     * and removed otherwise.
      * </pre>
      *
      * <code>.locatedo.account.v1.SignOutRequest.Device device = 2 [json_name = "device"];</code>

@@ -8,5 +8,9 @@ import com.connectrpc.Headers
 import com.connectrpc.ResponseMessage
 
 public interface DeviceServiceClientInterface {
+  /**
+   *  The access token is optional. Without one the device is registered
+   *  anonymously, and the server keeps it only while promotions_consent is on.
+   */
   public suspend fun registerDevice(request: RegisterDeviceRequest, headers: Headers = emptyMap()): ResponseMessage<RegisterDeviceResponse>
 }

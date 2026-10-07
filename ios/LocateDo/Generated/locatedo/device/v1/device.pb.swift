@@ -109,6 +109,10 @@ nonisolated struct Locatedo_Device_V1_RegisterDeviceRequest: Sendable {
 
   var apnsEnvironment: Locatedo_Device_V1_ApnsEnvironment = .unspecified
 
+  var promotionsConsent: Bool = false
+
+  var language: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -138,7 +142,7 @@ nonisolated extension Locatedo_Device_V1_ApnsEnvironment: SwiftProtobuf._ProtoNa
 
 nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}platform\0\u{3}push_token\0\u{3}apns_environment\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}platform\0\u{3}push_token\0\u{3}apns_environment\0\u{3}promotions_consent\0\u{1}language\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -149,6 +153,8 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
       case 1: try { try decoder.decodeSingularEnumField(value: &self.platform) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.pushToken) }()
       case 3: try { try decoder.decodeSingularEnumField(value: &self.apnsEnvironment) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.promotionsConsent) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.language) }()
       default: break
       }
     }
@@ -164,6 +170,12 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
     if self.apnsEnvironment != .unspecified {
       try visitor.visitSingularEnumField(value: self.apnsEnvironment, fieldNumber: 3)
     }
+    if self.promotionsConsent != false {
+      try visitor.visitSingularBoolField(value: self.promotionsConsent, fieldNumber: 4)
+    }
+    if !self.language.isEmpty {
+      try visitor.visitSingularStringField(value: self.language, fieldNumber: 5)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -171,6 +183,8 @@ nonisolated extension Locatedo_Device_V1_RegisterDeviceRequest: SwiftProtobuf.Me
     if lhs.platform != rhs.platform {return false}
     if lhs.pushToken != rhs.pushToken {return false}
     if lhs.apnsEnvironment != rhs.apnsEnvironment {return false}
+    if lhs.promotionsConsent != rhs.promotionsConsent {return false}
+    if lhs.language != rhs.language {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

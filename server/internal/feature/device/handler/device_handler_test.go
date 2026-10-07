@@ -47,6 +47,31 @@ func TestDevice_registerThenTakeOver(t *testing.T) {
 	assert.Equal(t, "sandbox", env)
 }
 
+func TestDevice_RegisterDevice_anonymous(t *testing.T) {
+	t.Parallel()
+
+	// arrange: a build that predates the language sends none
+	d := tdb.New(t)
+	client := newClient(t, d)
+	req := &devicev1.RegisterDeviceRequest{
+		Platform:          devicev1.Platform_PLATFORM_ANDROID,
+		PushToken:         "fid",
+		PromotionsConsent: true,
+	}
+
+	// act
+	_, err := client.RegisterDevice(t.Context(), authed("", req))
+
+	// assert
+	require.NoError(t, err)
+	var owner *uuid.UUID
+	var language string
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT user_id, language FROM devices WHERE push_token = 'fid'").Scan(&owner, &language))
+	assert.Nil(t, owner)
+	assert.Equal(t, "en", language)
+}
+
 func TestDevice_RegisterDevice_rejects(t *testing.T) {
 	t.Parallel()
 
@@ -91,9 +116,21 @@ func TestDevice_RegisterDevice_rejects(t *testing.T) {
 			want: connect.CodeInvalidArgument,
 		},
 		{
-			name: "no token",
+			name: "unsupported language",
+			arrange: func(t *testing.T, d tdb.DB) (string, *devicev1.RegisterDeviceRequest) {
+				return token(t, d.Seeder.User(t)), &devicev1.RegisterDeviceRequest{
+					Platform:        devicev1.Platform_PLATFORM_IOS,
+					PushToken:       "apns-token",
+					ApnsEnvironment: devicev1.ApnsEnvironment_APNS_ENVIRONMENT_PRODUCTION,
+					Language:        "fr",
+				}
+			},
+			want: connect.CodeInvalidArgument,
+		},
+		{
+			name: "invalid token",
 			arrange: func(_ *testing.T, _ tdb.DB) (string, *devicev1.RegisterDeviceRequest) {
-				return "", &devicev1.RegisterDeviceRequest{
+				return "not-a-token", &devicev1.RegisterDeviceRequest{
 					Platform:        devicev1.Platform_PLATFORM_IOS,
 					PushToken:       "apns-token",
 					ApnsEnvironment: devicev1.ApnsEnvironment_APNS_ENVIRONMENT_PRODUCTION,

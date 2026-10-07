@@ -48,6 +48,27 @@ func TestPushHousehold_wakesEveryMembersDeviceOnItsPlatform(t *testing.T) {
 	assert.Equal(t, []string{"member-android"}, android.woken())
 }
 
+func TestPushHousehold_skipsAnonymousDevices(t *testing.T) {
+	t.Parallel()
+
+	// arrange: devices consenting to promotions without a user belong to no household
+	d := tdb.New(t)
+	h := d.Seeder.Household(t, hmodel.PlanFree)
+	device(t, d, h.OwnerID, "ios", "production", "owner-phone")
+	anonymousDevice(t, d, "ios", "production", "anonymous-phone")
+	anonymousDevice(t, d, "android", "", "anonymous-android")
+	pusher := &fakePusher{}
+	android := &fakeFCM{}
+
+	// act
+	err := pushJob(d, pusher, android).Handle(t.Context(), pushMessage(t, h.ID))
+
+	// assert
+	require.NoError(t, err)
+	assert.Equal(t, []string{"owner-phone"}, pusher.woken())
+	assert.Empty(t, android.woken())
+}
+
 func TestPushHousehold_forgetsUnregisteredAndroidTokens(t *testing.T) {
 	t.Parallel()
 
@@ -134,9 +155,11 @@ func TestSyncTriggers_enqueueOnePendingPushPerHousehold(t *testing.T) {
 type fakePusher struct {
 	fail map[string]error
 
-	mu   sync.Mutex
-	woke []string
-	envs map[string]apns.Environment
+	mu       sync.Mutex
+	woke     []string
+	envs     map[string]apns.Environment
+	promoted []string
+	promos   map[string]apns.Promotion
 }
 
 var _ apns.Pusher = (*fakePusher)(nil)
@@ -155,6 +178,32 @@ func (f *fakePusher) Wake(_ context.Context, env apns.Environment, token string,
 	return nil
 }
 
+func (f *fakePusher) Promote(_ context.Context, _ apns.Environment, token string, p apns.Promotion, _ time.Time) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.promoted = append(f.promoted, token)
+	if f.promos == nil {
+		f.promos = map[string]apns.Promotion{}
+	}
+	f.promos[token] = p
+	return nil
+}
+
+func (f *fakePusher) promotedTokens() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.promoted)
+}
+
+func (f *fakePusher) promotion(token string) apns.Promotion {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.promos[token]
+}
+
 func (f *fakePusher) woken() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -170,8 +219,10 @@ func (f *fakePusher) environment(token string) apns.Environment {
 type fakeFCM struct {
 	fail map[string]error
 
-	mu   sync.Mutex
-	woke []string
+	mu       sync.Mutex
+	woke     []string
+	promoted []string
+	promos   map[string]fcm.Promotion
 }
 
 var _ fcm.Pusher = (*fakeFCM)(nil)
@@ -184,6 +235,32 @@ func (f *fakeFCM) Wake(_ context.Context, token string, _ time.Time) error {
 	defer f.mu.Unlock()
 	f.woke = append(f.woke, token)
 	return nil
+}
+
+func (f *fakeFCM) Promote(_ context.Context, token string, p fcm.Promotion, _ time.Time) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.promoted = append(f.promoted, token)
+	if f.promos == nil {
+		f.promos = map[string]fcm.Promotion{}
+	}
+	f.promos[token] = p
+	return nil
+}
+
+func (f *fakeFCM) promotedTokens() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.promoted)
+}
+
+func (f *fakeFCM) promotion(token string) fcm.Promotion {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.promos[token]
 }
 
 func (f *fakeFCM) woken() []string {
@@ -213,6 +290,15 @@ func device(t *testing.T, d tdb.DB, userID uuid.UUID, platform, env, token strin
 	_, err := d.Writer.Exec(t.Context(),
 		"INSERT INTO devices (user_id, platform, apns_environment, push_token) VALUES ($1, $2, NULLIF($3, ''), $4)",
 		userID, platform, env, token)
+	require.NoError(t, err)
+}
+
+func anonymousDevice(t *testing.T, d tdb.DB, platform, env, token string) {
+	t.Helper()
+
+	_, err := d.Writer.Exec(t.Context(),
+		`INSERT INTO devices (platform, apns_environment, push_token, promotions_consented_at)
+		 VALUES ($1, NULLIF($2, ''), $3, now())`, platform, env, token)
 	require.NoError(t, err)
 }
 

@@ -49,6 +49,7 @@ import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
 import com.locatedo.locatedo.feature.place.PlaceSearchScreen
+import com.locatedo.locatedo.feature.promotions.PromotionsConsentSheet
 import com.locatedo.locatedo.feature.settings.SettingsScreen
 import com.locatedo.locatedo.feature.sharing.AcceptInviteScreen
 import com.locatedo.locatedo.feature.sharing.SharingScreen
@@ -104,6 +105,9 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     }
     if (appState.isExplainingAlwaysLocation) {
         AlwaysLocationSheet(onDismiss = appViewModel::dismissAlwaysLocation)
+    }
+    if (appState.isAskingPromotions) {
+        PromotionsConsentSheet(onAnswer = appViewModel::answerPromotions)
     }
     appState.notice?.let { notice ->
         NoticeDialog(notice = notice, onDismiss = appViewModel::dismissNotice)

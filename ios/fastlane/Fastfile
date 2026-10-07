@@ -242,6 +242,7 @@ platform :ios do
   lane :metadata do
     notes = File.read(File.expand_path("metadata/review_information/notes.txt", __dir__))
     UI.user_error!("Replace VIDEO_URL in the review notes first") if notes.include?("VIDEO_URL")
+    UI.user_error!("The review notes are #{notes.length} characters; App Store Connect takes 4000") if notes.length > 4000
     api_key
     deliver(
       app_identifier: APP_IDENTIFIER,

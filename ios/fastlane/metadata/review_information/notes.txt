@@ -11,6 +11,9 @@ HOW TO TRY IT
 2. Open the place and add a to-do.
 3. When the device enters the place's radius, a notification lists the open to-dos there.
 
+PROMOTIONAL NOTIFICATIONS (4.5.4)
+Off by default and sent only with consent given in the app: it asks once after the first arrival reminder ("Turn On" / "Not Now"), and Settings > Notifications > News and offers changes it anytime.
+
 ACCOUNT (OPTIONAL)
 No account is needed for the main features; everything is stored on the device. Sign in with Apple (Settings > Account) adds sync across devices and family sharing. No demo account is needed: any Apple ID can sign in. Account deletion: Settings > Account > Delete account; it deletes the account and server data and revokes the Sign in with Apple token.
 
@@ -21,7 +24,7 @@ FAMILY SHARING (USER CONTENT)
 Testing this needs two Apple IDs. As a Pro owner: Home > Share (top left) > Invite Someone, then open the link on a second device signed in with another Apple ID. Members see the same places and to-dos, and a to-do can be assigned to one member so only they are reminded. Content is only visible to the members the owner invited (6 people at most); nothing is public or searchable. The owner can remove any member (Share > swipe > Remove) and any member can leave (Share > Leave Sharing), which immediately removes the shared content from that iPhone. Support: support@locatedo.com
 
 EXTERNAL SERVICES
-Apple (Sign in with Apple, In-App Purchase, APNs for silent sync pushes, MapKit / Core Location), our backend at https://api.locatedo.com (AWS), RevenueCat (subscription status; payments go through Apple), Firebase Analytics (anonymous usage events; no place names, coordinates, or to-do text), and https://locatedo.com (privacy policy, support, invite links, maintenance notice). No AI services, ads, tracking SDKs, or third-party data providers.
+Apple (Sign in with Apple, In-App Purchase, APNs for silent sync pushes and opt-in promotional notifications, MapKit / Core Location), our backend at https://api.locatedo.com (AWS), RevenueCat (subscription status; payments go through Apple), Firebase Analytics (anonymous usage events; no place names, coordinates, or to-do text), and https://locatedo.com (privacy policy, support, invite links, maintenance notice). No AI services, ads, tracking SDKs, or third-party data providers.
 
 REGIONS / REGULATION
 Features are identical in every region; the UI follows the device language (English, Japanese) and prices follow the storefront. Not a regulated industry; no protected third-party material.

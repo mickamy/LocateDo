@@ -1,0 +1,76 @@
+name: server-send-campaign-stg
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: Language of the devices to reach
+        required: true
+        type: choice
+        options:
+          - ja
+          - en
+      title:
+        description: Notification title (up to 50 characters)
+        required: true
+      body:
+        description: Notification body (up to 200 characters)
+        required: true
+      url:
+        description: https URL opened on tap (optional)
+        required: false
+      dry_run:
+        description: Only count the devices it would reach
+        required: true
+        type: boolean
+        default: true
+      force:
+        description: Send even if the language had a campaign in the last 14 days
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-stg
+  cancel-in-progress: false
+
+jobs:
+  send-campaign:
+    runs-on: ubuntu-latest
+    environment: server-stg
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/locatedo-stg-deploy
+          aws-region: us-west-2
+
+      - name: Send the campaign from the Pi
+        env:
+          CAMPAIGN_LANGUAGE: ${{ inputs.language }}
+          CAMPAIGN_TITLE: ${{ inputs.title }}
+          CAMPAIGN_BODY: ${{ inputs.body }}
+          CAMPAIGN_URL: ${{ inputs.url }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          {
+            printf 'export CAMPAIGN_LANGUAGE=%q CAMPAIGN_TITLE=%q CAMPAIGN_BODY=%q CAMPAIGN_URL=%q DRY_RUN=%q FORCE=%q\n' \
+              "${CAMPAIGN_LANGUAGE}" "${CAMPAIGN_TITLE}" "${CAMPAIGN_BODY}" "${CAMPAIGN_URL}" "${DRY_RUN}" "${FORCE}"
+            cat server/scripts/send-campaign-stg.sh
+          } > send-campaign.sh
+          .github/scripts/run-on-stg.sh send-campaign.sh "send campaign ${CAMPAIGN_LANGUAGE} (dry run: ${DRY_RUN})"

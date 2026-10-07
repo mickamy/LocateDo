@@ -23,6 +23,7 @@ SELECT
   LOGICAL_OR(e.event_name = 'rc_trial_converted_event') AS converted_trial,
   -- Paid on the device while the server still said free, so writes and invites stalled (app versions that send the event only).
   LOGICAL_OR(e.event_name = 'sync_blocked_by_plan') AS blocked_by_plan,
+  LOGICAL_OR(e.event_name = 'promotions_consent_changed' AND e.auth_to = 'on') AS promotions_consent_ever,
   DATE_DIFF(CURRENT_DATE(), f.first_date, DAY) AS days_since_first
 FROM firsts AS f
 JOIN `__PROJECT__.__DATASET__.events` AS e USING (user_pseudo_id)

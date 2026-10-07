@@ -12,12 +12,25 @@ import (
 
 func Device(setters ...func(m *model.Device)) model.Device {
 	m := model.Device{
-		ID:              uuid.MustParse(gofakeit.UUID()),
-		UserID:          uuid.MustParse(gofakeit.UUID()),
-		Platform:        model.Platform(mustGenerate("{randomstring:[ios,android]}")),
-		PushToken:       gofakeit.UUID(),
-		APNsEnvironment: model.APNsEnvironment(mustGenerate("{randomstring:[sandbox,production]}")),
-		LastSeenAt:      gofakeit.Date(),
+		ID:                uuid.MustParse(gofakeit.UUID()),
+		Platform:          model.Platform(mustGenerate("{randomstring:[ios,android]}")),
+		PushToken:         gofakeit.UUID(),
+		APNsEnvironment:   model.APNsEnvironment(mustGenerate("{randomstring:[sandbox,production]}")),
+		Language:          model.Language(mustGenerate("{randomstring:[en,ja]}")),
+		PromotionsConsent: gofakeit.Bool(),
+		LastSeenAt:        gofakeit.Date(),
+	}
+	for _, s := range setters {
+		s(&m)
+	}
+	return m
+}
+
+func PromotionsConsentChange(setters ...func(m *model.PromotionsConsentChange)) model.PromotionsConsentChange {
+	m := model.PromotionsConsentChange{
+		DeviceID:  uuid.MustParse(gofakeit.UUID()),
+		Consented: gofakeit.Bool(),
+		ChangedAt: gofakeit.Date(),
 	}
 	for _, s := range setters {
 		s(&m)

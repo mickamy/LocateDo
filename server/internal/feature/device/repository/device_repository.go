@@ -2,8 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 	"uuid"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/mickamy/LocateDo/internal/errors/aerrors"
 	"github.com/mickamy/LocateDo/internal/feature/device/model"
@@ -13,13 +17,21 @@ import (
 )
 
 type Device interface {
+	FindByTokenForUpdate(ctx context.Context, platform model.Platform, token string) (model.Device, error)
 	// Upsert registers the token for the device's user, taking it over from
-	// whoever held it before.
-	Upsert(ctx context.Context, d model.Device) error
+	// whoever held it before. A device without a user keeps the owner the
+	// token already has.
+	Upsert(ctx context.Context, d model.Device) (uuid.UUID, error)
 	// ListByHousehold lists every member's devices on the platform.
 	ListByHousehold(ctx context.Context, householdID uuid.UUID, platform model.Platform) ([]model.Device, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByToken(ctx context.Context, platform model.Platform, token string) error
-	DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error
+	// ReleaseOwnedByToken detaches the user's device from them while it
+	// consents to promotions and deletes it otherwise.
+	ReleaseOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error
+	// DeleteAnonymousUnseenSince removes devices without a user not seen since
+	// before and reports how many.
+	DeleteAnonymousUnseenSince(ctx context.Context, before time.Time) (int, error)
 	Bind(tx tx.Tx) Device
 }
 
@@ -37,26 +49,50 @@ func (r device) Bind(tx tx.Tx) Device {
 	return device{q: queries.New(tx.DBTX())}
 }
 
-func (r device) Upsert(ctx context.Context, d model.Device) error {
+func (r device) FindByTokenForUpdate(
+	ctx context.Context,
+	platform model.Platform,
+	token string,
+) (model.Device, error) {
+	row, err := r.q.FindDeviceByTokenForUpdate(ctx, queries.FindDeviceByTokenForUpdateParams{
+		Platform:  string(platform),
+		PushToken: token,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.Device{}, aerrors.NotFound("device")
+	}
+	if err != nil {
+		return model.Device{}, fmt.Errorf("find device: %w", err)
+	}
+	return toModel(row), nil
+}
+
+func (r device) Upsert(ctx context.Context, d model.Device) (uuid.UUID, error) {
 	var env *string
 	if d.APNsEnvironment != "" {
 		v := string(d.APNsEnvironment)
 		env = &v
 	}
-	err := r.q.UpsertDevice(ctx, queries.UpsertDeviceParams{
-		UserID:          d.UserID,
-		Platform:        string(d.Platform),
-		PushToken:       d.PushToken,
-		ApnsEnvironment: env,
-		LastSeenAt:      d.LastSeenAt,
+	var consentedAt *time.Time
+	if d.PromotionsConsent {
+		consentedAt = &d.LastSeenAt
+	}
+	id, err := r.q.UpsertDevice(ctx, queries.UpsertDeviceParams{
+		UserID:                d.UserID,
+		Platform:              string(d.Platform),
+		PushToken:             d.PushToken,
+		ApnsEnvironment:       env,
+		Language:              string(d.Language),
+		PromotionsConsentedAt: consentedAt,
+		LastSeenAt:            d.LastSeenAt,
 	})
 	switch {
 	case db.IsForeignKeyViolation(err):
-		return aerrors.InvalidArgument("device refers to an unknown user")
+		return uuid.UUID{}, aerrors.InvalidArgument("device refers to an unknown user")
 	case err != nil:
-		return fmt.Errorf("upsert device: %w", err)
+		return uuid.UUID{}, fmt.Errorf("upsert device: %w", err)
 	}
-	return nil
+	return id, nil
 }
 
 func (r device) ListByHousehold(
@@ -73,20 +109,16 @@ func (r device) ListByHousehold(
 	}
 	devices := make([]model.Device, 0, len(rows))
 	for _, row := range rows {
-		var env model.APNsEnvironment
-		if row.ApnsEnvironment != nil {
-			env = model.APNsEnvironment(*row.ApnsEnvironment)
-		}
-		devices = append(devices, model.Device{
-			ID:              row.ID,
-			UserID:          row.UserID,
-			Platform:        model.Platform(row.Platform),
-			PushToken:       row.PushToken,
-			APNsEnvironment: env,
-			LastSeenAt:      row.LastSeenAt,
-		})
+		devices = append(devices, toModel(row))
 	}
 	return devices, nil
+}
+
+func (r device) Delete(ctx context.Context, id uuid.UUID) error {
+	if err := r.q.DeleteDevice(ctx, id); err != nil {
+		return fmt.Errorf("delete device: %w", err)
+	}
+	return nil
 }
 
 func (r device) DeleteByToken(ctx context.Context, platform model.Platform, token string) error {
@@ -99,13 +131,50 @@ func (r device) DeleteByToken(ctx context.Context, platform model.Platform, toke
 	return nil
 }
 
-func (r device) DeleteOwnedByToken(ctx context.Context, userID uuid.UUID, platform model.Platform, token string) error {
+func (r device) ReleaseOwnedByToken(
+	ctx context.Context,
+	userID uuid.UUID,
+	platform model.Platform,
+	token string,
+) error {
+	if err := r.q.DetachConsentingUserDeviceByToken(ctx, queries.DetachConsentingUserDeviceByTokenParams{
+		UserID:    &userID,
+		Platform:  string(platform),
+		PushToken: token,
+	}); err != nil {
+		return fmt.Errorf("detach owned device: %w", err)
+	}
 	if err := r.q.DeleteUserDeviceByToken(ctx, queries.DeleteUserDeviceByTokenParams{
-		UserID:    userID,
+		UserID:    &userID,
 		Platform:  string(platform),
 		PushToken: token,
 	}); err != nil {
 		return fmt.Errorf("delete owned device: %w", err)
 	}
 	return nil
+}
+
+func (r device) DeleteAnonymousUnseenSince(ctx context.Context, before time.Time) (int, error) {
+	n, err := r.q.DeleteAnonymousDevicesUnseenSince(ctx, before)
+	if err != nil {
+		return 0, fmt.Errorf("delete anonymous devices: %w", err)
+	}
+	return int(n), nil
+}
+
+func toModel(row queries.Device) model.Device {
+	var env model.APNsEnvironment
+	if row.ApnsEnvironment != nil {
+		env = model.APNsEnvironment(*row.ApnsEnvironment)
+	}
+	return model.Device{
+		ID:                row.ID,
+		UserID:            row.UserID,
+		Platform:          model.Platform(row.Platform),
+		PushToken:         row.PushToken,
+		APNsEnvironment:   env,
+		Language:          model.Language(row.Language),
+		PromotionsConsent: row.PromotionsConsentedAt != nil,
+		LastSeenAt:        row.LastSeenAt,
+	}
 }

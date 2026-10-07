@@ -89,6 +89,7 @@ struct DailyStateTests {
         #expect(properties[.plan] == "free")
         #expect(properties[.locationAuth] == "always")
         #expect(properties[.signedIn] == "1")
+        #expect(properties[.promotionsConsent] == "1")
     }
 
     @Test func theEventCarriesRawCounts() throws {
@@ -100,6 +101,7 @@ struct DailyStateTests {
         #expect(values["days_since_install"] as? Int == 12)
         #expect(values["precise_location"] as? Int == 1)
         #expect(values["notification_auth"] as? String == "authorized")
+        #expect(values["promotions_consent"] as? Int == 1)
     }
 
     private static func subscription(isTrial: Bool) -> ProSubscription {
@@ -120,7 +122,8 @@ struct DailyStateTests {
         signedIn: true,
         locationAuth: .always,
         preciseLocation: true,
-        notificationAuth: .authorized
+        notificationAuth: .authorized,
+        promotionsConsent: true
     )
 }
 
@@ -153,27 +156,55 @@ struct DailyStateScheduleTests {
     }
 }
 
-struct LocationAuthHistoryTests {
+struct AuthHistoryTests {
+    private static let key = AuthHistory.locationKey
+
     @Test func theFirstReadingIsNotAChange() throws {
         let defaults = try makeDefaults()
 
-        #expect(LocationAuthHistory.change(to: .always, defaults: defaults) == nil)
-        #expect(LocationAuthHistory.change(to: .always, defaults: defaults) == nil)
+        #expect(AuthHistory.change(to: DailyState.LocationAuth.always, key: Self.key, defaults: defaults) == nil)
+        #expect(AuthHistory.change(to: DailyState.LocationAuth.always, key: Self.key, defaults: defaults) == nil)
     }
 
     @Test func aDowngradeIsReportedOnce() throws {
         let defaults = try makeDefaults()
-        _ = LocationAuthHistory.change(to: .always, defaults: defaults)
+        _ = AuthHistory.change(to: DailyState.LocationAuth.always, key: Self.key, defaults: defaults)
 
-        let change = try #require(LocationAuthHistory.change(to: .whenInUse, defaults: defaults))
+        let change = try #require(
+            AuthHistory.change(to: DailyState.LocationAuth.whenInUse, key: Self.key, defaults: defaults)
+        )
 
         #expect(change.from == .always)
         #expect(change.to == .whenInUse)
-        #expect(LocationAuthHistory.change(to: .whenInUse, defaults: defaults) == nil)
+        #expect(AuthHistory.change(to: DailyState.LocationAuth.whenInUse, key: Self.key, defaults: defaults) == nil)
+    }
+
+    @Test func eachPermissionKeepsItsOwnHistory() throws {
+        let defaults = try makeDefaults()
+        _ = AuthHistory.change(to: DailyState.LocationAuth.always, key: AuthHistory.locationKey, defaults: defaults)
+        _ = AuthHistory.change(
+            to: DailyState.NotificationAuth.authorized,
+            key: AuthHistory.notificationKey,
+            defaults: defaults
+        )
+
+        let change = try #require(AuthHistory.change(
+            to: DailyState.NotificationAuth.denied,
+            key: AuthHistory.notificationKey,
+            defaults: defaults
+        ))
+
+        #expect(change.from == .authorized)
+        #expect(change.to == .denied)
+        #expect(AuthHistory.change(
+            to: DailyState.LocationAuth.always,
+            key: AuthHistory.locationKey,
+            defaults: defaults
+        ) == nil)
     }
 
     private func makeDefaults() throws -> UserDefaults {
-        let suite = "LocationAuthHistoryTests.\(UUID().uuidString)"
+        let suite = "AuthHistoryTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
         return defaults

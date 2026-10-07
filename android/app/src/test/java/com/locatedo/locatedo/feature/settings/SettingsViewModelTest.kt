@@ -17,6 +17,7 @@ import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakeSyncStateRepository
 import com.locatedo.locatedo.testing.InMemorySessionStore
 import com.locatedo.locatedo.testing.testPreferences
+import com.locatedo.locatedo.testing.testPromotionsConsent
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -140,6 +141,18 @@ class SettingsViewModelTest {
         assertEquals(null, viewModel.uiState.first { it.pro.restoreResult == null }.pro.restoreResult)
     }
 
+    @Test
+    fun thePromotionsSwitchChangesConsent() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = viewModel(preferences)
+        assertFalse(viewModel.uiState.first { !it.isLoading }.promotionsConsent)
+
+        viewModel.setPromotionsConsent(true)
+
+        assertTrue(viewModel.uiState.first { it.promotionsConsent }.promotionsConsent)
+        assertTrue(preferences.promotions.first().consent)
+    }
+
     private fun TestScope.viewModel(preferences: com.locatedo.locatedo.core.datastore.AppPreferences): SettingsViewModel {
         val authenticator = Authenticator(
             InMemorySessionStore(),
@@ -156,6 +169,7 @@ class SettingsViewModelTest {
             syncState,
             FakeMembershipRepository(),
             paywalls,
+            testPromotionsConsent(preferences, backgroundScope),
         )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel

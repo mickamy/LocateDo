@@ -9,6 +9,9 @@ final class AppPreferences {
         static let defaultRadiusMeters = "defaultRadiusMeters"
         static let pendingSessionEndedNotice = "pendingSessionEndedNotice"
         static let pendingRemovedNotice = "pendingRemovedNotice"
+        static let promotionsConsent = "promotionsConsent"
+        static let receivedArrivalNotification = "receivedArrivalNotification"
+        static let shownPromotionsPrompt = "shownPromotionsPrompt"
     }
 
     private let defaults: UserDefaults
@@ -33,12 +36,27 @@ final class AppPreferences {
         didSet { defaults.set(hasPendingRemovedNotice, forKey: Key.pendingRemovedNotice) }
     }
 
+    var promotionsConsent: Bool {
+        didSet { defaults.set(promotionsConsent, forKey: Key.promotionsConsent) }
+    }
+
+    var hasReceivedArrivalNotification: Bool {
+        didSet { defaults.set(hasReceivedArrivalNotification, forKey: Key.receivedArrivalNotification) }
+    }
+
+    var hasShownPromotionsPrompt: Bool {
+        didSet { defaults.set(hasShownPromotionsPrompt, forKey: Key.shownPromotionsPrompt) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.completedOnboarding)
         hasPromptedAlwaysLocation = defaults.bool(forKey: Key.promptedAlwaysLocation)
         hasPendingSessionEndedNotice = defaults.bool(forKey: Key.pendingSessionEndedNotice)
         hasPendingRemovedNotice = defaults.bool(forKey: Key.pendingRemovedNotice)
+        promotionsConsent = defaults.bool(forKey: Key.promotionsConsent)
+        hasReceivedArrivalNotification = defaults.bool(forKey: Key.receivedArrivalNotification)
+        hasShownPromotionsPrompt = defaults.bool(forKey: Key.shownPromotionsPrompt)
         let storedRadius = defaults.double(forKey: Key.defaultRadiusMeters)
         defaultRadiusMeters = Place.radiusRange.contains(storedRadius) ? storedRadius : Place.defaultRadiusMeters
     }

@@ -39,16 +39,62 @@ CREATE TABLE apple_tokens
 
 CREATE TABLE devices
 (
-    id               uuid PRIMARY KEY     DEFAULT uuidv7(),
-    user_id          uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    platform         text        NOT NULL CHECK (platform IN ('ios', 'android')),
-    push_token       text        NOT NULL,
-    apns_environment text        CHECK (apns_environment IN ('sandbox', 'production')),
-    last_seen_at     timestamptz NOT NULL DEFAULT now(),
+    id                      uuid PRIMARY KEY     DEFAULT uuidv7(),
+    user_id                 uuid        REFERENCES users (id) ON DELETE CASCADE,
+    platform                text        NOT NULL CHECK (platform IN ('ios', 'android')),
+    push_token              text        NOT NULL,
+    apns_environment        text        CHECK (apns_environment IN ('sandbox', 'production')),
+    language                text        NOT NULL DEFAULT 'en' CHECK (language IN ('en', 'ja')),
+    -- NULL while the device does not consent to promotional pushes.
+    promotions_consented_at timestamptz,
+    last_seen_at            timestamptz NOT NULL DEFAULT now(),
     UNIQUE (platform, push_token)
 );
 
 CREATE INDEX devices_user_id_idx ON devices (user_id);
+CREATE INDEX devices_language_idx ON devices (language) WHERE promotions_consented_at IS NOT NULL;
+
+-- Outlives the device: anonymous devices are deleted when they withdraw consent.
+CREATE TABLE promotions_consent_changes
+(
+    id         uuid PRIMARY KEY     DEFAULT uuidv7(),
+    device_id  uuid        NOT NULL,
+    user_id    uuid        REFERENCES users (id) ON DELETE SET NULL,
+    consented  boolean     NOT NULL,
+    changed_at timestamptz NOT NULL
+);
+
+CREATE INDEX promotions_consent_changes_device_id_idx ON promotions_consent_changes (device_id);
+CREATE INDEX promotions_consent_changes_user_id_idx ON promotions_consent_changes (user_id);
+
+CREATE TABLE campaigns
+(
+    id                 uuid PRIMARY KEY     DEFAULT uuidv7(),
+    language           text        NOT NULL CHECK (language IN ('en', 'ja')),
+    title              text        NOT NULL,
+    body               text        NOT NULL,
+    url                text,
+    target_count       integer     NOT NULL,
+    sent_count         integer,
+    unregistered_count integer,
+    failed_count       integer,
+    uncertain_count    integer,
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    sent_at            timestamptz
+);
+
+-- Written before the push goes out, so a device is never sent a campaign twice;
+-- sent_at stays NULL when it is unknown whether the push reached the service.
+CREATE TABLE campaign_deliveries
+(
+    campaign_id  uuid        NOT NULL REFERENCES campaigns (id) ON DELETE CASCADE,
+    device_id    uuid        NOT NULL REFERENCES devices (id) ON DELETE CASCADE,
+    attempted_at timestamptz NOT NULL,
+    sent_at      timestamptz,
+    PRIMARY KEY (campaign_id, device_id)
+);
+
+CREATE INDEX campaign_deliveries_device_id_idx ON campaign_deliveries (device_id);
 
 CREATE TABLE households
 (
@@ -191,6 +237,9 @@ DROP TABLE categories;
 DROP TABLE household_invites;
 DROP TABLE memberships;
 DROP TABLE households;
+DROP TABLE campaign_deliveries;
+DROP TABLE campaigns;
+DROP TABLE promotions_consent_changes;
 DROP TABLE devices;
 DROP TABLE apple_tokens;
 DROP TABLE refresh_tokens;

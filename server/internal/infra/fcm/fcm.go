@@ -1,4 +1,4 @@
-// Package fcm sends silent data messages through Firebase Cloud Messaging.
+// Package fcm sends data messages through Firebase Cloud Messaging.
 package fcm
 
 import (
@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -33,14 +34,30 @@ const (
 	maxResponseBytes = 1 << 16
 )
 
+// ErrNotDelivered means the message surely did not reach FCM: it failed
+// before being sent, or FCM answered with an error. Other errors leave it
+// unknown.
+var ErrNotDelivered = errors.New("fcm: message not delivered")
+
 // ErrUnregistered means the installation is no longer registered with FCM;
 // the caller should forget it.
-var ErrUnregistered = errors.New("fcm: installation is no longer registered")
+var ErrUnregistered = fmt.Errorf("%w: installation is no longer registered", ErrNotDelivered)
 
 type Pusher interface {
 	// Wake sends the installation a data message that lets the app pull in
 	// the background.
 	Wake(ctx context.Context, installationID string, now time.Time) error
+	// Promote sends a promotional campaign for the app to show as a
+	// notification once it has checked its own consent.
+	Promote(ctx context.Context, installationID string, p Promotion, now time.Time) error
+}
+
+type Promotion struct {
+	CampaignID uuid.UUID
+	Title      string
+	Body       string
+	// URL is opened on tap when set.
+	URL string
 }
 
 var _ Pusher = Client{}
@@ -110,6 +127,23 @@ func NewClient(cfg Config, httpClient *http.Client) Client {
 }
 
 func (c Client) Wake(ctx context.Context, installationID string, now time.Time) error {
+	return c.send(ctx, installationID, map[string]string{"reason": "sync"}, now)
+}
+
+func (c Client) Promote(ctx context.Context, installationID string, p Promotion, now time.Time) error {
+	data := map[string]string{
+		"type":        "campaign",
+		"campaign_id": p.CampaignID.String(),
+		"title":       p.Title,
+		"body":        p.Body,
+	}
+	if p.URL != "" {
+		data["url"] = p.URL
+	}
+	return c.send(ctx, installationID, data, now)
+}
+
+func (c Client) send(ctx context.Context, installationID string, data map[string]string, now time.Time) error {
 	account := c.cfg.ServiceAccount
 	if account == nil {
 		logger.Debug(ctx, "fcm is not configured; dropping push", "installation_id", installationID)
@@ -117,23 +151,23 @@ func (c Client) Wake(ctx context.Context, installationID string, now time.Time) 
 	}
 	bearer, err := c.token.get(ctx, c, now)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrNotDelivered, err)
 	}
 
 	body, err := json.Marshal(map[string]any{
 		"message": map[string]any{
 			"fid":     installationID,
-			"data":    map[string]string{"reason": "sync"},
+			"data":    data,
 			"android": map[string]string{"priority": "normal"},
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("encode message: %w", err)
+		return fmt.Errorf("%w: encode message: %w", ErrNotDelivered, err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
 		c.cfg.BaseURL+"/v1/projects/"+account.ProjectID+"/messages:send", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("new request: %w", err)
+		return fmt.Errorf("%w: new request: %w", ErrNotDelivered, err)
 	}
 	req.Header.Set("Authorization", "Bearer "+bearer)
 	req.Header.Set("Content-Type", "application/json")
@@ -166,7 +200,7 @@ func (c Client) Wake(ctx context.Context, installationID string, now time.Time) 
 	if res.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("%w: %s", ErrUnregistered, apiErr.Error.Message)
 	}
-	return fmt.Errorf("status %d: %s", res.StatusCode, apiErr.Error.Message)
+	return fmt.Errorf("%w: status %d: %s", ErrNotDelivered, res.StatusCode, apiErr.Error.Message)
 }
 
 type accessToken struct {

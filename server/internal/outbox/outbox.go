@@ -21,6 +21,7 @@ const (
 	KindPushHousehold    Kind = "push_household"
 	KindRevokeAppleToken Kind = "revoke_apple_token"
 	KindSyncEntitlement  Kind = "sync_entitlement"
+	KindSendCampaign     Kind = "send_campaign"
 )
 
 // PushHousehold matches what the sync triggers enqueue, for writes that
@@ -42,6 +43,18 @@ func SyncEntitlement(userID uuid.UUID, now time.Time) Message {
 	return Message{
 		Kind:      KindSyncEntitlement,
 		Payload:   []byte(`{"user_id":"` + userID.String() + `"}`),
+		DedupeKey: &key,
+		RunAt:     now,
+	}
+}
+
+// SendCampaign asks the worker to deliver the campaign to the devices it has
+// not reached yet.
+func SendCampaign(campaignID uuid.UUID, now time.Time) Message {
+	key := "campaign:" + campaignID.String()
+	return Message{
+		Kind:      KindSendCampaign,
+		Payload:   []byte(`{"campaign_id":"` + campaignID.String() + `"}`),
 		DedupeKey: &key,
 		RunAt:     now,
 	}

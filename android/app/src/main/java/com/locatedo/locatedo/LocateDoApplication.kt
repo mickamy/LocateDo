@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.locatedo.locatedo.core.account.AccountManager
 import com.locatedo.locatedo.core.analytics.DailyStateReporter
+import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
@@ -15,7 +16,10 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.geofence.GeofenceSync
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
+import com.locatedo.locatedo.core.notifications.CampaignNotifier
+import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.push.DeviceRegistration
+import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.core.push.PushMessages
 import com.locatedo.locatedo.core.sharing.HouseholdManager
 import com.locatedo.locatedo.core.sync.NetworkMonitor
@@ -24,6 +28,7 @@ import dagger.hilt.android.HiltAndroidApp
 import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -33,6 +38,8 @@ class LocateDoApplication : Application() {
     @Inject lateinit var categories: CategoryRepository
 
     @Inject lateinit var notifier: ArrivalNotifier
+
+    @Inject lateinit var campaignNotifier: CampaignNotifier
 
     @Inject lateinit var geofenceSync: GeofenceSync
 
@@ -54,6 +61,12 @@ class LocateDoApplication : Application() {
 
     @Inject lateinit var dailyStateReporter: DailyStateReporter
 
+    @Inject lateinit var writeAnalytics: WriteAnalytics
+
+    @Inject lateinit var promotionsConsent: PromotionsConsent
+
+    @Inject lateinit var permissions: PermissionsRepository
+
     @Inject lateinit var appStatus: AppStatusStore
 
     @Inject lateinit var clock: Clock
@@ -63,6 +76,7 @@ class LocateDoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         notifier.prepare()
+        campaignNotifier.prepare()
         applicationScope.launch {
             preferences.recordFirstLaunch(clock.instant())
             categories.ensureBuiltins()
@@ -88,13 +102,14 @@ class LocateDoApplication : Application() {
             } catch (e: Exception) {
                 Log.w(TAG, "Initial upload failed", e)
             }
-            deviceRegistration.registerIfSignedIn()
+            deviceRegistration.registerIfNeeded()
         }
     }
 
     // Pull on every return to the foreground (after re-reading the app status), when the server says something
     // changed, when the network comes back, when a maintenance window ends, and as soon as the device has a
-    // household. Being removed from the household starts a fresh one.
+    // household. Being removed from the household starts a fresh one. A foreground also checks whether the promotions
+    // sheet is due.
     private fun collectSyncTriggers() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->
@@ -106,6 +121,11 @@ class LocateDoApplication : Application() {
                         }
                         syncEngine.sync()
                         dailyStateReporter.report()
+                        promotionsConsent.checkPrompt(
+                            notificationAuth = permissions.observe().first().notifications,
+                            lastArrivalOpenedAt = writeAnalytics.lastArrivalOpenedAt,
+                            now = clock.instant(),
+                        )
                     }
                 }
             },

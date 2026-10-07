@@ -16,14 +16,16 @@ func NewWorker(infra di.Infra, lib di.Lib) *Worker {
 	pushHousehold := job.NewPushHousehold(infra)
 	revokeAppleToken := job.NewRevokeAppleToken(infra, lib)
 	syncEntitlement := job.NewSyncEntitlement(infra)
-	handlers := NewHandlers(pushHousehold, revokeAppleToken, syncEntitlement)
+	sendCampaign := job.NewSendCampaign(infra)
+	handlers := NewHandlers(pushHousehold, revokeAppleToken, syncEntitlement, sendCampaign)
 	consumer := NewConsumer(transactor, repository, handlers)
 	sweepTombstones := job.NewSweepTombstones(infra)
 	sweepRefreshTokens := job.NewSweepRefreshTokens(infra)
 	sweepDeadMessages := job.NewSweepDeadMessages(infra)
+	sweepAnonymousDevices := job.NewSweepAnonymousDevices(infra)
 	reconcileEntitlements := job.NewReconcileEntitlements(infra)
 	reportOutbox := job.NewReportOutbox(infra)
-	tasks := NewTasks(sweepTombstones, sweepRefreshTokens, sweepDeadMessages, reconcileEntitlements, reportOutbox)
+	tasks := NewTasks(sweepTombstones, sweepRefreshTokens, sweepDeadMessages, sweepAnonymousDevices, reconcileEntitlements, reportOutbox)
 	scheduler := NewScheduler(tasks)
 
 	return &Worker{

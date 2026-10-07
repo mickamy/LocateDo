@@ -12,6 +12,32 @@ import (
 	"uuid"
 )
 
+const deleteAnonymousDevicesUnseenSince = `-- name: DeleteAnonymousDevicesUnseenSince :execrows
+DELETE
+FROM devices
+WHERE user_id IS NULL
+  AND last_seen_at < $1
+`
+
+func (q *Queries) DeleteAnonymousDevicesUnseenSince(ctx context.Context, lastSeenAt time.Time) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteAnonymousDevicesUnseenSince, lastSeenAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const deleteDevice = `-- name: DeleteDevice :exec
+DELETE
+FROM devices
+WHERE id = $1
+`
+
+func (q *Queries) DeleteDevice(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteDevice, id)
+	return err
+}
+
 const deleteDeviceByToken = `-- name: DeleteDeviceByToken :exec
 DELETE
 FROM devices
@@ -35,10 +61,11 @@ FROM devices
 WHERE user_id = $1
   AND platform = $2
   AND push_token = $3
+  AND promotions_consented_at IS NULL
 `
 
 type DeleteUserDeviceByTokenParams struct {
-	UserID    uuid.UUID
+	UserID    *uuid.UUID
 	Platform  string
 	PushToken string
 }
@@ -48,8 +75,79 @@ func (q *Queries) DeleteUserDeviceByToken(ctx context.Context, arg DeleteUserDev
 	return err
 }
 
+const detachConsentingUserDeviceByToken = `-- name: DetachConsentingUserDeviceByToken :exec
+UPDATE devices
+SET user_id = NULL
+WHERE user_id = $1
+  AND platform = $2
+  AND push_token = $3
+  AND promotions_consented_at IS NOT NULL
+`
+
+type DetachConsentingUserDeviceByTokenParams struct {
+	UserID    *uuid.UUID
+	Platform  string
+	PushToken string
+}
+
+func (q *Queries) DetachConsentingUserDeviceByToken(ctx context.Context, arg DetachConsentingUserDeviceByTokenParams) error {
+	_, err := q.db.Exec(ctx, detachConsentingUserDeviceByToken, arg.UserID, arg.Platform, arg.PushToken)
+	return err
+}
+
+const findDeviceByTokenForUpdate = `-- name: FindDeviceByTokenForUpdate :one
+SELECT id, user_id, platform, push_token, apns_environment, language, promotions_consented_at, last_seen_at
+FROM devices
+WHERE platform = $1
+  AND push_token = $2
+    FOR UPDATE
+`
+
+type FindDeviceByTokenForUpdateParams struct {
+	Platform  string
+	PushToken string
+}
+
+func (q *Queries) FindDeviceByTokenForUpdate(ctx context.Context, arg FindDeviceByTokenForUpdateParams) (Device, error) {
+	row := q.db.QueryRow(ctx, findDeviceByTokenForUpdate, arg.Platform, arg.PushToken)
+	var i Device
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Platform,
+		&i.PushToken,
+		&i.ApnsEnvironment,
+		&i.Language,
+		&i.PromotionsConsentedAt,
+		&i.LastSeenAt,
+	)
+	return i, err
+}
+
+const insertPromotionsConsentChange = `-- name: InsertPromotionsConsentChange :exec
+INSERT INTO promotions_consent_changes (device_id, user_id, consented, changed_at)
+VALUES ($1, $2, $3, $4)
+`
+
+type InsertPromotionsConsentChangeParams struct {
+	DeviceID  uuid.UUID
+	UserID    *uuid.UUID
+	Consented bool
+	ChangedAt time.Time
+}
+
+func (q *Queries) InsertPromotionsConsentChange(ctx context.Context, arg InsertPromotionsConsentChangeParams) error {
+	_, err := q.db.Exec(ctx, insertPromotionsConsentChange,
+		arg.DeviceID,
+		arg.UserID,
+		arg.Consented,
+		arg.ChangedAt,
+	)
+	return err
+}
+
 const listHouseholdDevices = `-- name: ListHouseholdDevices :many
-SELECT d.id, d.user_id, d.platform, d.push_token, d.apns_environment, d.last_seen_at
+SELECT d.id, d.user_id, d.platform, d.push_token, d.apns_environment, d.language, d.promotions_consented_at, d.last_seen_at
 FROM devices d
          JOIN memberships m ON m.user_id = d.user_id
 WHERE m.household_id = $1
@@ -77,6 +175,8 @@ func (q *Queries) ListHouseholdDevices(ctx context.Context, arg ListHouseholdDev
 			&i.Platform,
 			&i.PushToken,
 			&i.ApnsEnvironment,
+			&i.Language,
+			&i.PromotionsConsentedAt,
 			&i.LastSeenAt,
 		); err != nil {
 			return nil, err
@@ -89,31 +189,45 @@ func (q *Queries) ListHouseholdDevices(ctx context.Context, arg ListHouseholdDev
 	return items, nil
 }
 
-const upsertDevice = `-- name: UpsertDevice :exec
-INSERT INTO devices (user_id, platform, push_token, apns_environment, last_seen_at)
-VALUES ($1, $2, $3, $4, $5)
+const upsertDevice = `-- name: UpsertDevice :one
+INSERT INTO devices (user_id, platform, push_token, apns_environment, language, promotions_consented_at, last_seen_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (platform, push_token) DO UPDATE
-    SET user_id          = EXCLUDED.user_id,
-        apns_environment = EXCLUDED.apns_environment,
-        last_seen_at     = EXCLUDED.last_seen_at
+    SET user_id                 = COALESCE(EXCLUDED.user_id, devices.user_id),
+        apns_environment        = EXCLUDED.apns_environment,
+        language                = EXCLUDED.language,
+        promotions_consented_at = CASE
+                                      WHEN EXCLUDED.promotions_consented_at IS NOT NULL
+                                          THEN COALESCE(devices.promotions_consented_at,
+                                                        EXCLUDED.promotions_consented_at)
+            END,
+        last_seen_at            = EXCLUDED.last_seen_at
+RETURNING id
 `
 
 type UpsertDeviceParams struct {
-	UserID          uuid.UUID
-	Platform        string
-	PushToken       string
-	ApnsEnvironment *string
-	LastSeenAt      time.Time
+	UserID                *uuid.UUID
+	Platform              string
+	PushToken             string
+	ApnsEnvironment       *string
+	Language              string
+	PromotionsConsentedAt *time.Time
+	LastSeenAt            time.Time
 }
 
-// A token already registered, to anyone, moves to this user.
-func (q *Queries) UpsertDevice(ctx context.Context, arg UpsertDeviceParams) error {
-	_, err := q.db.Exec(ctx, upsertDevice,
+// A token already registered moves to this user; an anonymous registration
+// (no user) leaves its owner in place. Consenting again keeps the original time.
+func (q *Queries) UpsertDevice(ctx context.Context, arg UpsertDeviceParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, upsertDevice,
 		arg.UserID,
 		arg.Platform,
 		arg.PushToken,
 		arg.ApnsEnvironment,
+		arg.Language,
+		arg.PromotionsConsentedAt,
 		arg.LastSeenAt,
 	)
-	return err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }

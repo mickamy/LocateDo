@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"uuid"
 
 	"connectrpc.com/connect"
 
@@ -25,9 +26,9 @@ func (h *Device) RegisterDevice(
 	ctx context.Context,
 	req *connect.Request[devicev1.RegisterDeviceRequest],
 ) (*connect.Response[devicev1.RegisterDeviceResponse], error) {
-	userID, err := caller.UserID(ctx)
-	if err != nil {
-		return nil, cerrors.Map(err)
+	var userID *uuid.UUID
+	if id, err := caller.UserID(ctx); err == nil {
+		userID = &id
 	}
 
 	if err := h.registerDevice.Do(ctx, usecase.RegisterDeviceInput{

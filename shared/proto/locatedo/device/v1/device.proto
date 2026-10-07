@@ -5,6 +5,8 @@ package locatedo.device.v1;
 import "buf/validate/validate.proto";
 
 service DeviceService {
+  // The access token is optional. Without one the device is registered
+  // anonymously, and the server keeps it only while promotions_consent is on.
   rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
 }
 
@@ -32,6 +34,16 @@ message RegisterDeviceRequest {
     max_len: 4096
   }];
   ApnsEnvironment apns_environment = 3 [(buf.validate.field).enum.defined_only = true];
+  bool promotions_consent = 4;
+  string language = 5 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string = {
+      in: [
+        "en",
+        "ja"
+      ]
+    }
+  ];
 
   option (buf.validate.message).cel = {
     id: "register_device_request.apns_environment"

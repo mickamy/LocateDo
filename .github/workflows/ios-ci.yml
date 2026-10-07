@@ -27,14 +27,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Boot the simulator while building
         run: xcrun simctl boot "$SIMULATOR" || true
+      # hashFiles walks the whole workspace and has timed out here, so the one file is hashed directly.
       - id: xcode
-        run: echo "version=$(xcodebuild -version | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(xcodebuild -version | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          echo "packages=$(shasum -a 256 ios/LocateDo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: DerivedData
-          key: ios-dd-v1-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/LocateDo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ github.sha }}
+          key: ios-dd-v1-${{ steps.xcode.outputs.version }}-${{ steps.xcode.outputs.packages }}-${{ github.sha }}
           restore-keys: |
-            ios-dd-v1-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/LocateDo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+            ios-dd-v1-${{ steps.xcode.outputs.version }}-${{ steps.xcode.outputs.packages }}-
             ios-dd-v1-${{ steps.xcode.outputs.version }}-
       - name: Build for testing
         id: build
@@ -71,7 +74,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && steps.build.outcome == 'success' }}
         with:
           path: DerivedData
-          key: ios-dd-v1-${{ steps.xcode.outputs.version }}-${{ hashFiles('ios/LocateDo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ github.sha }}
+          key: ios-dd-v1-${{ steps.xcode.outputs.version }}-${{ steps.xcode.outputs.packages }}-${{ github.sha }}
 
   lint:
     name: SwiftLint
