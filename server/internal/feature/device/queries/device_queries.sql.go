@@ -147,6 +147,43 @@ func (q *Queries) InsertPromotionsConsentChange(ctx context.Context, arg InsertP
 	return err
 }
 
+const listCompletionNoticeDevices = `-- name: ListCompletionNoticeDevices :many
+SELECT id, user_id, platform, push_token, apns_environment, language, promotions_consented_at, completion_notices, last_seen_at
+FROM devices
+WHERE user_id = $1
+  AND completion_notices
+`
+
+func (q *Queries) ListCompletionNoticeDevices(ctx context.Context, userID *uuid.UUID) ([]Device, error) {
+	rows, err := q.db.Query(ctx, listCompletionNoticeDevices, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Device
+	for rows.Next() {
+		var i Device
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Platform,
+			&i.PushToken,
+			&i.ApnsEnvironment,
+			&i.Language,
+			&i.PromotionsConsentedAt,
+			&i.CompletionNotices,
+			&i.LastSeenAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listHouseholdDevices = `-- name: ListHouseholdDevices :many
 SELECT d.id, d.user_id, d.platform, d.push_token, d.apns_environment, d.language, d.promotions_consented_at, d.completion_notices, d.last_seen_at
 FROM devices d

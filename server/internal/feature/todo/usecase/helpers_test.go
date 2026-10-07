@@ -52,3 +52,34 @@ func completions(t *testing.T, d tdb.DB, todoID uuid.UUID) []completion {
 	require.NoError(t, rows.Err())
 	return out
 }
+
+func createdBy(t *testing.T, d tdb.DB, userID uuid.UUID, todoIDs ...uuid.UUID) {
+	t.Helper()
+
+	for _, id := range todoIDs {
+		_, err := d.Writer.Exec(t.Context(), "UPDATE todos SET creator_id = $1 WHERE id = $2", userID, id)
+		require.NoError(t, err)
+	}
+}
+
+type queuedNotice struct {
+	dedupeKey string
+	runAt     time.Time
+}
+
+func completionNotices(t *testing.T, d tdb.DB) []queuedNotice {
+	t.Helper()
+
+	rows, err := d.Writer.Query(t.Context(),
+		"SELECT dedupe_key, run_at FROM outbox_messages WHERE kind = 'notify_completion' ORDER BY id")
+	require.NoError(t, err)
+	defer rows.Close()
+	var out []queuedNotice
+	for rows.Next() {
+		var n queuedNotice
+		require.NoError(t, rows.Scan(&n.dedupeKey, &n.runAt))
+		out = append(out, n)
+	}
+	require.NoError(t, rows.Err())
+	return out
+}

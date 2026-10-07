@@ -13,6 +13,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/todo/usecase"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/test/tdb"
+	"github.com/mickamy/LocateDo/test/tseed"
 )
 
 func TestSetTodoCompletion_completeThenReopen(t *testing.T) {
@@ -159,4 +160,69 @@ func TestSetTodoCompletion_recordsEachCompletion(t *testing.T) {
 	assert.Equal(t, &h.OwnerID, got[1].completerID)
 	assert.True(t, later.Equal(got[1].completedAt))
 	assert.Nil(t, got[1].reopenedAt)
+}
+
+func TestSetTodoCompletion_queuesANoticeToTheCreator(t *testing.T) {
+	t.Parallel()
+
+	// arrange: the member checks off two of the owner's to-dos
+	d := tdb.New(t)
+	setCompletion := usecase.NewSetTodoCompletion(d.Infra())
+	h := d.Seeder.Household(t, hmodel.PlanPro)
+	memberID := d.Seeder.Member(t, h.ID)
+	placeID := d.Seeder.Place(t, h.ID)
+	first := d.Seeder.Todo(t, h.ID, placeID)
+	second := d.Seeder.Todo(t, h.ID, placeID)
+	createdBy(t, d, h.OwnerID, first, second)
+	ctx := clock.Set(t.Context(), clock.NewFixed(now))
+
+	// act
+	for _, id := range []uuid.UUID{first, second} {
+		require.NoError(t, setCompletion.Do(ctx, usecase.SetTodoCompletionInput{
+			UserID: memberID, HouseholdID: h.ID, TodoID: id, CompletedAt: &now,
+		}))
+	}
+
+	// assert
+	got := completionNotices(t, d)
+	require.Len(t, got, 1, "completions gather into one notice")
+	assert.Equal(t, "completion:"+h.OwnerID.String()+":"+memberID.String(), got[0].dedupeKey)
+	assert.True(t, now.Add(2*time.Minute).Equal(got[0].runAt))
+}
+
+func TestSetTodoCompletion_queuesNoNotice(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		creator func(t *testing.T, d tdb.DB, h tseed.Household) *uuid.UUID
+	}{
+		{name: "own to-do", creator: func(_ *testing.T, _ tdb.DB, h tseed.Household) *uuid.UUID { return &h.OwnerID }},
+		{name: "unknown creator", creator: func(*testing.T, tdb.DB, tseed.Household) *uuid.UUID { return nil }},
+		{name: "creator left the household", creator: func(t *testing.T, d tdb.DB, _ tseed.Household) *uuid.UUID {
+			return new(d.Seeder.User(t))
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			d := tdb.New(t)
+			h := d.Seeder.Household(t, hmodel.PlanPro)
+			id := d.Seeder.Todo(t, h.ID, d.Seeder.Place(t, h.ID))
+			if creator := tt.creator(t, d, h); creator != nil {
+				createdBy(t, d, *creator, id)
+			}
+
+			// act
+			err := usecase.NewSetTodoCompletion(d.Infra()).Do(t.Context(), usecase.SetTodoCompletionInput{
+				UserID: h.OwnerID, HouseholdID: h.ID, TodoID: id, CompletedAt: &now,
+			})
+
+			// assert
+			require.NoError(t, err)
+			assert.Empty(t, completionNotices(t, d))
+		})
+	}
 }

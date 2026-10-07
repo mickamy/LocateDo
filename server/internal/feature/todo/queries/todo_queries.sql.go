@@ -12,6 +12,63 @@ import (
 	"uuid"
 )
 
+const claimCompletionNotice = `-- name: ClaimCompletionNotice :many
+UPDATE todo_completions c
+SET notified_at = $1
+FROM todos t
+WHERE t.id = c.todo_id
+  AND t.household_id = $2
+  AND t.creator_id = $3
+  AND t.completed_at IS NOT NULL
+  AND c.completer_id = $4
+  AND c.reopened_at IS NULL
+  AND c.notified_at IS NULL
+  AND NOT EXISTS (SELECT 1
+                  FROM todo_completions p
+                  WHERE p.todo_id = c.todo_id
+                    AND p.notified_at IS NOT NULL)
+RETURNING t.title, c.completed_at
+`
+
+type ClaimCompletionNoticeParams struct {
+	NotifiedAt  *time.Time
+	HouseholdID uuid.UUID
+	CreatorID   *uuid.UUID
+	CompleterID *uuid.UUID
+}
+
+type ClaimCompletionNoticeRow struct {
+	Title       string
+	CompletedAt time.Time
+}
+
+// Marks the creator's to-dos the completer checked off and nobody announced
+// yet, skipping reopened ones and to-dos announced before, and returns them.
+func (q *Queries) ClaimCompletionNotice(ctx context.Context, arg ClaimCompletionNoticeParams) ([]ClaimCompletionNoticeRow, error) {
+	rows, err := q.db.Query(ctx, claimCompletionNotice,
+		arg.NotifiedAt,
+		arg.HouseholdID,
+		arg.CreatorID,
+		arg.CompleterID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ClaimCompletionNoticeRow
+	for rows.Next() {
+		var i ClaimCompletionNoticeRow
+		if err := rows.Scan(&i.Title, &i.CompletedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countOpenTodos = `-- name: CountOpenTodos :one
 SELECT count(*)
 FROM todos

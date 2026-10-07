@@ -6,6 +6,7 @@ tool (
 	github.com/air-verse/air
 	github.com/go-kanna/kanna/cmd/kanna-di
 	github.com/go-kanna/kanna/cmd/kanna-fixture
+	github.com/go-kanna/kanna/cmd/kanna-i18n
 	github.com/go-kanna/kanna/cmd/kanna-mapper
 	github.com/pressly/goose/v3/cmd/goose
 	github.com/sqlc-dev/sqlc/cmd/sqlc

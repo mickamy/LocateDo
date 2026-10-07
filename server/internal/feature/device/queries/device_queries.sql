@@ -70,3 +70,9 @@ RETURNING id;
 -- name: InsertPromotionsConsentChange :exec
 INSERT INTO promotions_consent_changes (device_id, user_id, consented, changed_at)
 VALUES ($1, $2, $3, $4);
+
+-- name: ListCompletionNoticeDevices :many
+SELECT id, user_id, platform, push_token, apns_environment, language, promotions_consented_at, completion_notices, last_seen_at
+FROM devices
+WHERE user_id = $1
+  AND completion_notices;

@@ -54,3 +54,22 @@ UPDATE todo_completions
 SET reopened_at = $2
 WHERE todo_id = $1
   AND reopened_at IS NULL;
+
+-- Marks the creator's to-dos the completer checked off and nobody announced
+-- yet, skipping reopened ones and to-dos announced before, and returns them.
+-- name: ClaimCompletionNotice :many
+UPDATE todo_completions c
+SET notified_at = sqlc.arg(notified_at)
+FROM todos t
+WHERE t.id = c.todo_id
+  AND t.household_id = sqlc.arg(household_id)
+  AND t.creator_id = sqlc.arg(creator_id)
+  AND t.completed_at IS NOT NULL
+  AND c.completer_id = sqlc.arg(completer_id)
+  AND c.reopened_at IS NULL
+  AND c.notified_at IS NULL
+  AND NOT EXISTS (SELECT 1
+                  FROM todo_completions p
+                  WHERE p.todo_id = c.todo_id
+                    AND p.notified_at IS NOT NULL)
+RETURNING t.title, c.completed_at;

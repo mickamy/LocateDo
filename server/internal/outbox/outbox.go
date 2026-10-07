@@ -22,6 +22,7 @@ const (
 	KindRevokeAppleToken Kind = "revoke_apple_token"
 	KindSyncEntitlement  Kind = "sync_entitlement"
 	KindSendCampaign     Kind = "send_campaign"
+	KindNotifyCompletion Kind = "notify_completion"
 )
 
 // PushHousehold matches what the sync triggers enqueue, for writes that
@@ -57,6 +58,25 @@ func SendCampaign(campaignID uuid.UUID, now time.Time) Message {
 		Payload:   []byte(`{"campaign_id":"` + campaignID.String() + `"}`),
 		DedupeKey: &key,
 		RunAt:     now,
+	}
+}
+
+// CompletionNoticeDelay is how long completions by one member of another's
+// to-dos gather into one notice.
+const CompletionNoticeDelay = 2 * time.Minute
+
+// NotifyCompletion asks the worker to tell the creator about the completer's
+// completions of their to-dos. The first one schedules it CompletionNoticeDelay
+// later, and the ones until then join it.
+func NotifyCompletion(householdID, creatorID, completerID uuid.UUID, now time.Time) Message {
+	key := "completion:" + creatorID.String() + ":" + completerID.String()
+	payload := `{"household_id":"` + householdID.String() + `","creator_id":"` + creatorID.String() +
+		`","completer_id":"` + completerID.String() + `"}`
+	return Message{
+		Kind:      KindNotifyCompletion,
+		Payload:   []byte(payload),
+		DedupeKey: &key,
+		RunAt:     now.Add(CompletionNoticeDelay),
 	}
 }
 

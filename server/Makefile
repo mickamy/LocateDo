@@ -27,6 +27,7 @@ DB_NAME = locatedo
 		gen-mapper \
 		gen-sqlc \
 		gen-fixture \
+		gen-i18n \
 		new-migration \
 
 .env:
@@ -129,6 +130,9 @@ gen-mapper:
 
 gen-sqlc:
 	go tool -modfile=tools/go.mod sqlc generate
+
+gen-i18n:
+	go tool -modfile=tools/go.mod kanna-i18n -locales=internal/messages/locales -destination=internal/messages
 
 gen-fixture:
 	go tool -modfile=tools/go.mod kanna-fixture -package=fixture \

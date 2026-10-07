@@ -6,6 +6,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/di"
 	repository2 "github.com/mickamy/LocateDo/internal/feature/household/repository"
 	"github.com/mickamy/LocateDo/internal/feature/todo/repository"
+	"github.com/mickamy/LocateDo/internal/outbox"
 )
 
 // NewDeleteTodo initializes dependencies and constructs DeleteTodo.
@@ -39,11 +40,15 @@ func NewSetTodoCompletion(infra di.Infra) *SetTodoCompletion {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	households := repository2.NewHousehold(reader)
+	memberships := repository2.NewMembership(reader)
 	todos := repository.NewTodo(reader)
+	messages := outbox.NewRepository(reader)
 
 	return &SetTodoCompletion{
-		transactor: transactor,
-		households: households,
-		todos:      todos,
+		transactor:  transactor,
+		households:  households,
+		memberships: memberships,
+		todos:       todos,
+		messages:    messages,
 	}
 }

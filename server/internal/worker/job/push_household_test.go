@@ -160,6 +160,7 @@ type fakePusher struct {
 	envs     map[string]apns.Environment
 	promoted []string
 	promos   map[string]apns.Promotion
+	notices  map[string][]apns.CompletionNotice
 }
 
 var _ apns.Pusher = (*fakePusher)(nil)
@@ -193,9 +194,24 @@ func (f *fakePusher) Promote(_ context.Context, _ apns.Environment, token string
 }
 
 func (f *fakePusher) NotifyCompletion(
-	context.Context, apns.Environment, string, apns.CompletionNotice, time.Time,
+	_ context.Context, _ apns.Environment, token string, n apns.CompletionNotice, _ time.Time,
 ) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.notices == nil {
+		f.notices = map[string][]apns.CompletionNotice{}
+	}
+	f.notices[token] = append(f.notices[token], n)
 	return nil
+}
+
+func (f *fakePusher) completionNotices(token string) []apns.CompletionNotice {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.notices[token])
 }
 
 func (f *fakePusher) promotedTokens() []string {
@@ -229,6 +245,7 @@ type fakeFCM struct {
 	woke     []string
 	promoted []string
 	promos   map[string]fcm.Promotion
+	notices  map[string][]fcm.CompletionNotice
 }
 
 var _ fcm.Pusher = (*fakeFCM)(nil)
@@ -257,8 +274,23 @@ func (f *fakeFCM) Promote(_ context.Context, token string, p fcm.Promotion, _ ti
 	return nil
 }
 
-func (f *fakeFCM) NotifyCompletion(context.Context, string, fcm.CompletionNotice, time.Time) error {
+func (f *fakeFCM) NotifyCompletion(_ context.Context, token string, n fcm.CompletionNotice, _ time.Time) error {
+	if err := f.fail[token]; err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.notices == nil {
+		f.notices = map[string][]fcm.CompletionNotice{}
+	}
+	f.notices[token] = append(f.notices[token], n)
 	return nil
+}
+
+func (f *fakeFCM) completionNotices(token string) []fcm.CompletionNotice {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.notices[token])
 }
 
 func (f *fakeFCM) promotedTokens() []string {
