@@ -3,7 +3,7 @@ agp = "9.4.1"
 # AGP 9 bundles Kotlin 2.2.10, which cannot read libraries built with Kotlin 2.4 (maps-compose), so the root build
 # script puts this newer Kotlin Gradle plugin on the classpath. The Compose compiler and serialization plugins match it;
 # KSP 2.3+ is versioned on its own.
-kotlin = "2.3.21"
+kotlin = "2.4.20"
 ksp = "2.3.12"
 hilt = "2.60.1"
 coreKtx = "1.19.1"

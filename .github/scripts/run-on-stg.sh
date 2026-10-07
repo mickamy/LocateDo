@@ -8,8 +8,8 @@ script=${1:?script file}
 comment=${2:?comment}
 
 node_id=$(aws ssm describe-instance-information \
-  --filters Key=tag:Name,Values=locatedo-stg-pi Key=PingStatus,Values=Online \
-  --query 'InstanceInformationList[0].InstanceId' --output text)
+  --filters Key=tag:Name,Values=locatedo-stg-pi \
+  --query "InstanceInformationList[?PingStatus=='Online'] | [0].InstanceId" --output text)
 if [ -z "${node_id}" ] || [ "${node_id}" = None ]; then
   echo "::error::the locatedo-stg-pi node is not online in SSM"
   exit 1
@@ -17,7 +17,9 @@ fi
 
 parameters=$(mktemp)
 trap 'rm -f "${parameters}"' EXIT
-jq -n --rawfile script "${script}" '{commands: [$script], executionTimeout: ["900"]}' >"${parameters}"
+encoded=$(base64 -w0 "${script}")
+command="set -e; f=\$(mktemp); trap 'rm -f \"\$f\"' EXIT; echo ${encoded} | base64 -d >\"\$f\"; bash \"\$f\""
+jq -n --arg command "${command}" '{commands: [$command], executionTimeout: ["900"]}' >"${parameters}"
 
 command_id=$(aws ssm send-command --instance-ids "${node_id}" \
   --document-name AWS-RunShellScript --parameters "file://${parameters}" \
