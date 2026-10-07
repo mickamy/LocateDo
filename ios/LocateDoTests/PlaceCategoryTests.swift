@@ -55,11 +55,11 @@ struct PlaceCategoryTests {
     }
 
     @Test func everyPaletteKeyHasItsOwnStyle() {
-        let symbols = CategoryPalette.icons.map { CategoryStyle.systemImage(forIcon: $0) }
+        let symbols = CategoryPalette.icons.map { CategoryAppearance.systemImage(forIcon: $0) }
         #expect(Set(symbols).count == CategoryPalette.icons.count)
         #expect(!symbols.contains("tag.slash"))
 
-        let tints = CategoryPalette.colors.map { CategoryStyle.tint(forColor: $0) }
+        let tints = CategoryPalette.colors.map { CategoryAppearance.tint(forColor: $0) }
         #expect(Set(tints).count == CategoryPalette.colors.count)
     }
 

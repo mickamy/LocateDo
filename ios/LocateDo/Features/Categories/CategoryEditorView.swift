@@ -24,11 +24,11 @@ struct CategoryEditorView: View {
             Form {
                 Section {
                     HStack(spacing: 12) {
-                        Image(systemName: CategoryStyle.systemImage(forIcon: icon))
+                        Image(systemName: CategoryAppearance.systemImage(forIcon: icon))
                             .font(.title3)
                             .foregroundStyle(.white)
                             .frame(width: 44, height: 44)
-                            .background(CategoryStyle.tint(forColor: color), in: .circle)
+                            .background(CategoryAppearance.tint(forColor: color), in: .circle)
                             .accessibilityHidden(true)
                         TextField(text: $name) {
                             Text(.categoryNamePlaceholder)
@@ -90,14 +90,15 @@ struct CategoryEditorView: View {
 
     private func iconButton(_ key: String) -> some View {
         let isSelected = key == icon
+        let tint = CategoryAppearance.tint(forColor: color)
         return Button {
             icon = key
         } label: {
-            Image(systemName: CategoryStyle.systemImage(forIcon: key))
+            Image(systemName: CategoryAppearance.systemImage(forIcon: key))
                 .font(.title3)
                 .frame(width: 44, height: 44)
-                .foregroundStyle(isSelected ? Color.white : CategoryStyle.tint(forColor: color))
-                .background(isSelected ? CategoryStyle.tint(forColor: color) : Color(.tertiarySystemFill), in: .circle)
+                .foregroundStyle(isSelected ? Color.white : tint)
+                .background(isSelected ? tint : Color(.tertiarySystemFill), in: .circle)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -109,13 +110,13 @@ struct CategoryEditorView: View {
             color = key
         } label: {
             Circle()
-                .fill(CategoryStyle.tint(forColor: key))
+                .fill(CategoryAppearance.tint(forColor: key))
                 .frame(width: 32, height: 32)
                 .padding(4)
                 .overlay {
                     if isSelected {
                         Circle()
-                            .strokeBorder(CategoryStyle.tint(forColor: key), lineWidth: 2)
+                            .strokeBorder(CategoryAppearance.tint(forColor: key), lineWidth: 2)
                     }
                 }
                 .frame(width: 44, height: 44)
