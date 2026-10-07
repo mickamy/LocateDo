@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.home
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +18,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -90,6 +95,7 @@ fun PlaceDetailSheet(
                     )
                 }
             }
+            PlaceMenu(onDelete = onDelete)
             IconButton(onClick = onClose) {
                 Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_done))
             }
@@ -109,11 +115,6 @@ fun PlaceDetailSheet(
                 onClick = onEdit,
                 label = { Text(stringResource(R.string.common_edit)) },
                 leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
-            )
-            AssistChip(
-                onClick = onDelete,
-                label = { Text(stringResource(R.string.place_detail_delete)) },
-                leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
             )
         }
         Text(
@@ -150,6 +151,27 @@ fun PlaceDetailSheet(
             )
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+// Deleting is rare and cannot be undone, so it sits behind the menu instead of next to the everyday actions.
+@Composable
+private fun PlaceMenu(onDelete: () -> Unit) {
+    var isExpanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { isExpanded = true }) {
+            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.common_more))
+        }
+        DropdownMenu(expanded = isExpanded, onDismissRequest = { isExpanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.place_detail_delete)) },
+                onClick = {
+                    isExpanded = false
+                    onDelete()
+                },
+                leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
+            )
+        }
     }
 }
 
