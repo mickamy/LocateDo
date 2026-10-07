@@ -11,10 +11,12 @@ import (
 )
 
 type Device struct {
-	ID              uuid.UUID
-	UserID          uuid.UUID
-	Platform        string
-	PushToken       string
-	ApnsEnvironment *string
-	LastSeenAt      time.Time
+	ID                    uuid.UUID
+	UserID                *uuid.UUID
+	Platform              string
+	PushToken             string
+	ApnsEnvironment       *string
+	Language              string
+	PromotionsConsentedAt *time.Time
+	LastSeenAt            time.Time
 }

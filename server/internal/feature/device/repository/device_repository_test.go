@@ -23,20 +23,15 @@ func TestDevice_Upsert_tokenMovesToTheLatestUser(t *testing.T) {
 
 	// arrange
 	d := tdb.New(t)
-	devices := repository.NewDevice(d.Reader)
 	first := d.Seeder.User(t)
 	second := d.Seeder.User(t)
-	dev := fixture.Device(func(m *model.Device) { m.UserID = first; m.LastSeenAt = now })
+	dev := fixture.Device(func(m *model.Device) { m.UserID = new(first); m.LastSeenAt = now })
 
 	// act
-	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
-	})
-	dev.UserID = second
+	upsert(t, d, dev)
+	dev.UserID = new(second)
 	dev.LastSeenAt = now.Add(time.Hour)
-	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
-	})
+	upsert(t, d, dev)
 
 	// assert
 	var count int
@@ -48,6 +43,75 @@ func TestDevice_Upsert_tokenMovesToTheLatestUser(t *testing.T) {
 	assert.Equal(t, 1, count, "one row per token")
 	assert.Equal(t, second, userID)
 	assert.True(t, now.Add(time.Hour).Equal(lastSeenAt))
+}
+
+func TestDevice_Upsert_withoutUserKeepsTheOwner(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	owner := d.Seeder.User(t)
+	dev := fixture.Device(func(m *model.Device) { m.UserID = new(owner); m.LastSeenAt = now })
+	upsert(t, d, dev)
+
+	// act
+	dev.UserID = nil
+	dev.Language = model.LanguageJapanese
+	upsert(t, d, dev)
+
+	// assert
+	var userID *uuid.UUID
+	var language string
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT user_id, language FROM devices WHERE push_token = $1", dev.PushToken).Scan(&userID, &language))
+	assert.Equal(t, new(owner), userID)
+	assert.Equal(t, "ja", language)
+}
+
+func TestDevice_Upsert_promotionsConsentedAt(t *testing.T) {
+	t.Parallel()
+
+	later := now.Add(time.Hour)
+	tests := map[string]struct {
+		before *bool
+		after  bool
+		want   *time.Time
+	}{
+		"new row without consent": {before: nil, after: false, want: nil},
+		"new row with consent":    {before: nil, after: true, want: &later},
+		"consent given":           {before: new(false), after: true, want: &later},
+		"consent withdrawn":       {before: new(true), after: false, want: nil},
+		"consent kept":            {before: new(true), after: true, want: &now},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			d := tdb.New(t)
+			dev := fixture.Device(func(m *model.Device) { m.LastSeenAt = now })
+			if tt.before != nil {
+				dev.PromotionsConsent = *tt.before
+				upsert(t, d, dev)
+			}
+
+			// act
+			dev.PromotionsConsent = tt.after
+			dev.LastSeenAt = later
+			upsert(t, d, dev)
+
+			// assert
+			var got *time.Time
+			require.NoError(t, d.Writer.QueryRow(t.Context(),
+				"SELECT promotions_consented_at FROM devices WHERE push_token = $1", dev.PushToken).Scan(&got))
+			if tt.want == nil {
+				assert.Nil(t, got)
+				return
+			}
+			require.NotNil(t, got)
+			assert.True(t, tt.want.Equal(*got), "got %v", *got)
+		})
+	}
 }
 
 func TestDevice_Upsert_apnsEnvironment(t *testing.T) {
@@ -67,18 +131,15 @@ func TestDevice_Upsert_apnsEnvironment(t *testing.T) {
 
 			// arrange
 			d := tdb.New(t)
-			devices := repository.NewDevice(d.Reader)
 			dev := fixture.Device(func(m *model.Device) {
-				m.UserID = d.Seeder.User(t)
+				m.UserID = new(d.Seeder.User(t))
 				m.Platform = tt.platform
 				m.APNsEnvironment = tt.env
 				m.LastSeenAt = now
 			})
 
 			// act
-			d.InTx(t, func(tx tx.Tx) {
-				require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
-			})
+			upsert(t, d, dev)
 
 			// assert
 			var got *string
@@ -95,14 +156,75 @@ func TestDevice_Upsert_unknownUser(t *testing.T) {
 	// arrange
 	d := tdb.New(t)
 	devices := repository.NewDevice(d.Reader)
+	dev := fixture.Device(func(m *model.Device) { m.UserID = new(uuid.NewV7()); m.LastSeenAt = now })
 
 	// act
 	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
-		return devices.Bind(tx).Upsert(t.Context(), fixture.Device(func(m *model.Device) { m.LastSeenAt = now }))
+		_, err := devices.Bind(tx).Upsert(t.Context(), dev)
+		return err
 	})
 
 	// assert
 	require.ErrorIs(t, err, aerrors.ErrInvalidArgument)
+}
+
+func TestDevice_FindByTokenForUpdate(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	devices := repository.NewDevice(d.Reader)
+	dev := fixture.Device(func(m *model.Device) { m.LastSeenAt = now })
+	dev.ID = upsert(t, d, dev)
+
+	// act
+	var got model.Device
+	d.InTx(t, func(tx tx.Tx) {
+		var err error
+		got, err = devices.Bind(tx).FindByTokenForUpdate(t.Context(), dev.Platform, dev.PushToken)
+		require.NoError(t, err)
+	})
+
+	// assert
+	assert.Equal(t, dev.ID, got.ID)
+	assert.Nil(t, got.UserID)
+	assert.Equal(t, dev.Language, got.Language)
+	assert.Equal(t, dev.PromotionsConsent, got.PromotionsConsent)
+}
+
+func TestDevice_FindByTokenForUpdate_notFound(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	devices := repository.NewDevice(d.Reader)
+
+	// act
+	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
+		_, err := devices.Bind(tx).FindByTokenForUpdate(t.Context(), model.PlatformIOS, "unknown")
+		return err
+	})
+
+	// assert
+	require.ErrorIs(t, err, aerrors.ErrNotFound)
+}
+
+func TestDevice_Delete(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	devices := repository.NewDevice(d.Reader)
+	dev := fixture.Device(func(m *model.Device) { m.LastSeenAt = now })
+	id := upsert(t, d, dev)
+
+	// act
+	d.InTx(t, func(tx tx.Tx) {
+		require.NoError(t, devices.Bind(tx).Delete(t.Context(), id))
+	})
+
+	// assert
+	assert.Equal(t, 0, countDevices(t, d, dev.PushToken))
 }
 
 func TestDevice_DeleteOwnedByToken(t *testing.T) {
@@ -112,10 +234,8 @@ func TestDevice_DeleteOwnedByToken(t *testing.T) {
 	d := tdb.New(t)
 	devices := repository.NewDevice(d.Reader)
 	owner := d.Seeder.User(t)
-	dev := fixture.Device(func(m *model.Device) { m.UserID = owner; m.LastSeenAt = now })
-	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
-	})
+	dev := fixture.Device(func(m *model.Device) { m.UserID = new(owner); m.LastSeenAt = now })
+	upsert(t, d, dev)
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {
@@ -134,10 +254,8 @@ func TestDevice_DeleteOwnedByToken_anotherUsersToken(t *testing.T) {
 	devices := repository.NewDevice(d.Reader)
 	owner := d.Seeder.User(t)
 	other := d.Seeder.User(t)
-	dev := fixture.Device(func(m *model.Device) { m.UserID = owner; m.LastSeenAt = now })
-	d.InTx(t, func(tx tx.Tx) {
-		require.NoError(t, devices.Bind(tx).Upsert(t.Context(), dev))
-	})
+	dev := fixture.Device(func(m *model.Device) { m.UserID = new(owner); m.LastSeenAt = now })
+	upsert(t, d, dev)
 
 	// act
 	d.InTx(t, func(tx tx.Tx) {
@@ -146,6 +264,18 @@ func TestDevice_DeleteOwnedByToken_anotherUsersToken(t *testing.T) {
 
 	// assert
 	assert.Equal(t, 1, countDevices(t, d, dev.PushToken))
+}
+
+func upsert(t *testing.T, d tdb.DB, dev model.Device) uuid.UUID {
+	t.Helper()
+
+	var id uuid.UUID
+	d.InTx(t, func(tx tx.Tx) {
+		var err error
+		id, err = repository.NewDevice(d.Reader).Bind(tx).Upsert(t.Context(), dev)
+		require.NoError(t, err)
+	})
+	return id
 }
 
 func countDevices(t *testing.T, d tdb.DB, pushToken string) int {

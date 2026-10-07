@@ -10,6 +10,7 @@ import (
 func init() {
 	mapper.Register(PlatformFromDevicev1)
 	mapper.Register(APNsEnvironmentFromDevicev1)
+	mapper.Register(LanguageFromString)
 }
 
 func PlatformFromDevicev1(p devicev1.Platform) model.Platform {
@@ -36,4 +37,13 @@ func APNsEnvironmentFromDevicev1(e devicev1.ApnsEnvironment) model.APNsEnvironme
 	default:
 		return ""
 	}
+}
+
+// LanguageFromString reads anything but ja, including the empty value older
+// builds send, as en.
+func LanguageFromString(s string) model.Language {
+	if s == string(model.LanguageJapanese) {
+		return model.LanguageJapanese
+	}
+	return model.LanguageEnglish
 }

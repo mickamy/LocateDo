@@ -12,9 +12,11 @@ func NewRegisterDevice(infra di.Infra) *RegisterDevice {
 	transactor := infra.Transactor
 	reader := infra.Reader
 	devices := repository.NewDevice(reader)
+	consentChanges := repository.NewPromotionsConsentChange(reader)
 
 	return &RegisterDevice{
-		transactor: transactor,
-		devices:    devices,
+		transactor:     transactor,
+		devices:        devices,
+		consentChanges: consentChanges,
 	}
 }
