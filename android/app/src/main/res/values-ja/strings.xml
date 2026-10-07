@@ -157,7 +157,7 @@
     <string name="settings_account_android_apple_sign_in">Appleでサインイン</string>
     <string name="settings_account_android_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この端末の場所とやることはアカウントのデータに置き換わります。</string>
     <string name="settings_account_android_replace_confirm_title">この端末のデータを置き換えますか？</string>
-    <string name="settings_account_android_sign_in">Google でサインイン</string>
+    <string name="settings_account_android_sign_in">Google でログイン</string>
     <string name="settings_account_android_sign_out_confirm_message">この端末の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_android_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この端末の場所とやることは消えます。</string>
     <string name="settings_account_benefits_android_privacy_message">現在地がこの端末の外に出ることはありません。メールアドレスもいただきません。</string>
