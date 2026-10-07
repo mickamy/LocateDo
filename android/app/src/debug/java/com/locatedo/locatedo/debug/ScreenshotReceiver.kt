@@ -1,10 +1,14 @@
 package com.locatedo.locatedo.debug
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.location.Location
+import android.os.SystemClock
 import androidx.core.app.NotificationManagerCompat
 import androidx.room.withTransaction
+import com.google.android.gms.location.LocationServices
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.data.LocalData
 import com.locatedo.locatedo.core.database.CategoryDao
@@ -26,10 +30,13 @@ import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 // Replaces local data with a tidy example for Play screenshots, driven over adb by `fastlane screenshots`:
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a seed --es language ja
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a notify --es language ja
+// and `fastlane location_video`, which moves the device into a geofence (the app must be the mock location app):
+//   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a move --es latitude 37.326 --es longitude -122.0322
 class ScreenshotReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val japanese = intent.getStringExtra(EXTRA_LANGUAGE) == "ja"
@@ -44,6 +51,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
                         NotificationManagerCompat.from(context).cancelAll()
                         notifyArrival(graph, japanese)
                     }
+                    ACTION_MOVE -> move(context, intent)
                 }
             } finally {
                 result.finish()
@@ -110,9 +118,27 @@ class ScreenshotReceiver : BroadcastReceiver() {
         graph.arrivalNotifier().notifyArrival(place, entry.todos)
     }
 
+    // Geofences follow the fused provider, which an emulator's `geo fix` does not reach while no app asks for GPS.
+    @SuppressLint("MissingPermission")
+    private suspend fun move(context: Context, intent: Intent) {
+        val location = Location("mock").apply {
+            latitude = intent.getStringExtra(EXTRA_LATITUDE)!!.toDouble()
+            longitude = intent.getStringExtra(EXTRA_LONGITUDE)!!.toDouble()
+            accuracy = 5f
+            time = System.currentTimeMillis()
+            elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+        }
+        val client = LocationServices.getFusedLocationProviderClient(context)
+        client.setMockMode(true).await()
+        client.setMockLocation(location).await()
+    }
+
     private companion object {
         const val ACTION_SEED = "seed"
         const val ACTION_NOTIFY = "notify"
+        const val ACTION_MOVE = "move"
+        const val EXTRA_LATITUDE = "latitude"
+        const val EXTRA_LONGITUDE = "longitude"
         const val EXTRA_LANGUAGE = "language"
         const val RADIUS_METERS = 150.0
     }
