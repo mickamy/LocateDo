@@ -64,6 +64,8 @@ import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
 import com.locatedo.locatedo.feature.account.GoogleSignInButton
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
+import com.locatedo.locatedo.ui.appstatus.MaintenanceNote
 import com.locatedo.locatedo.ui.components.BenefitRow
 import com.locatedo.locatedo.ui.components.shownName
 
@@ -293,10 +295,16 @@ private fun SharingHeader(status: SharingStatus, state: SharingUiState, onUpgrad
 
 @Composable
 private fun InviteAction(state: SharingUiState, onInvite: () -> Unit) {
+    val isUnderMaintenance = LocalAppStatus.current.activeMaintenance != null
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = onInvite, modifier = Modifier.fillMaxWidth(), enabled = state.seatsLeft > 0 && !state.isWorking) {
+        Button(
+            onClick = onInvite,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state.seatsLeft > 0 && !state.isWorking && !isUnderMaintenance,
+        ) {
             Text(stringResource(R.string.sharing_invite))
         }
+        MaintenanceNote()
         val caption = if (state.seatsLeft == 0) {
             stringResource(R.string.sharing_full)
         } else {

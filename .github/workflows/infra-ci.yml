@@ -36,6 +36,7 @@ jobs:
           - bootstrap
           - persistent
           - google
+          - stg
     defaults:
       run:
         working-directory: deploy/tofu/${{ matrix.root }}

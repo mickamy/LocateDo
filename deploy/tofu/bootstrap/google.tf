@@ -25,7 +25,7 @@ locals {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          "token.actions.githubusercontent.com:sub" = "${local.github_sub}:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = local.github_infra_subs
         }
       }
     }]
@@ -139,8 +139,9 @@ resource "aws_iam_role_policy" "google_plan" {
         Resource = local.google_state_arn
       },
       {
+        # The lock is read back before it is released.
         Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:DeleteObject"]
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
         Resource = "${local.google_state_arn}.tflock"
       },
     ]
@@ -171,7 +172,7 @@ resource "aws_iam_role_policy" "google_apply" {
       },
       {
         Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:DeleteObject"]
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
         Resource = "${local.google_state_arn}.tflock"
       },
     ]

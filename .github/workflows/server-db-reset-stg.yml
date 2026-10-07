@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: Type "reset" to drop every row in the stg database
+        description: Type "reset" to drop staging's database and start from an empty one
         required: true
 
 permissions:
@@ -17,43 +17,25 @@ concurrency:
 jobs:
   reset:
     if: inputs.confirm == 'reset'
-    runs-on: self-hosted
-    environment: stg
-    timeout-minutes: 10
-    env:
-      COMPOSE_FILE: compose.stg.yaml
+    runs-on: ubuntu-latest
+    environment: server-stg
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          go-version-file: server/go.mod
-          cache: false
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/locatedo-stg-deploy
+          aws-region: us-west-2
 
-      - name: Create .env file
-        run: |
-          make -B -C server .env
-
-      - name: Stop api and worker
-        working-directory: server
-        run: |
-          docker compose stop api worker
-
-      - name: Reset database
-        run: |
-          make -C server db-reset
-
-      - name: Start api and worker
-        if: always()
-        working-directory: server
-        run: |
-          docker compose start api worker
-
-      - name: Remove .env file
-        if: always()
-        run: |
-          rm -f server/.env
+      - name: Reset the database on the Pi
+        run: .github/scripts/run-on-stg.sh server/scripts/reset-stg.sh "reset the database"

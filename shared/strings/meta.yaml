@@ -54,3 +54,5 @@ removed.android_message:
   platforms: [android]
 paywall.android_renewal_note:
   platforms: [android]
+update.android_open_play:
+  platforms: [android]

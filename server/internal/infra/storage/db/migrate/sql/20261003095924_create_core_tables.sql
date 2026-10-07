@@ -159,6 +159,7 @@ CREATE TABLE deletions
 );
 
 CREATE INDEX deletions_household_id_version_idx ON deletions (household_id, version);
+CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
 
 CREATE TABLE outbox_messages
 (
@@ -180,15 +181,14 @@ CREATE UNIQUE INDEX outbox_messages_pending_dedupe_key_idx ON outbox_messages (d
 CREATE INDEX outbox_messages_pending_run_at_idx ON outbox_messages (run_at) WHERE status = 'pending';
 CREATE INDEX outbox_messages_running_lease_until_idx ON outbox_messages (lease_until) WHERE status = 'running';
 CREATE INDEX outbox_messages_dead_at_idx ON outbox_messages (dead_at) WHERE status = 'dead';
-CREATE INDEX deletions_deleted_at_idx ON deletions (deleted_at);
 
 -- +goose Down
 DROP TABLE outbox_messages;
 DROP TABLE deletions;
-DROP TABLE household_invites;
 DROP TABLE todos;
 DROP TABLE places;
 DROP TABLE categories;
+DROP TABLE household_invites;
 DROP TABLE memberships;
 DROP TABLE households;
 DROP TABLE devices;

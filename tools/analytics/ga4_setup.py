@@ -10,10 +10,9 @@ must be enabled in the key's Google Cloud project. Safe to rerun: existing defin
 import sys
 import urllib.error
 
-from google_token import access_token, call
+from google_token import access_token, call, default_key_path
 
 PROPERTY_ID = "483038986"
-KEY_PATH = "ios/fastlane/credentials/locatedo-firebase-adminsdk-fbsvc-3085ceab82.json"
 API = "https://analyticsadmin.googleapis.com/v1beta"
 SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 
@@ -60,7 +59,7 @@ def list_all(token, path, field):
 
 def main():
     property_id = sys.argv[1] if len(sys.argv) > 1 else PROPERTY_ID
-    key_path = sys.argv[2] if len(sys.argv) > 2 else KEY_PATH
+    key_path = sys.argv[2] if len(sys.argv) > 2 else default_key_path()
     token, email = access_token(key_path, SCOPE)
     prop = f"properties/{property_id}"
     print(f"Using {email} on {prop}")

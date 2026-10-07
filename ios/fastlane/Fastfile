@@ -192,7 +192,7 @@ platform :ios do
   desc "Build a Staging Ad Hoc archive and distribute it through Firebase App Distribution"
   lane :firebase do
     setup_ci if is_ci
-    api_key
+    # Read-only match never contacts the developer portal, so staging needs no App Store Connect key.
     match(type: "adhoc", app_identifier: STAGING_APP_IDENTIFIER, readonly: true)
     archive(
       app_identifier: STAGING_APP_IDENTIFIER,

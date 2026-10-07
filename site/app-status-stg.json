@@ -1,5 +1,12 @@
 {
   "minimum_version": { "ios": "1.0.0", "android": "1.0.0" },
   "maintenance": null,
-  "notice": null
+  "notice": {
+    "id": "2026-10-stg-notice-check",
+    "until": "2026-10-14T00:00:00Z",
+    "message": {
+      "ja": "お知らせの表示の確認です（staging のみ）。OK を押すと、次からは表示されません。",
+      "en": "This checks how notices are shown (staging only). After you tap OK, it will not appear again."
+    }
+  }
 }

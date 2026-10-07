@@ -302,6 +302,7 @@ update:
   title: "アップデートが必要です"
   message: "このバージョンのちかメモは使えなくなりました。最新のバージョンにアップデートしてください。"
   open_app_store: "App Store を開く"
+  android_open_play: "Google Play を開く"
 maintenance:
   upcoming: "{start}〜{end} はサーバーのメンテナンスのため同期を止めます。"
   active: "サーバーのメンテナンス中です。{end} ごろに再開し、ためた変更を同期します。"

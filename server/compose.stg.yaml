@@ -1,41 +1,59 @@
+# Runs on the staging Raspberry Pi next to a .env built from Parameter Store
+# (/locatedo/stg/db/* and /locatedo/stg/app/*) and IMAGE_TAG set by the deploy.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+x-app: &app
+  image: ghcr.io/mickamy/locatedo-server:${IMAGE_TAG:?}
+  logging: *logging
+  env_file: .env
+  environment:
+    ENV: staging
+    MODULE_ROOT: /src
+    DATABASE_URL: postgres://admin:${DB_ADMIN_PASSWORD:?}@db:5432/locatedo?sslmode=disable
+    DATABASE_WRITER_URL: postgres://locatedo_writer:${DB_WRITER_PASSWORD:?}@db:5432/locatedo?sslmode=disable
+    DATABASE_READER_URL: postgres://locatedo_reader:${DB_READER_PASSWORD:?}@db:5432/locatedo?sslmode=disable
+  restart: always
+  depends_on:
+    db:
+      condition: service_healthy
+
 services:
   api:
-    build: .
+    <<: *app
     command: [ "/bin/api" ]
-    env_file: .env
-    environment:
-      ENV: staging
-      MODULE_ROOT: /src
-      DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
-      DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
-      DATABASE_READER_URL: postgres://locatedo_reader:password@db:5432/locatedo?sslmode=disable
-    restart: always
     ports:
       - "127.0.0.1:8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
 
   worker:
-    build: .
+    <<: *app
     command: [ "/bin/worker" ]
-    env_file: .env
-    environment:
-      ENV: staging
-      MODULE_ROOT: /src
-      DATABASE_URL: postgres://admin:password@db:5432/locatedo?sslmode=disable
-      DATABASE_WRITER_URL: postgres://locatedo_writer:password@db:5432/locatedo?sslmode=disable
-      DATABASE_READER_URL: postgres://locatedo_reader:password@db:5432/locatedo?sslmode=disable
-    restart: always
-    depends_on:
-      db:
-        condition: service_healthy
+
+  migrate:
+    <<: *app
+    command: [ "/bin/admin", "migrate" ]
+    restart: "no"
+    profiles:
+      - tools
+
+  # One-off operations, e.g. `docker compose run --rm admin set-plan -user <id> -plan pro`.
+  admin:
+    <<: *app
+    entrypoint: [ "/bin/admin" ]
+    restart: "no"
+    profiles:
+      - tools
 
   tunnel:
     image: cloudflare/cloudflared:2026.9.3
     command: tunnel --no-autoupdate run
     environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
+    logging: *logging
     restart: always
     depends_on:
       - api
@@ -44,13 +62,15 @@ services:
     image: postgres:18-alpine
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?}
       POSTGRES_DB: locatedo
+      DB_WRITER_PASSWORD: ${DB_WRITER_PASSWORD:?}
+      DB_READER_PASSWORD: ${DB_READER_PASSWORD:?}
+    logging: *logging
     restart: always
-    ports:
-      - "127.0.0.1:5432:5432"
     volumes:
       - db-data:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U admin -d locatedo" ]
       interval: 5s
@@ -58,5 +78,4 @@ services:
       retries: 10
 
 volumes:
-  go:
   db-data:

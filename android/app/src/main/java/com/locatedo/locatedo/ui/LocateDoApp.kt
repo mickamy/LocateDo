@@ -3,6 +3,7 @@ package com.locatedo.locatedo.ui
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,8 +36,10 @@ import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
+import com.locatedo.locatedo.core.appstatus.AppStatusDocument
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.feature.account.AccountScreen
+import com.locatedo.locatedo.feature.appstatus.UpdateRequiredScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
@@ -49,6 +53,9 @@ import com.locatedo.locatedo.feature.settings.SettingsScreen
 import com.locatedo.locatedo.feature.sharing.AcceptInviteScreen
 import com.locatedo.locatedo.feature.sharing.SharingScreen
 import com.locatedo.locatedo.feature.todos.TodoListScreen
+import com.locatedo.locatedo.ui.analytics.LocalAnalytics
+import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
+import com.locatedo.locatedo.ui.appstatus.MaintenanceBanner
 import com.locatedo.locatedo.ui.navigation.AcceptInviteKey
 import com.locatedo.locatedo.ui.navigation.AccountKey
 import com.locatedo.locatedo.ui.navigation.CategoriesKey
@@ -59,7 +66,6 @@ import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
-import com.locatedo.locatedo.ui.analytics.LocalAnalytics
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
 
@@ -79,9 +85,11 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     val pendingPlace by appViewModel.pendingPlace.collectAsStateWithLifecycle()
     val pendingInvite by appViewModel.pendingInvite.collectAsStateWithLifecycle()
     val pendingPaywall by appViewModel.pendingPaywall.collectAsStateWithLifecycle()
+    val appStatus = LocalAppStatus.current
 
     when {
         appState.isLoading -> Box(modifier = Modifier.fillMaxSize())
+        appStatus.requiresUpdate -> UpdateRequiredScreen()
         !appState.hasCompletedOnboarding -> OnboardingScreen()
         else -> Tabs(
             onPlaceAdded = appViewModel::placeAdded,
@@ -90,6 +98,8 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
             onInviteConsumed = appViewModel::inviteConsumed,
             pendingPaywall = pendingPaywall,
             onPaywallConsumed = appViewModel::paywallConsumed,
+            showsMaintenanceBanner = appState.isSignedIn,
+            onDismissMaintenanceBanner = appViewModel::dismissMaintenanceBanner,
         )
     }
     if (appState.isExplainingAlwaysLocation) {
@@ -98,6 +108,25 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     appState.notice?.let { notice ->
         NoticeDialog(notice = notice, onDismiss = appViewModel::dismissNotice)
     }
+    appStatus.pendingNotice?.let { notice ->
+        AnnouncementDialog(notice = notice, onDismiss = { appViewModel.noticeShown(notice) })
+    }
+}
+
+// An announcement from the app status, shown once per id.
+@Composable
+private fun AnnouncementDialog(notice: AppStatusDocument.Notice, onDismiss: () -> Unit) {
+    val language = LocalConfiguration.current.locales[0].language
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.announcement_title)) },
+        text = { Text(notice.message.text(language) ?: "") },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.common_ok))
+            }
+        },
+    )
 }
 
 @Composable
@@ -130,6 +159,8 @@ private fun Tabs(
     onInviteConsumed: (String) -> Unit,
     pendingPaywall: PaywallTrigger?,
     onPaywallConsumed: (PaywallTrigger) -> Unit,
+    showsMaintenanceBanner: Boolean,
+    onDismissMaintenanceBanner: () -> Unit,
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
@@ -182,111 +213,117 @@ private fun Tabs(
             }
         },
     ) { padding ->
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.padding(padding),
-            onBack = { backStack.removeLastOrNull() },
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            entryProvider = entryProvider {
-                entry<HomeKey> {
-                    HomeScreen(
-                        onAddPlace = {
-                            placeEditor.start(placeId = null)
-                            backStack.add(PlaceSearchKey)
-                        },
-                        onEditPlace = { placeId ->
-                            placeEditor.start(placeId)
-                            backStack.add(PlaceEditorKey)
-                        },
-                        onOpenSharing = {
-                            analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
-                            backStack.add(SharingKey)
-                        },
-                    )
-                }
-                entry<TodosKey> {
-                    TodoListScreen(
-                        onAddPlace = {
-                            placeEditor.start(placeId = null)
-                            backStack.add(PlaceSearchKey)
-                        },
-                        onOpenPlace = {
-                            backStack.clear()
-                            backStack.add(HomeKey)
-                        },
-                    )
-                }
-                entry<SettingsKey> {
-                    SettingsScreen(
-                        onOpenAccount = { backStack.add(AccountKey) },
-                        onOpenSharing = {
-                            analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "settings"))
-                            backStack.add(SharingKey)
-                        },
-                        onOpenCategories = { backStack.add(CategoriesKey) },
-                    )
-                }
-                entry<CategoriesKey> {
-                    CategoriesScreen(onBack = { backStack.removeLastOrNull() })
-                }
-                entry<AccountKey> {
-                    AccountScreen(onBack = { backStack.removeLastOrNull() })
-                }
-                entry<SharingKey> {
-                    SharingScreen(
-                        onBack = { backStack.removeLastOrNull() },
-                        onAcceptInvite = { backStack.add(AcceptInviteKey()) },
-                    )
-                }
-                entry<AcceptInviteKey> { key ->
-                    AcceptInviteScreen(
-                        token = key.token,
-                        onBack = { backStack.removeLastOrNull() },
-                        onJoined = { backStack.removeLastOrNull() },
-                    )
-                }
-                entry<PaywallKey> { key ->
-                    PaywallScreen(trigger = key.trigger, onClose = { backStack.removeLastOrNull() })
-                }
-                entry<PlaceSearchKey> {
-                    PlaceSearchScreen(
-                        viewModel = placeEditor,
-                        onChooseOnMap = { backStack.add(PlacePickKey) },
-                        onLocationChosen = { backStack.add(PlaceEditorKey) },
-                        onBack = { backStack.removeLastOrNull() },
-                    )
-                }
-                entry<PlacePickKey> {
-                    PlacePickScreen(
-                        viewModel = placeEditor,
-                        onLocationChosen = {
-                            backStack.removeLastOrNull()
-                            if (backStack.lastOrNull() != PlaceEditorKey) {
+        Column(modifier = Modifier.padding(padding)) {
+            // Only the tabs carry the banner; a flow screen or the paywall is not the place for it.
+            if (showsMaintenanceBanner && current in tabKeys) {
+                MaintenanceBanner(status = LocalAppStatus.current, onDismiss = onDismissMaintenanceBanner)
+            }
+            NavDisplay(
+                backStack = backStack,
+                modifier = Modifier.weight(1f),
+                onBack = { backStack.removeLastOrNull() },
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+                entryProvider = entryProvider {
+                    entry<HomeKey> {
+                        HomeScreen(
+                            onAddPlace = {
+                                placeEditor.start(placeId = null)
+                                backStack.add(PlaceSearchKey)
+                            },
+                            onEditPlace = { placeId ->
+                                placeEditor.start(placeId)
                                 backStack.add(PlaceEditorKey)
-                            }
-                        },
-                        onBack = { backStack.removeLastOrNull() },
-                    )
-                }
-                entry<PlaceEditorKey> {
-                    PlaceEditorScreen(
-                        viewModel = placeEditor,
-                        onChooseOnMap = { backStack.add(PlacePickKey) },
-                        onManageCategories = { backStack.add(CategoriesKey) },
-                        onSaved = { isNew ->
-                            backStack.leaveFlow()
-                            if (isNew) {
-                                onPlaceAdded()
-                            }
-                        },
-                        onCancel = { backStack.leaveFlow() },
-                    )
-                }
-            },
-        )
+                            },
+                            onOpenSharing = {
+                                analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
+                                backStack.add(SharingKey)
+                            },
+                        )
+                    }
+                    entry<TodosKey> {
+                        TodoListScreen(
+                            onAddPlace = {
+                                placeEditor.start(placeId = null)
+                                backStack.add(PlaceSearchKey)
+                            },
+                            onOpenPlace = {
+                                backStack.clear()
+                                backStack.add(HomeKey)
+                            },
+                        )
+                    }
+                    entry<SettingsKey> {
+                        SettingsScreen(
+                            onOpenAccount = { backStack.add(AccountKey) },
+                            onOpenSharing = {
+                                analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "settings"))
+                                backStack.add(SharingKey)
+                            },
+                            onOpenCategories = { backStack.add(CategoriesKey) },
+                        )
+                    }
+                    entry<CategoriesKey> {
+                        CategoriesScreen(onBack = { backStack.removeLastOrNull() })
+                    }
+                    entry<AccountKey> {
+                        AccountScreen(onBack = { backStack.removeLastOrNull() })
+                    }
+                    entry<SharingKey> {
+                        SharingScreen(
+                            onBack = { backStack.removeLastOrNull() },
+                            onAcceptInvite = { backStack.add(AcceptInviteKey()) },
+                        )
+                    }
+                    entry<AcceptInviteKey> { key ->
+                        AcceptInviteScreen(
+                            token = key.token,
+                            onBack = { backStack.removeLastOrNull() },
+                            onJoined = { backStack.removeLastOrNull() },
+                        )
+                    }
+                    entry<PaywallKey> { key ->
+                        PaywallScreen(trigger = key.trigger, onClose = { backStack.removeLastOrNull() })
+                    }
+                    entry<PlaceSearchKey> {
+                        PlaceSearchScreen(
+                            viewModel = placeEditor,
+                            onChooseOnMap = { backStack.add(PlacePickKey) },
+                            onLocationChosen = { backStack.add(PlaceEditorKey) },
+                            onBack = { backStack.removeLastOrNull() },
+                        )
+                    }
+                    entry<PlacePickKey> {
+                        PlacePickScreen(
+                            viewModel = placeEditor,
+                            onLocationChosen = {
+                                backStack.removeLastOrNull()
+                                if (backStack.lastOrNull() != PlaceEditorKey) {
+                                    backStack.add(PlaceEditorKey)
+                                }
+                            },
+                            onBack = { backStack.removeLastOrNull() },
+                        )
+                    }
+                    entry<PlaceEditorKey> {
+                        PlaceEditorScreen(
+                            viewModel = placeEditor,
+                            onChooseOnMap = { backStack.add(PlacePickKey) },
+                            onManageCategories = { backStack.add(CategoriesKey) },
+                            onSaved = { isNew ->
+                                backStack.leaveFlow()
+                                if (isNew) {
+                                    onPlaceAdded()
+                                }
+                            },
+                            onCancel = { backStack.leaveFlow() },
+                        )
+                    }
+                },
+            )
+        }
     }
 }
 

@@ -39,6 +39,8 @@ import com.locatedo.locatedo.feature.account.AccountFailure
 import com.locatedo.locatedo.feature.account.AccountViewModel
 import com.locatedo.locatedo.feature.account.GoogleSignInButton
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
+import com.locatedo.locatedo.ui.appstatus.MaintenanceNote
 import kotlinx.coroutines.launch
 
 // The link arrives pasted or from App Links; joining needs an account, so the signed-out form offers the sign-in.
@@ -123,13 +125,15 @@ fun AcceptInviteScreen(
                 )
             }
             if (uiState.isSignedIn) {
-                Button(onClick = viewModel::join, modifier = Modifier.fillMaxWidth(), enabled = uiState.canJoin) {
+                val isUnderMaintenance = LocalAppStatus.current.activeMaintenance != null
+                Button(onClick = viewModel::join, modifier = Modifier.fillMaxWidth(), enabled = uiState.canJoin && !isUnderMaintenance) {
                     if (uiState.isWorking) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                     } else {
                         Text(stringResource(R.string.invite_join))
                     }
                 }
+                MaintenanceNote()
             } else {
                 Text(
                     text = stringResource(R.string.sharing_android_sign_in_message),

@@ -16,6 +16,7 @@ import com.locatedo.device.v1.DeviceServiceClientInterface
 import com.locatedo.household.v1.HouseholdServiceClient
 import com.locatedo.household.v1.HouseholdServiceClientInterface
 import com.locatedo.locatedo.BuildConfig
+import com.locatedo.locatedo.core.appstatus.MaintenanceGate
 import com.locatedo.place.v1.PlaceServiceClient
 import com.locatedo.place.v1.PlaceServiceClientInterface
 import com.locatedo.sync.v1.SyncServiceClient
@@ -48,13 +49,13 @@ fun <T> ResponseMessage<T>.getOrThrow(): T = when (this) {
 object ApiModule {
     @Provides
     @Singleton
-    fun protocolClient(tokens: AccessTokenStore): ProtocolClientInterface = ProtocolClient(
+    fun protocolClient(tokens: AccessTokenStore, gate: MaintenanceGate): ProtocolClientInterface = ProtocolClient(
         ConnectOkHttpClient(),
         ProtocolClientConfig(
             host = BuildConfig.API_BASE_URL,
             serializationStrategy = GoogleJavaLiteProtobufStrategy(),
             networkProtocol = NetworkProtocol.CONNECT,
-            interceptors = listOf { AuthInterceptor(tokens) },
+            interceptors = listOf({ MaintenanceInterceptor(gate) }, { AuthInterceptor(tokens) }),
             ioCoroutineContext = Dispatchers.IO,
         ),
     )

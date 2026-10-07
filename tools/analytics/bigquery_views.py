@@ -13,13 +13,12 @@ import os
 import sys
 import urllib.error
 
-from google_token import access_token, call
+from google_token import access_token, call, default_key_path
 
 PROJECT = "locatedo"
 SOURCE_DATASET = "analytics_483038986"
 DATASET = "locatedo_views"
 LOCATION = "asia-northeast1"
-KEY_PATH = "ios/fastlane/credentials/locatedo-firebase-adminsdk-fbsvc-3085ceab82.json"
 API = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT}"
 SCOPE = "https://www.googleapis.com/auth/bigquery"
 
@@ -54,7 +53,7 @@ def apply_view(token, name, query):
 
 
 def main():
-    key_path = sys.argv[1] if len(sys.argv) > 1 else KEY_PATH
+    key_path = sys.argv[1] if len(sys.argv) > 1 else default_key_path()
     token, email = access_token(key_path, SCOPE)
     print(f"Using {email} on {PROJECT}")
     ensure_dataset(token)

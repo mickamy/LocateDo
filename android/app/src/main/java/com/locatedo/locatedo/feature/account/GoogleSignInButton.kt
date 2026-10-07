@@ -1,6 +1,9 @@
 package com.locatedo.locatedo.feature.account
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -11,12 +14,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.auth.GoogleSignIn
 import com.locatedo.locatedo.core.auth.GoogleSignInResult
 import com.locatedo.locatedo.core.auth.Nonce
+import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
+import com.locatedo.locatedo.ui.appstatus.MaintenanceNote
 import kotlinx.coroutines.launch
 
 // Credential Manager needs the Activity, so the sign-in runs from the screen and hands the ViewModel the id token.
@@ -28,29 +34,33 @@ fun GoogleSignInButton(viewModel: AccountViewModel, modifier: Modifier = Modifie
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
     val googleSignIn = remember { GoogleSignIn() }
+    val isUnderMaintenance = LocalAppStatus.current.activeMaintenance != null
 
-    Button(
-        onClick = {
-            val context = activity ?: return@Button
-            scope.launch {
-                val nonce = Nonce.make()
-                val result = try {
-                    googleSignIn.signIn(context, nonce)
-                } catch (e: GetCredentialException) {
-                    viewModel.signInFailed()
-                    return@launch
+    Column(modifier = modifier) {
+        Button(
+            onClick = {
+                val context = activity ?: return@Button
+                scope.launch {
+                    val nonce = Nonce.make()
+                    val result = try {
+                        googleSignIn.signIn(context, nonce)
+                    } catch (e: GetCredentialException) {
+                        viewModel.signInFailed()
+                        return@launch
+                    }
+                    when (result) {
+                        is GoogleSignInResult.IdToken -> viewModel.signIn(result.value, nonce)
+                        GoogleSignInResult.NoAccount -> viewModel.signInFailed()
+                        GoogleSignInResult.Canceled -> Unit
+                    }
                 }
-                when (result) {
-                    is GoogleSignInResult.IdToken -> viewModel.signIn(result.value, nonce)
-                    GoogleSignInResult.NoAccount -> viewModel.signInFailed()
-                    GoogleSignInResult.Canceled -> Unit
-                }
-            }
-        },
-        modifier = modifier,
-        enabled = enabled,
-    ) {
-        Text(stringResource(R.string.settings_account_android_sign_in))
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled && !isUnderMaintenance,
+        ) {
+            Text(stringResource(R.string.settings_account_android_sign_in))
+        }
+        MaintenanceNote(modifier = Modifier.padding(top = 8.dp))
     }
 
     if (uiState.needsReplaceConfirmation) {
