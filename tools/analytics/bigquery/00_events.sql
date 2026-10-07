@@ -10,6 +10,7 @@ SELECT
   device.language AS language,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'firebase_screen') AS screen,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'mode') AS mode,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'action') AS action,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'step') AS step,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'source') AS source,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'category') AS category,
