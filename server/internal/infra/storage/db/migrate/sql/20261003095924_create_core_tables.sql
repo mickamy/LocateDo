@@ -67,6 +67,31 @@ CREATE TABLE promotions_consent_changes
 CREATE INDEX promotions_consent_changes_device_id_idx ON promotions_consent_changes (device_id);
 CREATE INDEX promotions_consent_changes_user_id_idx ON promotions_consent_changes (user_id);
 
+CREATE TABLE campaigns
+(
+    id                 uuid PRIMARY KEY     DEFAULT uuidv7(),
+    language           text        NOT NULL CHECK (language IN ('en', 'ja')),
+    title              text        NOT NULL,
+    body               text        NOT NULL,
+    url                text,
+    target_count       integer     NOT NULL,
+    sent_count         integer,
+    unregistered_count integer,
+    failed_count       integer,
+    created_at         timestamptz NOT NULL DEFAULT now(),
+    sent_at            timestamptz
+);
+
+CREATE TABLE campaign_deliveries
+(
+    campaign_id uuid        NOT NULL REFERENCES campaigns (id) ON DELETE CASCADE,
+    device_id   uuid        NOT NULL REFERENCES devices (id) ON DELETE CASCADE,
+    sent_at     timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (campaign_id, device_id)
+);
+
+CREATE INDEX campaign_deliveries_device_id_idx ON campaign_deliveries (device_id);
+
 CREATE TABLE households
 (
     id            uuid PRIMARY KEY     DEFAULT uuidv7(),
@@ -208,6 +233,8 @@ DROP TABLE categories;
 DROP TABLE household_invites;
 DROP TABLE memberships;
 DROP TABLE households;
+DROP TABLE campaign_deliveries;
+DROP TABLE campaigns;
 DROP TABLE promotions_consent_changes;
 DROP TABLE devices;
 DROP TABLE apple_tokens;

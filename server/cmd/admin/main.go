@@ -11,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/mickamy/LocateDo/internal/di"
+	cmodel "github.com/mickamy/LocateDo/internal/feature/campaign/model"
+	cusecase "github.com/mickamy/LocateDo/internal/feature/campaign/usecase"
+	dmodel "github.com/mickamy/LocateDo/internal/feature/device/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
 	"github.com/mickamy/LocateDo/internal/infra/storage/db/migrate"
@@ -21,7 +24,9 @@ const usage = `usage: admin <command> [flags]
 commands:
   migrate                                     apply pending database migrations
   force-resync                                make every device pull its household from scratch (after a restore)
-  set-plan -user <user id> -plan <free|pro>   set the plan of the household the user owns`
+  set-plan -user <user id> -plan <free|pro>   set the plan of the household the user owns
+  send-campaign -language <en|ja> -title <title> -body <body> [-url <https url>] [-dry-run] [-force]
+                                              send a promotional push to the devices consenting in the language`
 
 func main() {
 	if err := run(context.Background(), di.NewConfig(), os.Args[1:]); err != nil {
@@ -41,6 +46,8 @@ func run(ctx context.Context, cfg di.Config, args []string) error {
 		return forceResync(ctx, cfg)
 	case "set-plan":
 		return setPlan(ctx, cfg, args[1:])
+	case "send-campaign":
+		return sendCampaign(ctx, cfg, args[1:])
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[0], usage)
 	}
@@ -111,5 +118,47 @@ func setPlan(ctx context.Context, cfg di.Config, args []string) error {
 	} else {
 		fmt.Printf("household %s: plan was already %s (0 households changed)\n", out.HouseholdID, plan)
 	}
+	return nil
+}
+
+func sendCampaign(ctx context.Context, cfg di.Config, args []string) error {
+	fs := flag.NewFlagSet("send-campaign", flag.ContinueOnError)
+	language := fs.String("language", "", "en or ja")
+	title := fs.String("title", "", "notification title")
+	body := fs.String("body", "", "notification body")
+	link := fs.String("url", "", "https URL opened on tap (optional)")
+	dryRun := fs.Bool("dry-run", false, "count the devices it would reach without sending")
+	force := fs.Bool("force", false, "send even if the language had a campaign in the last 14 days")
+	if err := fs.Parse(args); err != nil {
+		return fmt.Errorf("send-campaign: %w", err)
+	}
+
+	infra, err := di.NewInfra(ctx, cfg)
+	if err != nil {
+		return fmt.Errorf("build infrastructure: %w", err)
+	}
+	defer func() {
+		_ = infra.Close()
+	}()
+
+	out, err := cusecase.NewSendCampaign(infra).Do(ctx, cusecase.SendCampaignInput{
+		Campaign: cmodel.Campaign{
+			Language: dmodel.Language(*language),
+			Title:    *title,
+			Body:     *body,
+			URL:      *link,
+		},
+		DryRun: *dryRun,
+		Force:  *force,
+	})
+	if err != nil {
+		return fmt.Errorf("send-campaign: %w", err)
+	}
+	a := out.Audience
+	if *dryRun {
+		fmt.Printf("dry run: %d devices would receive it (ios %d, android %d)\n", a.Total(), a.IOS, a.Android)
+		return nil
+	}
+	fmt.Printf("campaign %s queued for %d devices (ios %d, android %d)\n", out.CampaignID, a.Total(), a.IOS, a.Android)
 	return nil
 }
