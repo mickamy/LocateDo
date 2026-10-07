@@ -14,6 +14,9 @@ ON CONFLICT (dedupe_key) WHERE status = 'pending' DO NOTHING;
 $$;
 -- +goose StatementEnd
 
+-- Deleting a user can cascade to their household before ON DELETE SET NULL
+-- updates that household's to-dos, which then go with it, so such an update
+-- passes as in record_deletion. Inserts still need the household.
 -- +goose StatementBegin
 CREATE FUNCTION stamp_sync_columns() RETURNS trigger
     LANGUAGE plpgsql AS
@@ -25,6 +28,10 @@ BEGIN
     RETURNING version INTO NEW.version;
 
     IF NOT FOUND THEN
+        IF TG_OP = 'UPDATE' THEN
+            NEW.version := OLD.version;
+            RETURN NEW;
+        END IF;
         RAISE foreign_key_violation USING MESSAGE = format('household %s does not exist', NEW.household_id);
     END IF;
 
