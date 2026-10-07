@@ -26,6 +26,18 @@ func Device(setters ...func(m *model.Device)) model.Device {
 	return m
 }
 
+func PromotionsConsentChange(setters ...func(m *model.PromotionsConsentChange)) model.PromotionsConsentChange {
+	m := model.PromotionsConsentChange{
+		DeviceID:  uuid.MustParse(gofakeit.UUID()),
+		Consented: gofakeit.Bool(),
+		ChangedAt: gofakeit.Date(),
+	}
+	for _, s := range setters {
+		s(&m)
+	}
+	return m
+}
+
 func mustGenerate(template string) string {
 	s, err := gofakeit.Generate(template)
 	if err != nil {
