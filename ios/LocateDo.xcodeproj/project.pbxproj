@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3BDC392E6FB8C36F911AEF86 /* LocateDoNotificationContent.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3B1CAABE0BBC494B5EA5FCA1 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3B5E2AF26BB49E5A94A8B65C /* GoogleSignInSwift */; };
 		3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BC7A1D03075000000D47174 /* FirebaseCrashlytics */; };
 		3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97921B8CF49F7EB4924EBD /* GoogleSignIn */; };
@@ -31,12 +32,32 @@
 			remoteGlobalIDString = 3BB55BEF3070E8CE008A116A;
 			remoteInfo = LocateDo;
 		};
+		3B53537F6C319C41BFA0D3A4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3BCDF0A76C001024B16FC70D;
+			remoteInfo = LocateDoNotificationContent;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3B0629E481FACA2B0FB2492A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3BDC392E6FB8C36F911AEF86 /* LocateDoNotificationContent.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3B34EEAF3071027900D47174 /* LocateDoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BB55BF03070E8CE008A116A /* LocateDo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocateDo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LocateDoNotificationContent.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -46,6 +67,21 @@
 				Info.plist,
 			);
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
+		};
+		3B9DCDFD65D6E5DB661234B0 /* Exceptions for "LocateDo" folder in "LocateDoNotificationContent" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Localizable.xcstrings,
+				Services/Notifications/ArrivalChecklist.swift,
+			);
+			target = 3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */;
+		};
+		3B3608EA8F3965B3743F014D /* Exceptions for "LocateDoNotificationContent" folder in "LocateDoNotificationContent" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -59,6 +95,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3BB55BFD3070E8CE008A116A /* Exceptions for "LocateDo" folder in "LocateDo" target */,
+				3B9DCDFD65D6E5DB661234B0 /* Exceptions for "LocateDo" folder in "LocateDoNotificationContent" target */,
 			);
 			path = LocateDo;
 			sourceTree = "<group>";
@@ -66,6 +103,14 @@
 		3BF628963073C9D40025FB46 /* LocateDoUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LocateDoUITests;
+			sourceTree = "<group>";
+		};
+		3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3B3608EA8F3965B3743F014D /* Exceptions for "LocateDoNotificationContent" folder in "LocateDoNotificationContent" target */,
+			);
+			path = LocateDoNotificationContent;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -93,6 +138,11 @@
 			files = (
 			);
 		};
+		3BAE5079AB3509D8B3D83296 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -101,6 +151,7 @@
 			children = (
 				3BB55BF23070E8CE008A116A /* LocateDo */,
 				3B34EEB03071027900D47174 /* LocateDoTests */,
+				3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */,
 				3BF628963073C9D40025FB46 /* LocateDoUITests */,
 				3BB55BF13070E8CE008A116A /* Products */,
 			);
@@ -112,6 +163,7 @@
 				3BB55BF03070E8CE008A116A /* LocateDo.app */,
 				3B34EEAF3071027900D47174 /* LocateDoTests.xctest */,
 				3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */,
+				3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -147,8 +199,12 @@
 				3BB55BEC3070E8CE008A116A /* Sources */,
 				3BB55BED3070E8CE008A116A /* Frameworks */,
 				3BB55BEE3070E8CE008A116A /* Resources */,
+				3B0629E481FACA2B0FB2492A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				3B2E3A12296871E97E8B1073 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3BB55BF23070E8CE008A116A /* LocateDo */,
@@ -188,6 +244,24 @@
 			productReference = 3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3B47C29C5FDD786AC1046AAF /* Build configuration list for PBXNativeTarget "LocateDoNotificationContent" */;
+			buildPhases = (
+				3B6407E38708F1C4414BC5DB /* Sources */,
+				3BAE5079AB3509D8B3D83296 /* Frameworks */,
+				3B712EEE1BFF32EB7AAA3B58 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */,
+			);
+			name = LocateDoNotificationContent;
+			productName = LocateDoNotificationContent;
+			productReference = 3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -208,6 +282,9 @@
 					3BF628943073C9D40025FB46 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 3BB55BEF3070E8CE008A116A;
+					};
+					3BCDF0A76C001024B16FC70D = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -236,6 +313,7 @@
 				3BB55BEF3070E8CE008A116A /* LocateDo */,
 				3B34EEAE3071027900D47174 /* LocateDoTests */,
 				3BF628943073C9D40025FB46 /* LocateDoUITests */,
+				3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */,
 			);
 		};
 /* End PBXProject section */
@@ -252,6 +330,11 @@
 			);
 		};
 		3BF628933073C9D40025FB46 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		3B712EEE1BFF32EB7AAA3B58 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -274,6 +357,11 @@
 			files = (
 			);
 		};
+		3B6407E38708F1C4414BC5DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -286,6 +374,11 @@
 			isa = PBXTargetDependency;
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
 			targetProxy = 3BF628993073C9D40025FB46 /* PBXContainerItemProxy */;
+		};
+		3B2E3A12296871E97E8B1073 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */;
+			targetProxy = 3B53537F6C319C41BFA0D3A4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -772,6 +865,98 @@
 			};
 			name = Staging;
 		};
+		3BB1B352AC4DC8F00554C745 /* Debug configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocateDoNotificationContent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocateDoNotificationContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.dev.NotificationContent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		3BCE468E71FD07D45CDC46FC /* Release configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_STYLE[sdk=iphonesimulator*]" = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocateDoNotificationContent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocateDoNotificationContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.NotificationContent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "match AppStore com.locatedo.LocateDo.NotificationContent";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphonesimulator*]" = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		3B508D13233063F8F11483F4 /* Staging configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_STYLE[sdk=iphonesimulator*]" = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LocateDoNotificationContent/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LocateDoNotificationContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg.NotificationContent;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "match AdHoc com.locatedo.LocateDo.stg.NotificationContent";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphonesimulator*]" = "";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "STAGING $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Staging;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -808,6 +993,15 @@
 				3BF6289C3073C9D40025FB46 /* Debug configuration for PBXNativeTarget "LocateDoUITests" */,
 				3BF6289D3073C9D40025FB46 /* Release configuration for PBXNativeTarget "LocateDoUITests" */,
 				3BF6289E3073C9D40025FB46 /* Staging configuration for PBXNativeTarget "LocateDoUITests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		3B47C29C5FDD786AC1046AAF /* Build configuration list for PBXNativeTarget "LocateDoNotificationContent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3BB1B352AC4DC8F00554C745 /* Debug configuration for PBXNativeTarget "LocateDoNotificationContent" */,
+				3BCE468E71FD07D45CDC46FC /* Release configuration for PBXNativeTarget "LocateDoNotificationContent" */,
+				3B508D13233063F8F11483F4 /* Staging configuration for PBXNativeTarget "LocateDoNotificationContent" */,
 			);
 			defaultConfigurationName = Release;
 		};
