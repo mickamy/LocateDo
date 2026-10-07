@@ -54,7 +54,7 @@ struct DeviceRegistrationTests {
         #expect(devices.registered.isEmpty)
 
         try authenticator.signIn(Self.session)
-        await registration.registerIfSignedIn()
+        await registration.register()
         #expect(devices.registered.map(\.pushToken) == ["0abcff01"])
     }
 
@@ -62,9 +62,87 @@ struct DeviceRegistrationTests {
         let devices = FakeDeviceService()
         let registration = DeviceRegistration(devices: devices, authenticator: Self.authenticator(signedIn: true))
 
-        await registration.registerIfSignedIn()
+        await registration.register()
 
         #expect(devices.registered.isEmpty)
+    }
+
+    @Test func sendsTheLanguageAndConsent() async {
+        let devices = FakeDeviceService()
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: true),
+            apnsEnvironment: .sandbox,
+            language: "ja"
+        ) { true }
+
+        await registration.received(deviceToken: Self.token)
+
+        #expect(devices.registered.map(\.language) == ["ja"])
+        #expect(devices.registered.map(\.promotionsConsent) == [true])
+    }
+
+    @Test func registersASignedOutDeviceThatConsents() async {
+        let devices = FakeDeviceService()
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: false),
+            apnsEnvironment: .sandbox
+        ) { true }
+
+        await registration.received(deviceToken: Self.token)
+
+        #expect(devices.registered.map(\.pushToken) == ["0abcff01"])
+        #expect(devices.registered.map(\.promotionsConsent) == [true])
+    }
+
+    @Test func turningConsentOffIsSentEvenWhenSignedOut() async {
+        let devices = FakeDeviceService()
+        var consent = true
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: false),
+            apnsEnvironment: .sandbox
+        ) { consent }
+        await registration.received(deviceToken: Self.token)
+
+        consent = false
+        await registration.promotionsConsentChanged()
+
+        #expect(devices.registered.map(\.promotionsConsent) == [true, false])
+    }
+
+    @Test func aSignedOutDeviceWithoutConsentWaitsForAChange() async {
+        let devices = FakeDeviceService()
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: false),
+            apnsEnvironment: .sandbox
+        )
+
+        await registration.received(deviceToken: Self.token)
+        await registration.register()
+
+        #expect(devices.registered.isEmpty)
+    }
+
+    @Test func aConsentChangeBeforeATokenSendsNothing() async {
+        let devices = FakeDeviceService()
+        let registration = DeviceRegistration(
+            devices: devices,
+            authenticator: Self.authenticator(signedIn: false)
+        ) { true }
+
+        await registration.promotionsConsentChanged()
+
+        #expect(devices.registered.isEmpty)
+    }
+
+    @Test func japaneseIsSentOnlyWhenTheAppShowsJapanese() {
+        #expect(DeviceRegistration.language(preferredLocalizations: ["ja"]) == "ja")
+        #expect(DeviceRegistration.language(preferredLocalizations: ["en"]) == "en")
+        #expect(DeviceRegistration.language(preferredLocalizations: ["Base"]) == "en")
+        #expect(DeviceRegistration.language(preferredLocalizations: []) == "en")
     }
 
     private static let session = Session(

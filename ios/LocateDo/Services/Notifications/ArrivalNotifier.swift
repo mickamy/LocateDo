@@ -7,6 +7,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
     @ObservationIgnored var onOpened: (UUID) -> Void = { _ in }
     @ObservationIgnored private(set) var lastOpenedAt: Date?
+    @ObservationIgnored var onCampaignLink: (URL) -> Void = { _ in }
 
     private let router: AppRouter
     private let center = UNUserNotificationCenter.current()
@@ -66,10 +67,21 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        if let raw = response.notification.request.content.userInfo[Self.placeIDKey] as? String,
-           let placeID = UUID(uuidString: raw) {
-            let latency = Date().timeIntervalSince(response.notification.date)
-            Analytics.log(.arrivalOpened, parameters: [.latencyS: max(Int(latency), 0)])
+        let userInfo = response.notification.request.content.userInfo
+        let latency = max(Int(Date().timeIntervalSince(response.notification.date)), 0)
+        if let campaign = CampaignNotification(userInfo: userInfo) {
+            Analytics.log(.campaignOpened, parameters: [
+                .campaignID: campaign.id,
+                .latencyS: latency,
+                .hasURL: campaign.url != nil
+            ])
+            if let url = campaign.url {
+                Task { @MainActor in
+                    onCampaignLink(url)
+                }
+            }
+        } else if let raw = userInfo[Self.placeIDKey] as? String, let placeID = UUID(uuidString: raw) {
+            Analytics.log(.arrivalOpened, parameters: [.latencyS: latency])
             Task { @MainActor in
                 lastOpenedAt = .now
                 onOpened(placeID)

@@ -5,6 +5,7 @@ import Foundation
 nonisolated enum AnalyticsEvent: String {
     case arrivalNotified = "arrival_notified"
     case arrivalOpened = "arrival_opened"
+    case campaignOpened = "campaign_opened"
     case dailyState = "daily_state"
     case limitReached = "limit_reached"
     case locationAuthChanged = "location_auth_changed"
@@ -32,12 +33,14 @@ nonisolated enum AnalyticsParameter: String {
     case ageDays = "age_days"
     case ageHours = "age_hours"
     case assigned
+    case campaignID = "campaign_id"
     case category
     case completedTodoCount7d = "completed_todo_count_7d"
     case customCategoryCount = "custom_category_count"
     case daysSinceInstall = "days_since_install"
     case durationS = "duration_s"
     case from
+    case hasURL = "has_url"
     case householdMembers = "household_members"
     case kind
     case latencyS = "latency_s"

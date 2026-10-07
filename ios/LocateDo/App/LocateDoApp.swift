@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 @main
 struct LocateDoApp: App {
@@ -47,8 +48,7 @@ struct LocateDoApp: App {
             await geofence.sync()
         }
         self.sync = sync
-        let devices = DeviceRegistration(devices: api.device, authenticator: authenticator)
-        self.devices = devices
+        devices = Self.makeDevices(api: api, authenticator: authenticator, preferences: preferences)
         account = AccountManager(
             account: api.account,
             household: api.household,
@@ -77,6 +77,7 @@ struct LocateDoApp: App {
 
     private func connectServices() {
         connectAccount()
+        connectNotifications()
         let isPro = { [entitlements, container] in
             let plan = try? container.mainContext.fetch(FetchDescriptor<SyncState>()).first?.plan
             return Entitlements.isPro(hasEntitlement: entitlements.hasEntitlement, plan: plan)
@@ -87,28 +88,10 @@ struct LocateDoApp: App {
             writes.logLimitReached(limit)
             router.pendingPaywall = limit.trigger
         }
-        notifier.onOpened = { [writes] placeID in
-            writes.arrivalOpened(placeID: placeID)
-        }
-        geofence.onArrival = { [sync] in
-            await sync.sync()
-        }
-        geofence.onNotified = { [promotionsConsent] in
-            promotionsConsent.arrivalNotified()
-        }
-        geofence.currentUserID = { [authenticator] in
-            authenticator.session?.userID
-        }
         authenticator.onSessionEnded = { [account] in
             Task {
                 await account.endSession()
             }
-        }
-        AppDelegate.onDeviceToken = { [devices] token in
-            await devices.received(deviceToken: token)
-        }
-        AppDelegate.onRemoteNotification = { [sync] in
-            await sync.sync()
         }
         appStatus.onMaintenanceEnded = { [sync] in
             Task {
@@ -123,6 +106,33 @@ struct LocateDoApp: App {
         }
         if !Self.isRunningTests {
             startServices()
+        }
+    }
+
+    private func connectNotifications() {
+        notifier.onOpened = { [writes] placeID in
+            writes.arrivalOpened(placeID: placeID)
+        }
+        notifier.onCampaignLink = { url in
+            UIApplication.shared.open(url)
+        }
+        geofence.onArrival = { [sync] in
+            await sync.sync()
+        }
+        geofence.onNotified = { [promotionsConsent] in
+            promotionsConsent.arrivalNotified()
+        }
+        geofence.currentUserID = { [authenticator] in
+            authenticator.session?.userID
+        }
+        promotionsConsent.onChanged = { [devices] in
+            await devices.promotionsConsentChanged()
+        }
+        AppDelegate.onDeviceToken = { [devices] token in
+            await devices.received(deviceToken: token)
+        }
+        AppDelegate.onRemoteNotification = { [sync] in
+            await sync.sync()
         }
     }
 
@@ -172,7 +182,7 @@ struct LocateDoApp: App {
         account.onHouseholdReady = { [weak account, devices, sync, geofence, entitlements] in
             Task {
                 await account?.linkPurchases(entitlements)
-                await devices.registerIfSignedIn()
+                await devices.register()
                 await sync.sync()
                 await geofence.sync()
             }
@@ -185,6 +195,16 @@ struct LocateDoApp: App {
         account.onSignedOut = { [geofence, entitlements] in
             await entitlements.logOut()
             await geofence.sync()
+        }
+    }
+
+    private static func makeDevices(
+        api: APIClient,
+        authenticator: Authenticator,
+        preferences: AppPreferences
+    ) -> DeviceRegistration {
+        DeviceRegistration(devices: api.device, authenticator: authenticator) { [preferences] in
+            preferences.promotionsConsent
         }
     }
 
