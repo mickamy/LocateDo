@@ -1,13 +1,22 @@
 ASSETS := ../../ios/LocateDo/Assets.xcassets
+ANDROID := ../../android/app/src
+PLAY := ../../android/play
 PREVIEW_DIR := preview
 SITE := ../../site
 
-.PHONY: generate preview favicon
+.PHONY: generate android preview favicon
 
 generate:
 	swift render.swift $(ASSETS)/AppIcon.appiconset
 	swift render.swift $(ASSETS)/AppIcon-Dev.appiconset --variant Dev
 	swift render.swift $(ASSETS)/AppIcon-Stg.appiconset --variant Stg
+
+android:
+	swift render.swift $(ANDROID)/main/res --android
+	swift render.swift $(ANDROID)/debug/res --android --variant Dev
+	swift render.swift $(ANDROID)/staging/res --android --variant Stg
+	swift render.swift $(PLAY) --play
+	oxipng -o 4 --strip safe -q $(ANDROID)/*/res/mipmap-*/ic_launcher_*.png $(PLAY)/icon.png
 
 preview:
 	swift render.swift $(PREVIEW_DIR) --preview

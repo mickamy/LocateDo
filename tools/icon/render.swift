@@ -78,7 +78,9 @@ func makeContext(opaque: Bool, pixels: Int = Int(size)) -> CGContext {
     return context
 }
 
-func draw(_ appearance: Appearance, in context: CGContext) {
+let canvas = CGRect(x: 0, y: 0, width: size, height: size)
+
+func drawGradient(_ appearance: Appearance, over rect: CGRect, in context: CGContext) {
     let gradient = CGGradient(
         colorsSpace: colorSpace,
         colors: [appearance.backgroundTop, appearance.backgroundBottom] as CFArray,
@@ -86,10 +88,14 @@ func draw(_ appearance: Appearance, in context: CGContext) {
     )!
     context.drawLinearGradient(
         gradient,
-        start: CGPoint(x: size / 2, y: size),
-        end: CGPoint(x: size / 2, y: 0),
-        options: []
+        start: CGPoint(x: rect.midX, y: rect.maxY),
+        end: CGPoint(x: rect.midX, y: rect.minY),
+        options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
     )
+}
+
+func draw(_ appearance: Appearance, in context: CGContext) {
+    drawGradient(appearance, over: canvas, in: context)
 
     context.saveGState()
     context.setShadow(offset: CGSize(width: 0, height: -14), blur: 44, color: color(0x000000, alpha: 0.22))
@@ -123,17 +129,25 @@ func drawPin(_ fill: CGColor, in context: CGContext) {
     context.endTransparencyLayer()
 }
 
-func drawBadge(_ text: String, in context: CGContext) {
-    let pill = CGRect(x: (size - 300) / 2, y: 868, width: 300, height: 84)
+let badgePill = CGRect(x: (size - 300) / 2, y: 868, width: 300, height: 84)
+
+// Without a text color the letters are cut out of the pill, for layers the launcher tints itself.
+func drawBadge(
+    _ text: String,
+    in context: CGContext,
+    fill: CGColor = color(0x1C1C1E, alpha: 0.78),
+    textColor: CGColor? = color(0xFFFFFF)
+) {
+    let pill = badgePill
     context.saveGState()
-    context.setFillColor(color(0x1C1C1E, alpha: 0.78))
+    context.setFillColor(fill)
     context.addPath(CGPath(roundedRect: pill, cornerWidth: pill.height / 2, cornerHeight: pill.height / 2, transform: nil))
     context.fillPath()
 
     let kern: CGFloat = 8
     let attributes: [NSAttributedString.Key: Any] = [
         kCTFontAttributeName as NSAttributedString.Key: CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 56, nil),
-        kCTForegroundColorAttributeName as NSAttributedString.Key: color(0xFFFFFF),
+        kCTForegroundColorAttributeName as NSAttributedString.Key: textColor ?? color(0x000000),
         kCTKernAttributeName as NSAttributedString.Key: kern,
     ]
     let line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
@@ -141,6 +155,9 @@ func drawBadge(_ text: String, in context: CGContext) {
     var descent: CGFloat = 0
     let width = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, nil)) - kern
     context.textPosition = CGPoint(x: pill.midX - width / 2, y: pill.midY - (ascent - descent) / 2)
+    if textColor == nil {
+        context.setBlendMode(.clear)
+    }
     CTLineDraw(line, context)
     context.restoreGState()
 }
@@ -253,6 +270,59 @@ func faviconSVG(fill: String) -> String {
     """
 }
 
+// Android's adaptive icon is a 108 dp canvas of which launchers show the middle 66 dp circle; the pin, with the
+// badge above it on dev and staging builds, is sized to stay inside that circle.
+let androidDensities: [(name: String, pixels: Int)] = [
+    ("mdpi", 108),
+    ("hdpi", 162),
+    ("xhdpi", 216),
+    ("xxhdpi", 324),
+    ("xxxhdpi", 432),
+]
+
+func androidBox(badged: Bool) -> CGRect {
+    let bottom = pinTip.y - pinOutline / 2
+    let top = badged ? badgePill.maxY : pinCenter.y + pinRadius + pinOutline / 2
+    let side = (top - bottom) / (badged ? 0.54 : 0.56)
+    return CGRect(x: size / 2 - side / 2, y: (top + bottom) / 2 - side / 2, width: side, height: side)
+}
+
+func writeAndroidIcons(to resDirectory: URL, variant: String?) throws {
+    let appearance = appearances[0]
+    let box = androidBox(badged: variant != nil)
+    let badge = variant?.uppercased()
+    for density in androidDensities {
+        let directory = resDirectory.appendingPathComponent("mipmap-\(density.name)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let background = scaled(pixels: density.pixels, opaque: true, box: box) { context in
+            drawGradient(appearance, over: box, in: context)
+        }
+        let foreground = scaled(pixels: density.pixels, opaque: false, box: box) { context in
+            drawPin(appearance.pin, in: context)
+            if let badge {
+                drawBadge(badge, in: context)
+            }
+        }
+        let monochrome = scaled(pixels: density.pixels, opaque: false, box: box) { context in
+            drawPin(color(0x000000), in: context)
+            if let badge {
+                drawBadge(badge, in: context, fill: color(0x000000), textColor: nil)
+            }
+        }
+        write(background, to: directory.appendingPathComponent("ic_launcher_background.png"))
+        write(foreground, to: directory.appendingPathComponent("ic_launcher_foreground.png"))
+        write(monochrome, to: directory.appendingPathComponent("ic_launcher_monochrome.png"))
+    }
+    print("wrote mipmap-*/ic_launcher_{background,foreground,monochrome}.png\(variant.map { " (\($0))" } ?? "")")
+}
+
+// The Play listing's icon: the same picture as the App Store's, at the size Play asks for.
+func writePlayIcon(to directory: URL) throws {
+    let icon = scaled(pixels: 512, opaque: true, box: canvas) { draw(appearances[0], in: $0) }
+    write(icon, to: directory.appendingPathComponent("icon.png"))
+    print("wrote icon.png")
+}
+
 func writeFavicons(to directory: URL) throws {
     let pinColor = appearances[0].pin
     let small = scaled(pixels: 32, opaque: false, box: faviconBox) { drawPin(pinColor, in: $0) }
@@ -262,8 +332,7 @@ func writeFavicons(to directory: URL) throws {
     try faviconSVG(fill: "#0A84FF").write(to: directory.appendingPathComponent("favicon.svg"), atomically: true, encoding: .utf8)
     print("wrote favicon.svg")
 
-    let full = CGRect(x: 0, y: 0, width: size, height: size)
-    let touch = scaled(pixels: 180, opaque: true, box: full) { draw(appearances[0], in: $0) }
+    let touch = scaled(pixels: 180, opaque: true, box: canvas) { draw(appearances[0], in: $0) }
     write(touch, to: directory.appendingPathComponent("apple-touch-icon.png"))
     print("wrote apple-touch-icon.png")
 }
@@ -273,6 +342,8 @@ var outputPath: String?
 var variant: String?
 var writesPreview = false
 var writesFavicons = false
+var writesAndroid = false
+var writesPlay = false
 var index = 0
 while index < arguments.count {
     switch arguments[index] {
@@ -280,6 +351,10 @@ while index < arguments.count {
         writesPreview = true
     case "--favicon":
         writesFavicons = true
+    case "--android":
+        writesAndroid = true
+    case "--play":
+        writesPlay = true
     case "--variant":
         index += 1
         variant = index < arguments.count ? arguments[index] : nil
@@ -289,7 +364,8 @@ while index < arguments.count {
     index += 1
 }
 guard let outputPath else {
-    FileHandle.standardError.write(Data("usage: swift render.swift <output-dir> [--preview] [--variant Dev|Stg] [--favicon]\n".utf8))
+    let usage = "usage: swift render.swift <output-dir> [--preview] [--variant Dev|Stg] [--favicon] [--android] [--play]\n"
+    FileHandle.standardError.write(Data(usage.utf8))
     exit(2)
 }
 let outputDirectory = URL(fileURLWithPath: outputPath)
@@ -297,6 +373,14 @@ try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDir
 
 if writesFavicons {
     try writeFavicons(to: outputDirectory)
+    exit(0)
+}
+if writesAndroid {
+    try writeAndroidIcons(to: outputDirectory, variant: variant)
+    exit(0)
+}
+if writesPlay {
+    try writePlayIcon(to: outputDirectory)
     exit(0)
 }
 
