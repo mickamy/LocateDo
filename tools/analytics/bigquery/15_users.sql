@@ -15,6 +15,15 @@ SELECT
   LOGICAL_OR(e.foreground AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13) AS active_week_2,
   LOGICAL_OR(e.event_name = 'arrival_notified' AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13) AS notified_week_2,
   LOGICAL_OR(e.foreground AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 30 AND 36) AS active_day_30,
+  -- Location access as of the last daily_state in the first 7 days; NULL when the app was not opened then.
+  ARRAY_AGG(
+    IF(e.event_name = 'daily_state' AND DATE_DIFF(e.event_date, f.first_date, DAY) < 7, e.location_auth, NULL)
+    IGNORE NULLS ORDER BY e.event_time DESC LIMIT 1
+  )[SAFE_OFFSET(0)] AS location_auth_first_week,
+  ARRAY_AGG(
+    IF(e.event_name = 'daily_state' AND DATE_DIFF(e.event_date, f.first_date, DAY) < 7, e.precise_location = 1, NULL)
+    IGNORE NULLS ORDER BY e.event_time DESC LIMIT 1
+  )[SAFE_OFFSET(0)] AS precise_location_first_week,
   MAX(e.household_members) AS max_household_members,
   LOGICAL_OR(e.event_name = 'share_tapped') AS tapped_share,
   LOGICAL_OR(e.event_name = 'limit_reached') AS reached_limit,
