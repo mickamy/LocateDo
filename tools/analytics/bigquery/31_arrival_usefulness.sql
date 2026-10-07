@@ -2,18 +2,22 @@
 -- todos_completed_in_app_after_reminders: checked off in the app rather than through the reminder within 60 minutes
 -- after the same user got one, e.g., read on the lock screen and opened from the icon. Places are not sent, so these
 -- may include to-dos at other places.
-WITH completions AS (
+WITH in_app_completions AS (
   SELECT
     DATE_TRUNC(c.event_date, MONTH) AS month,
-    COUNTIF(c.via = 'app' AND EXISTS (
+    EXISTS (
       SELECT 1
       FROM `__PROJECT__.__DATASET__.events` AS n
       WHERE n.user_pseudo_id = c.user_pseudo_id
         AND n.event_name = 'arrival_notified'
         AND n.event_time BETWEEN TIMESTAMP_SUB(c.event_time, INTERVAL 60 MINUTE) AND c.event_time
-    )) AS todos_completed_in_app_after_reminders
+    ) AS after_reminder
   FROM `__PROJECT__.__DATASET__.events` AS c
-  WHERE c.event_name = 'todo_completed'
+  WHERE c.event_name = 'todo_completed' AND c.via = 'app'
+),
+completions AS (
+  SELECT month, COUNTIF(after_reminder) AS todos_completed_in_app_after_reminders
+  FROM in_app_completions
   GROUP BY month
 ),
 reminders AS (
