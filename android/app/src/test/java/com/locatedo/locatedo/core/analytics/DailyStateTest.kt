@@ -118,6 +118,7 @@ class DailyStateTest {
         assertEquals(1L, values["precise_location"])
         assertEquals("authorized", values["notification_auth"])
         assertEquals(1L, values["promotions_consent"])
+        assertEquals(1L, values["battery_optimization_exempt"])
     }
 
     @Test
@@ -146,6 +147,7 @@ class DailyStateTest {
         preciseLocation = true,
         notificationAuth = NotificationAuth.AUTHORIZED,
         promotionsConsent = true,
+        batteryOptimizationExempt = true,
     )
 
     private fun subscription(isTrial: Boolean) =

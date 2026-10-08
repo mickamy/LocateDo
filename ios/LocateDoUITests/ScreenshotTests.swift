@@ -83,11 +83,11 @@ private struct Seed {
     // Matches ScreenshotSeed in the app.
     init(japanese: Bool) {
         if japanese {
-            center = CLLocation(latitude: 35.6437, longitude: 139.6710)
+            center = CLLocation(latitude: 35.67824, longitude: 139.76712)
             groceryName = "スーパー"
             firstTodo = "牛乳"
         } else {
-            center = CLLocation(latitude: 37.3230, longitude: -122.0322)
+            center = CLLocation(latitude: 37.77627, longitude: -122.41924)
             groceryName = "Grocery store"
             firstTodo = "Milk"
         }

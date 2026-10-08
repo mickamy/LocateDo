@@ -12,7 +12,7 @@ final class ReviewVideoTests: XCTestCase {
 
     @MainActor
     func testWalkthrough() throws {
-        XCUIDevice.shared.location = XCUILocation(location: CLLocation(latitude: 37.3260, longitude: -122.0322))
+        XCUIDevice.shared.location = XCUILocation(location: CLLocation(latitude: 37.77927, longitude: -122.41924))
         let app = XCUIApplication()
         app.launchArguments += ["-completedOnboarding", "YES", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

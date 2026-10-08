@@ -37,7 +37,7 @@ import kotlinx.coroutines.tasks.await
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a seed --es language ja
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a notify --es language ja
 // and `fastlane location_video`, which moves the device into a geofence (the app must be the mock location app):
-//   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a move --es latitude 37.326 --es longitude -122.0322
+//   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a move --es latitude 37.77927 --es longitude -122.41924
 class ScreenshotReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val japanese = intent.getStringExtra(EXTRA_LANGUAGE) == "ja"
@@ -177,11 +177,13 @@ object ScreenshotSeed {
 
     fun placeId(index: Int): UUID = UUID.fromString("0199a6f0-0000-7000-8000-00000000000${index + 1}")
 
+    // Chosen so the grocery store, the place the screenshots open, sits on a public landmark and its looked-up address
+    // is not someone's home: Tokyo Station and San Francisco City Hall.
     fun center(japanese: Boolean): Pair<Double, Double> {
         if (japanese) {
-            return 35.6437 to 139.6710
+            return 35.67824 to 139.76712
         }
-        return 37.3230 to -122.0322
+        return 37.77627 to -122.41924
     }
 
     fun entries(japanese: Boolean): List<Entry> {

@@ -5,9 +5,10 @@ import ImageIO
 import UniformTypeIdentifiers
 
 // Draws caption images for the App Review video; ffmpeg overlays them because its build here has no drawtext.
-//   swift caption.swift <output.png> <width> <height> <text> [--card [--title <title>] [--icon <png>]]
-// Without --card the image is transparent with a caption band near the bottom; with --card it is a
-// full-frame light card, in the app's colors, with the icon, title, and text centered.
+//   swift caption.swift <output.png> <width> <height> <text> [--top] [--card [--title <title>] [--icon <png>]]
+// Without --card the image is transparent with a caption band near the bottom, or with --top just below where the
+// lock screen shows its clock; with --card it is a full-frame light card, in the app's colors, with the icon,
+// title, and text centered.
 
 func color(_ hex: UInt32, alpha: CGFloat = 1) -> CGColor {
     CGColor(
@@ -65,6 +66,7 @@ guard arguments.count >= 4, let width = Double(arguments[1]), let height = Doubl
 let output = URL(fileURLWithPath: arguments[0])
 let text = arguments[3]
 let isCard = arguments.contains("--card")
+let isTop = arguments.contains("--top")
 
 func option(_ name: String) -> String? {
     guard let index = arguments.firstIndex(of: name), index + 1 < arguments.count else {
@@ -133,12 +135,13 @@ if isCard {
 } else {
     let (textFrame, textSize) = frame(of: text, fontSize: size.width * 0.045, width: textWidth - margin)
     let padding = size.width * 0.04
-    let band = CGRect(
-        x: margin,
-        y: size.height * 0.14,
-        width: textWidth,
-        height: textSize.height + padding * 2
-    )
+    let bandHeight = textSize.height + padding * 2
+    // The context counts y from the bottom.
+    var bandY = size.height * 0.14
+    if isTop {
+        bandY = size.height * 0.73 - bandHeight
+    }
+    let band = CGRect(x: margin, y: bandY, width: textWidth, height: bandHeight)
     context.setFillColor(color(0x000000, alpha: 0.72))
     context.addPath(CGPath(roundedRect: band, cornerWidth: padding, cornerHeight: padding, transform: nil))
     context.fillPath()

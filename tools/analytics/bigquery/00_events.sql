@@ -7,6 +7,8 @@ SELECT
   -- while it is closed, so these four are what counts a user as active.
   event_name IN ('session_start', 'user_engagement', 'screen_view', 'daily_state') AS foreground,
   user_pseudo_id,
+  platform,
+  device.mobile_brand_name AS device_brand,
   app_info.version AS app_version,
   (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'app_build') AS app_build,
   geo.country AS country,
@@ -47,6 +49,7 @@ SELECT
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'signed_in') AS signed_in,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'precise_location') AS precise_location,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'promotions_consent') AS promotions_consent,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'battery_optimization_exempt') AS battery_optimization_exempt,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'has_url') AS has_url,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'count') AS count,
   -- Sent by RevenueCat's Firebase integration on its rc_* events.

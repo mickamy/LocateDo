@@ -48,6 +48,7 @@ class DailyStateReporter @Inject constructor(
             preciseLocation = locationRepository.hasPrecisePermission(),
             notificationAuth = granted.notifications,
             promotionsConsent = preferences.promotions.first().consent,
+            batteryOptimizationExempt = permissions.isBatteryOptimizationExempt(),
         )
         LocationAuthHistory.change(record.lastReportedLocationAuth, state.locationAuth)?.let { (from, to) ->
             analytics.log(

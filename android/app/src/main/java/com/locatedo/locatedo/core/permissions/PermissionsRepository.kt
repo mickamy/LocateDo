@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.locatedo.locatedo.core.datastore.AppPreferences
@@ -29,6 +30,7 @@ data class Permissions(val location: LocationAuth, val notifications: Notificati
 interface PermissionsRepository {
     fun observe(): Flow<Permissions>
     fun refresh()
+    fun isBatteryOptimizationExempt(): Boolean
     suspend fun markLocationRequested()
     suspend fun markNotificationsRequested()
 }
@@ -48,6 +50,9 @@ class AndroidPermissionsRepository @Inject constructor(
     }
 
     override fun refresh() = refreshes.update { it + 1 }
+
+    override fun isBatteryOptimizationExempt(): Boolean =
+        context.getSystemService(PowerManager::class.java)?.isIgnoringBatteryOptimizations(context.packageName) == true
 
     override suspend fun markLocationRequested() = preferences.setRequestedLocation(true)
 
