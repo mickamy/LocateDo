@@ -202,8 +202,11 @@ class FakePermissionsRepository(
     var refreshCount = 0
     var locationRequested = false
     var notificationsRequested = false
+    var batteryOptimizationExempt = false
 
     override fun observe(): Flow<Permissions> = state
+
+    override fun isBatteryOptimizationExempt(): Boolean = batteryOptimizationExempt
 
     override fun refresh() {
         refreshCount += 1

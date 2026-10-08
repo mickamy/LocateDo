@@ -53,6 +53,7 @@ class DailyStateReporterTest {
         assertEquals(1L, values["signed_in"])
         assertEquals("always", values["location_auth"])
         assertEquals(0L, values["promotions_consent"])
+        assertEquals(0L, values["battery_optimization_exempt"])
         assertEquals("0", analytics.userProperties[AnalyticsUserProperty.PROMOTIONS_CONSENT])
         assertEquals("1", analytics.userProperties[AnalyticsUserProperty.PLACE_COUNT])
         assertEquals("free", analytics.userProperties[AnalyticsUserProperty.PLAN])

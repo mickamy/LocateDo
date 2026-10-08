@@ -36,6 +36,7 @@ data class DailyState(
     val preciseLocation: Boolean,
     val notificationAuth: NotificationAuth,
     val promotionsConsent: Boolean,
+    val batteryOptimizationExempt: Boolean,
 ) {
     enum class PlanState(val key: String) {
         FREE("free"),
@@ -67,6 +68,7 @@ data class DailyState(
             AnalyticsParameter.PRECISE_LOCATION to preciseLocation,
             AnalyticsParameter.NOTIFICATION_AUTH to notificationAuth.analyticsKey,
             AnalyticsParameter.PROMOTIONS_CONSENT to promotionsConsent,
+            AnalyticsParameter.BATTERY_OPTIMIZATION_EXEMPT to batteryOptimizationExempt,
         )
 
     val userProperties: Map<AnalyticsUserProperty, String>

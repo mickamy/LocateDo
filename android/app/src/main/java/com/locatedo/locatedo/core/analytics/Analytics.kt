@@ -42,6 +42,7 @@ enum class AnalyticsParameter(val key: String) {
     AGE_DAYS("age_days"),
     AGE_HOURS("age_hours"),
     ASSIGNED("assigned"),
+    BATTERY_OPTIMIZATION_EXEMPT("battery_optimization_exempt"),
     CAMPAIGN_ID("campaign_id"),
     CATEGORY("category"),
     COUNT("count"),
