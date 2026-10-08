@@ -61,20 +61,42 @@ SCREENSHOT_LOCATIONS = {
   "ja-JP" => { language: "ja", latitude: 35.6437, longitude: 139.6710 },
 }.freeze
 
+# Quiet on success, but a failure says which command it was and what adb printed.
 def adb(*args)
-  Fastlane::Actions.sh(File.join(SDK, "platform-tools/adb"), "-s", SCREENSHOT_SERIAL, *args, log: false)
+  failed = ->(output) { UI.user_error!("adb #{args.join(' ')} failed:\n#{output}") }
+  Fastlane::Actions.sh(File.join(SDK, "platform-tools/adb"), "-s", SCREENSHOT_SERIAL, *args, log: false,
+                       error_callback: failed)
 end
 
 # A stray tap or key can land on the launcher or another app; stop rather than publish that as a screenshot, and
 # show the app's last crash, since the throwaway emulator and its logs are gone afterwards.
-def capture(path)
+def ensure_in_front(step)
   top = adb("shell", "dumpsys", "activity", "activities").lines.find { |line| line.include?("topResumedActivity") }
-  unless top&.include?(SCREENSHOT_PACKAGE)
-    crash = adb("logcat", "-d", "-b", "crash").lines.last(20).join
-    screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
-    texts = screen.scan(/ text="([^"]+)"/).flatten.join(" | ")
-    UI.user_error!("#{File.basename(path)}: #{SCREENSHOT_PACKAGE} is not in front (#{top&.strip})\n#{texts}\n#{crash}")
-  end
+  return if top&.include?(SCREENSHOT_PACKAGE)
+
+  crash = adb("logcat", "-d", "-b", "crash").lines.last(20).join
+  # Why the app went away when it did not crash: killed for memory, or something else brought up the launcher.
+  events = /#{Regexp.escape(SCREENSHOT_PACKAGE)}|am_kill|am_proc_died|START u0/
+  system = adb("logcat", "-d", "-b", "system", "-b", "events").lines.grep(events).last(20).join
+  screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
+  texts = screen.scan(/ text="([^"]+)"/).flatten.join(" | ")
+  UI.user_error!("#{step}: #{SCREENSHOT_PACKAGE} is not in front (#{top&.strip})\n#{texts}\n#{crash}\n#{system}")
+end
+
+# Taps and swipes go by coordinates, so they first check the app is still in front; otherwise they would land on the
+# launcher and open whatever sits there.
+def tap_app(x, y, step)
+  ensure_in_front(step)
+  adb("shell", "input", "tap", x.to_s, y.to_s)
+end
+
+def swipe_app(from_y, to_y, step)
+  ensure_in_front(step)
+  adb("shell", "input", "swipe", "540", from_y.to_s, "540", to_y.to_s, "600")
+end
+
+def capture(path)
+  ensure_in_front(File.basename(path))
   adb("shell", "screencap", "-p", "/sdcard/screenshot.png")
   adb("pull", "/sdcard/screenshot.png", path)
 end
@@ -148,8 +170,8 @@ platform :android do
     raw = File.join(ROOT, "build/screenshots-raw")
     FileUtils.rm_rf(raw)
     with_screenshot_emulator do
-      adb("install", "-r", apk)
       disable_interrupting_apps
+      adb("install", "-r", apk)
       %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
         adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
       end
@@ -174,8 +196,8 @@ platform :android do
     # The first seeded place, the grocery store.
     grocery = { latitude: location.fetch(:latitude) + 0.0030, longitude: location.fetch(:longitude) }
     with_screenshot_emulator do
-      adb("install", "-r", apk)
       disable_interrupting_apps
+      adb("install", "-r", apk)
       adb("shell", "appops", "set", SCREENSHOT_PACKAGE, "android:mock_location", "allow")
       # Background location is left out: asking for it is what the video shows.
       %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION POST_NOTIFICATIONS].each do |permission|
@@ -291,10 +313,11 @@ platform :android do
   end
 
   # Preinstalled apps finish setting themselves up on a fresh emulator and take the screen in the middle of a run: the
-  # Google app and YouTube come to the front, and any app may ask for the notification permission. Every app but ours
-  # has that permission denied for good, in one shell on the device rather than an adb call per package.
+  # Google app and YouTube come to the front, any app may ask for the notification permission, and the Play Store
+  # updates Google Play services, which kills every app that loaded its code (ours does, for Maps). Every app but ours
+  # has the notification permission denied for good, in one shell on the device rather than an adb call per package.
   def disable_interrupting_apps
-    %w[com.google.android.googlequicksearchbox com.google.android.youtube].each do |package|
+    %w[com.android.vending com.google.android.googlequicksearchbox com.google.android.youtube].each do |package|
       adb("shell", "pm", "disable-user", "--user", "0", package)
     end
     permission = "android.permission.POST_NOTIFICATIONS"
@@ -333,10 +356,10 @@ platform :android do
     recenter_map
     capture(File.join(dir, "04-Map.png"))
 
-    adb("shell", "input", "swipe", "540", "1990", "540", "900", "600")
+    swipe_app(1990, 900, "raise the sheet")
     sleep(4)
     capture(File.join(dir, "02-Nearby.png"))
-    adb("shell", "input", "swipe", "540", "160", "540", "2100", "600")
+    swipe_app(160, 2100, "lower the sheet")
     sleep(3)
 
     adb("shell", "am", "start", "-n", activity, "-f", "0x20000000",
@@ -347,10 +370,10 @@ platform :android do
     tap_label("common_done", language)
     sleep(2)
 
-    adb("shell", "input", "tap", "540", "2270")
+    tap_app(540, 2270, "open the to-do tab")
     sleep(4)
     capture(File.join(dir, "05-Todos.png"))
-    adb("shell", "input", "tap", "172", "2270")
+    tap_app(172, 2270, "open the home tab")
     sleep(3)
     recenter_map
 
@@ -360,7 +383,7 @@ platform :android do
   end
 
   def recenter_map
-    adb("shell", "input", "tap", "964", "1759")
+    tap_app(964, 1759, "recenter the map")
     sleep(8)
   end
 
