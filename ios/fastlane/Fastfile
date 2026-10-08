@@ -1,3 +1,5 @@
+require "open3"
+
 default_platform(:ios)
 skip_docs
 
@@ -26,12 +28,10 @@ def simulator_udid(device)
   match["udid"]
 end
 
-# Builds the Debug app with the store icon, starts an erased simulator with "Always" granted, and runs one
-# UI test while the screen is recorded to <work>/raw.mp4. Returns the test output and when recording began.
-def record_ui_test(udid:, work:, test:, env: {})
+# Builds the Debug app with the store icon and starts an erased simulator with it installed and "Always" granted.
+def prepare_recording_simulator(udid)
   root = File.expand_path("..", __dir__)
   derived_data = UI_TEST_DERIVED_DATA
-  FileUtils.mkdir_p(work)
   sh("xcodebuild", "build-for-testing", "-project", File.join(root, PROJECT), "-scheme", "dev",
      "-destination", "id=#{udid}", "-derivedDataPath", derived_data,
      "ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon")
@@ -44,35 +44,99 @@ def record_ui_test(udid:, work:, test:, env: {})
   # Granted up front so the recording shows neither the permission alerts nor the "Always" banner.
   sh("xcrun", "simctl", "install", udid, File.join(derived_data, "Build/Products/Debug-iphonesimulator/LocateDo.app"))
   sh("xcrun", "simctl", "privacy", udid, "grant", "location-always", DEV_APP_IDENTIFIER)
-  raw = File.join(work, "raw.mp4")
-  results = File.join(work, "results.xcresult")
-  FileUtils.rm_rf(results)
-  # The clock starts when simctl reports "Recording started", which comes a few seconds after the spawn.
+end
+
+def test_without_building_command(udid, test, results)
+  root = File.expand_path("..", __dir__)
+  ["xcodebuild", "test-without-building", "-project", File.join(root, PROJECT), "-scheme", "dev",
+   "-destination", "id=#{udid}", "-derivedDataPath", UI_TEST_DERIVED_DATA, "-parallel-testing-enabled", "NO",
+   "-resultBundlePath", results, "-only-testing:LocateDoUITests/#{test}",
+   "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "300"]
+end
+
+# After a crash xcodebuild relaunches the runner and can report a pass with no tests run.
+def verify_single_pass(results, test)
+  summary = JSON.parse(sh("xcrun", "xcresulttool", "get", "test-results", "summary", "--path", results, log: false))
+  return if summary["passedTests"] == 1 && summary["failedTests"].zero?
+
+  UI.user_error!("#{test} did not pass exactly once: #{summary.slice('passedTests', 'failedTests', 'skippedTests')}")
+end
+
+# Starts recording the simulator into path and returns once simctl says it is recording.
+def start_recording(udid, path)
   reader, writer = IO.pipe
-  recorder = Process.spawn("xcrun", "simctl", "io", udid, "recordVideo", "--codec", "h264", "--force", raw,
+  recorder = Process.spawn("xcrun", "simctl", "io", udid, "recordVideo", "--codec", "h264", "--force", path,
                            out: writer, err: writer)
   writer.close
   reader.each_line { |line| break if line.include?("Recording started") }
+  recorder
+end
+
+def stop_recording(recorder)
+  Process.kill("INT", recorder)
+  Process.wait(recorder)
+end
+
+# Prepares the simulator and runs one UI test while the whole screen is recorded to <work>/raw.mp4. Returns the
+# test output and when recording began.
+def record_ui_test(udid:, work:, test:, env: {})
+  FileUtils.mkdir_p(work)
+  prepare_recording_simulator(udid)
+  results = File.join(work, "results.xcresult")
+  FileUtils.rm_rf(results)
+  # The clock starts when simctl reports "Recording started", which comes a few seconds after the spawn.
+  recorder = start_recording(udid, File.join(work, "raw.mp4"))
   recording_started = Time.now.to_f
   previous = env.keys.to_h { |key| [key, ENV.fetch(key, nil)] }
   output = nil
   begin
     ENV.update(env)
-    output = sh("xcodebuild", "test-without-building", "-project", File.join(root, PROJECT), "-scheme", "dev",
-                "-destination", "id=#{udid}", "-derivedDataPath", derived_data, "-parallel-testing-enabled", "NO",
-                "-resultBundlePath", results, "-only-testing:LocateDoUITests/#{test}",
-                "-test-timeouts-enabled", "YES", "-maximum-test-execution-time-allowance", "300")
+    output = sh(*test_without_building_command(udid, test, results))
   ensure
     ENV.update(previous)
-    Process.kill("INT", recorder)
-    Process.wait(recorder)
+    stop_recording(recorder)
   end
-  # After a crash xcodebuild relaunches the runner and can report a pass with no tests run.
-  summary = JSON.parse(sh("xcrun", "xcresulttool", "get", "test-results", "summary", "--path", results, log: false))
-  unless summary["passedTests"] == 1 && summary["failedTests"].zero?
-    UI.user_error!("#{test} did not pass exactly once: #{summary.slice('passedTests', 'failedTests', 'skippedTests')}")
-  end
+  verify_single_pass(results, test)
   [output, recording_started]
+end
+
+# Prepares the simulator and runs AppPreviewTests, recording each scene into <work>/<scene>.mp4 on its own, so
+# nothing has to be found in one long recording. The test prints "PREVIEW <scene> start" and waits for
+# <scene>.recording in the signals folder, then prints "PREVIEW <scene> end" and waits for <scene>.stopped.
+# Returns the scenes recorded.
+def record_preview_scenes(udid:, work:, env: {})
+  FileUtils.rm_rf(work)
+  signals = File.join(work, "signals")
+  FileUtils.mkdir_p(signals)
+  prepare_recording_simulator(udid)
+  results = File.join(work, "results.xcresult")
+  recorded = []
+  recorder = nil
+  log = []
+  previous = env.keys.to_h { |key| [key, ENV.fetch(key, nil)] }
+  begin
+    ENV.update(env.merge("TEST_RUNNER_PREVIEW_SIGNALS" => signals))
+    Open3.popen2e(*test_without_building_command(udid, "AppPreviewTests", results)) do |_stdin, out, status|
+      out.each_line do |line|
+        log << line
+        if (name = line[/PREVIEW (\w+) start/, 1]) && recorder.nil?
+          recorder = start_recording(udid, File.join(work, "#{name}.mp4"))
+          FileUtils.touch(File.join(signals, "#{name}.recording"))
+        elsif (name = line[/PREVIEW (\w+) end/, 1]) && recorder
+          stop_recording(recorder)
+          recorder = nil
+          recorded << name
+          FileUtils.touch(File.join(signals, "#{name}.stopped"))
+        end
+      end
+      UI.user_error!("AppPreviewTests failed:\n#{log.last(40).join}") unless status.value.success?
+    end
+  ensure
+    ENV.update(previous)
+    stop_recording(recorder) if recorder
+  end
+  verify_single_pass(results, "AppPreviewTests")
+  recorded
 end
 
 # Grants and system alerts are unreliable until the simulator has finished booting.
@@ -419,21 +483,26 @@ platform :ios do
     UI.success("Wrote #{File.join(work, 'review.mp4')}")
   end
 
-  # Captions per scene, in the order the preview tells the story.
+  PREVIEW_HOLD = 0.8
+
+  # Captions per scene, in the order the preview tells the story; it closes on the app's tagline over home. Options:
+  # minimum, the least a scene is shown, and how long a scene the test took as a screenshot is shown; caption, extra
+  # arguments for caption.swift, such as --top to keep the caption off the notification at the bottom of the lock
+  # screen.
   PREVIEW_SCENES = {
     "en-US" => [
-      ["arrival", "Get reminded at the store"],
+      ["arrival", "Get reminded at the store", { minimum: 3.5, caption: "--top" }],
       ["place", "Check things off as you shop"],
-      ["home", "See what's waiting nearby"],
       ["map", "All your places on one map"],
       ["todos", "Every list in one place"],
+      ["home", "Where you go reminds you\nwhat to do"],
     ],
     "ja" => [
-      ["arrival", "お店に着いたら、お知らせ"],
+      ["arrival", "お店に着いたら、お知らせ", { minimum: 3.5, caption: "--top" }],
       ["place", "買ったらチェック"],
-      ["home", "近くの用事がひと目で"],
       ["map", "場所はマップでも"],
       ["todos", "買い物リストをまとめて"],
+      ["home", "行く場所が、\nやることを思い出させる"],
     ],
   }.freeze
 
@@ -444,39 +513,49 @@ platform :ios do
     caption = File.join(root, "../tools/video/caption.swift")
     PREVIEW_SCENES.each do |language, scenes|
       work = File.join(root, "build/app-preview", language)
-      output, recording_started = record_ui_test(
-        udid: udid, work: work, test: "AppPreviewTests",
-        env: { "TEST_RUNNER_PREVIEW_LANGUAGE" => language.split("-").first }
+      recorded = record_preview_scenes(
+        udid: udid, work: work, env: { "TEST_RUNNER_PREVIEW_LANGUAGE" => language.split("-").first }
       )
-      inputs = ["-i", File.join(work, "raw.mp4")]
+      inputs = []
       filters = []
       duration = 0.0
-      scenes.each_with_index do |(name, text), index|
-        first = output[/PREVIEW #{name} start (\d+\.\d+)/, 1]
-        last = output[/PREVIEW #{name} end (\d+\.\d+)/, 1]
-        UI.user_error!("AppPreviewTests did not print the #{name} scene") unless first && last
-        start = recording_offset(first.to_f, recording_started)
-        finish = recording_offset(last.to_f, recording_started)
-        duration += finish - start
+      scenes.each_with_index do |(name, text, options), index|
+        options ||= {}
+        still = File.join(work, "signals", "#{name}.still.png")
+        clip = File.join(work, "#{name}.mp4")
+        if File.exist?(still)
+          length = options.fetch(:minimum)
+          inputs += ["-loop", "1", "-t", length.to_s, "-i", still]
+        elsif recorded.include?(name)
+          # The recording starts capturing a moment after simctl says so, so the clip's own length is used, and its
+          # last frame is held a little so the result of the scene can be read.
+          length = (sh("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", clip,
+                       log: false).to_f + PREVIEW_HOLD).round(2)
+          length = [length, options.fetch(:minimum, 0)].max
+          inputs += ["-i", clip]
+        else
+          UI.user_error!("AppPreviewTests neither recorded nor took a screenshot of the #{name} scene")
+        end
+        duration += length
         image = File.join(work, "#{name}.png")
-        sh("swift", caption, image, "886", "1920", text)
+        sh("swift", caption, image, "886", "1920", text, *options[:caption])
         inputs += ["-i", image]
-        filters << "[0:v]trim=start=#{start}:end=#{finish},setpts=PTS-STARTPTS," \
-                   "scale=886:-2,crop=886:1920,setsar=1,fps=30,format=yuv420p[v#{index}]"
-        filters << "[v#{index}][#{index + 1}:v]overlay=0:0[c#{index}]"
+        filters << "[#{index * 2}:v]fps=30,tpad=stop_mode=clone:stop_duration=#{length},trim=duration=#{length}," \
+                   "setpts=PTS-STARTPTS,scale=886:-2,crop=886:1920,setsar=1,format=yuv420p[v#{index}]"
+        filters << "[v#{index}][#{index * 2 + 1}:v]overlay=0:0[c#{index}]"
       end
       UI.user_error!("The #{language} preview runs #{duration.round(1)} s; it must be 15-30 s") unless (15..30).cover?(duration)
       labels = scenes.each_index.map { |index| "[c#{index}]" }.join
       filters << "#{labels}concat=n=#{scenes.size}:v=1:a=0[video]"
-      output = File.join(APP_PREVIEWS, language)
-      FileUtils.mkdir_p(output)
+      folder = File.join(APP_PREVIEWS, language)
+      FileUtils.mkdir_p(folder)
       # App previews need a stereo audio track, even a silent one.
       sh("ffmpeg", "-v", "error", "-y", *inputs,
          "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
-         "-filter_complex", filters.join(";"), "-map", "[video]", "-map", "#{scenes.size + 1}:a",
+         "-filter_complex", filters.join(";"), "-map", "[video]", "-map", "#{scenes.size * 2}:a",
          "-c:v", "libx264", "-profile:v", "high", "-crf", "18", "-r", "30",
          "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart",
-         File.join(output, APP_PREVIEW_FILE))
+         File.join(folder, APP_PREVIEW_FILE))
       UI.success("Wrote fastlane/app_previews/#{language}/#{APP_PREVIEW_FILE} (#{duration.round(1)} s)")
     end
   end
