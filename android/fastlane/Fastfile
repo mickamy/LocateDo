@@ -47,10 +47,20 @@ def tap_text(text)
   end
 end
 
-def tap_node(description)
-  screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
-  node = screen.scan(/<node [^>]*>/).find { |n| yield(n) }
-  UI.user_error!("No element with #{description} on screen") if node.nil?
+# Looks a few times, a second apart, for what has only just been asked to appear, like a heads-up notification.
+def tap_node(description, &matches)
+  node = nil
+  screen = ""
+  5.times do |attempt|
+    sleep(1) if attempt.positive?
+    screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
+    node = screen.scan(/<node [^>]*>/).find(&matches)
+    break if node
+  end
+  if node.nil?
+    texts = screen.scan(/ text="([^"]+)"/).flatten.join(" | ")
+    UI.user_error!("No element with #{description} on screen\n#{texts}")
+  end
   x1, y1, x2, y2 = node[/bounds="([^"]+)"/, 1].scan(/\d+/).map(&:to_i)
   adb("shell", "input", "tap", ((x1 + x2) / 2).to_s, ((y1 + y2) / 2).to_s)
 end
@@ -170,12 +180,7 @@ platform :android do
     raw = File.join(ROOT, "build/screenshots-raw")
     FileUtils.rm_rf(raw)
     with_screenshot_emulator do
-      disable_interrupting_apps
-      adb("install", "-r", apk)
-      %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
-        adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
-      end
-      enter_demo_mode
+      prepare_demo_device(apk)
       SCREENSHOT_LOCATIONS.each do |locale, location|
         dir = File.join(raw, locale)
         FileUtils.mkdir_p(dir)
@@ -183,6 +188,51 @@ platform :android do
       end
     end
     compose_screenshots(raw)
+  end
+
+  # The scenes of the Play promo video, in the order and with the captions of the App Store previews; it closes on the
+  # app's tagline over home.
+  PROMO_SCENES = {
+    "en-US" => [
+      ["arrival", "Get reminded at the store"],
+      ["place", "Check things off as you shop"],
+      ["map", "All your places on one map"],
+      ["todos", "Every list in one place"],
+      ["home", "Where you go reminds you\nwhat to do"],
+    ],
+    "ja-JP" => [
+      ["arrival", "お店に着いたら、お知らせ"],
+      ["place", "買ったらチェック"],
+      ["map", "場所はマップでも"],
+      ["todos", "買い物リストをまとめて"],
+      ["home", "行く場所が、\nやることを思い出させる"],
+    ],
+  }.freeze
+
+  # The grocery store's first two to-dos (debug ScreenshotSeed): one is checked off from the notification, the other
+  # in the app.
+  PROMO_TODOS = {
+    "en" => %w[Milk Eggs],
+    "ja" => %w[牛乳 卵],
+  }.freeze
+
+  desc "Record the Play promo videos (en-US and ja-JP) on a throwaway emulator into fastlane/promo_videos (needs ffmpeg)"
+  lane :promo_video do
+    build(task: "assemble", build_type: "Debug", version_code: 1)
+    apk = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    work = File.join(ROOT, "build/promo-video")
+    FileUtils.rm_rf(work)
+    with_screenshot_emulator do
+      prepare_demo_device(apk)
+      SCREENSHOT_LOCATIONS.each do |locale, location|
+        dir = File.join(work, locale)
+        FileUtils.mkdir_p(dir)
+        record_promo_scenes(locale, location, dir)
+      end
+    end
+    PROMO_SCENES.each do |locale, scenes|
+      compose_promo_video(File.join(work, locale), scenes, File.join(ROOT, "fastlane/promo_videos", locale, "promo.mp4"))
+    end
   end
 
   desc "Record the background location walkthrough for Play's declaration into build/location-video (needs ffmpeg)"
@@ -285,7 +335,7 @@ platform :android do
       hw.cpu.arch=arm64
       hw.gps=yes
       hw.gpu.enabled=yes
-      hw.keyboard=yes
+      hw.keyboard=no
       hw.lcd.density=420
       hw.lcd.height=2400
       hw.lcd.width=1080
@@ -310,6 +360,111 @@ platform :android do
       FileUtils.rm_rf(File.join(avd_dir, "#{SCREENSHOT_AVD}.avd"))
       FileUtils.rm_f(File.join(avd_dir, "#{SCREENSHOT_AVD}.ini"))
     end
+  end
+
+  def prepare_demo_device(apk)
+    disable_interrupting_apps
+    adb("install", "-r", apk)
+    %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
+      adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
+    end
+    enter_demo_mode
+  end
+
+  # The app in the locale's language, standing at the demo center with fresh demo data, on the home map.
+  def open_demo(locale, location)
+    adb("shell", "am", "force-stop", SCREENSHOT_PACKAGE)
+    adb("shell", "cmd", "locale", "set-app-locales", SCREENSHOT_PACKAGE, "--locales", locale)
+    adb("emu", "geo", "fix", location.fetch(:longitude).to_s, location.fetch(:latitude).to_s)
+    adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "seed", "--es", "language", location.fetch(:language))
+    sleep(3)
+    adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity")
+    sleep(15)
+    recenter_map
+  end
+
+  # One clip per scene, each starting where the last one left the app. Taps and swipes assume the 1080x2400 emulator,
+  # as the screenshots do.
+  def record_promo_scenes(locale, location, dir)
+    language = location.fetch(:language)
+    notified, checked = PROMO_TODOS.fetch(language)
+    open_demo(locale, location)
+
+    # uiautomator only reads the focused window, which a heads-up notification is not, so the button is pressed in
+    # the notification shade.
+    record(File.join(dir, "arrival.mp4")) do
+      adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "notify", "--es", "language", language)
+      sleep(2)
+      adb("shell", "cmd", "statusbar", "expand-notifications")
+      sleep(1.5)
+      # The button reads "✓ <title>"; uiautomator may write the check mark as an entity, so only the end is matched.
+      tap_text(/ #{Regexp.escape(notified)}\z/)
+      sleep(1.5)
+      adb("shell", "cmd", "statusbar", "collapse")
+      sleep(0.5)
+    end
+
+    adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity", "-f", "0x20000000",
+        "--es", "placeId", "0199a6f0-0000-7000-8000-000000000001")
+    sleep(5)
+    record(File.join(dir, "place.mp4")) do
+      sleep(0.5)
+      tap_text(checked)
+      sleep(2.5)
+    end
+    tap_label("common_done", language)
+    sleep(2)
+
+    record(File.join(dir, "map.mp4")) do
+      sleep(0.5)
+      tap_app(964, 1759, "recenter the map")
+      sleep(2.5)
+    end
+
+    record(File.join(dir, "todos.mp4")) do
+      sleep(0.5)
+      tap_app(540, 2270, "open the to-do tab")
+      sleep(2.5)
+    end
+
+    # The last picture: home with the places listed, held while the tagline shows.
+    tap_app(172, 2270, "open the home tab")
+    sleep(2)
+    swipe_app(1990, 900, "raise the sheet")
+    sleep(2)
+    record(File.join(dir, "home.mp4")) do
+      sleep(4)
+    end
+  end
+
+  # The clips joined in order, each with its caption over it, at the emulator's size. The result is kept in the
+  # repository, like the App Store previews; Play itself takes a YouTube link to it.
+  def compose_promo_video(dir, scenes, output)
+    inputs = []
+    filters = []
+    scenes.each_with_index do |(name, text), index|
+      clip = File.join(dir, "#{name}.mp4")
+      caption = File.join(dir, "#{name}.png")
+      sh("swift", File.join(ROOT, "../tools/video/caption.swift"), caption, "1080", "2400", text)
+      inputs += ["-i", clip, "-i", caption]
+      # screenrecord writes frames only when the screen changes, and its file claims more time than its last frame,
+      # so each clip is filled to 30 fps first, then ends a frame after the last one and skips the half second before
+      # anything moves.
+      last = sh("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time",
+                "-of", "csv=p=0", clip, log: false).split.map(&:to_f).max
+      filters << "[#{index * 2}:v]fps=30,trim=start=0.5:end=#{(last + 0.1).round(2)},setpts=PTS-STARTPTS," \
+                 "scale=1080:2400,setsar=1,format=yuv420p[v#{index}]"
+      filters << "[v#{index}][#{index * 2 + 1}:v]overlay=0:0[c#{index}]"
+    end
+    labels = scenes.each_index.map { |index| "[c#{index}]" }.join
+    filters << "#{labels}concat=n=#{scenes.size}:v=1:a=0[video]"
+    FileUtils.mkdir_p(File.dirname(output))
+    sh("ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", filters.join(";"), "-map", "[video]",
+       "-c:v", "libx264", "-profile:v", "high", "-crf", "18", "-r", "30", "-movflags", "+faststart", output)
+    duration = sh("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", output, log: false).to_f
+    # Play autoplays only the first 30 seconds.
+    UI.important("#{output} runs #{duration.round(1)} s; Play autoplays only 30 s") if duration > 30
+    UI.success("Wrote #{output} (#{duration.round(1)} s)")
   end
 
   # Preinstalled apps finish setting themselves up on a fresh emulator and take the screen in the middle of a run: the
@@ -346,14 +501,7 @@ platform :android do
   def take_screenshots(locale, location, dir)
     language = location.fetch(:language)
     activity = "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity"
-    adb("shell", "am", "force-stop", SCREENSHOT_PACKAGE)
-    adb("shell", "cmd", "locale", "set-app-locales", SCREENSHOT_PACKAGE, "--locales", locale)
-    adb("emu", "geo", "fix", location.fetch(:longitude).to_s, location.fetch(:latitude).to_s)
-    adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "seed", "--es", "language", language)
-    sleep(3)
-    adb("shell", "am", "start", "-n", activity)
-    sleep(15)
-    recenter_map
+    open_demo(locale, location)
     capture(File.join(dir, "04-Map.png"))
 
     swipe_app(1990, 900, "raise the sheet")
