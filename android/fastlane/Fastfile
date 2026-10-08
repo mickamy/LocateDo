@@ -57,8 +57,8 @@ end
 
 # Where the emulator stands; the seeded places sit around it (debug ScreenshotSeed).
 SCREENSHOT_LOCATIONS = {
-  "en-US" => { language: "en", latitude: 37.3230, longitude: -122.0322 },
-  "ja-JP" => { language: "ja", latitude: 35.6437, longitude: 139.6710 },
+  "en-US" => { language: "en", latitude: 37.77627, longitude: -122.41924 },
+  "ja-JP" => { language: "ja", latitude: 35.67824, longitude: 139.76712 },
 }.freeze
 
 # Quiet on success, but a failure says which command it was and what adb printed.
