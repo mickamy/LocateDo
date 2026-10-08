@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Test StopBy</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 0 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 0 64px;
+  }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 36px 0 8px; }
+  p, li { margin: 0 0 12px; }
+  ul, ol { padding-left: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  .meta { color: var(--muted); margin-bottom: 24px; }
+  .lang { font-size: 15px; margin-bottom: 32px; }
+  a { color: var(--accent); }
+  ol > li { margin-bottom: 24px; }
+  .action { margin: 14px 0; }
+  .note { margin: 0; color: var(--muted); font-size: 15px; }
+  .button { display: inline-block; padding: 10px 20px; border-radius: 999px; background: var(--accent); color: #ffffff; font-weight: 600; text-decoration: none; }
+  .badge { display: inline-block; margin-left: -12px; }
+  .badge img { display: block; height: 72px; width: auto; }
+</style>
+</head>
+<body>
+<main>
+  <p class="lang"><a href="testers-ja.html" hreflang="ja">日本語</a></p>
+
+  <h1>Test StopBy</h1>
+  <p class="meta">Thanks for helping us test StopBy (ちかメモ in Japanese), the to-do app that reminds you when you arrive at a place. You can test on Android or iPhone.</p>
+
+  <h2>Android</h2>
+  <ol>
+    <li>Signed in with the Google account you use on Google Play on your Android phone, open the StopBy testers group and tap <strong>“Join group”</strong>.
+      <p class="action"><a class="button" href="https://groups.google.com/a/locatedo.com/g/testers">Open the testers group</a></p>
+      <p class="note">Opening the page alone doesn’t sign you up; you need to tap “Join group”. If you are signed in with a different Google account, switch accounts from the picture at the top right first.</p></li>
+    <li>Signed in with the same Google account, open the testing page on Google Play and tap “Become a tester”. If it isn’t ready yet, try again in a few minutes.
+      <p class="action"><a class="button" href="https://play.google.com/apps/testing/com.locatedo.locatedo">Open the testing page</a></p></li>
+    <li>Install StopBy from Google Play.
+      <p class="action"><a class="badge" href="https://play.google.com/store/apps/details?id=com.locatedo.locatedo"><img src="badges/google-play-en.png" alt="Get it on Google Play"></a></p></li>
+    <li>Please keep the app installed and use it for at least 14 days. Google needs testers to stay in the test that long before the app can be released, so please don’t leave the test or delete the app in the meantime.</li>
+  </ol>
+
+  <h2>iPhone</h2>
+  <ol>
+    <li>Install TestFlight from the App Store.
+      <p class="action"><a class="button" href="https://apps.apple.com/app/testflight/id899247664">Get TestFlight</a></p></li>
+    <li>On your iPhone, open StopBy in TestFlight and install it.
+      <p class="action"><a class="button" href="https://testflight.apple.com/join/3Rgm4eG2">Open StopBy in TestFlight</a></p></li>
+  </ol>
+
+  <h2>What to try</h2>
+  <ul>
+    <li>Save the places you go to and add to-dos to them.</li>
+    <li>Allow location all the time and notifications, then go about your day. You’ll be reminded when you arrive.</li>
+    <li>Check things off right from the arrival notification: press and hold it on iPhone, or tap the buttons on Android.</li>
+    <li>Sign in with Apple or Google and invite a family member to share places and to-dos. Sharing needs StopBy Pro; purchases during the test are free and never charged.</li>
+  </ul>
+
+  <h2>Feedback</h2>
+  <p>Tell us what worked and what didn’t at <a href="mailto:support@locatedo.com">support@locatedo.com</a>. On iPhone you can also send feedback from TestFlight by taking a screenshot in the app.</p>
+
+  <h2>Leaving the test</h2>
+  <p>Your email address is used only to give you access to the test. To leave, open <a href="https://groups.google.com/a/locatedo.com/g/testers">the testers group</a> and tap “Leave group” on Android, or remove StopBy in TestFlight on iPhone. See also the <a href="privacy.html">Privacy Policy</a>.</p>
+</main>
+</body>
+</html>
