@@ -10,6 +10,9 @@ PROJECT = "LocateDo.xcodeproj"
 UI_TEST_DERIVED_DATA = File.expand_path("../build/ui-tests/DerivedData", __dir__)
 # Archives build here so the Crashlytics upload-symbols tool from the SPM checkout has a fixed path.
 ARCHIVE_DERIVED_DATA = File.expand_path("../build/archive/DerivedData", __dir__)
+# deliver reads app previews from <locale>/ folders and takes the display size from the file name.
+APP_PREVIEWS = File.expand_path("../build/app-previews", __dir__)
+APP_PREVIEW_FILE = "IPHONE_67.mp4"
 
 # The app and its notification content extension, which is signed with its own profile.
 def signed_identifiers(app_identifier)
@@ -432,7 +435,7 @@ platform :ios do
     ],
   }.freeze
 
-  desc "Record the App Store app previews (886x1920, en-US and ja) into build/app-preview (needs ffmpeg)"
+  desc "Record the App Store app previews (886x1920, en-US and ja) into build/app-previews (needs ffmpeg)"
   lane :app_preview do |options|
     udid = simulator_udid(options.fetch(:device, "iPhone 18 Pro Max"))
     root = File.expand_path("..", __dir__)
@@ -463,15 +466,35 @@ platform :ios do
       UI.user_error!("The #{language} preview runs #{duration.round(1)} s; it must be 15-30 s") unless (15..30).cover?(duration)
       labels = scenes.each_index.map { |index| "[c#{index}]" }.join
       filters << "#{labels}concat=n=#{scenes.size}:v=1:a=0[video]"
+      output = File.join(APP_PREVIEWS, language)
+      FileUtils.mkdir_p(output)
       # App previews need a stereo audio track, even a silent one.
       sh("ffmpeg", "-v", "error", "-y", *inputs,
          "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
          "-filter_complex", filters.join(";"), "-map", "[video]", "-map", "#{scenes.size + 1}:a",
          "-c:v", "libx264", "-profile:v", "high", "-crf", "18", "-r", "30",
          "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart",
-         File.join(root, "build/app-preview/#{language}.mp4"))
-      UI.success("Wrote build/app-preview/#{language}.mp4 (#{duration.round(1)} s)")
+         File.join(output, APP_PREVIEW_FILE))
+      UI.success("Wrote build/app-previews/#{language}/#{APP_PREVIEW_FILE} (#{duration.round(1)} s)")
     end
+  end
+
+  # deliver changes the version being prepared on App Store Connect, so this fails while none is editable.
+  desc "Replace the App Store app previews with the ones app_preview recorded into build/app-previews"
+  lane :upload_previews do
+    api_key
+    deliver(
+      app_identifier: APP_IDENTIFIER,
+      app_version: get_version_number(xcodeproj: PROJECT, target: "LocateDo"),
+      app_previews_path: APP_PREVIEWS,
+      overwrite_preview_videos: true,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
   end
 
   # App privacy answers need an Apple ID session; an App Store Connect API key cannot set them.
