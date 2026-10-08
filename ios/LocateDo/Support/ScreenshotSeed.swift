@@ -57,11 +57,13 @@ enum ScreenshotSeed {
         try context.save()
     }
 
+    // Chosen so the grocery store, the place the screenshots open, sits on a public landmark and its looked-up address
+    // is not someone's home: Tokyo Station and San Francisco City Hall.
     static func center(japanese: Bool) -> (Double, Double) {
         if japanese {
-            return (35.6437, 139.6710)
+            return (35.67824, 139.76712)
         }
-        return (37.3230, -122.0322)
+        return (37.77627, -122.41924)
     }
 
     private static func entries(japanese: Bool) -> [Entry] {
