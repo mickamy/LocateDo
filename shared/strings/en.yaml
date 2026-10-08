@@ -139,6 +139,11 @@ settings:
     title: "About"
     version: "Version"
     privacy_policy: "Privacy Policy"
+    contact: "Contact Support"
+    contact_subject: "StopBy Support"
+    contact_body: "■ How can we help?\n\n\n■ If something went wrong, tell us what you can\n- When it happened:\n- What happened (e.g., no reminder when I got to the store):\n- What you were doing:\n- If you have screenshots or a screen recording, please attach them to this email\n\n――――――――――\nThe details below help us look into it. Please leave them as they are.\n"
+    contact_failed_title: "Couldn’t open your email app"
+    contact_failed_message: "The details for support were copied. Please paste them into an email to {address}."
   pro:
     title: "StopBy Pro"
     active: "Active"

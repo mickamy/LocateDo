@@ -143,7 +143,7 @@ nonisolated enum Analytics {
             return
         }
         FirebaseApp.configure(options: options)
-        CrashReporting.configure(configuration: configuration)
+        CrashReporting.configure(configuration: configuration, appInstanceID: appInstanceID())
         // The exported app version is only the marketing version, so builds of the same version look alike.
         setUserProperty(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String, for: .appBuild)
     }

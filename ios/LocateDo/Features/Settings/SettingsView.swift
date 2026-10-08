@@ -106,6 +106,7 @@ struct SettingsView: View {
                     Link(destination: LegalLinks.privacyPolicy) {
                         Label(.settingsAboutPrivacyPolicy, systemImage: "hand.raised")
                     }
+                    ContactSupportButton()
                 } header: {
                     Text(.settingsAboutTitle)
                 }

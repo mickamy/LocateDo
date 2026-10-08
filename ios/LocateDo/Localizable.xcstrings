@@ -2267,6 +2267,91 @@
         }
       }
     },
+    "settings.about.contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact Support"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お問い合わせ"
+          }
+        }
+      }
+    },
+    "settings.about.contact_body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "■ How can we help?\n\n\n■ If something went wrong, tell us what you can\n- When it happened:\n- What happened (e.g., no reminder when I got to the store):\n- What you were doing:\n- If you have screenshots or a screen recording, please attach them to this email\n\n――――――――――\nThe details below help us look into it. Please leave them as they are.\n"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "■ お問い合わせ内容\n\n\n■ 不具合の場合は、わかる範囲でお書きください\n・起きた日時：\n・どんなことが起きたか（例：お店に着いたのに通知が来なかった）：\n・そのときの操作：\n・スクリーンショットや画面収録があれば、このメールに添付してください\n\n――――――――――\n以下は調査に使う情報です。消さずにそのままお送りください。\n"
+          }
+        }
+      }
+    },
+    "settings.about.contact_failed_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The details for support were copied. Please paste them into an email to %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "調査に使う情報をコピーしました。%@ 宛のメールに貼り付けてお送りください。"
+          }
+        }
+      }
+    },
+    "settings.about.contact_failed_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t open your email app"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メールアプリを開けませんでした"
+          }
+        }
+      }
+    },
+    "settings.about.contact_subject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StopBy Support"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ちかメモへのお問い合わせ"
+          }
+        }
+      }
+    },
     "settings.about.privacy_policy" : {
       "extractionState" : "manual",
       "localizations" : {

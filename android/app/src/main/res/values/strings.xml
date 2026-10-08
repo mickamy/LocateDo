@@ -156,6 +156,11 @@
     <string name="session_ended_android_message">Your account was deleted on another device or your sign-in expired, so the data on this phone was removed.</string>
     <string name="session_ended_message">Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed.</string>
     <string name="session_ended_title">Signed Out</string>
+    <string name="settings_about_contact">Contact Support</string>
+    <string name="settings_about_contact_body">■ How can we help?\n\n\n■ If something went wrong, tell us what you can\n- When it happened:\n- What happened (e.g., no reminder when I got to the store):\n- What you were doing:\n- If you have screenshots or a screen recording, please attach them to this email\n\n――――――――――\nThe details below help us look into it. Please leave them as they are.\n</string>
+    <string name="settings_about_contact_failed_message">The details for support were copied. Please paste them into an email to %1$s.</string>
+    <string name="settings_about_contact_failed_title">Couldn’t open your email app</string>
+    <string name="settings_about_contact_subject">StopBy Support</string>
     <string name="settings_about_privacy_policy">Privacy Policy</string>
     <string name="settings_about_title">About</string>
     <string name="settings_about_version">Version</string>
