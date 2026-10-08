@@ -189,6 +189,7 @@ fun SettingsScreen(
                 },
                 leadingContent = { Icon(Icons.Filled.PrivacyTip, contentDescription = null) },
             )
+            ContactSupportItem()
             if (BuildConfig.DEBUG_TOOLS) {
                 HorizontalDivider()
                 DebugSection()
