@@ -42,7 +42,6 @@ struct PlaceEditorView: View {
                     }
                     .focused($isNameFocused)
                     .submitLabel(.done)
-                    .onSubmit(saveIfPossible)
                 }
                 Section {
                     if let coordinate {
@@ -136,12 +135,6 @@ struct PlaceEditorView: View {
     private func categoryLabel(_ category: PlaceCategory?) -> some View {
         let style = CategoryStyle(category)
         return Label(style.name, systemImage: style.systemImage)
-    }
-
-    private func saveIfPossible() {
-        if canSave {
-            save()
-        }
     }
 
     private func locationPreview(_ coordinate: CLLocationCoordinate2D) -> some View {
