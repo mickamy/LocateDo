@@ -23,9 +23,11 @@ defaults:
 permissions:
   contents: read
 
+# A pull request from dev skips these jobs: the push to dev has already run them on the same commits.
 jobs:
   test:
     name: go test
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -58,6 +60,7 @@ jobs:
 
   lint:
     name: golangci-lint
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -75,6 +78,7 @@ jobs:
 
   generate:
     name: generated code is current
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -96,6 +100,7 @@ jobs:
 
   tidy:
     name: go mod tidy
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

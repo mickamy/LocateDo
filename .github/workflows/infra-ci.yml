@@ -23,9 +23,11 @@ concurrency:
   group: infra-ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# A pull request from dev skips these jobs: the push to dev has already run them on the same commits.
 jobs:
   check:
     name: fmt / validate (${{ matrix.root }})
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
