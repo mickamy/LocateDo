@@ -77,8 +77,7 @@ android {
             buildConfigField("String", "APP_STATUS_URL", "\"https://locatedo.com/app-status.json\"")
             buildConfigField("String", "APPLE_SERVICES_ID", "\"com.locatedo.LocateDo.web\"")
             buildConfigField("String", "APPLE_REDIRECT_URI", "\"https://api.locatedo.com/auth/apple/android\"")
-            // The Play Store key is created in RevenueCat once the Play app exists.
-            buildConfigField("String", "REVENUECAT_API_KEY", "\"\"")
+            buildConfigField("String", "REVENUECAT_API_KEY", "\"goog_BCCkcrHZHlOzLsMSTEdIOacsagz\"")
         }
         create("staging") {
             initWith(getByName("release"))
