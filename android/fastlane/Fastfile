@@ -149,8 +149,7 @@ platform :android do
     FileUtils.rm_rf(raw)
     with_screenshot_emulator do
       adb("install", "-r", apk)
-      # The Google app finishes setting itself up on a fresh emulator and takes the screen in the middle of a run.
-      adb("shell", "pm", "disable-user", "--user", "0", "com.google.android.googlequicksearchbox")
+      disable_interrupting_apps
       %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
         adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
       end
@@ -176,7 +175,7 @@ platform :android do
     grocery = { latitude: location.fetch(:latitude) + 0.0030, longitude: location.fetch(:longitude) }
     with_screenshot_emulator do
       adb("install", "-r", apk)
-      adb("shell", "pm", "disable-user", "--user", "0", "com.google.android.googlequicksearchbox")
+      disable_interrupting_apps
       adb("shell", "appops", "set", SCREENSHOT_PACKAGE, "android:mock_location", "allow")
       # Background location is left out: asking for it is what the video shows.
       %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION POST_NOTIFICATIONS].each do |permission|
@@ -289,6 +288,20 @@ platform :android do
       FileUtils.rm_rf(File.join(avd_dir, "#{SCREENSHOT_AVD}.avd"))
       FileUtils.rm_f(File.join(avd_dir, "#{SCREENSHOT_AVD}.ini"))
     end
+  end
+
+  # Preinstalled apps finish setting themselves up on a fresh emulator and take the screen in the middle of a run: the
+  # Google app and YouTube come to the front, and any app may ask for the notification permission. Every app but ours
+  # has that permission denied for good, in one shell on the device rather than an adb call per package.
+  def disable_interrupting_apps
+    %w[com.google.android.googlequicksearchbox com.google.android.youtube].each do |package|
+      adb("shell", "pm", "disable-user", "--user", "0", package)
+    end
+    permission = "android.permission.POST_NOTIFICATIONS"
+    adb("shell", "for p in $(pm list packages | cut -d: -f2); do " \
+                 "[ \"$p\" = #{SCREENSHOT_PACKAGE} ] && continue; " \
+                 "pm revoke $p #{permission} 2>/dev/null && pm set-permission-flags $p #{permission} user-fixed; " \
+                 "done; true")
   end
 
   # 9:41, full battery, and no notification icons, as on the App Store images.
