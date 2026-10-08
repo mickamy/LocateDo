@@ -151,6 +151,11 @@
     <string name="session_ended_android_message">別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この端末のデータを消去しました。</string>
     <string name="session_ended_message">別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。</string>
     <string name="session_ended_title">サインアウトしました</string>
+    <string name="settings_about_contact">お問い合わせ</string>
+    <string name="settings_about_contact_body">■ お問い合わせ内容\n\n\n■ 不具合の場合は、わかる範囲でお書きください\n・起きた日時：\n・どんなことが起きたか（例：お店に着いたのに通知が来なかった）：\n・そのときの操作：\n・スクリーンショットや画面収録があれば、このメールに添付してください\n\n――――――――――\n以下は調査に使う情報です。消さずにそのままお送りください。\n</string>
+    <string name="settings_about_contact_failed_message">調査に使う情報をコピーしました。%1$s 宛のメールに貼り付けてお送りください。</string>
+    <string name="settings_about_contact_failed_title">メールアプリを開けませんでした</string>
+    <string name="settings_about_contact_subject">ちかメモへのお問い合わせ</string>
     <string name="settings_about_privacy_policy">プライバシーポリシー</string>
     <string name="settings_about_title">このアプリについて</string>
     <string name="settings_about_version">バージョン</string>
