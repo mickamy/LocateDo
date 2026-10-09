@@ -1,4 +1,4 @@
--- Arrivals the app noticed and why some were not announced, by month, to tell "arrivals are not detected" from
+-- Arrivals the app noticed and why some were not announced, by month and platform, to tell "arrivals are not detected" from
 -- "there was nothing to remind".
 -- users_waiting_without_arrivals: users whose daily_state that month showed a place with open to-dos but who had no
 -- arrival at all, the ones the geofence may be missing.
@@ -6,6 +6,7 @@
 WITH arrivals AS (
   SELECT
     DATE_TRUNC(event_date, MONTH) AS month,
+    platform,
     COUNT(*) AS arrivals,
     COUNTIF(event_name = 'arrival_notified') AS reminders,
     COUNTIF(event_name = 'arrival_suppressed') AS suppressed,
@@ -17,10 +18,10 @@ WITH arrivals AS (
     COUNT(DISTINCT IF(event_name = 'arrival_notified', user_pseudo_id, NULL)) AS users_reminded
   FROM `__PROJECT__.__DATASET__.events`
   WHERE event_name IN ('arrival_notified', 'arrival_suppressed')
-  GROUP BY month
+  GROUP BY month, platform
 ),
 waiting_users AS (
-  SELECT DISTINCT DATE_TRUNC(event_date, MONTH) AS month, user_pseudo_id
+  SELECT DISTINCT DATE_TRUNC(event_date, MONTH) AS month, platform, user_pseudo_id
   FROM `__PROJECT__.__DATASET__.daily_state`
   WHERE places_with_open_todos > 0
 ),
@@ -32,14 +33,16 @@ arrived_users AS (
 waiting AS (
   SELECT
     w.month,
+    w.platform,
     COUNT(*) AS users_waiting,
     COUNTIF(a.user_pseudo_id IS NULL) AS users_waiting_without_arrivals
   FROM waiting_users AS w
   LEFT JOIN arrived_users AS a USING (month, user_pseudo_id)
-  GROUP BY w.month
+  GROUP BY w.month, w.platform
 )
 SELECT
   month,
+  platform,
   COALESCE(a.arrivals, 0) AS arrivals,
   COALESCE(a.reminders, 0) AS reminders,
   SAFE_DIVIDE(a.reminders, a.arrivals) AS reminder_rate,
@@ -54,4 +57,4 @@ SELECT
   COALESCE(w.users_waiting_without_arrivals, 0) AS users_waiting_without_arrivals,
   SAFE_DIVIDE(w.users_waiting_without_arrivals, w.users_waiting) AS waiting_without_arrivals_rate
 FROM arrivals AS a
-FULL JOIN waiting AS w USING (month)
+FULL JOIN waiting AS w USING (month, platform)

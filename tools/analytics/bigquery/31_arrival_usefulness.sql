@@ -1,4 +1,4 @@
--- Whether arrival reminders get opened and lead to to-dos being checked off, by month.
+-- Whether arrival reminders get opened and lead to to-dos being checked off, by month and platform.
 -- todos_completed_from_reminders: checked off within 30 minutes of opening the reminder (via notification) or from
 -- its checklist without opening the app, on iPhone (via action) or Apple Watch (via watch_action); both are also
 -- counted in todos_completed_from_actions, and the Watch ones in todos_completed_from_watch_actions.
@@ -8,6 +8,7 @@
 WITH in_app_completions AS (
   SELECT
     DATE_TRUNC(c.event_date, MONTH) AS month,
+    c.platform,
     EXISTS (
       SELECT 1
       FROM `__PROJECT__.__DATASET__.events` AS n
@@ -19,13 +20,14 @@ WITH in_app_completions AS (
   WHERE c.event_name = 'todo_completed' AND c.via IN ('app', 'watch')
 ),
 completions AS (
-  SELECT month, COUNTIF(after_reminder) AS todos_completed_in_app_after_reminders
+  SELECT month, platform, COUNTIF(after_reminder) AS todos_completed_in_app_after_reminders
   FROM in_app_completions
-  GROUP BY month
+  GROUP BY month, platform
 ),
 reminders AS (
   SELECT
     DATE_TRUNC(event_date, MONTH) AS month,
+    platform,
     COUNTIF(event_name = 'arrival_notified') AS reminders,
     COUNTIF(event_name = 'arrival_opened') AS reminders_opened,
     SAFE_DIVIDE(COUNTIF(event_name = 'arrival_opened'), COUNTIF(event_name = 'arrival_notified')) AS open_rate,
@@ -37,10 +39,11 @@ reminders AS (
     COUNTIF(event_name = 'todo_completed' AND via IN ('action', 'watch_action')) AS todos_completed_from_actions,
     COUNTIF(event_name = 'todo_completed' AND via = 'watch_action') AS todos_completed_from_watch_actions
   FROM `__PROJECT__.__DATASET__.events`
-  GROUP BY month
+  GROUP BY month, platform
 )
 SELECT
   r.month,
+  r.platform,
   r.reminders,
   r.reminders_opened,
   r.open_rate,
@@ -56,4 +59,4 @@ SELECT
     r.todos_completed
   ) AS completed_after_reminders_rate
 FROM reminders AS r
-LEFT JOIN completions AS c USING (month)
+LEFT JOIN completions AS c USING (month, platform)
