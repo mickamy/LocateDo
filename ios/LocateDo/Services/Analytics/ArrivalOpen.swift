@@ -4,6 +4,8 @@ nonisolated enum CompletionVia: String {
     case notification
     case app
     case action
+    case watch
+    case watchAction = "watch_action"
 }
 
 // A to-do checked off at the notified place soon after opening the arrival notification counts as done through it.

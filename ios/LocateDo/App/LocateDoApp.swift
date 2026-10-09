@@ -23,6 +23,7 @@ struct LocateDoApp: App {
     private let devices: DeviceRegistration
     private let households: HouseholdManager
     private let appStatus: AppStatusStore
+    private let watch = WatchBridge()
     private let entitlements = LocateDoApp.makeEntitlements()
 
     init() {
@@ -81,6 +82,7 @@ struct LocateDoApp: App {
     private func connectServices() {
         connectAccount()
         connectNotifications()
+        connectWatch()
         let isPro = { [entitlements, container] in
             let plan = try? container.mainContext.fetch(FetchDescriptor<SyncState>()).first?.plan
             return Entitlements.isPro(hasEntitlement: entitlements.hasEntitlement, plan: plan)
@@ -121,7 +123,7 @@ struct LocateDoApp: App {
             CheckOffTip.openedFromArrival = true
         }
         notifier.onCheckOff = { [writes, sync] todoIDs in
-            await Self.checkOff(todoIDs, writes: writes, sync: sync)
+            await Self.checkOff(todoIDs, via: .action, writes: writes, sync: sync)
         }
         notifier.onCampaignLink = { url in
             UIApplication.shared.open(url)
@@ -156,6 +158,7 @@ struct LocateDoApp: App {
         geofence.start()
         network.start()
         entitlements.start()
+        watch.start()
         Task { [account, entitlements] in
             await account.linkPurchases(entitlements)
         }
@@ -214,15 +217,6 @@ struct LocateDoApp: App {
         }
     }
 
-    private static func makeAppStatus(gate: MaintenanceGate) -> AppStatusStore {
-        var url: URL?
-        if !isRunningTests, let raw = Bundle.main.object(forInfoDictionaryKey: "LocateDoAppStatusURL") as? String {
-            url = URL(string: raw)
-        }
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
-        return AppStatusStore(url: url, currentVersion: version, gate: gate)
-    }
-
     // Firebase starts first so RevenueCat can be handed the Analytics instance ID as it is configured.
     private static func makeEntitlements() -> Entitlements {
         if !isRunningTests {
@@ -270,13 +264,13 @@ struct LocateDoApp: App {
 }
 
 extension LocateDoApp {
-    // The app was woken in the background by the notification's action, so it asks for time to send the writes.
-    private static func checkOff(_ todoIDs: [UUID], writes: LocalWrites, sync: SyncEngine) async {
-        let task = UIApplication.shared.beginBackgroundTask(withName: "check-off")
-        writes.checkOff(todoIDs)
-        CheckOffTip().invalidate(reason: .actionPerformed)
-        await sync.drain()
-        UIApplication.shared.endBackgroundTask(task)
+    private static func makeAppStatus(gate: MaintenanceGate) -> AppStatusStore {
+        var url: URL?
+        if !isRunningTests, let raw = Bundle.main.object(forInfoDictionaryKey: "LocateDoAppStatusURL") as? String {
+            url = URL(string: raw)
+        }
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+        return AppStatusStore(url: url, currentVersion: version, gate: gate)
     }
 
     private static func makeDevices(
@@ -290,5 +284,30 @@ extension LocateDoApp {
             promotionsConsent: { [preferences] in preferences.promotionsConsent },
             completionNotices: { [preferences] in preferences.completionNotices }
         )
+    }
+
+    private func connectWatch() {
+        watch.onCheckOff = { [writes, sync] checkOff in
+            await Self.checkOff(checkOff.todoIDs, via: CompletionVia(checkOff.source), writes: writes, sync: sync)
+        }
+        watch.snapshot = { [container, locationProvider, authenticator] in
+            let descriptor = FetchDescriptor<Place>(sortBy: [SortDescriptor(\.sortOrder), SortDescriptor(\.name)])
+            let places = (try? container.mainContext.fetch(descriptor)) ?? []
+            return WatchSnapshot(
+                places: Nearby.places(places, from: locationProvider.location).map(\.place),
+                userID: authenticator.session?.userID
+            )
+        }
+    }
+
+    // Woken in the background by a notification action or the Watch, so it asks for time to send the writes.
+    private static func checkOff(_ todoIDs: [UUID], via: CompletionVia, writes: LocalWrites, sync: SyncEngine) async {
+        let task = UIApplication.shared.beginBackgroundTask(withName: "check-off")
+        writes.checkOff(todoIDs, via: via)
+        if via == .action {
+            CheckOffTip().invalidate(reason: .actionPerformed)
+        }
+        await sync.drain()
+        UIApplication.shared.endBackgroundTask(task)
     }
 }
