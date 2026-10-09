@@ -9,6 +9,7 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.location.GeocodingRepository
 import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.Category
@@ -16,6 +17,7 @@ import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.notifications.ArrivalSimulator
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -63,6 +65,7 @@ class PlaceDetailViewModel @AssistedInject constructor(
     private val geocodingRepository: GeocodingRepository,
     private val paywallRequests: PaywallRequests,
     private val arrivalSimulator: ArrivalSimulator,
+    private val undo: TodoUndo,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -108,9 +111,9 @@ class PlaceDetailViewModel @AssistedInject constructor(
         }
     }
 
-    fun deleteTodo(todoId: UUID) {
+    fun deleteTodo(todoId: UUID, via: TodoDeletionVia) {
         viewModelScope.launch {
-            todoRepository.delete(listOf(todoId))
+            undo.offer(todoRepository.delete(listOf(todoId), via))
         }
     }
 

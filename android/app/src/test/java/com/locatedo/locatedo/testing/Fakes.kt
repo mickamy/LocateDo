@@ -21,6 +21,7 @@ import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.notifications.ArrivalSimulator
 import com.locatedo.locatedo.core.notifications.CampaignNotification
@@ -226,6 +227,8 @@ class FakeTodoRepository : TodoRepository {
     val added = mutableListOf<Todo>()
     val updated = mutableListOf<Todo>()
     val deleted = mutableListOf<UUID>()
+    val deletedVia = mutableListOf<TodoDeletionVia>()
+    val restored = mutableListOf<Todo>()
     var limit: FreeLimit? = null
 
     override fun observeAll(): Flow<List<Todo>> = state
@@ -261,9 +264,17 @@ class FakeTodoRepository : TodoRepository {
         return true
     }
 
-    override suspend fun delete(ids: List<UUID>) {
-        deleted += ids
+    override suspend fun delete(ids: List<UUID>, via: TodoDeletionVia): List<Todo> {
+        val found = state.value.filter { it.id in ids }
+        deleted += found.map { it.id }
+        deletedVia += via
         state.value = state.value.filter { it.id !in ids }
+        return found
+    }
+
+    override suspend fun restore(todos: List<Todo>) {
+        restored += todos
+        state.value = state.value + todos
     }
 }
 

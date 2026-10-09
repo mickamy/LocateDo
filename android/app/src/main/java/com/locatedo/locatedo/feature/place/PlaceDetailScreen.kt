@@ -68,6 +68,7 @@ import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.feature.todos.TodoEditorSheet
 import com.locatedo.locatedo.feature.todos.TodoRow
 import com.locatedo.locatedo.ui.analytics.TrackScreen
@@ -95,6 +96,7 @@ fun PlaceDetailScreen(
     val detail = uiState.detail
     var isConfirmingDelete by remember { mutableStateOf(false) }
     var isAddingTodo by remember { mutableStateOf(false) }
+    var editingTodo by remember { mutableStateOf<UUID?>(null) }
 
     LaunchedEffect(uiState.isLoading, detail == null) {
         if (!uiState.isLoading && detail == null) {
@@ -138,6 +140,7 @@ fun PlaceDetailScreen(
                 members = uiState.members,
                 onAddTodo = { isAddingTodo = true },
                 onToggle = viewModel::setTodoCompleted,
+                onEdit = { editingTodo = it },
                 onDelete = viewModel::deleteTodo,
                 onAssign = viewModel::setAssignee,
             )
@@ -169,6 +172,9 @@ fun PlaceDetailScreen(
     }
     if (isAddingTodo) {
         TodoEditorSheet(placeId = placeId, onDismiss = { isAddingTodo = false })
+    }
+    editingTodo?.let { todoId ->
+        TodoEditorSheet(placeId = null, onDismiss = { editingTodo = null }, editingId = todoId)
     }
 }
 
@@ -255,7 +261,8 @@ private fun Todos(
     members: List<Membership>,
     onAddTodo: () -> Unit,
     onToggle: (UUID, Boolean) -> Unit,
-    onDelete: (UUID) -> Unit,
+    onEdit: (UUID) -> Unit,
+    onDelete: (UUID, TodoDeletionVia) -> Unit,
     onAssign: (UUID, UUID?) -> Unit,
 ) {
     val assignees = assigneeChoices(members)
@@ -269,7 +276,8 @@ private fun Todos(
         TodoRow(
             todo = todo,
             onToggle = { onToggle(todo.id, it) },
-            onDelete = { onDelete(todo.id) },
+            onEdit = { onEdit(todo.id) },
+            onDelete = { onDelete(todo.id, it) },
             detail = todoDetail(members, todo),
             assignees = assignees,
             onAssign = { onAssign(todo.id, it) },
@@ -288,6 +296,7 @@ private fun Todos(
             members = members,
             assignees = assignees,
             onToggle = onToggle,
+            onEdit = onEdit,
             onDelete = onDelete,
             onAssign = onAssign,
         )
@@ -353,7 +362,8 @@ private fun CompletedTodos(
     members: List<Membership>,
     assignees: List<AssigneeChoice>,
     onToggle: (UUID, Boolean) -> Unit,
-    onDelete: (UUID) -> Unit,
+    onEdit: (UUID) -> Unit,
+    onDelete: (UUID, TodoDeletionVia) -> Unit,
     onAssign: (UUID, UUID?) -> Unit,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
@@ -377,7 +387,8 @@ private fun CompletedTodos(
             TodoRow(
                 todo = todo,
                 onToggle = { onToggle(todo.id, it) },
-                onDelete = { onDelete(todo.id) },
+                onEdit = { onEdit(todo.id) },
+                onDelete = { onDelete(todo.id, it) },
                 detail = todoDetail(members, todo),
                 assignees = assignees,
                 onAssign = { onAssign(todo.id, it) },

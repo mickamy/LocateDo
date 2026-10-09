@@ -9,10 +9,12 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
@@ -67,6 +69,7 @@ class TodoListViewModel @Inject constructor(
     private val paywallRequests: PaywallRequests,
     authenticator: Authenticator,
     private val sync: SyncEngine,
+    private val undo: TodoUndo,
 ) : ViewModel() {
     private val filter = MutableStateFlow(TodoFilter.OPEN)
     private val isRefreshing = MutableStateFlow(false)
@@ -120,9 +123,9 @@ class TodoListViewModel @Inject constructor(
         }
     }
 
-    fun deleteTodo(todoId: UUID) {
+    fun deleteTodo(todoId: UUID, via: TodoDeletionVia) {
         viewModelScope.launch {
-            todoRepository.delete(listOf(todoId))
+            undo.offer(todoRepository.delete(listOf(todoId), via))
         }
     }
 

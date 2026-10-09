@@ -6,6 +6,7 @@ import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -80,6 +81,17 @@ class WriteAnalytics @Inject constructor(
                 AnalyticsParameter.OPEN_TODO_COUNT to openTodoCount,
             ),
         )
+    }
+
+    fun todoDeleted(via: TodoDeletionVia, count: Int) {
+        analytics.log(
+            AnalyticsEvent.TODO_DELETED,
+            mapOf(AnalyticsParameter.VIA to via.key, AnalyticsParameter.COUNT to count),
+        )
+    }
+
+    fun todoDeleteUndone(count: Int) {
+        analytics.log(AnalyticsEvent.TODO_DELETE_UNDONE, mapOf(AnalyticsParameter.COUNT to count))
     }
 
     suspend fun limitReached(limit: FreeLimit) {

@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.place
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
@@ -127,7 +128,7 @@ class PlaceDetailViewModelTest {
     }
 
     private fun TestScope.viewModel(placeId: UUID): PlaceDetailViewModel {
-        val viewModel = PlaceDetailViewModel(placeId, places, categories, memberships, todos, location, geocoding, paywalls, arrivals)
+        val viewModel = PlaceDetailViewModel(placeId, places, categories, memberships, todos, location, geocoding, paywalls, arrivals, TodoUndo())
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

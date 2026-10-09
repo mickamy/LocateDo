@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.todos
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
@@ -115,7 +116,7 @@ class TodoListViewModelTest {
     }
 
     private fun TestScope.viewModel(): TodoListViewModel {
-        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(), FakeSyncEngine())
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(), FakeSyncEngine(), TodoUndo())
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }
@@ -135,7 +136,7 @@ class TodoListViewModelTest {
     @Test
     fun pullingToRefreshSyncsOnceSignedIn() = runTest(dispatcher) {
         val sync = FakeSyncEngine()
-        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(testSession), sync)
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(testSession), sync, TodoUndo())
         backgroundScope.launch { viewModel.uiState.collect {} }
         assertTrue(viewModel.uiState.value.isSignedIn)
 

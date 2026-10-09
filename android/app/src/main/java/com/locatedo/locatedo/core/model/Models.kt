@@ -69,6 +69,13 @@ enum class BuiltinCategory(val key: String, val icon: String, val color: String)
     }
 }
 
+enum class TodoDeletionVia(val key: String) {
+    SWIPE("swipe"),
+    MENU("menu"),
+    EDITOR("editor"),
+    COMPLETED_BULK("completed_bulk"),
+}
+
 enum class FreeLimit(val max: Int) {
     PLACES(3),
     OPEN_TODOS(15),

@@ -16,14 +16,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,10 +50,10 @@ import com.locatedo.locatedo.feature.appstatus.UpdateRequiredScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
 import com.locatedo.locatedo.feature.map.MapScreen
-import com.locatedo.locatedo.feature.place.PlaceDetailScreen
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
 import com.locatedo.locatedo.feature.onboarding.ReminderSetupSheet
 import com.locatedo.locatedo.feature.paywall.PaywallScreen
+import com.locatedo.locatedo.feature.place.PlaceDetailScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
@@ -64,16 +70,17 @@ import com.locatedo.locatedo.ui.navigation.AcceptInviteKey
 import com.locatedo.locatedo.ui.navigation.AccountKey
 import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
+import com.locatedo.locatedo.ui.navigation.MapKey
 import com.locatedo.locatedo.ui.navigation.PaywallKey
+import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
-import com.locatedo.locatedo.ui.navigation.MapKey
-import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
+import kotlinx.coroutines.flow.collectLatest
 
 private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
@@ -193,6 +200,23 @@ private fun Tabs(
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
     val analytics = LocalAnalytics.current
+    val todoUndo: TodoUndoViewModel = hiltViewModel()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalResources.current
+
+    // A newer delete replaces the snackbar of the one before, as on iOS.
+    LaunchedEffect(Unit) {
+        todoUndo.offers.collectLatest { deleted ->
+            val result = snackbarHostState.showSnackbar(
+                message = resources.getString(R.string.todo_deleted, deleted.first().title),
+                actionLabel = resources.getString(R.string.common_undo),
+                duration = SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                todoUndo.undo(deleted)
+            }
+        }
+    }
 
     LaunchedEffect(pendingPlace) {
         if (pendingPlace != null) {
@@ -226,6 +250,7 @@ private fun Tabs(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (current in tabKeys || current is PlaceDetailKey) {
                 NavigationBar {
