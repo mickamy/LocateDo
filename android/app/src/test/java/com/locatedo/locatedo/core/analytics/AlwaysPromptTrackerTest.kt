@@ -24,7 +24,7 @@ class AlwaysPromptTrackerTest {
                 analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
             )
         }
-        assertEquals(listOf("allow", "later", "dismissed"), AlwaysPromptAnswer.entries.map { it.key })
+        assertEquals(listOf("allow", "later", "never", "dismissed"), AlwaysPromptAnswer.entries.map { it.key })
     }
 
     @Test
@@ -36,6 +36,18 @@ class AlwaysPromptTrackerTest {
 
         assertEquals(1, analytics.count(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED))
         assertEquals("allow", analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED)["result"])
+    }
+
+    @Test
+    fun whatWasKnownWhenShownIsLoggedWithTheAnswer() {
+        tracker.shown(mapOf(AnalyticsParameter.MISSING to "both", AnalyticsParameter.SHOWN_COUNT to 2))
+
+        tracker.answered(AlwaysPromptAnswer.LATER)
+
+        assertEquals(
+            mapOf("missing" to "both", "shown_count" to 2L, "result" to "later", "duration_s" to 0L),
+            analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
+        )
     }
 
     @Test

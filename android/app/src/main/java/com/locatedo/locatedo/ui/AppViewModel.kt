@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
 import com.locatedo.locatedo.core.analytics.AlwaysPromptTracker
 import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.InstallDate
 import com.locatedo.locatedo.core.appstatus.AppStatusDocument
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
@@ -15,11 +16,13 @@ import com.locatedo.locatedo.core.billing.paywallTrigger
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.common.TodosRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
-import com.locatedo.locatedo.core.permissions.LocationAuth
+import com.locatedo.locatedo.core.permissions.Permissions
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.core.sync.SyncEngine
+import com.locatedo.locatedo.feature.onboarding.ReminderSetup
+import com.locatedo.locatedo.feature.onboarding.ReminderSetupRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.Duration
@@ -45,12 +48,12 @@ data class AppUiState(
     val isLoading: Boolean = true,
     val hasCompletedOnboarding: Boolean = false,
     val isSignedIn: Boolean = false,
-    val isExplainingAlwaysLocation: Boolean = false,
+    val reminderSetup: ReminderSetupRequest? = null,
     val isAskingPromotions: Boolean = false,
     val notice: AppNotice? = null,
 )
 
-// What sits above the tabs: the onboarding gate, the one-time "always" location and promotions prompts, the notices,
+// What sits above the tabs: the onboarding gate, the reminder setup and promotions prompts, the notices,
 // and what the app status takes away or announces.
 @HiltViewModel
 class AppViewModel @Inject constructor(
@@ -69,7 +72,7 @@ class AppViewModel @Inject constructor(
 ) : ViewModel() {
     private val alwaysPrompt = AlwaysPromptTracker(analytics, clock)
 
-    private val isExplainingAlwaysLocation = MutableStateFlow(false)
+    private val reminderSetup = MutableStateFlow<ReminderSetupRequest?>(null)
 
     private val isAskingPromotions = MutableStateFlow(false)
 
@@ -87,17 +90,20 @@ class AppViewModel @Inject constructor(
     // A tapped completion notice; the tabs switch to the to-do list.
     val pendingTodos: StateFlow<Boolean> = todosRequests.pending
 
+    val currentPermissions: StateFlow<Permissions?> =
+        permissions.observe().stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
     val uiState: StateFlow<AppUiState> = combine(
         preferences.data,
-        isExplainingAlwaysLocation,
+        reminderSetup,
         isAskingPromotions,
         authenticator.session,
-    ) { stored, explaining, askingPromotions, session ->
+    ) { stored, setup, askingPromotions, session ->
         AppUiState(
             isLoading = false,
             hasCompletedOnboarding = stored.hasCompletedOnboarding,
             isSignedIn = session != null,
-            isExplainingAlwaysLocation = explaining,
+            reminderSetup = setup,
             isAskingPromotions = askingPromotions,
             notice = when {
                 stored.hasPendingRemovedNotice -> AppNotice.REMOVED
@@ -113,6 +119,11 @@ class AppViewModel @Inject constructor(
         }
         viewModelScope.launch {
             promotionsConsent.promptDue.filter { it }.collect { askPromotions() }
+        }
+        viewModelScope.launch {
+            combine(reminderSetup, permissions.observe()) { setup, current -> setup != null && ReminderSetup.missing(current) == null }
+                .filter { it }
+                .collect { closeReminderSetup(AlwaysPromptAnswer.ALLOW) }
         }
     }
 
@@ -148,7 +159,7 @@ class AppViewModel @Inject constructor(
         return !stored.hasCompletedOnboarding ||
             stored.hasPendingRemovedNotice ||
             stored.hasPendingSessionEndedNotice ||
-            isExplainingAlwaysLocation.value ||
+            reminderSetup.value != null ||
             pendingPlace.value != null ||
             pendingInvite.value != null ||
             pendingPaywall.value != null ||
@@ -157,25 +168,44 @@ class AppViewModel @Inject constructor(
             status.pendingNotice != null
     }
 
-    // Offered once, right after the first place is saved, while location is granted for foreground use only.
     fun placeAdded() {
         viewModelScope.launch {
-            if (preferences.data.first().hasPromptedAlwaysLocation) {
+            permissions.refresh()
+            val stored = preferences.data.first()
+            val current = permissions.observe().first()
+            val now = clock.instant()
+            if (!ReminderSetup.isDue(current, stored.reminderSetupShownAt, stored.reminderSetupNever, now)) {
                 return@launch
             }
-            if (permissions.observe().first().location != LocationAuth.WHEN_IN_USE) {
-                return@launch
-            }
-            preferences.setPromptedAlwaysLocation(true)
-            alwaysPrompt.shown()
-            isExplainingAlwaysLocation.value = true
+            val missing = ReminderSetup.missing(current) ?: return@launch
+            val shownCount = preferences.recordReminderSetupShown(now)
+            alwaysPrompt.shown(mapOf(AnalyticsParameter.MISSING to missing.key, AnalyticsParameter.SHOWN_COUNT to shownCount))
+            reminderSetup.value = ReminderSetupRequest(missing, shownCount)
         }
     }
 
-    fun alwaysLocationAnswered(answer: AlwaysPromptAnswer) = alwaysPrompt.answered(answer)
+    fun refreshPermissions() = permissions.refresh()
 
-    fun dismissAlwaysLocation() {
-        isExplainingAlwaysLocation.value = false
+    fun notificationsRequested() {
+        viewModelScope.launch {
+            permissions.markNotificationsRequested()
+            permissions.refresh()
+        }
+    }
+
+    // "allow" whenever nothing is missing by the time the sheet closes, however it was closed.
+    fun closeReminderSetup(answer: AlwaysPromptAnswer) {
+        if (reminderSetup.value == null) {
+            return
+        }
+        reminderSetup.value = null
+        viewModelScope.launch {
+            if (answer == AlwaysPromptAnswer.NEVER) {
+                preferences.setReminderSetupNever()
+            }
+            val isComplete = ReminderSetup.missing(permissions.observe().first()) == null
+            alwaysPrompt.answered(if (isComplete) AlwaysPromptAnswer.ALLOW else answer)
+        }
     }
 
     fun dismissNotice() {

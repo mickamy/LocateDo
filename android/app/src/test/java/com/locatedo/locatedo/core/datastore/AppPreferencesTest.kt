@@ -30,7 +30,8 @@ class AppPreferencesTest {
         preferences.setCompletedOnboarding(true)
         preferences.setRequestedLocation(true)
         preferences.setRequestedNotifications(true)
-        preferences.setPromptedAlwaysLocation(true)
+        preferences.recordReminderSetupShown(Instant.parse("2026-10-09T00:00:00Z"))
+        preferences.setReminderSetupNever()
         preferences.setDefaultRadiusMeters(250.0)
 
         assertEquals(
@@ -38,7 +39,9 @@ class AppPreferencesTest {
                 hasCompletedOnboarding = true,
                 hasRequestedLocation = true,
                 hasRequestedNotifications = true,
-                hasPromptedAlwaysLocation = true,
+                reminderSetupShownAt = Instant.parse("2026-10-09T00:00:00Z"),
+                reminderSetupShownCount = 1,
+                reminderSetupNever = true,
                 defaultRadiusMeters = 250.0,
             ),
             preferences.data.first(),
@@ -71,7 +74,8 @@ class AppPreferencesTest {
         preferences.setCompletedOnboarding(true)
         preferences.setRequestedLocation(true)
         preferences.setRequestedNotifications(true)
-        preferences.setPromptedAlwaysLocation(true)
+        preferences.recordReminderSetupShown(Instant.parse("2026-10-09T00:00:00Z"))
+        preferences.setReminderSetupNever()
         preferences.setDefaultRadiusMeters(250.0)
 
         preferences.reset()

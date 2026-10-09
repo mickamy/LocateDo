@@ -8,8 +8,11 @@ import com.locatedo.locatedo.core.common.TodosRequests
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
+import com.locatedo.locatedo.core.permissions.Permissions
 import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.core.sharing.InviteRequests
+import com.locatedo.locatedo.feature.onboarding.ReminderSetupMissing
+import com.locatedo.locatedo.feature.onboarding.ReminderSetupRequest
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakeSyncEngine
@@ -18,6 +21,7 @@ import com.locatedo.locatedo.testing.appStatusStore
 import com.locatedo.locatedo.testing.fakeAuthenticator
 import com.locatedo.locatedo.testing.testPreferences
 import com.locatedo.locatedo.testing.testPromotionsConsent
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
@@ -69,57 +73,112 @@ class AppViewModelTest {
 
         val state = viewModel.uiState.first { !it.isLoading }
         assertTrue(state.hasCompletedOnboarding)
-        assertFalse(state.isExplainingAlwaysLocation)
+        assertNull(state.reminderSetup)
     }
 
     @Test
-    fun theFirstPlaceOffersAlwaysLocationOnceWhileItIsWhenInUse() = runTest(dispatcher) {
+    fun aSavedPlaceOffersWhatRemindersStillNeedAndRecordsTheShowing() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
+        val permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE, notifications = NotificationAuth.DENIED)
+        val viewModel = viewModel(preferences, permissions = permissions)
         subscribe(viewModel)
 
         viewModel.placeAdded()
 
-        assertTrue(viewModel.uiState.first { it.isExplainingAlwaysLocation }.isExplainingAlwaysLocation)
-        assertTrue(preferences.data.first().hasPromptedAlwaysLocation)
-
-        viewModel.dismissAlwaysLocation()
-        viewModel.placeAdded()
-
-        assertFalse(viewModel.uiState.first { !it.isExplainingAlwaysLocation }.isExplainingAlwaysLocation)
+        assertEquals(
+            ReminderSetupRequest(ReminderSetupMissing.BOTH, shownCount = 1),
+            viewModel.uiState.first { it.reminderSetup != null }.reminderSetup,
+        )
+        val stored = preferences.data.first()
+        assertEquals(clock.now, stored.reminderSetupShownAt)
+        assertEquals(1, stored.reminderSetupShownCount)
     }
 
     @Test
-    fun theAlwaysLocationAnswerIsLoggedOnceWithItsDuration() = runTest(dispatcher) {
+    fun theSheetWaitsAWeekBeforeItIsOfferedAgain() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
         subscribe(viewModel)
         viewModel.placeAdded()
-        viewModel.uiState.first { it.isExplainingAlwaysLocation }
+        viewModel.closeReminderSetup(AlwaysPromptAnswer.LATER)
+
+        clock.now = clock.now.plus(Duration.ofDays(6))
+        viewModel.placeAdded()
+        assertNull(viewModel.uiState.first { !it.isLoading }.reminderSetup)
+
+        clock.now = clock.now.plus(Duration.ofDays(1))
+        viewModel.placeAdded()
+        assertEquals(2, viewModel.uiState.first { it.reminderSetup != null }.reminderSetup?.shownCount)
+    }
+
+    @Test
+    fun dontShowAgainStopsTheSheet() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
+        subscribe(viewModel)
+        viewModel.placeAdded()
+
+        viewModel.closeReminderSetup(AlwaysPromptAnswer.NEVER)
+        clock.now = clock.now.plus(Duration.ofDays(30))
+        viewModel.placeAdded()
+
+        assertTrue(preferences.data.first().reminderSetupNever)
+        assertNull(viewModel.uiState.first { !it.isLoading }.reminderSetup)
+        assertEquals("never", analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED)["result"])
+    }
+
+    @Test
+    fun theAnswerIsLoggedOnceWithWhatWasMissingAndWhichShowingItWas() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val permissions = FakePermissionsRepository(location = LocationAuth.ALWAYS, notifications = NotificationAuth.NOT_DETERMINED)
+        val viewModel = viewModel(preferences, permissions = permissions)
+        subscribe(viewModel)
+        viewModel.placeAdded()
+        viewModel.uiState.first { it.reminderSetup != null }
         clock.now = clock.now.plusSeconds(3)
 
-        viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.ALLOW)
-        viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.DISMISSED)
-        viewModel.dismissAlwaysLocation()
+        viewModel.closeReminderSetup(AlwaysPromptAnswer.LATER)
+        viewModel.closeReminderSetup(AlwaysPromptAnswer.DISMISSED)
 
         assertEquals(1, analytics.count(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED))
         assertEquals(
-            mapOf("result" to "allow", "duration_s" to 3L),
+            mapOf("result" to "later", "missing" to "notifications", "shown_count" to 1L, "duration_s" to 3L),
             analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
         )
     }
 
     @Test
-    fun nothingIsOfferedWhenLocationIsAlreadyAlwaysOrNotGranted() = runTest(dispatcher) {
-        for (location in listOf(LocationAuth.ALWAYS, LocationAuth.DENIED, LocationAuth.NOT_DETERMINED)) {
-            val preferences = testPreferences(folder.newFolder(location.name), backgroundScope)
-            val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = location))
+    fun theSheetClosesAsAllowedOnceNothingIsMissing() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE, notifications = NotificationAuth.AUTHORIZED)
+        val viewModel = viewModel(preferences, permissions = permissions)
+        subscribe(viewModel)
+        viewModel.placeAdded()
+        viewModel.uiState.first { it.reminderSetup != null }
+
+        permissions.state.value = Permissions(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED)
+
+        assertNull(viewModel.uiState.first { it.reminderSetup == null }.reminderSetup)
+        assertEquals("allow", analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED)["result"])
+        assertEquals("location_always", analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED)["missing"])
+    }
+
+    @Test
+    fun nothingIsOfferedWhenNothingIsMissingOrOnlyLocationIsOff() = runTest(dispatcher) {
+        val cases = listOf(
+            Permissions(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED),
+            Permissions(LocationAuth.DENIED, NotificationAuth.AUTHORIZED),
+            Permissions(LocationAuth.NOT_DETERMINED, NotificationAuth.AUTHORIZED),
+        )
+        for (case in cases) {
+            val preferences = testPreferences(folder.newFolder(case.location.name), backgroundScope)
+            val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(case.location, case.notifications))
             subscribe(viewModel)
 
             viewModel.placeAdded()
 
-            assertEquals(location.name, false, preferences.data.first().hasPromptedAlwaysLocation)
-            assertFalse(location.name, viewModel.uiState.first { !it.isLoading }.isExplainingAlwaysLocation)
+            assertNull(case.toString(), preferences.data.first().reminderSetupShownAt)
+            assertNull(case.toString(), viewModel.uiState.first { !it.isLoading }.reminderSetup)
         }
     }
 

@@ -17,6 +17,7 @@ enum class PermissionAction(val key: String) {
 enum class AlwaysPromptAnswer(val key: String) {
     ALLOW("allow"),
     LATER("later"),
+    NEVER("never"),
     DISMISSED("dismissed"),
 }
 
@@ -31,9 +32,11 @@ fun Analytics.logPermissionAction(kind: PermissionKind, action: PermissionAction
 // and the close that follows is not a second answer.
 class AlwaysPromptTracker(private val analytics: Analytics, private val clock: Clock) {
     private var shownAt: Instant? = null
+    private var details: AnalyticsParameters = emptyMap()
 
-    fun shown() {
+    fun shown(details: AnalyticsParameters = emptyMap()) {
         shownAt = clock.instant()
+        this.details = details
     }
 
     fun answered(answer: AlwaysPromptAnswer) {
@@ -41,7 +44,7 @@ class AlwaysPromptTracker(private val analytics: Analytics, private val clock: C
         shownAt = null
         analytics.log(
             AnalyticsEvent.ALWAYS_PROMPT_ANSWERED,
-            mapOf(
+            details + mapOf(
                 AnalyticsParameter.RESULT to answer.key,
                 AnalyticsParameter.DURATION_S to Duration.between(at, clock.instant()).seconds.coerceAtLeast(0),
             ),
