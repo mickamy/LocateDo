@@ -62,7 +62,7 @@ onboarding:
   permissions: "そのために位置情報の許可をお願いします。"
   privacy_title: "居場所は、あなただけのもの"
   privacy_on_device: "到着したかどうかは、スマホの中だけで判定します。"
-  privacy_not_sent: "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、やることと、誰が完了したかだけです。"
+  privacy_not_sent: "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、登録した場所とやることのリストで、今いる場所は伝わりません。"
   privacy_no_ads: "広告もトラッキングもありません。"
   allow_location: "位置情報を許可"
   sample_place: "スーパー"

@@ -106,7 +106,7 @@
     <string name="onboarding_notifications_title">Get notified when you arrive</string>
     <string name="onboarding_permissions">StopBy asks for your location to do that.</string>
     <string name="onboarding_privacy_no_ads">No ads, no tracking.</string>
-    <string name="onboarding_privacy_not_sent">Your location is never sent to our servers or to your family. Your family shares only the to-dos and who checked them off.</string>
+    <string name="onboarding_privacy_not_sent">Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save, never where you are.</string>
     <string name="onboarding_privacy_on_device">Arrivals are detected on your phone, and nowhere else.</string>
     <string name="onboarding_privacy_title">Where you are is yours alone</string>
     <string name="onboarding_sample_place">Grocery store</string>

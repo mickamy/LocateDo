@@ -101,7 +101,7 @@
     <string name="onboarding_notifications_title">着いたらお知らせ</string>
     <string name="onboarding_permissions">そのために位置情報の許可をお願いします。</string>
     <string name="onboarding_privacy_no_ads">広告もトラッキングもありません。</string>
-    <string name="onboarding_privacy_not_sent">現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、やることと、誰が完了したかだけです。</string>
+    <string name="onboarding_privacy_not_sent">現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、登録した場所とやることのリストで、今いる場所は伝わりません。</string>
     <string name="onboarding_privacy_on_device">到着したかどうかは、スマホの中だけで判定します。</string>
     <string name="onboarding_privacy_title">居場所は、あなただけのもの</string>
     <string name="onboarding_sample_place">スーパー</string>
