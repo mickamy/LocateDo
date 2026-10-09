@@ -360,3 +360,8 @@ maintenance:
   dismiss: "閉じる"
 announcement:
   title: "お知らせ"
+watch:
+  empty_title: "やることはありません"
+  empty_message: "iPhone で場所とやることを追加してください。"
+  all_done: "すべて完了しました"
+  complete_hint: "完了にします"
