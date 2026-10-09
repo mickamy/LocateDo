@@ -1,0 +1,96 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1c1e;
+  --muted: #6e6e73;
+  --rule: #e5e5ea;
+  --accent: #0a84ff;
+  --panel: #f2f2f7;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --fg: #f2f2f7;
+    --muted: #98989d;
+    --rule: #2c2c2e;
+    --accent: #3b9bff;
+    --panel: #1c1c1e;
+  }
+}
+body {
+  margin: 0;
+  padding: 0 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 0 48px;
+}
+a { color: var(--accent); }
+h1 { font-size: 40px; line-height: 1.2; margin: 16px 0 8px; }
+h2 { font-size: 22px; line-height: 1.3; margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+.lang { font-size: 15px; text-align: right; margin: 0; }
+.hero { text-align: center; padding: 24px 0 48px; }
+.icon { display: block; margin: 0 auto; border-radius: 22%; }
+.lead { font-size: 20px; color: var(--muted); }
+.availability { margin-top: 28px; }
+.soon {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--panel);
+  font-weight: 600;
+}
+.note { color: var(--muted); font-size: 15px; }
+.feature {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 40px 0;
+  border-top: 1px solid var(--rule);
+}
+.feature img {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 40px 40px 0 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 92%, transparent);
+  mask-image: linear-gradient(to bottom, #000 92%, transparent);
+}
+.feature:nth-of-type(even) img { order: 2; }
+.points {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  padding: 40px 0;
+  border-top: 1px solid var(--rule);
+}
+.points h2 { font-size: 18px; }
+.points p { color: var(--muted); font-size: 15px; }
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: center;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  h1 { font-size: 32px; }
+  .lead { font-size: 18px; }
+  .lead br { display: none; }
+  .feature { grid-template-columns: 1fr; gap: 20px; text-align: center; }
+  .feature:nth-of-type(even) img { order: 0; }
+  .feature img { max-width: 240px; border-radius: 32px 32px 0 0; }
+  .points { grid-template-columns: 1fr; }
+}
