@@ -86,6 +86,15 @@ promotions_prompt:
   message: "We’ll occasionally let you know about new features, updates, and offers. You can turn this off anytime in Settings."
   accept: "Turn On"
   decline: "Not Now"
+reminder_setup:
+  title: "To be reminded when you arrive"
+  description: "StopBy needs two settings to remind you when you arrive, even with the app closed."
+  notifications: "Notifications"
+  location: "Location set to “Always”"
+  allow: "Allow"
+  allowed: "Allowed"
+  later: "Not now"
+  never: "Don’t show again"
 always_prompt:
   title: "Remind you even when the app is closed"
   description: "To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings."

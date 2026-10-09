@@ -160,6 +160,14 @@
     <string name="promotions_prompt_decline">今はいい</string>
     <string name="promotions_prompt_message">新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。</string>
     <string name="promotions_prompt_title">ちかメモからのお知らせを受け取りますか？</string>
+    <string name="reminder_setup_allow">許可する</string>
+    <string name="reminder_setup_allowed">許可済み</string>
+    <string name="reminder_setup_description">アプリを閉じている間も到着をお知らせするため、2 つの設定が必要です。</string>
+    <string name="reminder_setup_later">あとで</string>
+    <string name="reminder_setup_location">位置情報を「常に許可」</string>
+    <string name="reminder_setup_never">今後表示しない</string>
+    <string name="reminder_setup_notifications">通知</string>
+    <string name="reminder_setup_title">着いたらお知らせするには</string>
     <string name="removed_android_message">共有している世帯から外されたため、この端末のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_message">共有している世帯から外されたため、この iPhone のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_title">共有から外れました</string>

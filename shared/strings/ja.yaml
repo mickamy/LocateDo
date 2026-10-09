@@ -84,6 +84,15 @@ promotions_prompt:
   message: "新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。"
   accept: "受け取る"
   decline: "今はいい"
+reminder_setup:
+  title: "着いたらお知らせするには"
+  description: "アプリを閉じている間も到着をお知らせするため、2 つの設定が必要です。"
+  notifications: "通知"
+  location: "位置情報を「常に許可」"
+  allow: "許可する"
+  allowed: "許可済み"
+  later: "あとで"
+  never: "今後表示しない"
 always_prompt:
   title: "アプリを閉じていてもお知らせ"
   description: "アプリを閉じている間も到着に気づくには、位置情報を「常に許可」にする必要があります。あとから設定で変更できます。"
