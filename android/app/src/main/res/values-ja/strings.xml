@@ -5,6 +5,7 @@
     <string name="always_prompt_android_choose">次の画面で「%1$s」を選んでください。</string>
     <string name="always_prompt_description">アプリを閉じている間も到着に気づくには、位置情報を「常に許可」にする必要があります。あとから設定で変更できます。</string>
     <string name="always_prompt_later">あとで</string>
+    <string name="always_prompt_privacy">到着したかどうかはスマホの中だけで判定し、現在地は私たちのサーバーにも家族にも送りません。</string>
     <string name="always_prompt_title">アプリを閉じていてもお知らせ</string>
     <string name="announcement_title">お知らせ</string>
     <string name="app_name">ちかメモ</string>
@@ -86,12 +87,26 @@
     <plurals name="notification_more">
         <item quantity="other">他 %1$d 件</item>
     </plurals>
+    <string name="onboarding_allow_location">位置情報を許可</string>
     <string name="onboarding_allow_notifications">通知を許可</string>
     <string name="onboarding_description">よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。</string>
+    <string name="onboarding_feature_arrival_message">アプリを閉じていても届きます</string>
+    <string name="onboarding_feature_arrival_title">着いたら、すぐお知らせ</string>
+    <string name="onboarding_feature_family_message">誰かが買ったら、すぐ分かる</string>
+    <string name="onboarding_feature_family_title">家族と共有</string>
+    <string name="onboarding_feature_lists_message">買う場所ごとに書いておくだけ</string>
+    <string name="onboarding_feature_lists_title">お店ごとの買い物リスト</string>
     <string name="onboarding_later">あとで</string>
     <string name="onboarding_notifications_description">やることが残っている場所に着くと、通知でお知らせします。</string>
     <string name="onboarding_notifications_title">着いたらお知らせ</string>
     <string name="onboarding_permissions">そのために位置情報の許可をお願いします。</string>
+    <string name="onboarding_privacy_no_ads">広告もトラッキングもありません。</string>
+    <string name="onboarding_privacy_not_sent">現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、やることと、誰が完了したかだけです。</string>
+    <string name="onboarding_privacy_on_device">到着したかどうかは、スマホの中だけで判定します。</string>
+    <string name="onboarding_privacy_title">居場所は、あなただけのもの</string>
+    <string name="onboarding_sample_place">スーパー</string>
+    <string name="onboarding_sample_time">今</string>
+    <string name="onboarding_sample_todos">牛乳、卵、食パン</string>
     <string name="onboarding_start">はじめる</string>
     <string name="onboarding_tagline">行く場所が、やることを思い出させる。</string>
     <string name="paywall_android_renewal_note">解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、Google Play からいつでも解約できます。</string>

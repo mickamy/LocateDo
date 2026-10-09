@@ -52,6 +52,23 @@
         }
       }
     },
+    "always_prompt.privacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrivals are detected on your phone, and your location is never sent to our servers or to your family."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到着したかどうかはスマホの中だけで判定し、現在地は私たちのサーバーにも家族にも送りません。"
+          }
+        }
+      }
+    },
     "always_prompt.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1196,6 +1213,23 @@
         }
       }
     },
+    "onboarding.allow_location" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Location"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報を許可"
+          }
+        }
+      }
+    },
     "onboarding.allow_notifications" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1226,6 +1260,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。"
+          }
+        }
+      }
+    },
+    "onboarding.feature_arrival_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even with the app closed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリを閉じていても届きます"
+          }
+        }
+      }
+    },
+    "onboarding.feature_arrival_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminded when you arrive"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "着いたら、すぐお知らせ"
+          }
+        }
+      }
+    },
+    "onboarding.feature_family_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Know when someone picks it up"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誰かが買ったら、すぐ分かる"
+          }
+        }
+      }
+    },
+    "onboarding.feature_family_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared with your family"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族と共有"
+          }
+        }
+      }
+    },
+    "onboarding.feature_lists_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write it down where you'll buy it"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "買う場所ごとに書いておくだけ"
+          }
+        }
+      }
+    },
+    "onboarding.feature_lists_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A list for every store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お店ごとの買い物リスト"
           }
         }
       }
@@ -1294,6 +1430,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "そのために位置情報の許可をお願いします。"
+          }
+        }
+      }
+    },
+    "onboarding.privacy_no_ads" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ads, no tracking."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "広告もトラッキングもありません。"
+          }
+        }
+      }
+    },
+    "onboarding.privacy_not_sent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your location is never sent to our servers or to your family. Your family shares only the to-dos and who checked them off."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、やることと、誰が完了したかだけです。"
+          }
+        }
+      }
+    },
+    "onboarding.privacy_on_device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrivals are detected on your phone, and nowhere else."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到着したかどうかは、スマホの中だけで判定します。"
+          }
+        }
+      }
+    },
+    "onboarding.privacy_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where you are is yours alone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "居場所は、あなただけのもの"
+          }
+        }
+      }
+    },
+    "onboarding.sample_place" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grocery store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スーパー"
+          }
+        }
+      }
+    },
+    "onboarding.sample_time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "now"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今"
+          }
+        }
+      }
+    },
+    "onboarding.sample_todos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Milk, eggs, and bread"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "牛乳、卵、食パン"
           }
         }
       }
