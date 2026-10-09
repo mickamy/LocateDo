@@ -184,7 +184,7 @@ private fun Tabs(
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
-    val root = backStack.firstOrNull()
+    val currentTab = backStack.lastOrNull { it in tabKeys }
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
@@ -200,8 +200,7 @@ private fun Tabs(
     }
     LaunchedEffect(pendingTodos) {
         if (pendingTodos) {
-            backStack.clear()
-            backStack.add(TodosKey)
+            backStack.showTab(TodosKey)
             onTodosConsumed()
         }
     }
@@ -228,11 +227,10 @@ private fun Tabs(
                 NavigationBar {
                     for (tab in tabs) {
                         NavigationBarItem(
-                            selected = root == tab.key,
+                            selected = currentTab == tab.key,
                             onClick = {
                                 if (current != tab.key) {
-                                    backStack.clear()
-                                    backStack.add(tab.key)
+                                    backStack.showTab(tab.key)
                                 }
                             },
                             icon = { Icon(tab.icon, contentDescription = null) },
@@ -368,6 +366,15 @@ private fun Tabs(
                 },
             )
         }
+    }
+}
+
+// Home stays at the bottom, so back from another tab returns to Home before leaving the app.
+private fun NavBackStack<NavKey>.showTab(tab: NavKey) {
+    clear()
+    add(HomeKey)
+    if (tab != HomeKey) {
+        add(tab)
     }
 }
 
