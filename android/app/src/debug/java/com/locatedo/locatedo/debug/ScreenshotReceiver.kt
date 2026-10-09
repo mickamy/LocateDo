@@ -13,6 +13,8 @@ import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.data.LocalData
 import com.locatedo.locatedo.core.database.CategoryDao
 import com.locatedo.locatedo.core.database.LocateDoDatabase
+import com.locatedo.locatedo.core.database.MembershipDao
+import com.locatedo.locatedo.core.database.MembershipEntity
 import com.locatedo.locatedo.core.database.PlaceDao
 import com.locatedo.locatedo.core.database.PlaceEntity
 import com.locatedo.locatedo.core.database.TodoDao
@@ -22,6 +24,8 @@ import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
+import com.locatedo.locatedo.core.notifications.CompletionNotice
+import com.locatedo.locatedo.core.notifications.CompletionNotifier
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -36,6 +40,7 @@ import kotlinx.coroutines.tasks.await
 // Replaces local data with a tidy example for Play screenshots, driven over adb by `fastlane screenshots`:
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a seed --es language ja
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a notify --es language ja
+//   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a notify-completion --es language ja
 // and `fastlane location_video`, which moves the device into a geofence (the app must be the mock location app):
 //   am broadcast -n <package>/com.locatedo.locatedo.debug.ScreenshotReceiver -a move --es latitude 37.77927 --es longitude -122.41924
 class ScreenshotReceiver : BroadcastReceiver() {
@@ -52,6 +57,10 @@ class ScreenshotReceiver : BroadcastReceiver() {
                         NotificationManagerCompat.from(context).cancelAll()
                         notifyArrival(graph, japanese)
                     }
+                    ACTION_NOTIFY_COMPLETION -> {
+                        NotificationManagerCompat.from(context).cancelAll()
+                        notifyCompletion(graph, japanese)
+                    }
                     ACTION_MOVE -> move(context, intent)
                 }
             } finally {
@@ -65,6 +74,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
         val categories = graph.categoryDao().observeAll().first()
         val now = Instant.now().toEpochMilli()
         val center = ScreenshotSeed.center(japanese)
+        val household = ScreenshotSeed.household(japanese)
         graph.database().withTransaction {
             ScreenshotSeed.entries(japanese).forEachIndexed { index, entry ->
                 val placeId = ScreenshotSeed.placeId(index).toString()
@@ -88,7 +98,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
                             id = todoId(ScreenshotSeed.placeId(index), todoIndex).toString(),
                             title = title,
                             placeId = placeId,
-                            assigneeId = null,
+                            assigneeId = if (index == 0 && title == household.assigned) PARTNER_ID else null,
                             completedAt = null,
                             createdAt = now + todoIndex,
                             updatedAt = now + todoIndex,
@@ -96,6 +106,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
                     )
                 }
             }
+            addHousehold(graph, household, now)
         }
         val preferences = graph.preferences()
         preferences.setCompletedOnboarding(true)
@@ -103,6 +114,30 @@ class ScreenshotReceiver : BroadcastReceiver() {
         preferences.setRequestedNotifications(true)
         preferences.setPromptedAlwaysLocation(true)
         preferences.setShownPromotionsPrompt()
+    }
+
+    // Two members, so the grocery store shows an assignee and who checked something off.
+    private suspend fun addHousehold(graph: ScreenshotEntryPoint, household: ScreenshotSeed.Household, now: Long) {
+        graph.membershipDao().upsert(MembershipEntity(ME_ID, "owner", household.me, now, now))
+        graph.membershipDao().upsert(MembershipEntity(PARTNER_ID, "member", household.partner, now + 1, now + 1))
+        graph.todoDao().upsert(
+            TodoEntity(
+                id = todoId(ScreenshotSeed.placeId(0), COMPLETED_INDEX).toString(),
+                title = household.completed,
+                placeId = ScreenshotSeed.placeId(0).toString(),
+                assigneeId = null,
+                completedAt = now - COMPLETED_AGO_MILLIS,
+                completerId = PARTNER_ID,
+                createdAt = now - COMPLETED_AGO_MILLIS,
+                updatedAt = now - COMPLETED_AGO_MILLIS,
+            ),
+        )
+    }
+
+    // The server's completion notice for the to-do the partner checked off.
+    private fun notifyCompletion(graph: ScreenshotEntryPoint, japanese: Boolean) {
+        graph.completionNotifier().prepare()
+        graph.completionNotifier().notify(CompletionNotice(ScreenshotSeed.household(japanese).completionNotice, 1), 1)
     }
 
     private fun notifyArrival(graph: ScreenshotEntryPoint, japanese: Boolean) {
@@ -142,11 +177,16 @@ class ScreenshotReceiver : BroadcastReceiver() {
     private companion object {
         const val ACTION_SEED = "seed"
         const val ACTION_NOTIFY = "notify"
+        const val ACTION_NOTIFY_COMPLETION = "notify-completion"
         const val ACTION_MOVE = "move"
         const val EXTRA_LATITUDE = "latitude"
         const val EXTRA_LONGITUDE = "longitude"
         const val EXTRA_LANGUAGE = "language"
         const val RADIUS_METERS = 150.0
+        const val ME_ID = "0199a6f0-0000-7000-8000-0000000000a1"
+        const val PARTNER_ID = "0199a6f0-0000-7000-8000-0000000000a2"
+        const val COMPLETED_INDEX = 99
+        const val COMPLETED_AGO_MILLIS = 600_000L
     }
 }
 
@@ -160,6 +200,8 @@ interface ScreenshotEntryPoint {
     fun categoryDao(): CategoryDao
     fun preferences(): AppPreferences
     fun arrivalNotifier(): ArrivalNotifier
+    fun membershipDao(): MembershipDao
+    fun completionNotifier(): CompletionNotifier
 
     @ApplicationScope
     fun applicationScope(): CoroutineScope
@@ -174,6 +216,21 @@ object ScreenshotSeed {
         val longitudeOffset: Double,
         val todos: List<String>,
     )
+
+    class Household(
+        val me: String,
+        val partner: String,
+        val assigned: String,
+        val completed: String,
+        val completionNotice: String,
+    )
+
+    fun household(japanese: Boolean): Household {
+        if (japanese) {
+            return Household("たかし", "ゆき", "卵", "トイレットペーパー", "ゆきが「トイレットペーパー」を完了しました")
+        }
+        return Household("Sam", "Alex", "Eggs", "Paper towels", "Alex checked off \"Paper towels\"")
+    }
 
     fun placeId(index: Int): UUID = UUID.fromString("0199a6f0-0000-7000-8000-00000000000${index + 1}")
 
