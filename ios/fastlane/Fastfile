@@ -16,10 +16,23 @@ ARCHIVE_DERIVED_DATA = File.expand_path("../build/archive/DerivedData", __dir__)
 # deliver reads app previews from <locale>/ folders and takes the display size from the file name.
 APP_PREVIEWS = File.expand_path("app_previews", __dir__)
 APP_PREVIEW_FILE = "IPHONE_67.mp4"
+# Watch shots sit next to the iPhone ones in fastlane/screenshots, where deliver tells them apart by size.
+WATCH_SCREENSHOT_PREFIX = "watch-"
 
 # The app, its notification content extension, and its Watch app, each signed with its own profile.
 def signed_identifiers(app_identifier)
   [app_identifier, "#{app_identifier}#{NOTIFICATION_CONTENT_SUFFIX}", "#{app_identifier}#{WATCH_SUFFIX}"]
+end
+
+# Creates the Watch simulator when it is missing; device is a device type name such as "Apple Watch Ultra 3 (49mm)".
+def watch_simulator_udid(device)
+  devices = JSON.parse(`xcrun simctl list devices available --json`)["devices"]
+  match = devices.values.flatten.find { |candidate| candidate["name"] == device }
+  return match["udid"] if match
+
+  `xcrun simctl create "#{device}" "#{device}"`.strip.tap do |udid|
+    UI.user_error!("Could not create a #{device} simulator; is the watchOS runtime installed?") if udid.empty?
+  end
 end
 
 def simulator_udid(device)
@@ -390,7 +403,9 @@ platform :ios do
        "-scheme", "dev", "-destination", "id=#{udid}", "-derivedDataPath", derived_data,
        "ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon")
     app = File.join(derived_data, "Build/Products/Debug-iphonesimulator/LocateDo.app")
-    FileUtils.rm_rf(File.expand_path("screenshots", __dir__))
+    Dir[File.expand_path("screenshots/*/*.png", __dir__)].each do |file|
+      FileUtils.rm_f(file) unless File.basename(file).start_with?(WATCH_SCREENSHOT_PREFIX)
+    end
     %w[en-US ja].each do |language|
       # Each language starts from an erased simulator. "Always" can only be granted once the app is
       # installed, and it survives the reinstall the test run does, which keeps the location banner out.
@@ -415,6 +430,43 @@ platform :ios do
       )
     end
     compose_screenshots
+  end
+
+  desc "Take the Apple Watch screenshots in English and Japanese into fastlane/screenshots/<language>/watch-*.png"
+  lane :watch_screenshots do |options|
+    device = options.fetch(:device, "Apple Watch Ultra 3 (49mm)")
+    udid = watch_simulator_udid(device)
+    root = File.expand_path("..", __dir__)
+    work = File.join(root, "build/watch-screenshots")
+    FileUtils.rm_rf(work)
+    project = File.join(root, PROJECT)
+    sh("xcodebuild", "build-for-testing", "-project", project, "-scheme", "watch",
+       "-destination", "id=#{udid}", "-derivedDataPath", UI_TEST_DERIVED_DATA)
+    { "en-US" => "en", "ja" => "ja" }.each do |language, test_language|
+      sh("xcrun", "simctl", "shutdown", udid, error_callback: ->(_) {})
+      sh("xcrun", "simctl", "erase", udid)
+      boot_simulator(udid)
+      # watchOS simulators refuse status bar overrides, so the shots show the time they were taken.
+      result = File.join(work, "#{language}.xcresult")
+      # The test runner sees TEST_RUNNER_-prefixed variables without the prefix.
+      sh({ "TEST_RUNNER_SCREENSHOT_LANGUAGE" => test_language },
+         "xcodebuild", "test-without-building", "-project", project, "-scheme", "watch",
+         "-destination", "id=#{udid}", "-derivedDataPath", UI_TEST_DERIVED_DATA,
+         "-only-testing:LocateDoWatchUITests/WatchScreenshotTests", "-resultBundlePath", result)
+      attachments = File.join(work, language)
+      sh("xcrun", "xcresulttool", "export", "attachments", "--path", result, "--output-path", attachments)
+      output = File.expand_path("screenshots/#{language}", __dir__)
+      FileUtils.mkdir_p(output)
+      Dir[File.join(output, "#{WATCH_SCREENSHOT_PREFIX}*.png")].each { |file| FileUtils.rm_f(file) }
+      manifest = JSON.parse(File.read(File.join(attachments, "manifest.json")))
+      manifest.flat_map { |test| test["attachments"] }.each do |attachment|
+        name = attachment["suggestedHumanReadableName"][/\A\d+-[A-Za-z]+/]
+        next unless name
+        FileUtils.cp(File.join(attachments, attachment["exportedFileName"]),
+                     File.join(output, "#{WATCH_SCREENSHOT_PREFIX}#{name}.png"))
+      end
+    end
+    sh("oxipng", "-o", "4", "--strip", "safe", "-q", *Dir[File.expand_path("screenshots/*/#{WATCH_SCREENSHOT_PREFIX}*.png", __dir__)])
   end
 
   # Headlines for the App Store images, by screenshot name. Break long ones by hand with \n; compose.swift
@@ -453,6 +505,9 @@ platform :ios do
         UI.user_error!("No #{language} screenshot for #{name}") unless source
         sh("swift", File.join(root, "../tools/screenshots/compose.swift"), source,
            File.join(output, language, "#{name}.png"), headline, "--language", language.split("-").first)
+      end
+      Dir[File.join(raw, language, "#{WATCH_SCREENSHOT_PREFIX}*.png")].each do |file|
+        FileUtils.cp(file, File.join(output, language))
       end
     end
     # Lossless, so the store sees the same pixels while each retake adds less to the repository.

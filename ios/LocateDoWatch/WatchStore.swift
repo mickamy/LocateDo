@@ -18,6 +18,12 @@ final class WatchStore: NSObject, WCSessionDelegate {
     @ObservationIgnored private nonisolated let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "watch")
 
     func start() {
+        #if DEBUG
+        if WatchScreenshotSeed.isRequested {
+            receive(WatchScreenshotSeed.snapshot)
+            return
+        }
+        #endif
         guard WCSession.isSupported() else {
             return
         }

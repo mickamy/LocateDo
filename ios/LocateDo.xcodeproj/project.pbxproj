@@ -48,6 +48,13 @@
 			remoteGlobalIDString = 3BB55BEF3070E8CE008A116A;
 			remoteInfo = LocateDo;
 		};
+		3B6A67E7C02CA55990A99368 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3B9C79092F9AAAA513964E64;
+			remoteInfo = LocateDoWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -79,6 +86,7 @@
 		3BB55BF03070E8CE008A116A /* LocateDo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocateDo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LocateDoNotificationContent.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3B9050CC9395444EC87C787A /* LocateDoWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -154,6 +162,11 @@
 			path = LocateDoUITests;
 			sourceTree = "<group>";
 		};
+		3BB93447D4FB0D1A32800E4D /* LocateDoWatchUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LocateDoWatchUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -190,6 +203,11 @@
 			files = (
 			);
 		};
+		3B42D60B0DF688EC42BC6A3F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -201,6 +219,7 @@
 				3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */,
 				3BF628963073C9D40025FB46 /* LocateDoUITests */,
 				3BD61C37219076442B9CA29B /* LocateDoWatch */,
+				3BB93447D4FB0D1A32800E4D /* LocateDoWatchUITests */,
 				3BB55BF13070E8CE008A116A /* Products */,
 				3BE0A48395DDCF4B898BF96D /* Frameworks */,
 			);
@@ -213,6 +232,7 @@
 				3B34EEAF3071027900D47174 /* LocateDoTests.xctest */,
 				3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */,
 				3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */,
+				3B9050CC9395444EC87C787A /* LocateDoWatchUITests.xctest */,
 				3B85F61F3321FC68D19B299C /* LocateDoWatch.app */,
 			);
 			name = Products;
@@ -340,6 +360,27 @@
 			productReference = 3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		3BB4109B8DA9C89677EF665F /* LocateDoWatchUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3BC5CB8CBB80C4861C296DDB /* Build configuration list for PBXNativeTarget "LocateDoWatchUITests" */;
+			buildPhases = (
+				3B5D95FC99F6DA7B20021209 /* Sources */,
+				3B42D60B0DF688EC42BC6A3F /* Frameworks */,
+				3B81D61D1DF1F72E74DBA784 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3BB19F70CA3B29887D9622AF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3BB93447D4FB0D1A32800E4D /* LocateDoWatchUITests */,
+			);
+			name = LocateDoWatchUITests;
+			productName = LocateDoWatchUITests;
+			productReference = 3B9050CC9395444EC87C787A /* LocateDoWatchUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -350,6 +391,10 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					3BB4109B8DA9C89677EF665F = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 3B9C79092F9AAAA513964E64;
+					};
 					3B34EEAE3071027900D47174 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 3BB55BEF3070E8CE008A116A;
@@ -396,6 +441,7 @@
 				3BF628943073C9D40025FB46 /* LocateDoUITests */,
 				3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */,
 				3B9C79092F9AAAA513964E64 /* LocateDoWatch */,
+				3BB4109B8DA9C89677EF665F /* LocateDoWatchUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -422,6 +468,11 @@
 			);
 		};
 		3BF628933073C9D40025FB46 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		3B81D61D1DF1F72E74DBA784 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -454,6 +505,11 @@
 			files = (
 			);
 		};
+		3B5D95FC99F6DA7B20021209 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -476,6 +532,11 @@
 			isa = PBXTargetDependency;
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
 			targetProxy = 3BF628993073C9D40025FB46 /* PBXContainerItemProxy */;
+		};
+		3BB19F70CA3B29887D9622AF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3B9C79092F9AAAA513964E64 /* LocateDoWatch */;
+			targetProxy = 3B6A67E7C02CA55990A99368 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1167,6 +1228,71 @@
 			};
 			name = Staging;
 		};
+		3B4EBF5F17BF1848CE704E75 /* Debug configuration for PBXNativeTarget "LocateDoWatchUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoWatchUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = LocateDoWatch;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		3BA6554ED910F0CB9B315B7B /* Release configuration for PBXNativeTarget "LocateDoWatchUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoWatchUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = LocateDoWatch;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		3B2AA6581AA77C084038BE30 /* Staging configuration for PBXNativeTarget "LocateDoWatchUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDoWatchUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = LocateDoWatch;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Staging;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1221,6 +1347,15 @@
 				3BF6289C3073C9D40025FB46 /* Debug configuration for PBXNativeTarget "LocateDoUITests" */,
 				3BF6289D3073C9D40025FB46 /* Release configuration for PBXNativeTarget "LocateDoUITests" */,
 				3BF6289E3073C9D40025FB46 /* Staging configuration for PBXNativeTarget "LocateDoUITests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		3BC5CB8CBB80C4861C296DDB /* Build configuration list for PBXNativeTarget "LocateDoWatchUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3B4EBF5F17BF1848CE704E75 /* Debug configuration for PBXNativeTarget "LocateDoWatchUITests" */,
+				3BA6554ED910F0CB9B315B7B /* Release configuration for PBXNativeTarget "LocateDoWatchUITests" */,
+				3B2AA6581AA77C084038BE30 /* Staging configuration for PBXNativeTarget "LocateDoWatchUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};
