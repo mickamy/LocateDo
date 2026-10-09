@@ -417,17 +417,19 @@ platform :ios do
   SCREENSHOT_HEADLINES = {
     "en-US" => {
       "01-Arrival" => "Reminded the moment\nyou arrive",
-      "02-Nearby" => "See what's waiting\nnearby",
-      "03-Place" => "A list for every store",
-      "04-Map" => "Your places on one map",
-      "05-Todos" => "Every to-do in one place",
+      "02-Checked" => "Know when your family\npicks it up",
+      "03-Place" => "One list per store,\nshared with family",
+      "04-Nearby" => "See what's waiting\nnearby",
+      "05-Map" => "Your places on one map",
+      "06-Todos" => "Every to-do in one place",
     },
     "ja" => {
       "01-Arrival" => "着いたら、すぐお知らせ",
-      "02-Nearby" => "近くの用事がひと目で",
-      "03-Place" => "お店ごとの買い物リスト",
-      "04-Map" => "場所はマップでも",
-      "05-Todos" => "やることを\nまとめてチェック",
+      "02-Checked" => "家族が買ったら、\nすぐ分かる",
+      "03-Place" => "お店ごとのリストを\n家族と共有",
+      "04-Nearby" => "近くの用事がひと目で",
+      "05-Map" => "場所はマップでも",
+      "06-Todos" => "やることを\nまとめてチェック",
     },
   }.freeze
 

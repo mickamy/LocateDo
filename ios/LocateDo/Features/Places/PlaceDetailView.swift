@@ -2,6 +2,7 @@ import MapKit
 import SwiftData
 import SwiftUI
 import TipKit
+import UserNotifications
 
 struct PlaceDetailView: View {
     @Environment(LocalWrites.self) private var writes
@@ -106,6 +107,7 @@ struct PlaceDetailView: View {
                     Button {
                         Task {
                             await notifier.requestAuthorization()
+                            UNUserNotificationCenter.current().removeAllDeliveredNotifications()
                             await notifier.notifyArrival(at: place, todos: place.openTodos, after: 10)
                         }
                     } label: {
@@ -113,6 +115,19 @@ struct PlaceDetailView: View {
                             Text(verbatim: "Simulate arrival in 10 s (debug)")
                         } icon: {
                             Image(systemName: "timer")
+                        }
+                    }
+                    #endif
+                    #if DEBUG
+                    Button {
+                        Task {
+                            await ScreenshotSeed.scheduleCompletionNotice(after: 10)
+                        }
+                    } label: {
+                        Label {
+                            Text(verbatim: "Simulate completion notice in 10 s (debug)")
+                        } icon: {
+                            Image(systemName: "checkmark.circle")
                         }
                     }
                     #endif
