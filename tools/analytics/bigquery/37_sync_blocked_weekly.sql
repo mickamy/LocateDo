@@ -1,8 +1,10 @@
--- Writes held back because the device was Pro while the server plan was still free, by ISO week (Monday start).
+-- Writes held back because the device was Pro while the server plan was still free, by ISO week (Monday start) and
+-- platform.
 -- A block is resolved when the same user's next sync event is sync_unblocked; durations come from that event.
 WITH sync AS (
   SELECT
     user_pseudo_id,
+    platform,
     event_date,
     event_time,
     event_name,
@@ -14,14 +16,15 @@ WITH sync AS (
   WHERE event_name IN ('sync_blocked_by_plan', 'sync_unblocked')
 ),
 active AS (
-  SELECT DATE_TRUNC(event_date, WEEK(MONDAY)) AS week, COUNT(DISTINCT user_pseudo_id) AS active_users
+  SELECT DATE_TRUNC(event_date, WEEK(MONDAY)) AS week, platform, COUNT(DISTINCT user_pseudo_id) AS active_users
   FROM `__PROJECT__.__DATASET__.events`
   WHERE foreground
-  GROUP BY week
+  GROUP BY week, platform
 ),
 blocked AS (
   SELECT
     DATE_TRUNC(event_date, WEEK(MONDAY)) AS week,
+    platform,
     COUNT(*) AS blocks,
     COUNT(DISTINCT user_pseudo_id) AS blocked_users,
     COUNTIF(kind = 'place') AS place_blocks,
@@ -29,11 +32,12 @@ blocked AS (
     COUNTIF(next_event IS NULL OR next_event != 'sync_unblocked') AS unresolved_blocks
   FROM sync
   WHERE event_name = 'sync_blocked_by_plan'
-  GROUP BY week
+  GROUP BY week, platform
 ),
 unblocked AS (
   SELECT
     DATE_TRUNC(event_date, WEEK(MONDAY)) AS week,
+    platform,
     COUNT(*) AS unblocks,
     COUNTIF(result = 'sent') AS unblocked_sent,
     COUNTIF(result = 'rejected') AS unblocked_rejected,
@@ -42,10 +46,11 @@ unblocked AS (
     MAX(duration_s) / 3600 AS max_blocked_hours
   FROM sync
   WHERE event_name = 'sync_unblocked'
-  GROUP BY week
+  GROUP BY week, platform
 )
 SELECT
   a.week,
+  a.platform,
   a.active_users,
   COALESCE(b.blocked_users, 0) AS blocked_users,
   SAFE_DIVIDE(COALESCE(b.blocked_users, 0), a.active_users) AS blocked_user_rate,
@@ -60,5 +65,5 @@ SELECT
   u.median_blocked_hours,
   u.max_blocked_hours
 FROM active AS a
-LEFT JOIN blocked AS b USING (week)
-LEFT JOIN unblocked AS u USING (week)
+LEFT JOIN blocked AS b USING (week, platform)
+LEFT JOIN unblocked AS u USING (week, platform)

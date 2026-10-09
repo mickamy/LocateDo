@@ -3,13 +3,16 @@
 WITH firsts AS (
   SELECT
     user_pseudo_id,
-    COALESCE(MIN(IF(event_name = 'first_open', event_date, NULL)), MIN(event_date)) AS first_date
+    COALESCE(MIN(IF(event_name = 'first_open', event_date, NULL)), MIN(event_date)) AS first_date,
+    -- From events sent by the app, not those RevenueCat sends on its behalf.
+    ARRAY_AGG(IF(foreground, platform, NULL) IGNORE NULLS LIMIT 1)[SAFE_OFFSET(0)] AS platform
   FROM `__PROJECT__.__DATASET__.events`
   GROUP BY user_pseudo_id
 )
 SELECT
   f.user_pseudo_id,
   f.first_date,
+  f.platform,
   COUNTIF(e.event_name = 'place_added' AND DATE_DIFF(e.event_date, f.first_date, DAY) < 3) AS places_added_first_3_days,
   COUNTIF(e.event_name = 'todo_added' AND DATE_DIFF(e.event_date, f.first_date, DAY) < 3) AS todos_added_first_3_days,
   LOGICAL_OR(e.foreground AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13) AS active_week_2,
@@ -40,4 +43,4 @@ SELECT
   DATE_DIFF(CURRENT_DATE(), f.first_date, DAY) AS days_since_first
 FROM firsts AS f
 JOIN `__PROJECT__.__DATASET__.events` AS e USING (user_pseudo_id)
-GROUP BY f.user_pseudo_id, f.first_date
+GROUP BY f.user_pseudo_id, f.first_date, f.platform

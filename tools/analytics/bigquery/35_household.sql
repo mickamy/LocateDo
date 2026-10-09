@@ -1,6 +1,7 @@
 -- Whether sharing households stay longer and pay more often.
 -- Split by blocked_by_plan: those owners paid but could not invite until the server caught up, so they undercount sharing.
 SELECT
+  platform,
   LEAST(COALESCE(max_household_members, 1), 3) AS household_members,
   COALESCE(blocked_by_plan, FALSE) AS blocked_by_plan,
   COUNT(*) AS users,
@@ -12,4 +13,4 @@ SELECT
   SAFE_DIVIDE(COUNTIF(purchased_in_app), COUNT(*)) AS purchase_rate
 FROM `__PROJECT__.__DATASET__.users`
 WHERE days_since_first >= 14
-GROUP BY 1, 2
+GROUP BY 1, 2, 3

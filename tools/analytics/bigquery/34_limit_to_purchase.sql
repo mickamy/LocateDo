@@ -11,6 +11,7 @@ WITH first_limit AS (
 funnel AS (
   SELECT
     user_pseudo_id,
+    platform,
     paywall_trigger,
     LOGICAL_OR(event_name = 'paywall_shown') AS shown,
     LOGICAL_OR(event_name = 'purchase_started') AS started,
@@ -19,9 +20,10 @@ funnel AS (
     LOGICAL_OR(event_name = 'paywall_purchased') AS purchased
   FROM `__PROJECT__.__DATASET__.events`
   WHERE paywall_trigger IS NOT NULL
-  GROUP BY user_pseudo_id, paywall_trigger
+  GROUP BY user_pseudo_id, platform, paywall_trigger
 )
 SELECT
+  f.platform,
   f.paywall_trigger,
   COUNTIF(f.shown) AS users_shown,
   COUNTIF(f.started) AS users_started,
@@ -37,4 +39,4 @@ LEFT JOIN first_limit AS l
     (f.paywall_trigger = 'place_limit' AND l.kind = 'place')
     OR (f.paywall_trigger = 'todo_limit' AND l.kind = 'todo')
   )
-GROUP BY f.paywall_trigger
+GROUP BY f.platform, f.paywall_trigger
