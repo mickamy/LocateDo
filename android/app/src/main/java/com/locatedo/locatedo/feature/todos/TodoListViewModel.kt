@@ -49,7 +49,11 @@ data class TodoListUiState(
     val isSignedIn: Boolean = false,
     val isRefreshing: Boolean = false,
     val members: List<Membership> = emptyList(),
+    val completedTodoIds: List<UUID> = emptyList(),
 ) {
+    val isShared: Boolean
+        get() = members.size > 1
+
     val emptyState: TodoListEmptyState?
         get() = when {
             isLoading -> null
@@ -90,6 +94,7 @@ class TodoListViewModel @Inject constructor(
             isSignedIn = session != null,
             isRefreshing = refreshing,
             members = members,
+            completedTodoIds = places.flatMap { entry -> entry.completedTodosNewestFirst.map { it.id } },
             groups = places.mapNotNull { entry ->
                 val todos = when (filter) {
                     TodoFilter.ALL -> entry.openTodos + entry.completedTodosNewestFirst
@@ -126,6 +131,13 @@ class TodoListViewModel @Inject constructor(
     fun deleteTodo(todoId: UUID, via: TodoDeletionVia) {
         viewModelScope.launch {
             undo.offer(todoRepository.delete(listOf(todoId), via))
+        }
+    }
+
+    fun deleteCompleted() {
+        val ids = uiState.value.completedTodoIds
+        viewModelScope.launch {
+            todoRepository.delete(ids, TodoDeletionVia.COMPLETED_BULK)
         }
     }
 

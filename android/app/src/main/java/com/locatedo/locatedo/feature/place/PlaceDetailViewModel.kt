@@ -117,6 +117,13 @@ class PlaceDetailViewModel @AssistedInject constructor(
         }
     }
 
+    fun deleteCompleted() {
+        val ids = uiState.value.detail?.completedTodos?.map { it.id }.orEmpty()
+        viewModelScope.launch {
+            todoRepository.delete(ids, TodoDeletionVia.COMPLETED_BULK)
+        }
+    }
+
     fun setAssignee(todoId: UUID, userId: UUID?) {
         viewModelScope.launch {
             val todo = uiState.value.detail?.todos?.firstOrNull { it.id == todoId } ?: return@launch

@@ -69,6 +69,7 @@ import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
+import com.locatedo.locatedo.feature.todos.DeleteCompletedButton
 import com.locatedo.locatedo.feature.todos.TodoEditorSheet
 import com.locatedo.locatedo.feature.todos.TodoRow
 import com.locatedo.locatedo.ui.analytics.TrackScreen
@@ -143,6 +144,7 @@ fun PlaceDetailScreen(
                 onEdit = { editingTodo = it },
                 onDelete = viewModel::deleteTodo,
                 onAssign = viewModel::setAssignee,
+                onDeleteCompleted = viewModel::deleteCompleted,
             )
             Spacer(Modifier.height(16.dp))
         }
@@ -264,6 +266,7 @@ private fun Todos(
     onEdit: (UUID) -> Unit,
     onDelete: (UUID, TodoDeletionVia) -> Unit,
     onAssign: (UUID, UUID?) -> Unit,
+    onDeleteCompleted: () -> Unit,
 ) {
     val assignees = assigneeChoices(members)
     Text(
@@ -294,6 +297,7 @@ private fun Todos(
         CompletedTodos(
             todos = detail.completedTodos,
             members = members,
+            onDeleteAll = onDeleteCompleted,
             assignees = assignees,
             onToggle = onToggle,
             onEdit = onEdit,
@@ -360,6 +364,7 @@ private fun PlaceMenu(
 private fun CompletedTodos(
     todos: List<Todo>,
     members: List<Membership>,
+    onDeleteAll: () -> Unit,
     assignees: List<AssigneeChoice>,
     onToggle: (UUID, Boolean) -> Unit,
     onEdit: (UUID) -> Unit,
@@ -380,6 +385,7 @@ private fun CompletedTodos(
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        DeleteCompletedButton(count = todos.size, isShared = members.size > 1, onConfirm = onDeleteAll)
         Icon(if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
     }
     if (isExpanded) {

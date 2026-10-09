@@ -74,12 +74,23 @@ fun TodoListScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 FilterChipFor(TodoFilter.ALL, R.string.todo_filter_all, uiState.filter, viewModel::setFilter)
                 FilterChipFor(TodoFilter.OPEN, R.string.todo_filter_open, uiState.filter, viewModel::setFilter)
                 FilterChipFor(TodoFilter.DONE, R.string.todo_filter_done, uiState.filter, viewModel::setFilter)
+                if (uiState.filter == TodoFilter.DONE && uiState.completedTodoIds.isNotEmpty()) {
+                    Spacer(Modifier.weight(1f))
+                    DeleteCompletedButton(
+                        count = uiState.completedTodoIds.size,
+                        isShared = uiState.isShared,
+                        onConfirm = viewModel::deleteCompleted,
+                    )
+                }
             }
             // Pulling down syncs, as on iOS; without an account there is nothing to pull.
             val content: @Composable () -> Unit = {
