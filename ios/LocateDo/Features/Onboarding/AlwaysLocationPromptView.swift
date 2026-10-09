@@ -11,6 +11,7 @@ struct AlwaysLocationPromptView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var shownAt = Date()
     @State private var answer: Answer = .dismissed
+    @State private var contentHeight: CGFloat = 480
 
     var body: some View {
         VStack(spacing: 20) {
@@ -21,11 +22,12 @@ struct AlwaysLocationPromptView: View {
             Text(.alwaysPromptTitle)
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             Text(.alwaysPromptDescription)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             PrivacyNote(text: .alwaysPromptPrivacy)
-            Spacer(minLength: 0)
             Button {
                 answer = .allow
                 locationProvider.requestAlwaysAuthorization()
@@ -43,7 +45,12 @@ struct AlwaysLocationPromptView: View {
         }
         .trackScreen(.alwaysLocationPrompt)
         .padding(32)
-        .presentationDetents([.medium])
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height
+        } action: { height in
+            contentHeight = height
+        }
+        .presentationDetents([.height(contentHeight)])
         .presentationDragIndicator(.visible)
         .onDisappear {
             Analytics.log(.alwaysPromptAnswered, parameters: [
