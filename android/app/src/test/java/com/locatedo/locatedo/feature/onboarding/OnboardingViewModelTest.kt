@@ -45,6 +45,19 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun startingMovesFromTheIntroToThePrivacyPage() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
+        val viewModel = OnboardingViewModel(preferences, permissions, analytics, clock)
+        assertEquals(OnboardingStep.INTRO, viewModel.step.value)
+
+        viewModel.start()
+
+        assertEquals(OnboardingStep.PRIVACY, viewModel.step.value)
+        assertFalse(permissions.locationRequested)
+    }
+
+    @Test
     fun asksForNotificationsAfterLocationWhenTheyAreStillUndecided() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)

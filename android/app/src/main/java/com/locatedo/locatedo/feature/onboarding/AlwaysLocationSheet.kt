@@ -75,6 +75,7 @@ fun AlwaysLocationSheet(onAnswer: (AlwaysPromptAnswer) -> Unit, onDismiss: () ->
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+            PrivacyNote(stringResource(R.string.always_prompt_privacy))
             Text(
                 text = stringResource(R.string.always_prompt_android_choose, backgroundOption),
                 style = MaterialTheme.typography.bodyMedium,
