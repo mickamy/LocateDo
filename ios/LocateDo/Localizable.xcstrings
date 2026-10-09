@@ -751,6 +751,23 @@
         }
       }
     },
+    "common.undo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元に戻す"
+          }
+        }
+      }
+    },
     "home.add_place" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4595,6 +4612,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完了済み"
+          }
+        }
+      }
+    },
+    "todo.delete_completed" : {
+      "comment" : "Button in the header of the completed to-dos; deletes all of them after a confirmation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて削除"
+          }
+        }
+      }
+    },
+    "todo.delete_completed_confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Delete %lld completed to-do?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Delete %lld completed to-dos?"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "完了済みのやること %lld 件を削除しますか？"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "todo.deleted" : {
+      "comment" : "Shown briefly at the bottom after a to-do is deleted, next to the Undo button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted “%@”"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」を削除しました"
+          }
+        }
+      }
+    },
+    "todo.editor.edit_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit To-Do"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "やることを編集"
           }
         }
       }

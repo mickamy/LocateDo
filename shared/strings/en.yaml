@@ -14,6 +14,7 @@ common:
   delete: "Delete"
   more: "More"
   ok: "OK"
+  undo: "Undo"
 sharing:
   title: "Share with family"
   sign_in_message: "Sign in to share places and to-dos with your family."
@@ -235,10 +236,17 @@ todo:
   completed_by: "Checked off by {name}"
   editor:
     title: "Add a to-do"
+    edit_title: "Edit To-Do"
     title_label: "To-do"
     title_placeholder: "e.g., Buy milk"
     place_label: "Place"
   completed_section: "Completed"
+  deleted: "Deleted “{title}”"
+  delete_completed: "Delete All"
+  delete_completed_confirm:
+    plural:
+      one: "Delete {count:int} completed to-do?"
+      other: "Delete {count:int} completed to-dos?"
   assignee:
     label: "Assignee"
     anyone: "Anyone"

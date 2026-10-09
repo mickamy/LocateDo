@@ -52,6 +52,7 @@
     <string name="common_more">More</string>
     <string name="common_ok">OK</string>
     <string name="common_save">Save</string>
+    <string name="common_undo">Undo</string>
     <string name="home_add_place">Add a place</string>
     <string name="home_empty_message">Add a place to get reminded when you arrive.</string>
     <string name="home_empty_title">No places yet</string>
@@ -303,6 +304,15 @@
     <string name="todo_assignee_label">Assignee</string>
     <string name="todo_completed_by">Checked off by %1$s</string>
     <string name="todo_completed_section">Completed</string>
+    <!-- Button in the header of the completed to-dos; deletes all of them after a confirmation. -->
+    <string name="todo_delete_completed">Delete All</string>
+    <plurals name="todo_delete_completed_confirm">
+        <item quantity="one">Delete %1$d completed to-do?</item>
+        <item quantity="other">Delete %1$d completed to-dos?</item>
+    </plurals>
+    <!-- Shown briefly at the bottom after a to-do is deleted, next to the Undo button. -->
+    <string name="todo_deleted">Deleted “%1$s”</string>
+    <string name="todo_editor_edit_title">Edit To-Do</string>
     <string name="todo_editor_place_label">Place</string>
     <string name="todo_editor_title">Add a to-do</string>
     <string name="todo_editor_title_label">To-do</string>
