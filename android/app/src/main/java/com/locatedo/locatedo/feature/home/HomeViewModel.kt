@@ -7,6 +7,7 @@ import com.locatedo.locatedo.core.analytics.AlwaysPromptTracker
 import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
+import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.common.Nearby
 import com.locatedo.locatedo.core.common.NearbyPlace
 import com.locatedo.locatedo.core.data.CategoryRepository
@@ -16,13 +17,12 @@ import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
+import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -34,6 +34,9 @@ data class HomeUiState(
     val places: List<PlaceWithTodos> = emptyList(),
     val nearby: List<NearbyPlace> = emptyList(),
     val categories: Map<UUID, Category> = emptyMap(),
+    val here: Coordinate? = null,
+    val isSignedIn: Boolean = false,
+    val isRefreshing: Boolean = false,
     val permissionBanner: PermissionBanner? = null,
 ) {
     val openTodoCount: Int
@@ -46,13 +49,15 @@ class HomeViewModel @Inject constructor(
     categoryRepository: CategoryRepository,
     private val locationRepository: LocationRepository,
     private val permissions: PermissionsRepository,
+    authenticator: Authenticator,
+    private val sync: SyncEngine,
     private val analytics: Analytics,
     clock: Clock,
 ) : ViewModel() {
     private val alwaysPrompt = AlwaysPromptTracker(analytics, clock)
     private val _isExplainingAlwaysLocation = MutableStateFlow(false)
     private val currentCoordinate = MutableStateFlow<Coordinate?>(null)
-    private val _cameraTargets = MutableSharedFlow<Coordinate>()
+    private val isRefreshing = MutableStateFlow(false)
 
     val isExplainingAlwaysLocation: StateFlow<Boolean> = _isExplainingAlwaysLocation
 
@@ -60,21 +65,23 @@ class HomeViewModel @Inject constructor(
         placeRepository.observeAllWithTodos(),
         categoryRepository.observeAll(),
         currentCoordinate,
-    ) { places, categories, here ->
+        authenticator.session,
+        isRefreshing,
+    ) { places, categories, here, session, refreshing ->
         HomeUiState(
             isLoading = false,
             places = places,
             nearby = Nearby.sort(places, here),
             categories = categories.associateBy { it.id },
+            here = here,
+            isSignedIn = session != null,
+            isRefreshing = refreshing,
         )
     }
 
     val uiState: StateFlow<HomeUiState> = combine(content, permissions.observe()) { state, granted ->
         state.copy(permissionBanner = PermissionBanner.of(granted.location, granted.notifications, state.places.isNotEmpty()))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState())
-
-    // One-off camera moves, like the Google Maps "my location" button.
-    val cameraTargets: SharedFlow<Coordinate> = _cameraTargets
 
     fun refreshPermissions() = permissions.refresh()
 
@@ -96,19 +103,23 @@ class HomeViewModel @Inject constructor(
 
     fun hasLocationPermission(): Boolean = locationRepository.hasForegroundPermission()
 
-    fun locateMe() {
+    // Orders the places by distance and centers the small map.
+    fun refreshLocation() {
         viewModelScope.launch {
-            val coordinate = refreshCurrentCoordinate() ?: return@launch
-            _cameraTargets.emit(coordinate)
+            val coordinate = locationRepository.lastCoordinate() ?: return@launch
+            currentCoordinate.value = coordinate
         }
     }
 
-    private suspend fun refreshCurrentCoordinate(): Coordinate? {
-        val coordinate = locationRepository.lastCoordinate()
-        if (coordinate != null) {
-            currentCoordinate.value = coordinate
+    fun refresh() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            try {
+                sync.sync()
+            } finally {
+                isRefreshing.value = false
+            }
         }
-        return coordinate
     }
 
     private companion object {

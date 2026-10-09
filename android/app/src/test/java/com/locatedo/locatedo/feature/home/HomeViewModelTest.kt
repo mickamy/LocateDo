@@ -16,7 +16,9 @@ import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeLocationRepository
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
+import com.locatedo.locatedo.testing.FakeSyncEngine
 import com.locatedo.locatedo.testing.SettableClock
+import com.locatedo.locatedo.testing.fakeAuthenticator
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -63,7 +65,7 @@ class HomeViewModelTest {
     @Test
     fun startsLoadingThenShowsPlacesWithTheirCategories() = runTest(dispatcher) {
         places.state.value = emptyList()
-        val viewModel = HomeViewModel(places, categories, location, permissions, analytics, clock)
+        val viewModel = HomeViewModel(places, categories, location, permissions, fakeAuthenticator(), FakeSyncEngine(), analytics, clock)
         assertTrue(viewModel.uiState.value.isLoading)
 
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
@@ -82,7 +84,7 @@ class HomeViewModelTest {
         places.state.value = listOf(PlaceWithTodos(store, listOf(milk)), PlaceWithTodos(pharmacy, emptyList()))
         val viewModel = viewModel()
 
-        viewModel.locateMe()
+        viewModel.refreshLocation()
 
         assertEquals(listOf("Pharmacy", "Store"), viewModel.uiState.value.nearby.map { it.entry.place.name })
         assertTrue((viewModel.uiState.value.nearby.first().distanceMeters ?: Double.MAX_VALUE) < 200)
@@ -134,7 +136,7 @@ class HomeViewModelTest {
     }
 
     private fun TestScope.viewModel(): HomeViewModel {
-        val viewModel = HomeViewModel(places, categories, location, permissions, analytics, clock)
+        val viewModel = HomeViewModel(places, categories, location, permissions, fakeAuthenticator(), FakeSyncEngine(), analytics, clock)
         subscribe(viewModel)
         return viewModel
     }

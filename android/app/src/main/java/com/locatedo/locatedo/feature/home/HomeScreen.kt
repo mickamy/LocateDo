@@ -1,47 +1,39 @@
 package com.locatedo.locatedo.feature.home
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -53,22 +45,17 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.SystemSettings
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.ui.analytics.TrackScreen
-import com.locatedo.locatedo.ui.components.CategoryMarker
 import java.util.UUID
 
-private const val PLACE_ZOOM = 14f
-private val sheetPeekHeight = 96.dp
-private val emptyPeekHeight = 260.dp
-private val permissionBannerPeekHeight = 104.dp
+private const val PREVIEW_ZOOM = 14f
 
+// Mirrors the iOS home: what is waiting where, closest first; the map has its own tab.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -81,105 +68,77 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isExplainingAlwaysLocation by viewModel.isExplainingAlwaysLocation.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
-    val requestPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        hasLocationPermission = viewModel.hasLocationPermission()
-        if (hasLocationPermission) {
-            viewModel.locateMe()
-        }
-    }
-    val cameraPositionState = rememberCameraPositionState()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissions()
-    }
-    LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) {
-            viewModel.locateMe()
-        }
-    }
-    LaunchedEffect(Unit) {
-        viewModel.cameraTargets.collect { target ->
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), PLACE_ZOOM))
-        }
+        viewModel.refreshLocation()
     }
 
-    // The collapsed sheet shows one summary line or the whole empty state, with room for the permission banner.
-    var peekHeight = when {
-        !uiState.isLoading && uiState.places.isEmpty() -> emptyPeekHeight
-        else -> sheetPeekHeight
-    }
-    if (uiState.permissionBanner != null) {
-        peekHeight += permissionBannerPeekHeight
-    }
-
-    BottomSheetScaffold(
-        scaffoldState = rememberBottomSheetScaffoldState(),
-        sheetPeekHeight = peekHeight,
-        sheetContent = {
-            HomeSheet(
-                uiState = uiState,
-                onAddPlace = onAddPlace,
-                onSelect = onOpenPlace,
-                onPermissionBanner = { banner ->
-                    viewModel.permissionBannerTapped(banner)
-                    when (banner) {
-                        PermissionBanner.LOCATION_ALWAYS -> Unit
-                        PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
-                        PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.tab_home)) },
+                navigationIcon = {
+                    IconButton(onClick = onOpenSharing) {
+                        Icon(Icons.Filled.Group, contentDescription = stringResource(R.string.sharing_title))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onAddPlace) {
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.home_add_place))
                     }
                 },
             )
         },
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-                uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false),
-            ) {
-                for (entry in uiState.places) {
-                    val place = entry.place
-                    val category = uiState.categories[place.categoryId]
-                    MarkerComposable(
-                        category?.icon.orEmpty(),
-                        category?.color.orEmpty(),
-                        state = rememberUpdatedMarkerState(position = LatLng(place.latitude, place.longitude)),
-                        title = place.name,
-                        anchor = Offset(0.5f, 0.5f),
-                        onClick = {
-                            onOpenPlace(place.id)
-                            true
-                        },
-                    ) {
-                        CategoryMarker(icon = category?.icon, color = category?.color)
+        val content: @Composable () -> Unit = {
+            when {
+                uiState.isLoading -> Box(Modifier.fillMaxSize())
+                uiState.places.isEmpty() -> EmptyPlaces(onAddPlace = onAddPlace)
+                else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    uiState.permissionBanner?.let { banner ->
+                        item {
+                            PermissionBannerCard(
+                                banner = banner,
+                                onClick = {
+                                    viewModel.permissionBannerTapped(banner)
+                                    when (banner) {
+                                        PermissionBanner.LOCATION_ALWAYS -> Unit
+                                        PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
+                                        PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
+                                    }
+                                },
+                            )
+                        }
                     }
+                    item {
+                        MapPreview(uiState)
+                    }
+                    if (uiState.openTodoCount > 0) {
+                        item {
+                            Text(
+                                text = pluralStringResource(R.plurals.home_open_summary, uiState.openTodoCount, uiState.openTodoCount),
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    nearbyItems(uiState = uiState, onSelect = onOpenPlace)
                 }
             }
-            SearchBar(
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .align(Alignment.TopCenter),
-                onSearch = onAddPlace,
-                onAccount = onOpenSharing,
-            )
-            FloatingActionButton(
-                onClick = {
-                    if (hasLocationPermission) {
-                        viewModel.locateMe()
-                    } else {
-                        requestPermission.launch(
-                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-            ) {
-                Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.home_my_location))
+        }
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            if (uiState.isSignedIn) {
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    content()
+                }
+            } else {
+                content()
             }
         }
     }
@@ -192,60 +151,42 @@ fun HomeScreen(
     }
 }
 
-// The floating bar is the way into adding a place, as the search bar is in Google Maps.
+// Where you are at a glance, centered on the nearest place until the location is known.
 @Composable
-private fun SearchBar(modifier: Modifier = Modifier, onSearch: () -> Unit, onAccount: () -> Unit) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = CircleShape,
-        tonalElevation = 6.dp,
-        shadowElevation = 4.dp,
+private fun MapPreview(uiState: HomeUiState) {
+    val nearest = uiState.nearby.firstOrNull()?.entry?.place
+    val center = uiState.here?.let { LatLng(it.latitude, it.longitude) }
+        ?: nearest?.let { LatLng(it.latitude, it.longitude) }
+    val cameraPositionState = rememberCameraPositionState()
+    LaunchedEffect(center) {
+        if (center != null) {
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(center, PREVIEW_ZOOM))
+        }
+    }
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Row(
+        GoogleMap(
             modifier = Modifier
-                .clickable(onClick = onSearch, role = Role.Button)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Filled.Search, contentDescription = null)
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = stringResource(R.string.home_add_place),
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Icon(
-                Icons.Filled.AccountCircle,
-                contentDescription = stringResource(R.string.sharing_title),
-                modifier = Modifier
-                    .size(32.dp)
-                    .clickable(onClick = onAccount, role = Role.Button),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun HomeSheet(
-    uiState: HomeUiState,
-    onAddPlace: () -> Unit,
-    onSelect: (UUID) -> Unit,
-    onPermissionBanner: (PermissionBanner) -> Unit,
-) {
-    if (uiState.isLoading) {
-        Spacer(Modifier.height(sheetPeekHeight))
-        return
-    }
-    Column {
-        uiState.permissionBanner?.let { banner ->
-            PermissionBannerCard(banner = banner, onClick = { onPermissionBanner(banner) })
-        }
-        if (uiState.places.isEmpty()) {
-            EmptyPlaces(onAddPlace = onAddPlace)
-        } else {
-            NearbyList(uiState = uiState, onSelect = onSelect)
-        }
+                .fillMaxWidth()
+                .height(140.dp)
+                .clip(RoundedCornerShape(16.dp)),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = uiState.here != null),
+            uiSettings = MapUiSettings(
+                compassEnabled = false,
+                mapToolbarEnabled = false,
+                myLocationButtonEnabled = false,
+                rotationGesturesEnabled = false,
+                scrollGesturesEnabled = false,
+                tiltGesturesEnabled = false,
+                zoomControlsEnabled = false,
+                zoomGesturesEnabled = false,
+            ),
+        )
     }
 }
 
@@ -253,18 +194,19 @@ private fun HomeSheet(
 private fun EmptyPlaces(onAddPlace: () -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             Icons.Filled.Place,
             contentDescription = null,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.home_empty_message),
@@ -276,6 +218,5 @@ private fun EmptyPlaces(onAddPlace: () -> Unit) {
         Button(onClick = onAddPlace) {
             Text(stringResource(R.string.home_add_place))
         }
-        Spacer(Modifier.height(16.dp))
     }
 }
