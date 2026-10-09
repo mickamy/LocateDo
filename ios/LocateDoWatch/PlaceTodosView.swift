@@ -6,14 +6,17 @@ struct PlaceTodosView: View {
     @Environment(WatchStore.self) private var store
 
     var body: some View {
-        WatchChecklist(todos: place.todos) { id in
-            store.checkOff([id], source: .app)
+        List {
+            WatchChecklist(todos: place.todos) { id in
+                store.checkOff([id], source: .app)
+            }
         }
         .navigationTitle(place.name)
     }
 }
 
 // The rows stay where they are once checked, so the list does not shift under the next tap.
+// Only rows, so the app can put them in a List and the notification, which already scrolls, in a stack.
 struct WatchChecklist: View {
     let todos: [WatchSnapshot.Todo]
     let onCheck: (UUID) -> Void
@@ -21,15 +24,13 @@ struct WatchChecklist: View {
     @State private var checked: Set<UUID> = []
 
     var body: some View {
-        List {
-            ForEach(todos) { todo in
-                row(todo, isChecked: checked.contains(todo.id))
-            }
-            if !todos.isEmpty && checked.count == todos.count {
-                Label(.watchAllDone, systemImage: "checkmark.seal.fill")
-                    .foregroundStyle(.tint)
-                    .listRowBackground(Color.clear)
-            }
+        ForEach(todos) { todo in
+            row(todo, isChecked: checked.contains(todo.id))
+        }
+        if !todos.isEmpty && checked.count == todos.count {
+            Label(.watchAllDone, systemImage: "checkmark.seal.fill")
+                .foregroundStyle(.tint)
+                .listRowBackground(Color.clear)
         }
     }
 
@@ -46,6 +47,7 @@ struct WatchChecklist: View {
                     .strikethrough(isChecked)
                     .foregroundStyle(isChecked ? Color.secondary : Color.primary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .disabled(isChecked)
         .accessibilityHint(Text(.watchCompleteHint))

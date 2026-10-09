@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct LocateDoWatchApp: App {
-    private let store = WatchStore()
+    private let store = WatchStore.shared
 
     init() {
         store.start()
@@ -13,5 +13,6 @@ struct LocateDoWatchApp: App {
             PlaceListView()
                 .environment(store)
         }
+        WKNotificationScene(controller: ArrivalNotificationController.self, category: ArrivalChecklist.category)
     }
 }

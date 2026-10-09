@@ -5,6 +5,9 @@ import WatchConnectivity
 
 @Observable
 final class WatchStore: NSObject, WCSessionDelegate {
+    // The notification interface is made by the system, so it reaches the app's store through here.
+    static let shared = WatchStore()
+
     private(set) var snapshot: WatchSnapshot?
 
     private var received: WatchSnapshot?

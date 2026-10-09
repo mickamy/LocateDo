@@ -111,6 +111,7 @@
 			membershipExceptions = (
 				InfoPlist.xcstrings,
 				Localizable.xcstrings,
+				Services/Notifications/ArrivalChecklist.swift,
 				Services/Watch/WatchCheckOff.swift,
 				Services/Watch/WatchSnapshot.swift,
 				Support/CategoryAppearance.swift,
