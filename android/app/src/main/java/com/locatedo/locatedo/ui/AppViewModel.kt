@@ -56,7 +56,7 @@ data class AppUiState(
 class AppViewModel @Inject constructor(
     private val preferences: AppPreferences,
     private val permissions: PermissionsRepository,
-    selectionRequests: PlaceSelectionRequests,
+    private val selectionRequests: PlaceSelectionRequests,
     private val inviteRequests: InviteRequests,
     private val paywallRequests: PaywallRequests,
     private val todosRequests: TodosRequests,
@@ -75,7 +75,7 @@ class AppViewModel @Inject constructor(
 
     private var promotionsAskedAt: Instant? = null
 
-    // A place asked for from outside the home tab (a notification tap); the tabs switch to home so it can be shown.
+    // A place asked for from a notification tap; the tabs open its detail on the home tab.
     val pendingPlace: StateFlow<UUID?> = selectionRequests.pending
 
     // An invite link opened from outside; the tabs open the join screen with it.
@@ -184,6 +184,8 @@ class AppViewModel @Inject constructor(
             preferences.setPendingSessionEndedNotice(false)
         }
     }
+
+    fun placeConsumed(placeId: UUID) = selectionRequests.consume(placeId)
 
     fun inviteConsumed(token: String) = inviteRequests.consume(token)
 

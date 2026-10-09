@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -42,6 +43,8 @@ import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.appstatus.UpdateRequiredScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
+import com.locatedo.locatedo.feature.map.MapScreen
+import com.locatedo.locatedo.feature.place.PlaceDetailScreen
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
 import com.locatedo.locatedo.feature.paywall.PaywallScreen
@@ -67,6 +70,8 @@ import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
+import com.locatedo.locatedo.ui.navigation.MapKey
+import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
 
@@ -74,6 +79,7 @@ private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
 private val tabs = listOf(
     Tab(HomeKey, R.string.tab_home, Icons.Filled.Home),
+    Tab(MapKey, R.string.tab_map, Icons.Filled.Map),
     Tab(TodosKey, R.string.tab_todos, Icons.Filled.Checklist),
     Tab(SettingsKey, R.string.tab_settings, Icons.Filled.Settings),
 )
@@ -96,6 +102,7 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
         else -> Tabs(
             onPlaceAdded = appViewModel::placeAdded,
             pendingPlace = pendingPlace,
+            onPlaceConsumed = appViewModel::placeConsumed,
             pendingInvite = pendingInvite,
             onInviteConsumed = appViewModel::inviteConsumed,
             pendingPaywall = pendingPaywall,
@@ -165,6 +172,7 @@ private fun NoticeDialog(notice: AppNotice, onDismiss: () -> Unit) {
 private fun Tabs(
     onPlaceAdded: () -> Unit,
     pendingPlace: UUID?,
+    onPlaceConsumed: (UUID) -> Unit,
     pendingInvite: String?,
     onInviteConsumed: (String) -> Unit,
     pendingPaywall: PaywallTrigger?,
@@ -176,21 +184,23 @@ private fun Tabs(
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
+    val currentTab = backStack.lastOrNull { it in tabKeys }
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
     val analytics = LocalAnalytics.current
 
     LaunchedEffect(pendingPlace) {
-        if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
+        if (pendingPlace != null) {
             backStack.clear()
             backStack.add(HomeKey)
+            backStack.add(PlaceDetailKey(pendingPlace.toString()))
+            onPlaceConsumed(pendingPlace)
         }
     }
     LaunchedEffect(pendingTodos) {
         if (pendingTodos) {
-            backStack.clear()
-            backStack.add(TodosKey)
+            backStack.showTab(TodosKey)
             onTodosConsumed()
         }
     }
@@ -213,15 +223,14 @@ private fun Tabs(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            if (current in tabKeys) {
+            if (current in tabKeys || current is PlaceDetailKey) {
                 NavigationBar {
                     for (tab in tabs) {
                         NavigationBarItem(
-                            selected = current == tab.key,
+                            selected = currentTab == tab.key,
                             onClick = {
                                 if (current != tab.key) {
-                                    backStack.clear()
-                                    backStack.add(tab.key)
+                                    backStack.showTab(tab.key)
                                 }
                             },
                             icon = { Icon(tab.icon, contentDescription = null) },
@@ -252,14 +261,20 @@ private fun Tabs(
                                 placeEditor.start(placeId = null)
                                 backStack.add(PlaceSearchKey)
                             },
-                            onEditPlace = { placeId ->
-                                placeEditor.start(placeId)
-                                backStack.add(PlaceEditorKey)
-                            },
+                            onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                             onOpenSharing = {
                                 analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
                                 backStack.add(SharingKey)
                             },
+                        )
+                    }
+                    entry<MapKey> {
+                        MapScreen(
+                            onAddPlace = {
+                                placeEditor.start(placeId = null)
+                                backStack.add(PlaceSearchKey)
+                            },
+                            onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                         )
                     }
                     entry<TodosKey> {
@@ -268,10 +283,7 @@ private fun Tabs(
                                 placeEditor.start(placeId = null)
                                 backStack.add(PlaceSearchKey)
                             },
-                            onOpenPlace = {
-                                backStack.clear()
-                                backStack.add(HomeKey)
-                            },
+                            onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                         )
                     }
                     entry<SettingsKey> {
@@ -282,6 +294,17 @@ private fun Tabs(
                                 backStack.add(SharingKey)
                             },
                             onOpenCategories = { backStack.add(CategoriesKey) },
+                        )
+                    }
+                    entry<PlaceDetailKey> { key ->
+                        val placeId = UUID.fromString(key.placeId)
+                        PlaceDetailScreen(
+                            placeId = placeId,
+                            onBack = { backStack.removeLastOrNull() },
+                            onEdit = {
+                                placeEditor.start(placeId)
+                                backStack.add(PlaceEditorKey)
+                            },
                         )
                     }
                     entry<CategoriesKey> {
@@ -346,8 +369,18 @@ private fun Tabs(
     }
 }
 
+// Home stays at the bottom, so back from another tab returns to Home before leaving the app.
+private fun NavBackStack<NavKey>.showTab(tab: NavKey) {
+    clear()
+    add(HomeKey)
+    if (tab != HomeKey) {
+        add(tab)
+    }
+}
+
+// A place edited from its detail returns there; one added from a tab returns to the tab.
 private fun NavBackStack<NavKey>.leaveFlow() {
-    while (size > 1 && lastOrNull() !in tabKeys) {
+    while (size > 1 && lastOrNull() !in tabKeys && lastOrNull() !is PlaceDetailKey) {
         removeLastOrNull()
     }
 }

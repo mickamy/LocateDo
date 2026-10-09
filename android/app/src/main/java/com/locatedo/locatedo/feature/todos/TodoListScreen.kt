@@ -51,7 +51,7 @@ import java.util.UUID
 @Composable
 fun TodoListScreen(
     onAddPlace: () -> Unit,
-    onOpenPlace: () -> Unit,
+    onOpenPlace: (UUID) -> Unit,
     viewModel: TodoListViewModel = hiltViewModel(),
 ) {
     TrackScreen(AnalyticsScreen.TODOS)
@@ -98,10 +98,7 @@ fun TodoListScreen(
                     null -> TodoGroups(
                         groups = uiState.groups,
                         members = uiState.members,
-                        onOpenPlace = { placeId ->
-                            viewModel.requestPlace(placeId)
-                            onOpenPlace()
-                        },
+                        onOpenPlace = onOpenPlace,
                         onToggle = viewModel::setTodoCompleted,
                         onDelete = viewModel::deleteTodo,
                         onAssign = viewModel::setAssignee,

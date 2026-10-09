@@ -6,7 +6,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-// Lets other screens (the to-do tab, later a notification tap) ask the home map to show a place.
+// Lets a notification tap ask the tabs to open a place.
 @Singleton
 class PlaceSelectionRequests @Inject constructor() {
     private val _pending = MutableStateFlow<UUID?>(null)

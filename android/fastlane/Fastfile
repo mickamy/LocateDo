@@ -14,17 +14,19 @@ SCREENSHOT_RECEIVER = "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.debug.Screens
 SCREENSHOT_HEADLINES = {
   "en-US" => {
     "01-Arrival" => "Reminded the moment\nyou arrive",
-    "02-Nearby" => "See what's waiting\nnearby",
-    "03-Place" => "A list for every store",
-    "04-Map" => "Your places on one map",
-    "05-Todos" => "Every to-do in one place",
+    "02-Checked" => "Know when your family\npicks it up",
+    "03-Place" => "One list per store,\nshared with family",
+    "04-Nearby" => "See what's waiting\nnearby",
+    "05-Map" => "Your places on one map",
+    "06-Todos" => "Every to-do in one place",
   },
   "ja-JP" => {
     "01-Arrival" => "着いたら、すぐお知らせ",
-    "02-Nearby" => "近くの用事がひと目で",
-    "03-Place" => "お店ごとの買い物リスト",
-    "04-Map" => "場所はマップでも",
-    "05-Todos" => "やることを\nまとめてチェック",
+    "02-Checked" => "家族が買ったら、\nすぐ分かる",
+    "03-Place" => "お店ごとのリストを\n家族と共有",
+    "04-Nearby" => "近くの用事がひと目で",
+    "05-Map" => "場所はマップでも",
+    "06-Todos" => "やることを\nまとめてチェック",
   },
 }.freeze
 
@@ -47,14 +49,21 @@ def tap_text(text)
   end
 end
 
+# The tab bar is drawn last, so its label is the last match: Home's title reads the same as its tab.
+def tap_tab(name, language)
+  label = app_string(name, language)
+  tap_node("tab #{label.inspect}", last: true) { |node| node[/ text="([^"]*)"/, 1] == label }
+end
+
 # Looks a few times, a second apart, for what has only just been asked to appear, like a heads-up notification.
-def tap_node(description, &matches)
+def tap_node(description, last: false, &matches)
   node = nil
   screen = ""
   5.times do |attempt|
     sleep(1) if attempt.positive?
     screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
-    node = screen.scan(/<node [^>]*>/).find(&matches)
+    nodes = screen.scan(/<node [^>]*>/).select(&matches)
+    node = last ? nodes.last : nodes.first
     break if node
   end
   if node.nil?
@@ -91,18 +100,6 @@ def ensure_in_front(step)
   screen = adb("exec-out", "uiautomator", "dump", "/dev/tty").force_encoding(Encoding::UTF_8)
   texts = screen.scan(/ text="([^"]+)"/).flatten.join(" | ")
   UI.user_error!("#{step}: #{SCREENSHOT_PACKAGE} is not in front (#{top&.strip})\n#{texts}\n#{crash}\n#{system}")
-end
-
-# Taps and swipes go by coordinates, so they first check the app is still in front; otherwise they would land on the
-# launcher and open whatever sits there.
-def tap_app(x, y, step)
-  ensure_in_front(step)
-  adb("shell", "input", "tap", x.to_s, y.to_s)
-end
-
-def swipe_app(from_y, to_y, step)
-  ensure_in_front(step)
-  adb("shell", "input", "swipe", "540", from_y.to_s, "540", to_y.to_s, "600")
 end
 
 def capture(path)
@@ -264,8 +261,6 @@ platform :android do
       sleep(3)
       adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity")
       sleep(15)
-      tap_label("home_my_location", "en")
-      sleep(8)
 
       record(File.join(work, "ask.mp4")) do
         sleep(2)
@@ -365,26 +360,28 @@ platform :android do
   def prepare_demo_device(apk)
     disable_interrupting_apps
     adb("install", "-r", apk)
+    adb("shell", "appops", "set", SCREENSHOT_PACKAGE, "android:mock_location", "allow")
     %w[ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS].each do |permission|
       adb("shell", "pm", "grant", SCREENSHOT_PACKAGE, "android.permission.#{permission}")
     end
     enter_demo_mode
   end
 
-  # The app in the locale's language, standing at the demo center with fresh demo data, on the home map.
+  # The app in the locale's language, standing at the demo center with fresh demo data, on the home list.
   def open_demo(locale, location)
     adb("shell", "am", "force-stop", SCREENSHOT_PACKAGE)
     adb("shell", "cmd", "locale", "set-app-locales", SCREENSHOT_PACKAGE, "--locales", locale)
     adb("emu", "geo", "fix", location.fetch(:longitude).to_s, location.fetch(:latitude).to_s)
     adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "seed", "--es", "language", location.fetch(:language))
+    # `geo fix` alone reaches the fused provider only once some app asks for GPS, which home does not.
+    adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "move",
+        "--es", "latitude", location.fetch(:latitude).to_s, "--es", "longitude", location.fetch(:longitude).to_s)
     sleep(3)
     adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity")
     sleep(15)
-    recenter_map
   end
 
-  # One clip per scene, each starting where the last one left the app. Taps and swipes assume the 1080x2400 emulator,
-  # as the screenshots do.
+  # One clip per scene, each starting where the last one left the app.
   def record_promo_scenes(locale, location, dir)
     language = location.fetch(:language)
     notified, checked = PROMO_TODOS.fetch(language)
@@ -404,9 +401,7 @@ platform :android do
       sleep(0.5)
     end
 
-    adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity", "-f", "0x20000000",
-        "--es", "placeId", "0199a6f0-0000-7000-8000-000000000001")
-    sleep(5)
+    open_grocery_store
     scene(dir, "place") do
       sleep(0.5)
       tap_text(checked)
@@ -415,25 +410,25 @@ platform :android do
     tap_label("common_done", language)
     sleep(2)
 
+    tap_tab("tab_map", language)
+    sleep(4)
     scene(dir, "map") do
       sleep(0.5)
-      tap_app(964, 1759, "recenter the map")
-      sleep(2.5)
+      recenter_map(language, wait: 2.5)
     end
 
     scene(dir, "todos") do
       sleep(0.5)
-      tap_app(540, 2270, "open the to-do tab")
-      sleep(4)
+      tap_tab("tab_todos", language)
+      sleep(3)
     end
 
-    # The last picture: home with the places listed, held while the tagline shows.
-    tap_app(172, 2270, "open the home tab")
-    sleep(2)
-    swipe_app(1990, 900, "raise the sheet")
-    sleep(2)
+    # The last picture: home with the places listed, held while the tagline shows. The tab switch happens on camera,
+    # since screenrecord writes no frames for a screen that never changes, and such a clip drops out of the video.
     scene(dir, "home") do
-      sleep(4)
+      sleep(0.5)
+      tap_tab("tab_home", language)
+      sleep(3.5)
     end
   end
 
@@ -502,43 +497,59 @@ platform :android do
     end
   end
 
-  # Taps assume the 1080x2400 emulator created above. The map is recentered and given time before each map shot,
+  # The shots of the App Store screenshots, in its order; the map is recentered and given time before each map shot,
   # since a fresh emulator loads tiles slowly.
   def take_screenshots(locale, location, dir)
     language = location.fetch(:language)
-    activity = "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity"
     open_demo(locale, location)
-    capture(File.join(dir, "04-Map.png"))
 
-    swipe_app(1990, 900, "raise the sheet")
-    sleep(4)
-    capture(File.join(dir, "02-Nearby.png"))
-    swipe_app(160, 2100, "lower the sheet")
-    sleep(3)
-
-    adb("shell", "am", "start", "-n", activity, "-f", "0x20000000",
-        "--es", "placeId", "0199a6f0-0000-7000-8000-000000000001")
-    sleep(8)
+    open_grocery_store
+    # The completed list opened, so it shows who checked off what.
+    tap_text(/\A#{Regexp.escape(app_string("todo_completed_section", language))} \(/)
+    sleep(1)
     capture(File.join(dir, "03-Place.png"))
-    # The sheet's close button, not BACK: BACK sometimes left the app, and the next taps landed on the launcher.
+    # The top bar's back button, not BACK: BACK sometimes left the app, and the next taps landed on the launcher.
     tap_label("common_done", language)
     sleep(2)
 
-    tap_app(540, 2270, "open the to-do tab")
+    tap_tab("tab_todos", language)
     sleep(4)
-    capture(File.join(dir, "05-Todos.png"))
-    tap_app(172, 2270, "open the home tab")
-    sleep(3)
-    recenter_map
+    capture(File.join(dir, "06-Todos.png"))
 
+    # Back on home, which has read the demo location by now, so distances and the small map are right.
+    tap_tab("tab_home", language)
+    sleep(4)
+    capture(File.join(dir, "04-Nearby.png"))
+
+    # The household channel does not pop up, so the notice is shown in the notification shade, where people read it.
+    adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "notify-completion", "--es", "language", language)
+    sleep(1.5)
+    adb("shell", "cmd", "statusbar", "expand-notifications")
+    sleep(2)
+    capture(File.join(dir, "02-Checked.png"))
+    adb("shell", "cmd", "statusbar", "collapse")
+    sleep(1)
+
+    tap_tab("tab_map", language)
+    sleep(2)
+    recenter_map(language)
+    capture(File.join(dir, "05-Map.png"))
     adb("shell", "am", "broadcast", "-n", SCREENSHOT_RECEIVER, "-a", "notify", "--es", "language", language)
     sleep(1.5)
     capture(File.join(dir, "01-Arrival.png"))
   end
 
-  def recenter_map
-    tap_app(964, 1759, "recenter the map")
+  # The grocery store's detail, as a tapped arrival notification opens it (home, then the place).
+  def open_grocery_store
+    adb("shell", "am", "start", "-n", "#{SCREENSHOT_PACKAGE}/com.locatedo.locatedo.MainActivity", "-f", "0x20000000",
+        "--es", "placeId", "0199a6f0-0000-7000-8000-000000000001")
     sleep(8)
+  end
+
+  def recenter_map(language, wait: 8)
+    ensure_in_front("recenter the map")
+    tap_label("home_my_location", language)
+    sleep(wait)
   end
 
   def compose_screenshots(raw)

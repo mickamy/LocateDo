@@ -5,6 +5,7 @@
     <string name="always_prompt_android_choose">On the next screen, choose “%1$s”.</string>
     <string name="always_prompt_description">To notice when you arrive while StopBy is closed, iOS needs location access set to “Always”. You can change this anytime in Settings.</string>
     <string name="always_prompt_later">Not now</string>
+    <string name="always_prompt_privacy">Arrivals are detected on your phone, and your location is never sent to our servers or to your family.</string>
     <string name="always_prompt_title">Remind you even when the app is closed</string>
     <string name="announcement_title">Notice</string>
     <string name="app_name">StopBy</string>
@@ -91,12 +92,26 @@
         <item quantity="one">+%1$d more</item>
         <item quantity="other">+%1$d more</item>
     </plurals>
+    <string name="onboarding_allow_location">Allow Location</string>
     <string name="onboarding_allow_notifications">Allow notifications</string>
     <string name="onboarding_description">Add the places you visit and the things to do there. StopBy reminds you when you arrive.</string>
+    <string name="onboarding_feature_arrival_message">Even with the app closed</string>
+    <string name="onboarding_feature_arrival_title">Reminded when you arrive</string>
+    <string name="onboarding_feature_family_message">Know when someone picks it up</string>
+    <string name="onboarding_feature_family_title">Shared with your family</string>
+    <string name="onboarding_feature_lists_message">Write it down where you\'ll buy it</string>
+    <string name="onboarding_feature_lists_title">A list for every store</string>
     <string name="onboarding_later">Not now</string>
     <string name="onboarding_notifications_description">StopBy sends a notification when you arrive at a place that still has open to-dos.</string>
     <string name="onboarding_notifications_title">Get notified when you arrive</string>
     <string name="onboarding_permissions">StopBy asks for your location to do that.</string>
+    <string name="onboarding_privacy_no_ads">No ads, no tracking.</string>
+    <string name="onboarding_privacy_not_sent">Your location is never sent to our servers or to your family. Your family shares only the to-dos and who checked them off.</string>
+    <string name="onboarding_privacy_on_device">Arrivals are detected on your phone, and nowhere else.</string>
+    <string name="onboarding_privacy_title">Where you are is yours alone</string>
+    <string name="onboarding_sample_place">Grocery store</string>
+    <string name="onboarding_sample_time">now</string>
+    <string name="onboarding_sample_todos">Milk, eggs, and bread</string>
     <string name="onboarding_start">Get started</string>
     <string name="onboarding_tagline">Where you go reminds you what to do.</string>
     <string name="paywall_android_renewal_note">Subscriptions renew automatically until canceled. Cancel anytime in Google Play at least 24 hours before the current period ends.</string>
@@ -171,8 +186,7 @@
     <string name="settings_account_android_sign_in">Sign in with Google</string>
     <string name="settings_account_android_sign_out_confirm_message">Places and to-dos on this phone will be removed. They come back when you sign in again.</string>
     <string name="settings_account_android_sign_out_unsynced_message">Some changes haven’t been synced yet and will be lost. Places and to-dos on this phone will be removed.</string>
-    <string name="settings_account_benefits_android_privacy_message">Your location never leaves this phone, and we don’t ask for your email.</string>
-    <string name="settings_account_benefits_privacy_message">Your location never leaves this iPhone, and we don’t ask for your email.</string>
+    <string name="settings_account_benefits_privacy_message">Your location is never sent to our servers or to your family, and we don’t ask for your email.</string>
     <string name="settings_account_benefits_privacy_title">Your location stays private</string>
     <string name="settings_account_benefits_share_message">Add places and to-dos together and get reminded when you arrive.</string>
     <string name="settings_account_benefits_share_title">Share with family</string>

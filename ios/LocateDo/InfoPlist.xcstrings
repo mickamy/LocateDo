@@ -24,13 +24,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "StopBy needs your location in the background to remind you when you arrive at a place."
+            "value" : "StopBy needs your location in the background to remind you when you arrive at a place. Your location is never sent to our servers."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場所に着いたときにお知らせするため、バックグラウンドでも位置情報が必要です。"
+            "value" : "場所に着いたときにお知らせするため、バックグラウンドでも位置情報が必要です。現在地は私たちのサーバーに送りません。"
           }
         }
       }

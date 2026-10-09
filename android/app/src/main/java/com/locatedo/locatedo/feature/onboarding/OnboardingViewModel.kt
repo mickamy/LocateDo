@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 enum class OnboardingStep(val key: String) {
     INTRO("intro"),
+    PRIVACY("privacy"),
     NOTIFICATIONS("notifications"),
 }
 
@@ -34,6 +35,11 @@ class OnboardingViewModel @Inject constructor(
     private val startedAt = clock.instant()
 
     val step: StateFlow<OnboardingStep> = _step
+
+    // The intro leads to the privacy page, which asks for location.
+    fun start() {
+        _step.value = OnboardingStep.PRIVACY
+    }
 
     // Called once the system's location dialog closes, whatever the user chose.
     fun locationRequested() {

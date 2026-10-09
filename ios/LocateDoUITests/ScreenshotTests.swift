@@ -68,8 +68,13 @@ final class ScreenshotTests: XCTestCase {
     private func finishOnboarding(_ app: XCUIApplication) {
         let start = app.buttons["onboarding.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 10))
+        // The intro reveals itself top to bottom; the button fades in last.
+        sleep(1)
         // "Always" is granted before launch, so only the notification alert appears.
         start.tap()
+        let allowLocation = app.buttons["onboarding.allowLocation"]
+        XCTAssertTrue(allowLocation.waitForExistence(timeout: 5))
+        allowLocation.tap()
         let allowNotifications = app.buttons["onboarding.allowNotifications"]
         XCTAssertTrue(allowNotifications.waitForExistence(timeout: 5))
         allowNotifications.tap()
