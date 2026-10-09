@@ -13,13 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,7 +48,6 @@ import java.util.UUID
 private const val PLACE_ZOOM = 14f
 
 // Mirrors the iOS Map tab: every place as a category marker; a marker opens the place.
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     onAddPlace: () -> Unit,
@@ -80,55 +76,53 @@ fun MapScreen(
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_map)) }) }) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-                uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false),
-            ) {
-                for (place in uiState.places) {
-                    val category = uiState.categories[place.categoryId]
-                    MarkerComposable(
-                        category?.icon.orEmpty(),
-                        category?.color.orEmpty(),
-                        state = rememberUpdatedMarkerState(position = LatLng(place.latitude, place.longitude)),
-                        title = place.name,
-                        anchor = Offset(0.5f, 0.5f),
-                        onClick = {
-                            onOpenPlace(place.id)
-                            true
-                        },
-                    ) {
-                        CategoryMarker(icon = category?.icon, color = category?.color)
-                    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
+            uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false),
+        ) {
+            for (place in uiState.places) {
+                val category = uiState.categories[place.categoryId]
+                MarkerComposable(
+                    category?.icon.orEmpty(),
+                    category?.color.orEmpty(),
+                    state = rememberUpdatedMarkerState(position = LatLng(place.latitude, place.longitude)),
+                    title = place.name,
+                    anchor = Offset(0.5f, 0.5f),
+                    onClick = {
+                        onOpenPlace(place.id)
+                        true
+                    },
+                ) {
+                    CategoryMarker(icon = category?.icon, color = category?.color)
                 }
             }
-            if (!uiState.isLoading && uiState.places.isEmpty()) {
-                EmptyCard(
-                    onAddPlace = onAddPlace,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp),
-                )
-            } else {
-                FloatingActionButton(
-                    onClick = {
-                        if (hasLocationPermission) {
-                            viewModel.locateMe()
-                        } else {
-                            requestPermission.launch(
-                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp),
-                ) {
-                    Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.home_my_location))
-                }
+        }
+        if (!uiState.isLoading && uiState.places.isEmpty()) {
+            EmptyCard(
+                onAddPlace = onAddPlace,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+            )
+        } else {
+            FloatingActionButton(
+                onClick = {
+                    if (hasLocationPermission) {
+                        viewModel.locateMe()
+                    } else {
+                        requestPermission.launch(
+                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+            ) {
+                Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.home_my_location))
             }
         }
     }
