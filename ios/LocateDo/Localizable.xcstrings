@@ -1457,13 +1457,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save, never where you are."
+            "value" : "Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、登録した場所とやることのリストで、今いる場所は伝わりません。"
+            "value" : "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、登録した場所とやることのリストです。"
           }
         }
       }

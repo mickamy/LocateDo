@@ -64,7 +64,7 @@ onboarding:
   permissions: "StopBy asks for your location to do that."
   privacy_title: "Where you are is yours alone"
   privacy_on_device: "Arrivals are detected on your phone, and nowhere else."
-  privacy_not_sent: "Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save, never where you are."
+  privacy_not_sent: "Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save."
   privacy_no_ads: "No ads, no tracking."
   allow_location: "Allow Location"
   sample_place: "Grocery store"
