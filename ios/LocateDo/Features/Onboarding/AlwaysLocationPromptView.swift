@@ -24,6 +24,7 @@ struct AlwaysLocationPromptView: View {
             Text(.alwaysPromptDescription)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            PrivacyNote(text: .alwaysPromptPrivacy)
             Spacer(minLength: 0)
             Button {
                 answer = .allow
