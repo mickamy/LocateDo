@@ -164,6 +164,22 @@ struct WriteAnalyticsTests {
         #expect(fixture.recorder.userProperties[.openTodoCount] == "0")
     }
 
+    @Test func checkingOffFromTheWatchSaysWhere() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let milk = Todo(title: "Milk", place: place)
+        let eggs = Todo(title: "Eggs", place: place)
+        fixture.writes.add(milk)
+        fixture.writes.add(eggs)
+
+        fixture.writes.checkOff([milk.id], via: CompletionVia(.app))
+        fixture.writes.checkOff([eggs.id], via: CompletionVia(.notification))
+
+        let completions = fixture.recorder.events.filter { $0.name == .todoCompleted }
+        #expect(completions.map { $0.values["via"] as? String } == ["watch", "watch_action"])
+    }
+
     @Test func reopeningATodoIsNotACompletion() throws {
         let fixture = try Fixture()
         let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)

@@ -104,7 +104,7 @@ final class LocalWrites {
 
     // From the arrival notification's checklist; to-dos someone else already checked off are skipped.
     @discardableResult
-    func checkOff(_ todoIDs: [UUID], now: Date = .now) -> Int {
+    func checkOff(_ todoIDs: [UUID], via: CompletionVia = .action, now: Date = .now) -> Int {
         var completed: [Todo] = []
         for id in todoIDs {
             var descriptor = FetchDescriptor<Todo>(predicate: #Predicate { $0.id == id })
@@ -120,7 +120,7 @@ final class LocalWrites {
         }
         commit(completed.map { .completion(of: $0) })
         for todo in completed {
-            logCompletion(of: todo, via: .action, now: now)
+            logCompletion(of: todo, via: via, now: now)
         }
         updateCountProperties()
         return completed.count

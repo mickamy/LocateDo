@@ -10,6 +10,7 @@
 		3B4035565436DCDDB455DF0A /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3BB27CCE4CA73E84455B7789 /* UserNotifications.framework */; };
 		3B4FF38872539949B9CE28DD /* UserNotificationsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B18D74FE5D745A602C3D98C /* UserNotificationsUI.framework */; };
 		3BC7A1D13075000000D47174 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BC7A1D03075000000D47174 /* FirebaseCrashlytics */; };
+		3BCC6C53FFA2DE00B8E56FEB /* LocateDoWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3B85F61F3321FC68D19B299C /* LocateDoWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3BDC392E6FB8C36F911AEF86 /* LocateDoNotificationContent.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3BEBB7A941E911150D254A9F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97921B8CF49F7EB4924EBD /* GoogleSignIn */; };
 		3BF1AEBF3071100000D47174 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF1AEBE3071100000D47174 /* FirebaseAnalytics */; };
@@ -33,6 +34,13 @@
 			remoteGlobalIDString = 3BCDF0A76C001024B16FC70D;
 			remoteInfo = LocateDoNotificationContent;
 		};
+		3BB9F3F56BA0D4B3E34D3632 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3B9C79092F9AAAA513964E64;
+			remoteInfo = LocateDoWatch;
+		};
 		3BF628993073C9D40025FB46 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3BB55BE83070E8CE008A116A /* Project object */;
@@ -52,11 +60,21 @@
 			);
 			name = "Embed Foundation Extensions";
 		};
+		3BE8209E9C237A692C0634E8 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolder = Product;
+			files = (
+				3BCC6C53FFA2DE00B8E56FEB /* LocateDoWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3B18D74FE5D745A602C3D98C /* UserNotificationsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotificationsUI.framework; path = System/Library/Frameworks/UserNotificationsUI.framework; sourceTree = SDKROOT; };
 		3B34EEAF3071027900D47174 /* LocateDoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LocateDoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3B85F61F3321FC68D19B299C /* LocateDoWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocateDoWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BB27CCE4CA73E84455B7789 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		3BB55BF03070E8CE008A116A /* LocateDo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocateDo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LocateDoNotificationContent.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,6 +106,18 @@
 			);
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
 		};
+		3BF7FB026036FA840028653C /* Exceptions for "LocateDo" folder in "LocateDoWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				InfoPlist.xcstrings,
+				Localizable.xcstrings,
+				Services/Notifications/ArrivalChecklist.swift,
+				Services/Watch/WatchCheckOff.swift,
+				Services/Watch/WatchSnapshot.swift,
+				Support/CategoryAppearance.swift,
+			);
+			target = 3B9C79092F9AAAA513964E64 /* LocateDoWatch */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -109,8 +139,14 @@
 			exceptions = (
 				3BB55BFD3070E8CE008A116A /* Exceptions for "LocateDo" folder in "LocateDo" target */,
 				3B9DCDFD65D6E5DB661234B0 /* Exceptions for "LocateDo" folder in "LocateDoNotificationContent" target */,
+				3BF7FB026036FA840028653C /* Exceptions for "LocateDo" folder in "LocateDoWatch" target */,
 			);
 			path = LocateDo;
+			sourceTree = "<group>";
+		};
+		3BD61C37219076442B9CA29B /* LocateDoWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LocateDoWatch;
 			sourceTree = "<group>";
 		};
 		3BF628963073C9D40025FB46 /* LocateDoUITests */ = {
@@ -122,6 +158,11 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		3B34EEAC3071027900D47174 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		3BA1B100D21F762B0722BB8E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -159,6 +200,7 @@
 				3B34EEB03071027900D47174 /* LocateDoTests */,
 				3B3313DAC8523E72F996C542 /* LocateDoNotificationContent */,
 				3BF628963073C9D40025FB46 /* LocateDoUITests */,
+				3BD61C37219076442B9CA29B /* LocateDoWatch */,
 				3BB55BF13070E8CE008A116A /* Products */,
 				3BE0A48395DDCF4B898BF96D /* Frameworks */,
 			);
@@ -171,6 +213,7 @@
 				3B34EEAF3071027900D47174 /* LocateDoTests.xctest */,
 				3BF628953073C9D40025FB46 /* LocateDoUITests.xctest */,
 				3BF31E99D9FD56619AB6B20A /* LocateDoNotificationContent.appex */,
+				3B85F61F3321FC68D19B299C /* LocateDoWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -208,6 +251,24 @@
 			productReference = 3B34EEAF3071027900D47174 /* LocateDoTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		3B9C79092F9AAAA513964E64 /* LocateDoWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3B1339E84CD8E4ED0BC445AD /* Build configuration list for PBXNativeTarget "LocateDoWatch" */;
+			buildPhases = (
+				3B555E352B163AC0B1AE8541 /* Sources */,
+				3BA1B100D21F762B0722BB8E /* Frameworks */,
+				3BDE0447614495B17534BFA9 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				3BD61C37219076442B9CA29B /* LocateDoWatch */,
+			);
+			name = LocateDoWatch;
+			productName = LocateDoWatch;
+			productReference = 3B85F61F3321FC68D19B299C /* LocateDoWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		3BB55BEF3070E8CE008A116A /* LocateDo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3BB55BFE3070E8CE008A116A /* Build configuration list for PBXNativeTarget "LocateDo" */;
@@ -216,11 +277,13 @@
 				3BB55BED3070E8CE008A116A /* Frameworks */,
 				3BB55BEE3070E8CE008A116A /* Resources */,
 				3B0629E481FACA2B0FB2492A /* Embed Foundation Extensions */,
+				3BE8209E9C237A692C0634E8 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				3B2E3A12296871E97E8B1073 /* PBXTargetDependency */,
+				3B6FD5984A16E264F9E33AFB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3BB55BF23070E8CE008A116A /* LocateDo */,
@@ -291,6 +354,9 @@
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 3BB55BEF3070E8CE008A116A;
 					};
+					3B9C79092F9AAAA513964E64 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					3BB55BEF3070E8CE008A116A = {
 						CreatedOnToolsVersion = 27.0;
 					};
@@ -329,6 +395,7 @@
 				3B34EEAE3071027900D47174 /* LocateDoTests */,
 				3BF628943073C9D40025FB46 /* LocateDoUITests */,
 				3BCDF0A76C001024B16FC70D /* LocateDoNotificationContent */,
+				3B9C79092F9AAAA513964E64 /* LocateDoWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -349,6 +416,11 @@
 			files = (
 			);
 		};
+		3BDE0447614495B17534BFA9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		3BF628933073C9D40025FB46 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -358,6 +430,11 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		3B34EEAB3071027900D47174 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		3B555E352B163AC0B1AE8541 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
 			);
@@ -389,6 +466,11 @@
 			isa = PBXTargetDependency;
 			target = 3BB55BEF3070E8CE008A116A /* LocateDo */;
 			targetProxy = 3B34EEB33071027900D47174 /* PBXContainerItemProxy */;
+		};
+		3B6FD5984A16E264F9E33AFB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3B9C79092F9AAAA513964E64 /* LocateDoWatch */;
+			targetProxy = 3BB9F3F56BA0D4B3E34D3632 /* PBXContainerItemProxy */;
 		};
 		3BF6289A3073C9D40025FB46 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -482,6 +564,73 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Staging;
+		};
+		3B658349D2347AE92FAE9BF6 /* Release configuration for PBXNativeTarget "LocateDoWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_STYLE[sdk=watchsimulator*]" = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.locatedo.LocateDo;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "match AppStore com.locatedo.LocateDo.watchkitapp";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=watchsimulator*]" = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		3BA8F0A6ACC2EBD3CFFD1F5D /* Staging configuration for PBXNativeTarget "LocateDoWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_STYLE[sdk=watchsimulator*]" = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.locatedo.LocateDo.stg;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.stg.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "match AdHoc com.locatedo.LocateDo.stg.watchkitapp";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=watchsimulator*]" = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "STAGING $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Staging;
 		};
@@ -748,6 +897,34 @@
 			};
 			name = Release;
 		};
+		3BB94F405A181DCDA665B0BB /* Debug configuration for PBXNativeTarget "LocateDoWatch" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = AZ28EH9G9N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.locatedo.LocateDo.dev;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.locatedo.LocateDo.dev.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
 		3BCE468E71FD07D45CDC46FC /* Release configuration for PBXNativeTarget "LocateDoNotificationContent" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -993,6 +1170,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3B1339E84CD8E4ED0BC445AD /* Build configuration list for PBXNativeTarget "LocateDoWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3BB94F405A181DCDA665B0BB /* Debug configuration for PBXNativeTarget "LocateDoWatch" */,
+				3B658349D2347AE92FAE9BF6 /* Release configuration for PBXNativeTarget "LocateDoWatch" */,
+				3BA8F0A6ACC2EBD3CFFD1F5D /* Staging configuration for PBXNativeTarget "LocateDoWatch" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		3B34EEB73071027900D47174 /* Build configuration list for PBXNativeTarget "LocateDoTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

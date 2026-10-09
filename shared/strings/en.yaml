@@ -367,3 +367,8 @@ maintenance:
   dismiss: "Dismiss"
 announcement:
   title: "Notice"
+watch:
+  empty_title: "No to-dos"
+  empty_message: "Add places and to-dos on your iPhone."
+  all_done: "All done"
+  complete_hint: "Marks it as done"

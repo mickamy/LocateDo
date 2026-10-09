@@ -4853,6 +4853,76 @@
           }
         }
       }
+    },
+    "watch.all_done" : {
+      "comment" : "Shown on the Apple Watch once every to-do of a place or an arrival notification is checked off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All done"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて完了しました"
+          }
+        }
+      }
+    },
+    "watch.complete_hint" : {
+      "comment" : "VoiceOver hint on a to-do row on the Apple Watch, which completes it when tapped.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marks it as done"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了にします"
+          }
+        }
+      }
+    },
+    "watch.empty_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add places and to-dos on your iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone で場所とやることを追加してください。"
+          }
+        }
+      }
+    },
+    "watch.empty_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No to-dos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "やることはありません"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

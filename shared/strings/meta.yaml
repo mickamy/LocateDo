@@ -77,3 +77,13 @@ place.picker.nearby_convenience:
   platforms: [ios]
 place.picker.nearby_hardware:
   platforms: [ios]
+watch.empty_title:
+  platforms: [ios]
+watch.empty_message:
+  platforms: [ios]
+watch.all_done:
+  comment: "Shown on the Apple Watch once every to-do of a place or an arrival notification is checked off."
+  platforms: [ios]
+watch.complete_hint:
+  comment: "VoiceOver hint on a to-do row on the Apple Watch, which completes it when tapped."
+  platforms: [ios]

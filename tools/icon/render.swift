@@ -344,6 +344,7 @@ var writesPreview = false
 var writesFavicons = false
 var writesAndroid = false
 var writesPlay = false
+var writesWatch = false
 var index = 0
 while index < arguments.count {
     switch arguments[index] {
@@ -355,6 +356,8 @@ while index < arguments.count {
         writesAndroid = true
     case "--play":
         writesPlay = true
+    case "--watch":
+        writesWatch = true
     case "--variant":
         index += 1
         variant = index < arguments.count ? arguments[index] : nil
@@ -364,7 +367,7 @@ while index < arguments.count {
     index += 1
 }
 guard let outputPath else {
-    let usage = "usage: swift render.swift <output-dir> [--preview] [--variant Dev|Stg] [--favicon] [--android] [--play]\n"
+    let usage = "usage: swift render.swift <output-dir> [--preview] [--variant Dev|Stg] [--favicon] [--android] [--play] [--watch]\n"
     FileHandle.standardError.write(Data(usage.utf8))
     exit(2)
 }
@@ -384,7 +387,8 @@ if writesPlay {
     exit(0)
 }
 
-for appearance in appearances {
+// watchOS takes one icon and crops it to a circle, which would cut off a badge.
+for appearance in writesWatch ? [appearances[0]] : appearances {
     let context = makeContext(opaque: true)
     draw(appearance, in: context)
     var fileName = appearance.fileName
