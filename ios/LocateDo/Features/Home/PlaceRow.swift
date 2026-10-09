@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PlaceRow: View {
+    private static let previewTodos = 2
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let nearby: NearbyPlace
@@ -25,8 +27,13 @@ struct PlaceRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(.headline)
-                ForEach(place.openTodos.prefix(2)) { todo in
+                ForEach(place.openTodos.prefix(Self.previewTodos)) { todo in
                     Text(todo.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                if place.openTodos.count > Self.previewTodos {
+                    Text(.homeMoreTodos(place.openTodos.count - Self.previewTodos))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
