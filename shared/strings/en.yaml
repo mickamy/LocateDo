@@ -184,6 +184,10 @@ settings:
     billing_issue: "There’s a problem with your payment. Check it in Manage Subscription."
     household: "Pro comes with your household’s plan."
 home:
+  more_todos:
+    plural:
+      one: "+{count:int} more"
+      other: "+{count:int} more"
   open_summary:
     plural:
       one: "{count:int} open to-do"
@@ -243,6 +247,7 @@ todo:
   completed_section: "Completed"
   deleted: "Deleted “{title}”"
   delete_completed: "Delete All"
+  delete_completed_shared_message: "They’ll also be removed for everyone you share with."
   delete_completed_confirm:
     plural:
       one: "Delete {count:int} completed to-do?"

@@ -819,6 +819,42 @@
         }
       }
     },
+    "home.more_todos" : {
+      "comment" : "Under the first two to-dos of a place in the nearby list, when it has more.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld more"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld more"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "他 %lld 件"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "home.open_summary" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4665,6 +4701,24 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "todo.delete_completed_shared_message" : {
+      "comment" : "Under the confirmation for deleting all completed to-dos, only while the household has other members.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They’ll also be removed for everyone you share with."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共有している家族の画面からも消えます。"
           }
         }
       }

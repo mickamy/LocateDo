@@ -56,6 +56,11 @@
     <string name="home_add_place">Add a place</string>
     <string name="home_empty_message">Add a place to get reminded when you arrive.</string>
     <string name="home_empty_title">No places yet</string>
+    <!-- Under the first two to-dos of a place in the nearby list, when it has more. -->
+    <plurals name="home_more_todos">
+        <item quantity="one">+%1$d more</item>
+        <item quantity="other">+%1$d more</item>
+    </plurals>
     <string name="home_my_location">My location</string>
     <plurals name="home_open_summary">
         <item quantity="one">%1$d open to-do</item>
@@ -310,6 +315,8 @@
         <item quantity="one">Delete %1$d completed to-do?</item>
         <item quantity="other">Delete %1$d completed to-dos?</item>
     </plurals>
+    <!-- Under the confirmation for deleting all completed to-dos, only while the household has other members. -->
+    <string name="todo_delete_completed_shared_message">They’ll also be removed for everyone you share with.</string>
     <!-- Shown briefly at the bottom after a to-do is deleted, next to the Undo button. -->
     <string name="todo_deleted">Deleted “%1$s”</string>
     <string name="todo_editor_edit_title">Edit To-Do</string>
