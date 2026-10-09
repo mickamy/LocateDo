@@ -2,11 +2,16 @@ import SwiftUI
 
 @main
 struct LocateDoWatchApp: App {
+    private let store = WatchStore()
+
+    init() {
+        store.start()
+    }
+
     var body: some Scene {
         WindowGroup {
-            Image(systemName: "mappin.and.ellipse")
-                .font(.largeTitle)
-                .foregroundStyle(.tint)
+            PlaceListView()
+                .environment(store)
         }
     }
 }

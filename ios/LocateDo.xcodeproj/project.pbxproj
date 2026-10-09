@@ -113,6 +113,7 @@
 				Localizable.xcstrings,
 				Services/Watch/WatchCheckOff.swift,
 				Services/Watch/WatchSnapshot.swift,
+				Support/CategoryAppearance.swift,
 			);
 			target = 3B9C79092F9AAAA513964E64 /* LocateDoWatch */;
 		};

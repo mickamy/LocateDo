@@ -2,7 +2,7 @@ import Foundation
 
 // Shared with the Watch app, which shows what iPhone last sent and never writes.
 nonisolated struct WatchSnapshot: Codable, Equatable {
-    struct Place: Codable, Equatable, Identifiable {
+    struct Place: Codable, Hashable, Identifiable {
         let id: UUID
         let name: String
         let categoryIcon: String?
@@ -10,7 +10,7 @@ nonisolated struct WatchSnapshot: Codable, Equatable {
         let todos: [Todo]
     }
 
-    struct Todo: Codable, Equatable, Identifiable {
+    struct Todo: Codable, Hashable, Identifiable {
         let id: UUID
         let title: String
     }
