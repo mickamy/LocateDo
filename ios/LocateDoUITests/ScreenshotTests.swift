@@ -2,8 +2,8 @@ import CoreLocation
 import XCTest
 
 // Run through `fastlane screenshots`, which erases the simulator and grants "Always" first. Region
-// monitoring is unsupported in the simulator, so the arrival notification comes from the debug
-// "Simulate arrival in 10 s" action.
+// monitoring is unsupported in the simulator, and the completion notice comes from the server, so both
+// notifications come from debug actions.
 final class ScreenshotTests: XCTestCase {
     private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
@@ -24,7 +24,7 @@ final class ScreenshotTests: XCTestCase {
 
         let grocery = app.staticTexts[seed.groceryName].firstMatch
         XCTAssertTrue(grocery.waitForExistence(timeout: 10))
-        snapshot("02-Nearby")
+        snapshot("04-Nearby")
 
         grocery.tap()
         XCTAssertTrue(app.staticTexts[seed.firstTodo].waitForExistence(timeout: 5))
@@ -33,24 +33,35 @@ final class ScreenshotTests: XCTestCase {
 
         app.tabBars.buttons.element(boundBy: 1).tap()
         sleep(3)
-        snapshot("04-Map")
+        snapshot("05-Map")
 
         app.tabBars.buttons.element(boundBy: 2).tap()
         XCTAssertTrue(app.staticTexts[seed.firstTodo].waitForExistence(timeout: 5))
-        snapshot("05-Todos")
+        snapshot("06-Todos")
 
-        // Last, so the device stays locked: schedule the arrival, lock, and catch it on the lock screen.
+        // Last, the lock screen: each debug action clears what was delivered before, so one notification shows.
         app.tabBars.buttons.element(boundBy: 0).tap()
         grocery.tap()
+        catchOnLockScreen(app, action: "Simulate completion notice in 10 s (debug)", containing: seed.partnerName)
+        snapshot("02-Checked")
+
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.buttons["place.menu"].waitForExistence(timeout: 10))
+        catchOnLockScreen(app, action: "Simulate arrival in 10 s (debug)", containing: seed.groceryName)
+        snapshot("01-Arrival")
+    }
+
+    @MainActor
+    private func catchOnLockScreen(_ app: XCUIApplication, action: String, containing text: String) {
         app.buttons["place.menu"].tap()
-        app.buttons["Simulate arrival in 10 s (debug)"].tap()
+        app.buttons[action].tap()
         XCUIDevice.shared.perform(NSSelectorFromString("pressLockButton"))
         let banner = springboard.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", seed.groceryName))
+            .matching(NSPredicate(format: "label CONTAINS %@", text))
             .firstMatch
         XCTAssertTrue(banner.waitForExistence(timeout: 30))
         sleep(1)
-        snapshot("01-Arrival")
     }
 
     @MainActor
@@ -79,6 +90,7 @@ private struct Seed {
     let center: CLLocation
     let groceryName: String
     let firstTodo: String
+    let partnerName: String
 
     // Matches ScreenshotSeed in the app.
     init(japanese: Bool) {
@@ -86,10 +98,12 @@ private struct Seed {
             center = CLLocation(latitude: 35.67824, longitude: 139.76712)
             groceryName = "スーパー"
             firstTodo = "牛乳"
+            partnerName = "ゆき"
         } else {
             center = CLLocation(latitude: 37.77627, longitude: -122.41924)
             groceryName = "Grocery store"
             firstTodo = "Milk"
+            partnerName = "Alex"
         }
     }
 }
