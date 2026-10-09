@@ -16,6 +16,15 @@ nonisolated struct WatchSnapshot: Codable, Equatable {
     }
 
     static let contextKey = "snapshot"
+    static let requestKey = "requestSnapshot"
+    // Sent by a Watch that has nothing yet, for example when the Watch app is installed after the iPhone app last ran.
+    static var request: [String: Any] {
+        [requestKey: true]
+    }
+
+    static func isRequest(_ message: [String: Any]) -> Bool {
+        message[requestKey] as? Bool == true
+    }
 
     let places: [Place]
 

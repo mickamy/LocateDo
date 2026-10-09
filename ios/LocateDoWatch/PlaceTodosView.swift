@@ -36,6 +36,9 @@ struct WatchChecklist: View {
 
     private func row(_ todo: WatchSnapshot.Todo, isChecked: Bool) -> some View {
         Button {
+            guard !isChecked else {
+                return
+            }
             checked.insert(todo.id)
             onCheck(todo.id)
         } label: {
@@ -49,7 +52,6 @@ struct WatchChecklist: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .disabled(isChecked)
         .accessibilityHint(Text(.watchCompleteHint))
         .accessibilityAddTraits(isChecked ? .isSelected : [])
         .sensoryFeedback(.success, trigger: isChecked)

@@ -18,6 +18,12 @@ final class WatchStore: NSObject, WCSessionDelegate {
     @ObservationIgnored private nonisolated let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "watch")
 
     func start() {
+        #if DEBUG
+        if WatchScreenshotSeed.isRequested {
+            receive(WatchScreenshotSeed.snapshot)
+            return
+        }
+        #endif
         guard WCSession.isSupported() else {
             return
         }
@@ -48,9 +54,12 @@ final class WatchStore: NSObject, WCSessionDelegate {
         }
     }
 
-    private func activated(with snapshot: WatchSnapshot?) {
+    private func activated(with snapshot: WatchSnapshot?, state: String) {
+        logger.notice("Activated: \(state, privacy: .public)")
         if let snapshot {
             receive(snapshot)
+        } else {
+            requestSnapshot()
         }
         let messages = unsent
         unsent = []
@@ -59,7 +68,28 @@ final class WatchStore: NSObject, WCSessionDelegate {
         }
     }
 
+    // Wakes the iPhone app, so the list shows without opening it on iPhone first.
+    private func requestSnapshot() {
+        let session = WCSession.default
+        guard received == nil, session.activationState == .activated, session.isReachable else {
+            return
+        }
+        logger.notice("Asking iPhone for the to-dos")
+        session.sendMessage(WatchSnapshot.request) { [weak self] reply in
+            guard let snapshot = WatchSnapshot(applicationContext: reply) else {
+                return
+            }
+            Task { @MainActor in
+                self?.receive(snapshot)
+            }
+        } errorHandler: { [logger] error in
+            logger.notice("Could not ask iPhone for the to-dos: \(error, privacy: .public)")
+        }
+    }
+
     private func receive(_ snapshot: WatchSnapshot) {
+        let todos = snapshot.places.reduce(0) { $0 + $1.todos.count }
+        logger.notice("Received \(snapshot.places.count) places, \(todos) to-dos")
         let present = Set(snapshot.places.flatMap { $0.todos.map(\.id) })
         checkedOff.formIntersection(present)
         received = snapshot
@@ -76,8 +106,22 @@ final class WatchStore: NSObject, WCSessionDelegate {
         error: (any Error)?
     ) {
         let snapshot = WatchSnapshot(applicationContext: session.receivedApplicationContext)
+        var state = activationState == .activated ? "activated" : "not activated"
+        state += ", iPhone app installed \(session.isCompanionAppInstalled)"
+        if let error {
+            state += ", \(error.localizedDescription)"
+        }
         Task { @MainActor in
-            activated(with: snapshot)
+            activated(with: snapshot, state: state)
+        }
+    }
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        guard session.isReachable else {
+            return
+        }
+        Task { @MainActor in
+            requestSnapshot()
         }
     }
 

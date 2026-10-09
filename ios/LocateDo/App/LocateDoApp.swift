@@ -187,6 +187,7 @@ struct LocateDoApp: App {
         .environment(entitlements)
         .environment(writes)
         .environment(appStatus)
+        .environment(watch)
     }
 
     private func connectAccount() {

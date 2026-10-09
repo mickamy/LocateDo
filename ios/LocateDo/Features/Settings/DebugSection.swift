@@ -6,6 +6,7 @@ import UIKit
 struct DebugSection: View {
     @Environment(Authenticator.self) private var authenticator
     @Environment(SyncEngine.self) private var sync
+    @Environment(WatchBridge.self) private var watch
     @Query private var syncStates: [SyncState]
     @Query private var pendingWrites: [PendingWrite]
     @State private var serverStatus: String?
@@ -19,6 +20,13 @@ struct DebugSection: View {
             debugRow("Cursor", "\(syncStates.first?.cursor ?? 0)")
             debugRow("Queued writes", "\(pendingWrites.count)")
             debugRow("Last pull", sync.lastPullSummary ?? "-")
+            debugRow("Watch", watch.state)
+            debugRow("Watch event", watch.lastEvent ?? "-")
+            Button {
+                watch.send(force: true)
+            } label: {
+                Text(verbatim: "Send to Watch")
+            }
             Button {
                 Task {
                     await sync.sync()
