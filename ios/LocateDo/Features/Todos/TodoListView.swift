@@ -14,6 +14,10 @@ struct TodoListView: View {
         TodoGrouping.groups(todos, filter: filter)
     }
 
+    private var completed: [Todo] {
+        todos.filter(\.isCompleted)
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -85,6 +89,13 @@ struct TodoListView: View {
                 filterPicker
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+            } footer: {
+                if filter == .done && !completed.isEmpty {
+                    HStack {
+                        Spacer()
+                        DeleteCompletedButton(todos: completed)
+                    }
+                }
             }
             if groups.isEmpty {
                 Text(.todoListFilterEmpty)

@@ -75,7 +75,11 @@ struct PlaceDetailView: View {
                         delete(todos.completedNewestFirst, at: offsets)
                     }
                 } header: {
-                    Text(.todoCompletedSection)
+                    HStack {
+                        Text(.todoCompletedSection)
+                        Spacer()
+                        DeleteCompletedButton(todos: todos.completedNewestFirst)
+                    }
                 }
             }
         }
