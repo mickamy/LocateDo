@@ -1,7 +1,6 @@
 package com.locatedo.locatedo.feature.home
 
 import android.Manifest
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,21 +50,16 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
-import com.locatedo.locatedo.BuildConfig
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.SystemSettings
-import com.locatedo.locatedo.core.common.zoomForRadius
-import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
-import com.locatedo.locatedo.feature.todos.TodoEditorSheet
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.CategoryMarker
 import java.util.UUID
@@ -75,14 +67,13 @@ import java.util.UUID
 private const val PLACE_ZOOM = 14f
 private val sheetPeekHeight = 96.dp
 private val emptyPeekHeight = 260.dp
-private val detailPeekHeight = 360.dp
 private val permissionBannerPeekHeight = 104.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onAddPlace: () -> Unit,
-    onEditPlace: (UUID) -> Unit,
+    onOpenPlace: (UUID) -> Unit,
     onOpenSharing: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -90,10 +81,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isExplainingAlwaysLocation by viewModel.isExplainingAlwaysLocation.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val selected = uiState.selected
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
-    var placeToDelete by remember { mutableStateOf<Place?>(null) }
-    var isAddingTodo by remember { mutableStateOf(false) }
     val requestPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         hasLocationPermission = viewModel.hasLocationPermission()
         if (hasLocationPermission) {
@@ -105,9 +93,6 @@ fun HomeScreen(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissions()
     }
-    BackHandler(enabled = selected != null) {
-        viewModel.clearSelection()
-    }
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             viewModel.locateMe()
@@ -118,21 +103,13 @@ fun HomeScreen(
             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), PLACE_ZOOM))
         }
     }
-    LaunchedEffect(selected?.place?.id) {
-        val place = selected?.place ?: return@LaunchedEffect
-        cameraPositionState.animate(
-            CameraUpdateFactory.newLatLngZoom(LatLng(place.latitude, place.longitude), zoomForRadius(place.radiusMeters)),
-        )
-    }
 
-    // The collapsed sheet shows one summary line, the whole empty state, or the top of a place's details, with room
-    // for the permission banner above the first two.
+    // The collapsed sheet shows one summary line or the whole empty state, with room for the permission banner.
     var peekHeight = when {
-        selected != null -> detailPeekHeight
         !uiState.isLoading && uiState.places.isEmpty() -> emptyPeekHeight
         else -> sheetPeekHeight
     }
-    if (selected == null && uiState.permissionBanner != null) {
+    if (uiState.permissionBanner != null) {
         peekHeight += permissionBannerPeekHeight
     }
 
@@ -140,35 +117,19 @@ fun HomeScreen(
         scaffoldState = rememberBottomSheetScaffoldState(),
         sheetPeekHeight = peekHeight,
         sheetContent = {
-            if (selected != null) {
-                PlaceDetailSheet(
-                    detail = selected,
-                    onClose = viewModel::clearSelection,
-                    onAddTodo = { isAddingTodo = true },
-                    onEdit = { onEditPlace(selected.place.id) },
-                    onDelete = { placeToDelete = selected.place },
-                    onToggleTodo = viewModel::setTodoCompleted,
-                    onDeleteTodo = viewModel::deleteTodo,
-                    members = uiState.members,
-                    onAssignTodo = viewModel::setAssignee,
-                    showsDebugTools = BuildConfig.DEBUG_TOOLS,
-                    onSimulateArrival = { after -> viewModel.simulateArrival(selected.place.id, after) },
-                )
-            } else {
-                HomeSheet(
-                    uiState = uiState,
-                    onAddPlace = onAddPlace,
-                    onSelect = viewModel::select,
-                    onPermissionBanner = { banner ->
-                        viewModel.permissionBannerTapped(banner)
-                        when (banner) {
-                            PermissionBanner.LOCATION_ALWAYS -> Unit
-                            PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
-                            PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
-                        }
-                    },
-                )
-            }
+            HomeSheet(
+                uiState = uiState,
+                onAddPlace = onAddPlace,
+                onSelect = onOpenPlace,
+                onPermissionBanner = { banner ->
+                    viewModel.permissionBannerTapped(banner)
+                    when (banner) {
+                        PermissionBanner.LOCATION_ALWAYS -> Unit
+                        PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
+                        PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
+                    }
+                },
+            )
         },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -177,7 +138,6 @@ fun HomeScreen(
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
                 uiSettings = MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false),
-                onMapClick = { viewModel.clearSelection() },
             ) {
                 for (entry in uiState.places) {
                     val place = entry.place
@@ -189,33 +149,22 @@ fun HomeScreen(
                         title = place.name,
                         anchor = Offset(0.5f, 0.5f),
                         onClick = {
-                            viewModel.select(place.id)
+                            onOpenPlace(place.id)
                             true
                         },
                     ) {
                         CategoryMarker(icon = category?.icon, color = category?.color)
                     }
                 }
-                selected?.place?.let { place ->
-                    Circle(
-                        center = LatLng(place.latitude, place.longitude),
-                        radius = place.radiusMeters,
-                        fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                        strokeColor = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 2f,
-                    )
-                }
             }
-            if (selected == null) {
-                SearchBar(
-                    modifier = Modifier
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .align(Alignment.TopCenter),
-                    onSearch = onAddPlace,
-                    onAccount = onOpenSharing,
-                )
-            }
+            SearchBar(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .align(Alignment.TopCenter),
+                onSearch = onAddPlace,
+                onAccount = onOpenSharing,
+            )
             FloatingActionButton(
                 onClick = {
                     if (hasLocationPermission) {
@@ -235,31 +184,6 @@ fun HomeScreen(
         }
     }
 
-    placeToDelete?.let { place ->
-        AlertDialog(
-            onDismissRequest = { placeToDelete = null },
-            title = { Text(stringResource(R.string.place_detail_delete_confirm_title, place.name)) },
-            text = { Text(stringResource(R.string.place_detail_delete_confirm_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deletePlace(place.id)
-                        placeToDelete = null
-                    },
-                ) {
-                    Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { placeToDelete = null }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            },
-        )
-    }
-    if (isAddingTodo && selected != null) {
-        TodoEditorSheet(placeId = selected.place.id, onDismiss = { isAddingTodo = false })
-    }
     if (isExplainingAlwaysLocation) {
         AlwaysLocationSheet(
             onAnswer = viewModel::alwaysLocationAnswered,

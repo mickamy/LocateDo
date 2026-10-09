@@ -42,6 +42,7 @@ import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.appstatus.UpdateRequiredScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
+import com.locatedo.locatedo.feature.place.PlaceDetailScreen
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
 import com.locatedo.locatedo.feature.paywall.PaywallScreen
@@ -67,6 +68,7 @@ import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
+import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
 
@@ -96,6 +98,7 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
         else -> Tabs(
             onPlaceAdded = appViewModel::placeAdded,
             pendingPlace = pendingPlace,
+            onPlaceConsumed = appViewModel::placeConsumed,
             pendingInvite = pendingInvite,
             onInviteConsumed = appViewModel::inviteConsumed,
             pendingPaywall = pendingPaywall,
@@ -165,6 +168,7 @@ private fun NoticeDialog(notice: AppNotice, onDismiss: () -> Unit) {
 private fun Tabs(
     onPlaceAdded: () -> Unit,
     pendingPlace: UUID?,
+    onPlaceConsumed: (UUID) -> Unit,
     pendingInvite: String?,
     onInviteConsumed: (String) -> Unit,
     pendingPaywall: PaywallTrigger?,
@@ -176,15 +180,18 @@ private fun Tabs(
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
+    val root = backStack.firstOrNull()
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
     val analytics = LocalAnalytics.current
 
     LaunchedEffect(pendingPlace) {
-        if (pendingPlace != null && backStack.lastOrNull() != HomeKey) {
+        if (pendingPlace != null) {
             backStack.clear()
             backStack.add(HomeKey)
+            backStack.add(PlaceDetailKey(pendingPlace.toString()))
+            onPlaceConsumed(pendingPlace)
         }
     }
     LaunchedEffect(pendingTodos) {
@@ -213,11 +220,11 @@ private fun Tabs(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            if (current in tabKeys) {
+            if (current in tabKeys || current is PlaceDetailKey) {
                 NavigationBar {
                     for (tab in tabs) {
                         NavigationBarItem(
-                            selected = current == tab.key,
+                            selected = root == tab.key,
                             onClick = {
                                 if (current != tab.key) {
                                     backStack.clear()
@@ -252,10 +259,7 @@ private fun Tabs(
                                 placeEditor.start(placeId = null)
                                 backStack.add(PlaceSearchKey)
                             },
-                            onEditPlace = { placeId ->
-                                placeEditor.start(placeId)
-                                backStack.add(PlaceEditorKey)
-                            },
+                            onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                             onOpenSharing = {
                                 analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
                                 backStack.add(SharingKey)
@@ -268,10 +272,7 @@ private fun Tabs(
                                 placeEditor.start(placeId = null)
                                 backStack.add(PlaceSearchKey)
                             },
-                            onOpenPlace = {
-                                backStack.clear()
-                                backStack.add(HomeKey)
-                            },
+                            onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                         )
                     }
                     entry<SettingsKey> {
@@ -282,6 +283,17 @@ private fun Tabs(
                                 backStack.add(SharingKey)
                             },
                             onOpenCategories = { backStack.add(CategoriesKey) },
+                        )
+                    }
+                    entry<PlaceDetailKey> { key ->
+                        val placeId = UUID.fromString(key.placeId)
+                        PlaceDetailScreen(
+                            placeId = placeId,
+                            onBack = { backStack.removeLastOrNull() },
+                            onEdit = {
+                                placeEditor.start(placeId)
+                                backStack.add(PlaceEditorKey)
+                            },
                         )
                     }
                     entry<CategoriesKey> {
@@ -346,8 +358,9 @@ private fun Tabs(
     }
 }
 
+// A place edited from its detail returns there; one added from a tab returns to the tab.
 private fun NavBackStack<NavKey>.leaveFlow() {
-    while (size > 1 && lastOrNull() !in tabKeys) {
+    while (size > 1 && lastOrNull() !in tabKeys && lastOrNull() !is PlaceDetailKey) {
         removeLastOrNull()
     }
 }

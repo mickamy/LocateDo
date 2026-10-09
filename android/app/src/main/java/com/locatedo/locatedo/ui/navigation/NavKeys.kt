@@ -17,6 +17,9 @@ data object SettingsKey : NavKey
 data object CategoriesKey : NavKey
 
 @Serializable
+data class PlaceDetailKey(val placeId: String) : NavKey
+
+@Serializable
 data object AccountKey : NavKey
 
 @Serializable

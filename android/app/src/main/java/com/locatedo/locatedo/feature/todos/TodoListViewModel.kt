@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.paywallTrigger
-import com.locatedo.locatedo.core.common.PlaceSelectionRequests
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
@@ -65,7 +64,6 @@ class TodoListViewModel @Inject constructor(
     categoryRepository: CategoryRepository,
     membershipRepository: MembershipRepository,
     private val todoRepository: TodoRepository,
-    private val selectionRequests: PlaceSelectionRequests,
     private val paywallRequests: PaywallRequests,
     authenticator: Authenticator,
     private val sync: SyncEngine,
@@ -133,11 +131,6 @@ class TodoListViewModel @Inject constructor(
             val todo = uiState.value.groups.flatMap { it.todos }.firstOrNull { it.id == todoId } ?: return@launch
             todoRepository.update(todo.copy(assigneeId = userId))
         }
-    }
-
-    // The home map shows the place once the caller switches to that tab.
-    fun requestPlace(placeId: UUID) {
-        selectionRequests.request(placeId)
     }
 
     private companion object {
