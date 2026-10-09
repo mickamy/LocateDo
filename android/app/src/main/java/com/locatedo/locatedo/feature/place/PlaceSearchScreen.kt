@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 // Google Maps' search: the field is the title, suggestions fill the page, and two shortcuts sit on top.
@@ -38,6 +39,7 @@ import com.locatedo.locatedo.ui.analytics.TrackScreen
 fun PlaceSearchScreen(
     viewModel: PlaceEditorViewModel,
     onChooseOnMap: () -> Unit,
+    onPredictionFetched: () -> Unit,
     onLocationChosen: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -50,8 +52,10 @@ fun PlaceSearchScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
-            if (event is PlaceEditorEvent.LocationChosen) {
-                onLocationChosen()
+            when (event) {
+                PlaceEditorEvent.PredictionFetched -> onPredictionFetched()
+                PlaceEditorEvent.LocationChosen -> onLocationChosen()
+                is PlaceEditorEvent.Saved -> Unit
             }
         }
     }
@@ -97,7 +101,10 @@ fun PlaceSearchScreen(
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.place_editor_choose_on_map)) },
                         leadingContent = { Icon(Icons.Filled.Map, contentDescription = null) },
-                        modifier = Modifier.clickable(onClick = onChooseOnMap),
+                        modifier = Modifier.clickable {
+                            viewModel.pickOnMap()
+                            onChooseOnMap()
+                        },
                     )
                 }
             }
@@ -106,6 +113,7 @@ fun PlaceSearchScreen(
                     headlineContent = { Text(prediction.primaryText) },
                     supportingContent = prediction.secondaryText?.let { { Text(it) } },
                     leadingContent = { Icon(Icons.Filled.Place, contentDescription = null) },
+                    trailingContent = prediction.distanceMeters?.let { meters -> { Text(DistanceFormatting.string(meters.toDouble())) } },
                     modifier = Modifier.clickable { viewModel.selectPrediction(prediction) },
                 )
             }

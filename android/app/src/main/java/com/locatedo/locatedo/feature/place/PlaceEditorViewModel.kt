@@ -27,7 +27,6 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -61,6 +60,7 @@ data class PickPreview(
     val name: String? = null,
     val address: String? = null,
     val isLoading: Boolean = false,
+    val source: PlaceSource = PlaceSource.MAP,
 )
 
 data class PlaceEditorUiState(
@@ -73,6 +73,7 @@ data class PlaceEditorUiState(
 )
 
 sealed interface PlaceEditorEvent {
+    data object PredictionFetched : PlaceEditorEvent
     data object LocationChosen : PlaceEditorEvent
     data class Saved(val isNew: Boolean) : PlaceEditorEvent
 }
@@ -128,8 +129,9 @@ class PlaceEditorViewModel @Inject constructor(
                     return@collect
                 }
                 isSearching.value = true
-                val near = draft.value.coordinate ?: locationRepository.lastCoordinate()
-                predictions.value = placesRepository.autocomplete(text, near)
+                val origin = locationRepository.lastCoordinate()
+                val near = draft.value.coordinate ?: origin
+                predictions.value = placesRepository.autocomplete(text, near, origin)
                 isSearching.value = false
             }
         }
@@ -179,11 +181,24 @@ class PlaceEditorViewModel @Inject constructor(
         query.value = text
     }
 
+    // A search result is shown on the pick map before it is used, so a store with many branches is checked by where it is.
     fun selectPrediction(prediction: PlacePrediction) {
         viewModelScope.launch {
             val candidate = placesRepository.fetch(prediction.id) ?: return@launch
-            choose(candidate.coordinate, candidate.name ?: prediction.primaryText, candidate.address, PlaceSource.SEARCH)
+            previewJob?.cancel()
+            pickPreview.value = PickPreview(
+                coordinate = candidate.coordinate,
+                name = candidate.name ?: prediction.primaryText,
+                address = candidate.address,
+                source = PlaceSource.SEARCH,
+            )
+            _events.emit(PlaceEditorEvent.PredictionFetched)
         }
+    }
+
+    fun pickOnMap() {
+        previewJob?.cancel()
+        pickPreview.value = PickPreview()
     }
 
     suspend fun lastKnownCoordinate(): Coordinate? = locationRepository.lastCoordinate()
@@ -196,15 +211,18 @@ class PlaceEditorViewModel @Inject constructor(
         }
     }
 
-    // Called as the pick map settles; the lookup is delayed so a moving map does not geocode every frame.
-    fun previewPick(coordinate: Coordinate) {
+    // A store tapped on the map keeps its own name; the address comes from geocoding either way.
+    fun previewPick(coordinate: Coordinate, name: String? = null) {
         previewJob?.cancel()
-        pickPreview.value = PickPreview(coordinate = coordinate, isLoading = true)
+        pickPreview.value = PickPreview(coordinate = coordinate, name = name, isLoading = true)
         previewJob = viewModelScope.launch {
-            delay(PICK_PREVIEW_DELAY_MILLIS)
             val geocoded = geocodingRepository.reverse(coordinate)
             pickPreview.update { current ->
-                if (current.coordinate != coordinate) current else current.copy(name = geocoded?.name, address = geocoded?.address, isLoading = false)
+                if (current.coordinate != coordinate) {
+                    current
+                } else {
+                    current.copy(name = name ?: geocoded?.name, address = geocoded?.address, isLoading = false)
+                }
             }
         }
     }
@@ -213,7 +231,7 @@ class PlaceEditorViewModel @Inject constructor(
         val preview = pickPreview.value
         val coordinate = preview.coordinate ?: return
         viewModelScope.launch {
-            choose(coordinate, preview.name, preview.address, PlaceSource.MAP)
+            choose(coordinate, preview.name, preview.address, preview.source)
         }
     }
 
@@ -276,6 +294,5 @@ class PlaceEditorViewModel @Inject constructor(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val SEARCH_DEBOUNCE_MILLIS = 300L
-        const val PICK_PREVIEW_DELAY_MILLIS = 400L
     }
 }

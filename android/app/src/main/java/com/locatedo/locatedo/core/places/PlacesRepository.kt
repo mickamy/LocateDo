@@ -20,12 +20,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.tasks.await
 
-data class PlacePrediction(val id: String, val primaryText: String, val secondaryText: String?)
+data class PlacePrediction(val id: String, val primaryText: String, val secondaryText: String?, val distanceMeters: Int? = null)
 
 data class PlaceCandidate(val name: String?, val address: String?, val coordinate: Coordinate)
 
 interface PlacesRepository {
-    suspend fun autocomplete(query: String, near: Coordinate?): List<PlacePrediction>
+    suspend fun autocomplete(query: String, near: Coordinate?, origin: Coordinate?): List<PlacePrediction>
     suspend fun fetch(id: String): PlaceCandidate?
 }
 
@@ -41,7 +41,7 @@ class GooglePlacesRepository @Inject constructor(@param:ApplicationContext priva
     // One token per search session so the predictions and the final fetch bill as one session.
     private var sessionToken: AutocompleteSessionToken? = null
 
-    override suspend fun autocomplete(query: String, near: Coordinate?): List<PlacePrediction> {
+    override suspend fun autocomplete(query: String, near: Coordinate?, origin: Coordinate?): List<PlacePrediction> {
         if (query.isBlank()) {
             return emptyList()
         }
@@ -51,14 +51,17 @@ class GooglePlacesRepository @Inject constructor(@param:ApplicationContext priva
             .setSessionToken(token)
             .apply {
                 if (near != null) {
-                    locationBias = CircularBounds.newInstance(LatLng(near.latitude, near.longitude), SEARCH_RADIUS_METERS)
+                    locationBias = CircularBounds.newInstance(near.toLatLng(), SEARCH_RADIUS_METERS)
+                }
+                if (origin != null) {
+                    setOrigin(origin.toLatLng())
                 }
             }
             .build()
         return runCatching { client.findAutocompletePredictions(request).await() }
             .getOrNull()
             ?.autocompletePredictions
-            ?.map { PlacePrediction(it.placeId, it.getPrimaryText(null).toString(), it.getSecondaryText(null).toString()) }
+            ?.map { PlacePrediction(it.placeId, it.getPrimaryText(null).toString(), it.getSecondaryText(null).toString(), it.distanceMeters) }
             ?: emptyList()
     }
 
@@ -80,6 +83,8 @@ class GooglePlacesRepository @Inject constructor(@param:ApplicationContext priva
         const val SEARCH_RADIUS_METERS = 20_000.0
     }
 }
+
+private fun Coordinate.toLatLng(): LatLng = LatLng(latitude, longitude)
 
 @Module
 @InstallIn(SingletonComponent::class)

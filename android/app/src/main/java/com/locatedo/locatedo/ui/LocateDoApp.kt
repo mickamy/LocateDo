@@ -333,6 +333,7 @@ private fun Tabs(
                         PlaceSearchScreen(
                             viewModel = placeEditor,
                             onChooseOnMap = { backStack.add(PlacePickKey) },
+                            onPredictionFetched = { backStack.add(PlacePickKey) },
                             onLocationChosen = { backStack.add(PlaceEditorKey) },
                             onBack = { backStack.removeLastOrNull() },
                         )

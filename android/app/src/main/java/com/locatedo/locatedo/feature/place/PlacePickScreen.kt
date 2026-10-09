@@ -6,12 +6,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,16 +31,17 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 private const val PICK_ZOOM = 16f
-private val pinSize = 48.dp
 
-// Google Maps' "drop a pin": the pin stays at the center and the map moves underneath it.
+// Like the iOS picker: tap the map or a store on it to drop the pin there.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacePickScreen(
@@ -53,7 +51,8 @@ fun PlacePickScreen(
 ) {
     TrackScreen(AnalyticsScreen.PLACE_PICKER)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val initial = uiState.draft.coordinate
+    val preview = uiState.pickPreview
+    val initial = preview.coordinate ?: uiState.draft.coordinate
     val cameraPositionState = rememberCameraPositionState {
         if (initial != null) {
             position = CameraPosition.fromLatLngZoom(initial.toLatLng(), PICK_ZOOM)
@@ -65,12 +64,8 @@ fun PlacePickScreen(
             viewModel.lastKnownCoordinate()?.let { coordinate ->
                 cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(coordinate.toLatLng(), PICK_ZOOM))
             }
-        }
-    }
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            val target = cameraPositionState.position.target
-            viewModel.previewPick(Coordinate(target.latitude, target.longitude))
+        } else if (preview.coordinate == null) {
+            viewModel.previewPick(initial)
         }
     }
     LaunchedEffect(Unit) {
@@ -98,23 +93,22 @@ fun PlacePickScreen(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false),
-            )
-            Icon(
-                Icons.Filled.Place,
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(pinSize)
-                    .offset(y = -pinSize / 2),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            PickCard(
-                preview = uiState.pickPreview,
-                onConfirm = viewModel::confirmPick,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-            )
+                onMapClick = { latLng -> viewModel.previewPick(Coordinate(latLng.latitude, latLng.longitude)) },
+                onPOIClick = { poi -> viewModel.previewPick(Coordinate(poi.latLng.latitude, poi.latLng.longitude), name = poi.name) },
+            ) {
+                preview.coordinate?.let { coordinate ->
+                    Marker(state = rememberUpdatedMarkerState(position = coordinate.toLatLng()))
+                }
+            }
+            if (preview.coordinate != null) {
+                PickCard(
+                    preview = preview,
+                    onConfirm = viewModel::confirmPick,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
+                )
+            }
         }
     }
 }
