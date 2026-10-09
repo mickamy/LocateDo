@@ -5,7 +5,10 @@ import Observation
 final class AppPreferences {
     private enum Key {
         static let completedOnboarding = "completedOnboarding"
-        static let promptedAlwaysLocation = "promptedAlwaysLocation"
+        static let reminderSetupShownAt = "reminderSetupShownAt"
+        static let reminderSetupShownCount = "reminderSetupShownCount"
+        static let reminderSetupNever = "reminderSetupNever"
+        static let requestedAlwaysLocation = "requestedAlwaysLocation"
         static let defaultRadiusMeters = "defaultRadiusMeters"
         static let pendingSessionEndedNotice = "pendingSessionEndedNotice"
         static let pendingRemovedNotice = "pendingRemovedNotice"
@@ -21,8 +24,21 @@ final class AppPreferences {
         didSet { defaults.set(hasCompletedOnboarding, forKey: Key.completedOnboarding) }
     }
 
-    var hasPromptedAlwaysLocation: Bool {
-        didSet { defaults.set(hasPromptedAlwaysLocation, forKey: Key.promptedAlwaysLocation) }
+    var reminderSetupShownAt: Date? {
+        didSet { defaults.set(reminderSetupShownAt, forKey: Key.reminderSetupShownAt) }
+    }
+
+    var reminderSetupShownCount: Int {
+        didSet { defaults.set(reminderSetupShownCount, forKey: Key.reminderSetupShownCount) }
+    }
+
+    var reminderSetupNever: Bool {
+        didSet { defaults.set(reminderSetupNever, forKey: Key.reminderSetupNever) }
+    }
+
+    // iOS shows its "Always" prompt only once; after that the way there is Settings.
+    var hasRequestedAlwaysLocation: Bool {
+        didSet { defaults.set(hasRequestedAlwaysLocation, forKey: Key.requestedAlwaysLocation) }
     }
 
     var defaultRadiusMeters: Double {
@@ -56,7 +72,10 @@ final class AppPreferences {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.completedOnboarding)
-        hasPromptedAlwaysLocation = defaults.bool(forKey: Key.promptedAlwaysLocation)
+        reminderSetupShownAt = defaults.object(forKey: Key.reminderSetupShownAt) as? Date
+        reminderSetupShownCount = defaults.integer(forKey: Key.reminderSetupShownCount)
+        reminderSetupNever = defaults.bool(forKey: Key.reminderSetupNever)
+        hasRequestedAlwaysLocation = defaults.bool(forKey: Key.requestedAlwaysLocation)
         hasPendingSessionEndedNotice = defaults.bool(forKey: Key.pendingSessionEndedNotice)
         hasPendingRemovedNotice = defaults.bool(forKey: Key.pendingRemovedNotice)
         promotionsConsent = defaults.bool(forKey: Key.promotionsConsent)
@@ -69,7 +88,9 @@ final class AppPreferences {
 
     func reset() {
         hasCompletedOnboarding = false
-        hasPromptedAlwaysLocation = false
+        reminderSetupShownAt = nil
+        reminderSetupShownCount = 0
+        reminderSetupNever = false
         defaultRadiusMeters = Place.defaultRadiusMeters
     }
 }

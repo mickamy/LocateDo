@@ -53,6 +53,7 @@ nonisolated enum AnalyticsParameter: String {
     case kind
     case latencyS = "latency_s"
     case locationAuth = "location_auth"
+    case missing
     case promotionsConsent = "promotions_consent"
     case mode
     case notificationAuth = "notification_auth"
@@ -66,6 +67,7 @@ nonisolated enum AnalyticsParameter: String {
     case radiusM = "radius_m"
     case reason
     case result
+    case shownCount = "shown_count"
     case signedIn = "signed_in"
     case source
     case step
