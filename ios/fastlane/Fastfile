@@ -7,6 +7,7 @@ APP_IDENTIFIER = "com.locatedo.LocateDo"
 STAGING_APP_IDENTIFIER = "com.locatedo.LocateDo.stg"
 DEV_APP_IDENTIFIER = "com.locatedo.LocateDo.dev"
 NOTIFICATION_CONTENT_SUFFIX = ".NotificationContent"
+WATCH_SUFFIX = ".watchkitapp"
 PROJECT = "LocateDo.xcodeproj"
 # One build folder for every UI-test lane, so later runs and other languages only build what changed.
 UI_TEST_DERIVED_DATA = File.expand_path("../build/ui-tests/DerivedData", __dir__)
@@ -16,9 +17,9 @@ ARCHIVE_DERIVED_DATA = File.expand_path("../build/archive/DerivedData", __dir__)
 APP_PREVIEWS = File.expand_path("app_previews", __dir__)
 APP_PREVIEW_FILE = "IPHONE_67.mp4"
 
-# The app and its notification content extension, which is signed with its own profile.
+# The app, its notification content extension, and its Watch app, each signed with its own profile.
 def signed_identifiers(app_identifier)
-  [app_identifier, "#{app_identifier}#{NOTIFICATION_CONTENT_SUFFIX}"]
+  [app_identifier, "#{app_identifier}#{NOTIFICATION_CONTENT_SUFFIX}", "#{app_identifier}#{WATCH_SUFFIX}"]
 end
 
 def simulator_udid(device)
@@ -153,7 +154,7 @@ end
 
 platform :ios do
   # produce still wants an Apple ID login, so this talks to the API directly.
-  desc "Create the App IDs (the apps with push notifications, and their notification extensions) and point at the App Store Connect record"
+  desc "Create the App IDs (the apps with push notifications, their notification extensions, and their Watch apps) and point at the App Store Connect record"
   lane :bootstrap do
     api_key
     connect_api
@@ -163,16 +164,20 @@ platform :ios do
       STAGING_APP_IDENTIFIER => "LocateDo Staging",
       DEV_APP_IDENTIFIER => "LocateDo Dev"
     }.each do |identifier, name|
-      extension = "#{identifier}#{NOTIFICATION_CONTENT_SUFFIX}"
-      if Spaceship::ConnectAPI::BundleId.find(extension)
-        UI.message("#{extension} already exists")
-      else
-        Spaceship::ConnectAPI::BundleId.create(
-          name: "#{name} Notification Content",
-          platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
-          identifier: extension
-        )
-        UI.success("Created #{extension}")
+      {
+        "#{identifier}#{NOTIFICATION_CONTENT_SUFFIX}" => "#{name} Notification Content",
+        "#{identifier}#{WATCH_SUFFIX}" => "#{name} Watch"
+      }.each do |embedded, embedded_name|
+        if Spaceship::ConnectAPI::BundleId.find(embedded)
+          UI.message("#{embedded} already exists")
+        else
+          Spaceship::ConnectAPI::BundleId.create(
+            name: embedded_name,
+            platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
+            identifier: embedded
+          )
+          UI.success("Created #{embedded}")
+        end
       end
       bundle = Spaceship::ConnectAPI::BundleId.find(identifier) ||
         Spaceship::ConnectAPI::BundleId.create(
@@ -209,7 +214,7 @@ platform :ios do
       group_id = "group.#{identifier}"
       group = Spaceship::Portal.app_group.find(group_id) ||
         Spaceship::Portal.app_group.create!(group_id: group_id, name: "#{name} Group")
-      signed_identifiers(identifier).each do |bundle_identifier|
+      [identifier, "#{identifier}#{NOTIFICATION_CONTENT_SUFFIX}"].each do |bundle_identifier|
         app = Spaceship::Portal.app.find(bundle_identifier)
         UI.user_error!("No App ID #{bundle_identifier}; run bootstrap first") unless app
         app = app.update_service(Spaceship::Portal.app_service.app_group.on)

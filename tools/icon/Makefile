@@ -1,4 +1,5 @@
 ASSETS := ../../ios/LocateDo/Assets.xcassets
+WATCH_ASSETS := ../../ios/LocateDoWatch/Assets.xcassets
 ANDROID := ../../android/app/src
 PLAY := ../../android/fastlane/metadata/android
 PREVIEW_DIR := preview
@@ -10,6 +11,7 @@ generate:
 	swift render.swift $(ASSETS)/AppIcon.appiconset
 	swift render.swift $(ASSETS)/AppIcon-Dev.appiconset --variant Dev
 	swift render.swift $(ASSETS)/AppIcon-Stg.appiconset --variant Stg
+	swift render.swift $(WATCH_ASSETS)/AppIcon.appiconset --watch
 
 android:
 	swift render.swift $(ANDROID)/main/res --android
