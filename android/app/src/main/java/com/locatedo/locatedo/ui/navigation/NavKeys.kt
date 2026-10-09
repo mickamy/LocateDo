@@ -8,6 +8,9 @@ import kotlinx.serialization.Serializable
 data object HomeKey : NavKey
 
 @Serializable
+data object MapKey : NavKey
+
+@Serializable
 data object TodosKey : NavKey
 
 @Serializable

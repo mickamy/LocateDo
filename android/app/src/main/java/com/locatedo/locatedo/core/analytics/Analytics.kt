@@ -95,6 +95,7 @@ enum class AnalyticsScreen(val key: String) {
     CATEGORIES("categories"),
     CATEGORY_EDITOR("category_editor"),
     HOME("home"),
+    MAP("map"),
     ONBOARDING("onboarding"),
     PAYWALL("paywall"),
     PLACE_DETAIL("place_detail"),

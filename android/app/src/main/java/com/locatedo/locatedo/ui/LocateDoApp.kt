@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ import com.locatedo.locatedo.feature.account.AccountScreen
 import com.locatedo.locatedo.feature.appstatus.UpdateRequiredScreen
 import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
+import com.locatedo.locatedo.feature.map.MapScreen
 import com.locatedo.locatedo.feature.place.PlaceDetailScreen
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
@@ -68,6 +70,7 @@ import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
+import com.locatedo.locatedo.ui.navigation.MapKey
 import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
 import java.util.UUID
@@ -76,6 +79,7 @@ private data class Tab(val key: NavKey, val label: Int, val icon: ImageVector)
 
 private val tabs = listOf(
     Tab(HomeKey, R.string.tab_home, Icons.Filled.Home),
+    Tab(MapKey, R.string.tab_map, Icons.Filled.Map),
     Tab(TodosKey, R.string.tab_todos, Icons.Filled.Checklist),
     Tab(SettingsKey, R.string.tab_settings, Icons.Filled.Settings),
 )
@@ -264,6 +268,15 @@ private fun Tabs(
                                 analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
                                 backStack.add(SharingKey)
                             },
+                        )
+                    }
+                    entry<MapKey> {
+                        MapScreen(
+                            onAddPlace = {
+                                placeEditor.start(placeId = null)
+                                backStack.add(PlaceSearchKey)
+                            },
+                            onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                         )
                     }
                     entry<TodosKey> {
