@@ -201,7 +201,7 @@ struct LocalWritesTests {
         fixture.writes.add(milk)
         fixture.writes.add(bread)
 
-        fixture.writes.delete([milk, bread])
+        fixture.writes.delete([milk, bread], via: .swipe)
 
         #expect(try fixture.context.fetchCount(FetchDescriptor<Todo>()) == 0)
         let queue = try fixture.queue()
@@ -292,5 +292,87 @@ struct LocalWritesTests {
         var signedIn = true
         var queued = 0
         var isPro = false
+    }
+}
+
+extension LocalWritesTests {
+    @Test func editingATodoMovesItAndQueuesAPut() throws {
+        let fixture = try Fixture()
+        let store = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        let pharmacy = Place(name: "Pharmacy", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(store)
+        fixture.writes.add(pharmacy)
+        let todo = Todo(title: "Milk", place: store)
+        fixture.writes.add(todo)
+        let assignee = UUID()
+
+        fixture.writes.update(todo, title: "Sunscreen", place: pharmacy, assigneeID: assignee,
+                              now: Date(timeIntervalSince1970: 1_000))
+
+        #expect(todo.place?.id == pharmacy.id)
+        #expect(store.todos.isEmpty)
+        #expect(pharmacy.todos.map(\.id) == [todo.id])
+        #expect(todo.updatedAt == Date(timeIntervalSince1970: 1_000))
+        guard case .putTodo(let input) = try fixture.queue().last else {
+            Issue.record("Expected putTodo")
+            return
+        }
+        #expect(input.title == "Sunscreen")
+        #expect(input.placeID == ProtoInput.id(pharmacy.id))
+        #expect(input.assigneeID == ProtoInput.id(assignee))
+    }
+
+    @Test func undoingADeleteBringsBackTheSameTodo() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let todo = Todo(title: "Milk", place: place, now: Date(timeIntervalSince1970: 10))
+        fixture.writes.add(todo)
+        todo.assigneeID = UUID()
+        let id = todo.id
+        let assigneeID = todo.assigneeID
+
+        let deleted = fixture.writes.delete([todo], via: .menu)
+        fixture.writes.restore(deleted)
+
+        let restored = try #require(try fixture.context.fetch(FetchDescriptor<Todo>()).first)
+        #expect(restored.id == id)
+        #expect(restored.title == "Milk")
+        #expect(restored.place?.id == place.id)
+        #expect(restored.assigneeID == assigneeID)
+        #expect(restored.createdAt == Date(timeIntervalSince1970: 10))
+        #expect(!restored.isCompleted)
+        #expect(try fixture.queue().suffix(2).map(\.kind) == [.deleteTodo, .putTodo])
+    }
+
+    @Test func undoingADeleteKeepsItCompleted() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let todo = Todo(title: "Milk", place: place)
+        fixture.writes.add(todo)
+        fixture.writes.toggleCompletion(todo, now: Date(timeIntervalSince1970: 20))
+
+        fixture.writes.restore(fixture.writes.delete([todo], via: .swipe))
+
+        let restored = try #require(try fixture.context.fetch(FetchDescriptor<Todo>()).first)
+        #expect(restored.completedAt == Date(timeIntervalSince1970: 20))
+        #expect(try fixture.queue().suffix(3).map(\.kind) == [.deleteTodo, .putTodo, .setTodoCompletion])
+    }
+
+    @Test func undoingADeleteSkipsTodosWhosePlaceIsGone() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let todo = Todo(title: "Milk", place: place)
+        fixture.writes.add(todo)
+        let deleted = fixture.writes.delete([todo], via: .swipe)
+        fixture.writes.delete(place)
+        let queued = fixture.probe.queued
+
+        fixture.writes.restore(deleted)
+
+        #expect(try fixture.context.fetchCount(FetchDescriptor<Todo>()) == 0)
+        #expect(fixture.probe.queued == queued)
     }
 }

@@ -120,6 +120,6 @@ struct TodoListView: View {
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {
-        writes.delete(offsets.map { todos[$0] })
+        writes.delete(offsets.map { todos[$0] }, via: .swipe)
     }
 }

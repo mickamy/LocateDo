@@ -24,6 +24,8 @@ nonisolated enum AnalyticsEvent: String {
     case placeDeleted = "place_deleted"
     case todoAdded = "todo_added"
     case todoCompleted = "todo_completed"
+    case todoDeleted = "todo_deleted"
+    case todoDeleteUndone = "todo_delete_undone"
     case shareTapped = "share_tapped"
     case inviteAccepted = "invite_accepted"
     case paywallShown = "paywall_shown"
