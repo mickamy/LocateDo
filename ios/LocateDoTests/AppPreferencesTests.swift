@@ -15,7 +15,10 @@ struct AppPreferencesTests {
         let defaults = try makeDefaults()
         let preferences = AppPreferences(defaults: defaults)
         preferences.hasCompletedOnboarding = true
-        preferences.hasPromptedAlwaysLocation = true
+        preferences.reminderSetupShownAt = Date(timeIntervalSince1970: 1_800_000_000)
+        preferences.reminderSetupShownCount = 2
+        preferences.reminderSetupNever = true
+        preferences.hasRequestedAlwaysLocation = true
         preferences.defaultRadiusMeters = 250
         preferences.hasPendingSessionEndedNotice = true
         preferences.promotionsConsent = true
@@ -24,7 +27,10 @@ struct AppPreferencesTests {
 
         let reloaded = AppPreferences(defaults: defaults)
         #expect(reloaded.hasCompletedOnboarding)
-        #expect(reloaded.hasPromptedAlwaysLocation)
+        #expect(reloaded.reminderSetupShownAt == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(reloaded.reminderSetupShownCount == 2)
+        #expect(reloaded.reminderSetupNever)
+        #expect(reloaded.hasRequestedAlwaysLocation)
         #expect(reloaded.defaultRadiusMeters == 250)
         #expect(reloaded.hasPendingSessionEndedNotice)
         #expect(reloaded.promotionsConsent)

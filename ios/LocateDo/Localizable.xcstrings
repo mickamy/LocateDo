@@ -1457,13 +1457,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your location is never sent to our servers or to your family. Your family shares only the to-dos and who checked them off."
+            "value" : "Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、やることと、誰が完了したかだけです。"
+            "value" : "現在地は、私たちのサーバーにも、家族にも送りません。家族と共有するのは、登録した場所とやることのリストです。"
           }
         }
       }
@@ -2301,6 +2301,74 @@
         }
       }
     },
+    "place.picker.nearby_convenience" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convenience stores"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンビニ"
+          }
+        }
+      }
+    },
+    "place.picker.nearby_drugstore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drugstores"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドラッグストア"
+          }
+        }
+      }
+    },
+    "place.picker.nearby_grocery" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grocery stores"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スーパー"
+          }
+        }
+      }
+    },
+    "place.picker.nearby_hardware" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hardware stores"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホームセンター"
+          }
+        }
+      }
+    },
     "place.picker.search_placeholder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2450,6 +2518,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ちかメモからのお知らせを受け取りますか？"
+          }
+        }
+      }
+    },
+    "reminder_setup.allow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "許可する"
+          }
+        }
+      }
+    },
+    "reminder_setup.allowed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "許可済み"
+          }
+        }
+      }
+    },
+    "reminder_setup.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StopBy needs two settings to remind you when you arrive, even with the app closed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリを閉じている間も到着をお知らせするため、2 つの設定が必要です。"
+          }
+        }
+      }
+    },
+    "reminder_setup.later" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "あとで"
+          }
+        }
+      }
+    },
+    "reminder_setup.location" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location set to “Always”"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報を「常に許可」"
+          }
+        }
+      }
+    },
+    "reminder_setup.never" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don’t show again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今後表示しない"
+          }
+        }
+      }
+    },
+    "reminder_setup.notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知"
+          }
+        }
+      }
+    },
+    "reminder_setup.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To be reminded when you arrive"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "着いたらお知らせするには"
           }
         }
       }

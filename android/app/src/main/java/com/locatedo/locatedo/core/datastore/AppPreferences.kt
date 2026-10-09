@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -19,7 +20,9 @@ data class UserPreferences(
     val hasCompletedOnboarding: Boolean = false,
     val hasRequestedLocation: Boolean = false,
     val hasRequestedNotifications: Boolean = false,
-    val hasPromptedAlwaysLocation: Boolean = false,
+    val reminderSetupShownAt: Instant? = null,
+    val reminderSetupShownCount: Int = 0,
+    val reminderSetupNever: Boolean = false,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
     val hasPendingRemovedNotice: Boolean = false,
     val hasPendingSessionEndedNotice: Boolean = false,
@@ -53,7 +56,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val completedOnboarding = booleanPreferencesKey("completedOnboarding")
         val requestedLocation = booleanPreferencesKey("requestedLocation")
         val requestedNotifications = booleanPreferencesKey("requestedNotifications")
-        val promptedAlwaysLocation = booleanPreferencesKey("promptedAlwaysLocation")
+        val reminderSetupShownAt = longPreferencesKey("reminderSetupShownAt")
+        val reminderSetupShownCount = intPreferencesKey("reminderSetupShownCount")
+        val reminderSetupNever = booleanPreferencesKey("reminderSetupNever")
         val defaultRadiusMeters = doublePreferencesKey("defaultRadiusMeters")
         val registeredGeofences = stringPreferencesKey("registeredGeofences")
         val pendingRemovedNotice = booleanPreferencesKey("pendingRemovedNotice")
@@ -108,7 +113,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             hasCompletedOnboarding = preferences[Keys.completedOnboarding] ?: false,
             hasRequestedLocation = preferences[Keys.requestedLocation] ?: false,
             hasRequestedNotifications = preferences[Keys.requestedNotifications] ?: false,
-            hasPromptedAlwaysLocation = preferences[Keys.promptedAlwaysLocation] ?: false,
+            reminderSetupShownAt = preferences[Keys.reminderSetupShownAt]?.let(Instant::ofEpochMilli),
+            reminderSetupShownCount = preferences[Keys.reminderSetupShownCount] ?: 0,
+            reminderSetupNever = preferences[Keys.reminderSetupNever] ?: false,
             defaultRadiusMeters = if (radius != null && radius in Place.RADIUS_RANGE) {
                 radius
             } else {
@@ -131,8 +138,17 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         dataStore.edit { it[Keys.requestedNotifications] = requested }
     }
 
-    suspend fun setPromptedAlwaysLocation(prompted: Boolean) {
-        dataStore.edit { it[Keys.promptedAlwaysLocation] = prompted }
+    // Returns which showing this is, counting from 1.
+    suspend fun recordReminderSetupShown(at: Instant): Int {
+        val stored = dataStore.edit {
+            it[Keys.reminderSetupShownAt] = at.toEpochMilli()
+            it[Keys.reminderSetupShownCount] = (it[Keys.reminderSetupShownCount] ?: 0) + 1
+        }
+        return stored[Keys.reminderSetupShownCount] ?: 1
+    }
+
+    suspend fun setReminderSetupNever() {
+        dataStore.edit { it[Keys.reminderSetupNever] = true }
     }
 
     suspend fun setDefaultRadiusMeters(meters: Double) {
@@ -205,7 +221,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             it.remove(Keys.completedOnboarding)
             it.remove(Keys.requestedLocation)
             it.remove(Keys.requestedNotifications)
-            it.remove(Keys.promptedAlwaysLocation)
+            it.remove(Keys.reminderSetupShownAt)
+            it.remove(Keys.reminderSetupShownCount)
+            it.remove(Keys.reminderSetupNever)
             it.remove(Keys.defaultRadiusMeters)
         }
     }

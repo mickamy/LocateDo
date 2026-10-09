@@ -58,6 +58,7 @@ class PlaceEditorViewModelTest {
     private val search = FakePlacesRepository()
     private val geocoding = FakeGeocodingRepository()
     private val analytics = FakeAnalytics()
+    private val location = FakeLocationRepository()
     private val other = Category(id = uuidV7(now), builtin = BuiltinCategory.OTHER, icon = "mappin", color = "gray", sortOrder = 3, updatedAt = now)
     private val shopping = Category(id = uuidV7(now), builtin = BuiltinCategory.SHOPPING, icon = "cart", color = "green", sortOrder = 0, updatedAt = now)
     private val store = Coordinate(35.0, 139.0)
@@ -103,20 +104,78 @@ class PlaceEditorViewModelTest {
     }
 
     @Test
-    fun choosingAPredictionFillsTheDraft() = runTest(dispatcher) {
+    fun searchMeasuresDistancesFromTheCurrentLocation() = runTest(dispatcher) {
+        val here = Coordinate(35.5, 139.5)
+        location.coordinate = here
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+
+        viewModel.setQuery("sup")
+        advanceTimeBy(301)
+
+        assertEquals(listOf<Coordinate?>(here), search.origins)
+    }
+
+    @Test
+    fun choosingAPredictionShowsItOnTheMapFirst() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
         viewModel.start(placeId = null)
 
         viewModel.selectPrediction(search.predictions.single())
 
+        assertEquals(
+            PickPreview(coordinate = store, name = "Supermarket", address = "1 Main St", source = PlaceSource.SEARCH),
+            viewModel.uiState.value.pickPreview,
+        )
+        assertNull(viewModel.uiState.value.draft.coordinate)
+        assertEquals(listOf(PlaceEditorEvent.PredictionFetched), events)
+    }
+
+    @Test
+    fun confirmingAPredictionFillsTheDraft() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+
+        viewModel.confirmPick()
+
         val draft = viewModel.uiState.value.draft
         assertEquals(store, draft.coordinate)
         assertEquals("Supermarket", draft.name)
         assertEquals("1 Main St", draft.address)
         assertEquals(PlaceSource.SEARCH, draft.source)
-        assertEquals(listOf(PlaceEditorEvent.LocationChosen), events)
+        assertEquals(PlaceEditorEvent.LocationChosen, events.last())
         assertTrue(draft.canSave)
+    }
+
+    @Test
+    fun tappingTheMapAfterASearchPicksFromTheMap() = runTest(dispatcher) {
+        val moved = Coordinate(35.001, 139.001)
+        geocoding.result = GeocodedPlace(name = "Corner shop", address = "2 Side St")
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+
+        viewModel.previewPick(moved)
+        viewModel.confirmPick()
+
+        val draft = viewModel.uiState.value.draft
+        assertEquals(moved, draft.coordinate)
+        assertEquals("Corner shop", draft.name)
+        assertEquals(PlaceSource.MAP, draft.source)
+    }
+
+    @Test
+    fun pickingOnTheMapDropsAnEarlierSearchResult() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+
+        viewModel.pickOnMap()
+
+        assertEquals(PickPreview(), viewModel.uiState.value.pickPreview)
     }
 
     @Test
@@ -126,6 +185,7 @@ class PlaceEditorViewModelTest {
         viewModel.setName("Weekly groceries")
 
         viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
 
         assertEquals("Weekly groceries", viewModel.uiState.value.draft.name)
     }
@@ -136,6 +196,7 @@ class PlaceEditorViewModelTest {
         val events = events(viewModel)
         viewModel.start(placeId = null)
         viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
         viewModel.setName("  Store  ")
         viewModel.setRadius(200.0)
         viewModel.setCategory(shopping.id)
@@ -179,6 +240,7 @@ class PlaceEditorViewModelTest {
         places.limit = FreeLimit.PLACES
         viewModel.start(placeId = null)
         viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
 
         viewModel.save()
 
@@ -212,7 +274,6 @@ class PlaceEditorViewModelTest {
         viewModel.start(placeId = null)
 
         viewModel.previewPick(store)
-        advanceTimeBy(401)
         assertEquals("Corner shop", viewModel.uiState.value.pickPreview.name)
         viewModel.confirmPick()
 
@@ -224,16 +285,32 @@ class PlaceEditorViewModelTest {
     }
 
     @Test
+    fun aStoreTappedOnTheMapKeepsItsName() = runTest(dispatcher) {
+        geocoding.result = GeocodedPlace(name = "1-2 Main St", address = "1-2 Main St")
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+
+        viewModel.previewPick(store, name = "Bakery")
+        viewModel.confirmPick()
+
+        val draft = viewModel.uiState.value.draft
+        assertEquals("Bakery", draft.name)
+        assertEquals("1-2 Main St", draft.address)
+        assertEquals(PlaceSource.MAP, draft.source)
+    }
+
+    @Test
     fun aBlankNameCannotBeSaved() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
         viewModel.start(placeId = null)
         viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
         viewModel.setName("   ")
 
         viewModel.save()
 
-        assertNull(events.lastOrNull { it != PlaceEditorEvent.LocationChosen })
+        assertTrue(events.none { it is PlaceEditorEvent.Saved })
         assertTrue(places.added.isEmpty())
     }
 
@@ -243,7 +320,7 @@ class PlaceEditorViewModelTest {
             categoryRepository = categories,
             placesRepository = search,
             geocodingRepository = geocoding,
-            locationRepository = FakeLocationRepository(),
+            locationRepository = location,
             preferences = preferences,
             paywallRequests = paywalls,
             analytics = analytics,

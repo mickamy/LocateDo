@@ -10,6 +10,8 @@ struct PlacePickerMapView: View {
 
     @State private var position: MapCameraPosition
     @State private var query = ""
+    @State private var isSearching = false
+    @State private var completer = PlaceSearchCompleter()
     @State private var results: [MKMapItem] = []
     @State private var selection: Selection?
     @State private var confirmed: Selection?
@@ -75,8 +77,33 @@ struct PlacePickerMapView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .top) {
+                nearbyKinds
+            }
             .trackScreen(.placePicker)
-            .searchable(text: $query, prompt: Text(.placePickerSearchPlaceholder))
+            .searchable(text: $query, isPresented: $isSearching, prompt: Text(.placePickerSearchPlaceholder))
+            .searchSuggestions {
+                ForEach(completer.completions, id: \.self) { completion in
+                    Button {
+                        Task {
+                            await pick(completion)
+                        }
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(completion.title)
+                                .foregroundStyle(.primary)
+                            if !completion.subtitle.isEmpty {
+                                Text(completion.subtitle)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .onChange(of: query) {
+                completer.update(query, near: searchCenter)
+            }
             .onSubmit(of: .search) {
                 Task {
                     await search()
@@ -122,11 +149,19 @@ struct PlacePickerMapView: View {
             Button {
                 select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress)
             } label: {
-                VStack(alignment: .leading) {
-                    Text(item.name ?? "")
-                        .foregroundStyle(.primary)
-                    if let address = item.address?.shortAddress {
-                        Text(address)
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(item.name ?? "")
+                            .foregroundStyle(.primary)
+                        if let address = item.address?.shortAddress {
+                            Text(address)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if let meters = distance(to: item) {
+                        Text(DistanceFormatting.string(meters: meters))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -221,19 +256,97 @@ struct PlacePickerMapView: View {
         dismiss()
     }
 
+    private static func region(around coordinate: CLLocationCoordinate2D) -> MKCoordinateRegion {
+        MKCoordinateRegion(center: coordinate, latitudinalMeters: 600, longitudinalMeters: 600)
+    }
+}
+
+extension PlacePickerMapView {
+    private var searchCenter: CLLocationCoordinate2D? {
+        selection?.coordinate ?? locationProvider.location?.coordinate
+    }
+
+    // Stores first, as the suggestions are; addresses only when no store matches.
     private func search() async {
+        var items = await mapItems(for: query, types: .pointOfInterest)
+        if items.isEmpty {
+            items = await mapItems(for: query, types: [.pointOfInterest, .address])
+        }
+        show(items)
+    }
+
+    private func mapItems(for query: String, types: MKLocalSearch.ResultType) async -> [MKMapItem] {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
-        if let center = selection?.coordinate ?? locationProvider.location?.coordinate {
+        request.resultTypes = types
+        if let center = searchCenter {
             request.region = MKCoordinateRegion(center: center, latitudinalMeters: 20_000, longitudinalMeters: 20_000)
         }
         let response = try? await MKLocalSearch(request: request).start()
-        results = response?.mapItems ?? []
+        return response?.mapItems ?? []
+    }
+
+    // A suggestion names one place, or a kind of place ("coffee") that has many.
+    private func pick(_ completion: MKLocalSearchCompletion) async {
+        let response = try? await MKLocalSearch(request: MKLocalSearch.Request(completion: completion)).start()
+        let items = response?.mapItems ?? []
+        isSearching = false
+        if items.count == 1, let item = items.first {
+            results = []
+            select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress)
+            return
+        }
+        show(items)
+    }
+
+    private func show(_ items: [MKMapItem]) {
+        results = items.sorted { (distance(to: $0) ?? .infinity) < (distance(to: $1) ?? .infinity) }
         selection = nil
         detent = Self.listDetent
     }
 
-    private static func region(around coordinate: CLLocationCoordinate2D) -> MKCoordinateRegion {
-        MKCoordinateRegion(center: coordinate, latitudinalMeters: 600, longitudinalMeters: 600)
+    private func distance(to item: MKMapItem) -> CLLocationDistance? {
+        locationProvider.location?.distance(from: item.location)
+    }
+
+    // The kinds of store people add most, one tap from the stores of that kind around them.
+    private var nearbyKinds: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                nearbyKind(.placePickerNearbyGrocery, systemImage: "cart")
+                nearbyKind(.placePickerNearbyDrugstore, systemImage: "cross.case")
+                nearbyKind(.placePickerNearbyConvenience, systemImage: "storefront")
+                nearbyKind(.placePickerNearbyHardware, systemImage: "hammer")
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func nearbyKind(_ name: LocalizedStringResource, systemImage: String) -> some View {
+        Button {
+            Task {
+                await searchNearby(String(localized: name))
+            }
+        } label: {
+            Label(name, systemImage: systemImage)
+                .font(.subheadline)
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .background(.thickMaterial, in: Capsule())
+    }
+
+    // Close by, so the nearest stores of the kind come first rather than the best-known ones in the city.
+    private func searchNearby(_ kind: String) async {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = kind
+        request.resultTypes = .pointOfInterest
+        if let center = searchCenter {
+            request.region = MKCoordinateRegion(center: center, latitudinalMeters: 5_000, longitudinalMeters: 5_000)
+        }
+        let response = try? await MKLocalSearch(request: request).start()
+        isSearching = false
+        show(response?.mapItems ?? [])
     }
 }

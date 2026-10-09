@@ -1,4 +1,6 @@
--- Whether the Home banner, the Settings buttons, and the "Always" sheet get permissions fixed, by month.
+-- Whether the Home banner, the Settings buttons, and the reminder setup sheet get permissions fixed, by month.
+-- The sheet asks for whatever was missing when it was shown (`missing`), so it counts once per permission it asked for;
+-- events from before it asked for notifications have no `missing` and count as location.
 -- A nudge counts as fixed when, within 24 hours, location reaches "Always" or notifications become allowed.
 -- users_without_always: users whose daily_state that month showed places but no "Always", the banner's audience.
 WITH nudges AS (
@@ -11,8 +13,16 @@ WITH nudges AS (
       WHEN event_name = 'permission_action_tapped' THEN CONCAT('settings_', kind, '_', action)
       ELSE CONCAT('always_prompt_', result)
     END AS nudge,
-    IF(event_name = 'always_prompt_answered' OR STARTS_WITH(kind, 'location'), 'location', 'notifications') AS permission
-  FROM `__PROJECT__.__DATASET__.events`
+    permission
+  FROM `__PROJECT__.__DATASET__.events`,
+    UNNEST(
+      CASE
+        WHEN event_name != 'always_prompt_answered' THEN [IF(STARTS_WITH(kind, 'location'), 'location', 'notifications')]
+        WHEN missing = 'notifications' THEN ['notifications']
+        WHEN missing = 'both' THEN ['location', 'notifications']
+        ELSE ['location']
+      END
+    ) AS permission
   WHERE event_name IN ('permission_banner_tapped', 'permission_action_tapped', 'always_prompt_answered')
 ),
 fixes AS (
@@ -45,6 +55,7 @@ audience AS (
 SELECT
   j.month,
   j.nudge,
+  j.permission,
   COUNT(*) AS nudges,
   COUNT(DISTINCT j.user_pseudo_id) AS users,
   COUNT(DISTINCT IF(j.fixed, j.user_pseudo_id, NULL)) AS fixed_users,
@@ -52,4 +63,4 @@ SELECT
   a.users_without_always
 FROM judged AS j
 LEFT JOIN audience AS a USING (month)
-GROUP BY j.month, j.nudge, a.users_without_always
+GROUP BY j.month, j.nudge, j.permission, a.users_without_always

@@ -112,7 +112,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
         preferences.setCompletedOnboarding(true)
         preferences.setRequestedLocation(true)
         preferences.setRequestedNotifications(true)
-        preferences.setPromptedAlwaysLocation(true)
+        preferences.setReminderSetupNever()
         preferences.setShownPromotionsPrompt()
     }
 

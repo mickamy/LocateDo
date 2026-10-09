@@ -45,8 +45,8 @@ import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
 import com.locatedo.locatedo.feature.map.MapScreen
 import com.locatedo.locatedo.feature.place.PlaceDetailScreen
-import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
+import com.locatedo.locatedo.feature.onboarding.ReminderSetupSheet
 import com.locatedo.locatedo.feature.paywall.PaywallScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
@@ -93,6 +93,7 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
     val pendingInvite by appViewModel.pendingInvite.collectAsStateWithLifecycle()
     val pendingPaywall by appViewModel.pendingPaywall.collectAsStateWithLifecycle()
     val pendingTodos by appViewModel.pendingTodos.collectAsStateWithLifecycle()
+    val permissions by appViewModel.currentPermissions.collectAsStateWithLifecycle()
     val appStatus = LocalAppStatus.current
 
     when {
@@ -113,10 +114,13 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
             onDismissMaintenanceBanner = appViewModel::dismissMaintenanceBanner,
         )
     }
-    if (appState.isExplainingAlwaysLocation) {
-        AlwaysLocationSheet(
-            onAnswer = appViewModel::alwaysLocationAnswered,
-            onDismiss = appViewModel::dismissAlwaysLocation,
+    val currentPermissions = permissions
+    if (appState.reminderSetup != null && currentPermissions != null) {
+        ReminderSetupSheet(
+            permissions = currentPermissions,
+            onNotificationsRequested = appViewModel::notificationsRequested,
+            onRefresh = appViewModel::refreshPermissions,
+            onClose = appViewModel::closeReminderSetup,
         )
     }
     if (appState.isAskingPromotions) {
@@ -333,6 +337,7 @@ private fun Tabs(
                         PlaceSearchScreen(
                             viewModel = placeEditor,
                             onChooseOnMap = { backStack.add(PlacePickKey) },
+                            onPredictionFetched = { backStack.add(PlacePickKey) },
                             onLocationChosen = { backStack.add(PlaceEditorKey) },
                             onBack = { backStack.removeLastOrNull() },
                         )

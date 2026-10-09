@@ -106,7 +106,7 @@
     <string name="onboarding_notifications_title">Get notified when you arrive</string>
     <string name="onboarding_permissions">StopBy asks for your location to do that.</string>
     <string name="onboarding_privacy_no_ads">No ads, no tracking.</string>
-    <string name="onboarding_privacy_not_sent">Your location is never sent to our servers or to your family. Your family shares only the to-dos and who checked them off.</string>
+    <string name="onboarding_privacy_not_sent">Your location is never sent to our servers or to your family. Your family shares the places and to-dos you save.</string>
     <string name="onboarding_privacy_on_device">Arrivals are detected on your phone, and nowhere else.</string>
     <string name="onboarding_privacy_title">Where you are is yours alone</string>
     <string name="onboarding_sample_place">Grocery store</string>
@@ -165,6 +165,14 @@
     <string name="promotions_prompt_decline">Not Now</string>
     <string name="promotions_prompt_message">We’ll occasionally let you know about new features, updates, and offers. You can turn this off anytime in Settings.</string>
     <string name="promotions_prompt_title">Want news from StopBy?</string>
+    <string name="reminder_setup_allow">Allow</string>
+    <string name="reminder_setup_allowed">Allowed</string>
+    <string name="reminder_setup_description">StopBy needs two settings to remind you when you arrive, even with the app closed.</string>
+    <string name="reminder_setup_later">Not now</string>
+    <string name="reminder_setup_location">Location set to “Always”</string>
+    <string name="reminder_setup_never">Don’t show again</string>
+    <string name="reminder_setup_notifications">Notifications</string>
+    <string name="reminder_setup_title">To be reminded when you arrive</string>
     <string name="removed_android_message">You were removed from the shared household, so the data on this phone was removed and you’re starting over on your own.</string>
     <string name="removed_message">You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own.</string>
     <string name="removed_title">Removed from Sharing</string>

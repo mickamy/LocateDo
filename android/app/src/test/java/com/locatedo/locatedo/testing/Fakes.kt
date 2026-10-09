@@ -345,9 +345,11 @@ class FakePlacesRepository : PlacesRepository {
     var predictions: List<PlacePrediction> = emptyList()
     val candidates = mutableMapOf<String, PlaceCandidate>()
     val queries = mutableListOf<String>()
+    val origins = mutableListOf<Coordinate?>()
 
-    override suspend fun autocomplete(query: String, near: Coordinate?): List<PlacePrediction> {
+    override suspend fun autocomplete(query: String, near: Coordinate?, origin: Coordinate?): List<PlacePrediction> {
         queries += query
+        origins += origin
         return predictions
     }
 

@@ -10,7 +10,7 @@ struct NearbyView: View {
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @State private var isAddingPlace = false
     @State private var didSavePlace = false
-    @State private var isExplainingAlwaysLocation = false
+    @State private var reminderSetup: ReminderSetupRequest?
     @State private var path = NavigationPath()
 
     private var nearbyPlaces: [NearbyPlace] {
@@ -45,13 +45,13 @@ struct NearbyView: View {
                     }
                 }
             }
-            .sheet(isPresented: $isAddingPlace, onDismiss: offerAlwaysLocationIfNeeded) {
+            .sheet(isPresented: $isAddingPlace, onDismiss: offerReminderSetupIfNeeded) {
                 PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters) {
                     didSavePlace = true
                 }
             }
-            .sheet(isPresented: $isExplainingAlwaysLocation) {
-                AlwaysLocationPromptView()
+            .sheet(item: $reminderSetup) { request in
+                ReminderSetupView(shownCount: request.shownCount, missing: request.missing)
             }
             .navigationDestination(for: Place.self) { place in
                 PlaceDetailView(place: place)
@@ -80,17 +80,26 @@ struct NearbyView: View {
         isAddingPlace = true
     }
 
-    private func offerAlwaysLocationIfNeeded() {
+    private func offerReminderSetupIfNeeded() {
         guard didSavePlace else {
             return
         }
         didSavePlace = false
-        guard !preferences.hasPromptedAlwaysLocation,
-              locationProvider.authorizationStatus == .authorizedWhenInUse else {
-            return
+        Task {
+            await notifier.refreshAuthorizationStatus()
+            let location = locationProvider.authorizationStatus
+            let notifications = notifier.authorizationStatus
+            let now = Date.now
+            guard ReminderSetup.isDue(location: location, notifications: notifications,
+                                      shownAt: preferences.reminderSetupShownAt,
+                                      never: preferences.reminderSetupNever, now: now),
+                  let missing = ReminderSetup.missing(location: location, notifications: notifications) else {
+                return
+            }
+            preferences.reminderSetupShownAt = now
+            preferences.reminderSetupShownCount += 1
+            reminderSetup = ReminderSetupRequest(shownCount: preferences.reminderSetupShownCount, missing: missing)
         }
-        preferences.hasPromptedAlwaysLocation = true
-        isExplainingAlwaysLocation = true
     }
 
     private func openPendingPlace() {
@@ -161,4 +170,10 @@ struct NearbyView: View {
             }
         }
     }
+}
+
+private struct ReminderSetupRequest: Identifiable {
+    let id = UUID()
+    let shownCount: Int
+    let missing: ReminderSetup.Missing
 }

@@ -70,7 +70,7 @@ fun PlaceEditorScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is PlaceEditorEvent.Saved -> onSaved(event.isNew)
-                PlaceEditorEvent.LocationChosen -> Unit
+                PlaceEditorEvent.PredictionFetched, PlaceEditorEvent.LocationChosen -> Unit
             }
         }
     }
@@ -124,7 +124,12 @@ fun PlaceEditorScreen(
             draft.address?.let { address ->
                 Text(text = address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            TextButton(onClick = onChooseOnMap) {
+            TextButton(
+                onClick = {
+                    viewModel.pickOnMap()
+                    onChooseOnMap()
+                },
+            ) {
                 Icon(Icons.Filled.Map, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.place_editor_choose_on_map))
