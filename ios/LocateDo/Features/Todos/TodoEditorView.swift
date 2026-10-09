@@ -3,6 +3,7 @@ import SwiftUI
 
 struct TodoEditorView: View {
     @Environment(LocalWrites.self) private var writes
+    @Environment(TodoUndo.self) private var undo
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
@@ -12,9 +13,19 @@ struct TodoEditorView: View {
     @State private var assigneeID: UUID?
     @FocusState private var isTitleFocused: Bool
     @State private var paywall: PaywallTrigger?
+    @State private var deletesOnDisappear = false
+    private let editing: Todo?
 
     init(place: Place? = nil) {
+        editing = nil
         _place = State(initialValue: place)
+    }
+
+    init(editing todo: Todo) {
+        editing = todo
+        _title = State(initialValue: todo.title)
+        _place = State(initialValue: todo.place)
+        _assigneeID = State(initialValue: todo.assigneeID)
     }
 
     private var canSave: Bool {
@@ -45,9 +56,17 @@ struct TodoEditorView: View {
                         AssigneePicker(memberships: memberships, selection: $assigneeID)
                     }
                 }
+                if editing != nil {
+                    Section {
+                        Button(.commonDelete, role: .destructive) {
+                            deletesOnDisappear = true
+                            dismiss()
+                        }
+                    }
+                }
             }
-            .trackScreen(.todoEditor)
-            .navigationTitle(Text(.todoEditorTitle))
+            .trackScreen(.todoEditor, parameters: [.mode: editing == nil ? "add" : "edit"])
+            .navigationTitle(Text(editing == nil ? .todoEditorTitle : .todoEditorEditTitle))
             .sheet(item: $paywall) { trigger in
                 PaywallView(trigger: trigger)
             }
@@ -69,7 +88,15 @@ struct TodoEditorView: View {
                 if place == nil {
                     place = places.first
                 }
-                isTitleFocused = true
+                if editing == nil {
+                    isTitleFocused = true
+                }
+            }
+            // Deleted only once the sheet is gone, so nothing on screen reads the deleted to-do.
+            .onDisappear {
+                if deletesOnDisappear {
+                    delete()
+                }
             }
         }
     }
@@ -84,12 +111,26 @@ struct TodoEditorView: View {
         guard let place else {
             return
         }
-        let todo = Todo(title: title.trimmingCharacters(in: .whitespaces), place: place)
+        let title = title.trimmingCharacters(in: .whitespaces)
+        if let editing {
+            writes.update(editing, title: title, place: place, assigneeID: assigneeID)
+            dismiss()
+            return
+        }
+        let todo = Todo(title: title, place: place)
         todo.assigneeID = assigneeID
         if let limit = writes.add(todo) {
             paywall = limit.trigger
             return
         }
+        dismiss()
+    }
+
+    private func delete() {
+        guard let editing else {
+            return
+        }
+        undo.offer(writes.delete([editing], via: .editor))
         dismiss()
     }
 }

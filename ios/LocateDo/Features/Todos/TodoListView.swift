@@ -3,6 +3,7 @@ import SwiftUI
 
 struct TodoListView: View {
     @Environment(LocalWrites.self) private var writes
+    @Environment(TodoUndo.self) private var undo
     @Environment(AppRouter.self) private var router
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
@@ -120,6 +121,6 @@ struct TodoListView: View {
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {
-        writes.delete(offsets.map { todos[$0] }, via: .swipe)
+        undo.offer(writes.delete(offsets.map { todos[$0] }, via: .swipe))
     }
 }

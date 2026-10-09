@@ -131,6 +131,11 @@ struct RootView: View {
                 SettingsView()
             }
         }
+        // Above the tab bar, which the overlay does not leave room for by itself.
+        .overlay(alignment: .bottom) {
+            TodoUndoBanner()
+                .padding(.bottom, 72)
+        }
         .task(id: scenePhase) {
             guard scenePhase == .active else {
                 return

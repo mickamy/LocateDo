@@ -24,6 +24,7 @@ struct LocateDoApp: App {
     private let households: HouseholdManager
     private let appStatus: AppStatusStore
     private let watch = WatchBridge()
+    private let undo = TodoUndo()
     private let entitlements = LocateDoApp.makeEntitlements()
 
     init() {
@@ -188,6 +189,7 @@ struct LocateDoApp: App {
         .environment(writes)
         .environment(appStatus)
         .environment(watch)
+        .environment(undo)
     }
 
     private func connectAccount() {
