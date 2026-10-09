@@ -77,6 +77,9 @@ struct PlacePickerMapView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .top) {
+                nearbyKinds
+            }
             .trackScreen(.placePicker)
             .searchable(text: $query, isPresented: $isSearching, prompt: Text(.placePickerSearchPlaceholder))
             .searchSuggestions {
@@ -304,5 +307,46 @@ extension PlacePickerMapView {
 
     private func distance(to item: MKMapItem) -> CLLocationDistance? {
         locationProvider.location?.distance(from: item.location)
+    }
+
+    // The kinds of store people add most, one tap from the stores of that kind around them.
+    private var nearbyKinds: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                nearbyKind(.placePickerNearbyGrocery, systemImage: "cart")
+                nearbyKind(.placePickerNearbyDrugstore, systemImage: "cross.case")
+                nearbyKind(.placePickerNearbyConvenience, systemImage: "storefront")
+                nearbyKind(.placePickerNearbyHardware, systemImage: "hammer")
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func nearbyKind(_ name: LocalizedStringResource, systemImage: String) -> some View {
+        Button {
+            Task {
+                await searchNearby(String(localized: name))
+            }
+        } label: {
+            Label(name, systemImage: systemImage)
+                .font(.subheadline)
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .background(.thickMaterial, in: Capsule())
+    }
+
+    // Close by, so the nearest stores of the kind come first rather than the best-known ones in the city.
+    private func searchNearby(_ kind: String) async {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = kind
+        request.resultTypes = .pointOfInterest
+        if let center = searchCenter {
+            request.region = MKCoordinateRegion(center: center, latitudinalMeters: 5_000, longitudinalMeters: 5_000)
+        }
+        let response = try? await MKLocalSearch(request: request).start()
+        isSearching = false
+        show(response?.mapItems ?? [])
     }
 }
