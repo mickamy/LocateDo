@@ -25,6 +25,12 @@ struct WatchSnapshotTests {
         #expect(WatchSnapshot(applicationContext: [WatchSnapshot.contextKey: Data("{}".utf8)]) == nil)
     }
 
+    @Test func tellsARequestFromACheckOff() {
+        #expect(WatchSnapshot.isRequest(WatchSnapshot.request))
+        #expect(!WatchSnapshot.isRequest(WatchCheckOff(todoIDs: [UUID()], source: .app).message))
+        #expect(!WatchSnapshot.isRequest([:]))
+    }
+
     @Test func keepsPlacesInOrderWithTheirNotifiableOpenTodos() throws {
         let context = ModelContext(try AppModelContainer.make(inMemory: true))
         let me = UUID()

@@ -29,8 +29,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
+            skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3BB4109B8DA9C89677EF665F"
@@ -57,7 +56,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3B9C79092F9AAAA513964E64"
             BuildableName = "LocateDoWatch.app"
-            BlueprintName = "LocateDoWatch"
             ReferencedContainer = "container:LocateDo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -74,7 +72,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3B9C79092F9AAAA513964E64"
             BuildableName = "LocateDoWatch.app"
-            BlueprintName = "LocateDoWatch"
             ReferencedContainer = "container:LocateDo.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
