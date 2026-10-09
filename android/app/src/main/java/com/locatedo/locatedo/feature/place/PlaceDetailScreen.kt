@@ -184,8 +184,12 @@ fun PlaceDetailScreen(
 private fun AreaMap(detail: PlaceDetail) {
     val place = detail.place
     val center = LatLng(place.latitude, place.longitude)
-    val cameraPositionState = rememberCameraPositionState(key = "${place.id}-${place.radiusMeters}") {
+    val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(center, zoomForRadius(place.radiusMeters))
+    }
+    // An edit to the place moves the map along with it.
+    LaunchedEffect(center, place.radiusMeters) {
+        cameraPositionState.position = CameraPosition.fromLatLngZoom(center, zoomForRadius(place.radiusMeters))
     }
     Card(
         modifier = Modifier
