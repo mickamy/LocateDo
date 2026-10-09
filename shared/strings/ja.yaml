@@ -205,6 +205,10 @@ place:
     use_current_location: "現在地を使う"
     use_this_location: "この位置にする"
     selected: "選択した位置"
+    nearby_grocery: "スーパー"
+    nearby_drugstore: "ドラッグストア"
+    nearby_convenience: "コンビニ"
+    nearby_hardware: "ホームセンター"
   detail:
     todos_label: "この場所でやること"
     no_todos: "やることはまだありません"

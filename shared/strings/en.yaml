@@ -208,6 +208,10 @@ place:
     use_current_location: "Use current location"
     use_this_location: "Use this location"
     selected: "Selected location"
+    nearby_grocery: "Grocery stores"
+    nearby_drugstore: "Drugstores"
+    nearby_convenience: "Convenience stores"
+    nearby_hardware: "Hardware stores"
   detail:
     todos_label: "To-dos at this place"
     no_todos: "No to-dos yet"

@@ -69,3 +69,11 @@ notification.check_off_checked:
 settings.account.google_sign_in:
   comment: "Label on the Sign in with Google button, as Google words it in each language."
   platforms: [ios]
+place.picker.nearby_grocery:
+  platforms: [ios]
+place.picker.nearby_drugstore:
+  platforms: [ios]
+place.picker.nearby_convenience:
+  platforms: [ios]
+place.picker.nearby_hardware:
+  platforms: [ios]
