@@ -2409,13 +2409,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your location never leaves this iPhone, and we don’t ask for your email."
+            "value" : "Your location is never sent to our servers or to your family, and we don’t ask for your email."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "現在地がこの iPhone の外に出ることはありません。メールアドレスもいただきません。"
+            "value" : "現在地を私たちのサーバーにも家族にも送りません。メールアドレスもいただきません。"
           }
         }
       }
@@ -2432,7 +2432,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "位置情報は端末の中だけ"
+            "value" : "居場所は、あなただけのもの"
           }
         }
       }

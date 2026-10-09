@@ -204,7 +204,7 @@ private fun SignedOut(state: AccountScreenState, modifier: Modifier, viewModel: 
             BenefitRow(
                 icon = Icons.Filled.Lock,
                 title = R.string.settings_account_benefits_privacy_title,
-                message = R.string.settings_account_benefits_android_privacy_message,
+                message = R.string.settings_account_benefits_privacy_message,
             )
         }
         if (state.failure == AccountFailure.SIGN_IN) {

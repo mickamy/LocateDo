@@ -31,8 +31,6 @@ settings.account.android_sign_in:
 settings.account.android_apple_sign_in:
   comment: "Apple's own label for the button; keep it as Apple words it in each language."
   platforms: [android]
-settings.account.benefits.android_privacy_message:
-  platforms: [android]
 settings.account.android_sign_out_confirm_message:
   platforms: [android]
 settings.account.android_sign_out_unsynced_message:

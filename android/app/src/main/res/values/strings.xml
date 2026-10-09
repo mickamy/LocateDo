@@ -171,8 +171,7 @@
     <string name="settings_account_android_sign_in">Sign in with Google</string>
     <string name="settings_account_android_sign_out_confirm_message">Places and to-dos on this phone will be removed. They come back when you sign in again.</string>
     <string name="settings_account_android_sign_out_unsynced_message">Some changes haven’t been synced yet and will be lost. Places and to-dos on this phone will be removed.</string>
-    <string name="settings_account_benefits_android_privacy_message">Your location never leaves this phone, and we don’t ask for your email.</string>
-    <string name="settings_account_benefits_privacy_message">Your location never leaves this iPhone, and we don’t ask for your email.</string>
+    <string name="settings_account_benefits_privacy_message">Your location is never sent to our servers or to your family, and we don’t ask for your email.</string>
     <string name="settings_account_benefits_privacy_title">Your location stays private</string>
     <string name="settings_account_benefits_share_message">Add places and to-dos together and get reminded when you arrive.</string>
     <string name="settings_account_benefits_share_title">Share with family</string>
