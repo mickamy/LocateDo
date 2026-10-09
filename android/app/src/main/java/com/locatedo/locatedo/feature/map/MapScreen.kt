@@ -70,9 +70,17 @@ fun MapScreen(
             viewModel.locateMe()
         }
     }
+    // The first fix jumps there, so the tab never opens on the whole world; the button animates.
     LaunchedEffect(Unit) {
+        var hasCentered = false
         viewModel.cameraTargets.collect { target ->
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), PLACE_ZOOM))
+            val update = CameraUpdateFactory.newLatLngZoom(LatLng(target.latitude, target.longitude), PLACE_ZOOM)
+            if (hasCentered) {
+                cameraPositionState.animate(update)
+            } else {
+                cameraPositionState.move(update)
+                hasCentered = true
+            }
         }
     }
 
