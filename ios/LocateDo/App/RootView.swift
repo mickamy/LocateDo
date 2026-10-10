@@ -14,6 +14,7 @@ struct RootView: View {
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
     @Environment(PromotionsConsent.self) private var promotionsConsent
+    @Environment(WatchBridge.self) private var watch
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var isPromotionsPromptPresented = false
@@ -157,7 +158,8 @@ struct RootView: View {
                 authenticator: authenticator,
                 locationProvider: locationProvider,
                 notifier: notifier,
-                promotionsConsent: promotionsConsent.isOn
+                promotionsConsent: promotionsConsent.isOn,
+                watchAppInstalled: watch.hasWatchApp
             )
             presentPromotionsPromptIfDue()
         }

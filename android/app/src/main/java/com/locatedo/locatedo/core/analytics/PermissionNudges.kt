@@ -6,6 +6,7 @@ import java.time.Instant
 
 enum class PermissionKind(val key: String) {
     LOCATION("location"),
+    PRECISE_LOCATION("precise_location"),
     NOTIFICATIONS("notifications"),
 }
 

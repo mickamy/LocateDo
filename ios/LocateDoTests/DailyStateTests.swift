@@ -102,6 +102,7 @@ struct DailyStateTests {
         #expect(values["precise_location"] as? Int == 1)
         #expect(values["notification_auth"] as? String == "authorized")
         #expect(values["promotions_consent"] as? Int == 1)
+        #expect(values["watch_app_installed"] as? Int == 0)
     }
 
     private static func subscription(isTrial: Bool) -> ProSubscription {
@@ -123,7 +124,8 @@ struct DailyStateTests {
         locationAuth: .always,
         preciseLocation: true,
         notificationAuth: .authorized,
-        promotionsConsent: true
+        promotionsConsent: true,
+        watchAppInstalled: false
     )
 }
 

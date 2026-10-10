@@ -121,7 +121,7 @@ class AppViewModel @Inject constructor(
             promotionsConsent.promptDue.filter { it }.collect { askPromotions() }
         }
         viewModelScope.launch {
-            combine(reminderSetup, permissions.observe()) { setup, current -> setup != null && ReminderSetup.missing(current) == null }
+            combine(reminderSetup, permissions.observe()) { setup, current -> setup != null && ReminderSetup.missing(current).isEmpty() }
                 .filter { it }
                 .collect { closeReminderSetup(AlwaysPromptAnswer.ALLOW) }
         }
@@ -177,14 +177,29 @@ class AppViewModel @Inject constructor(
             if (!ReminderSetup.isDue(current, stored.reminderSetupShownAt, stored.reminderSetupNever, now)) {
                 return@launch
             }
-            val missing = ReminderSetup.missing(current) ?: return@launch
+            val missing = ReminderSetup.missing(current)
+            if (missing.isEmpty()) {
+                return@launch
+            }
             val shownCount = preferences.recordReminderSetupShown(now)
-            alwaysPrompt.shown(mapOf(AnalyticsParameter.MISSING to missing.key, AnalyticsParameter.SHOWN_COUNT to shownCount))
+            alwaysPrompt.shown(
+                mapOf(
+                    AnalyticsParameter.MISSING to ReminderSetup.analyticsValue(missing),
+                    AnalyticsParameter.SHOWN_COUNT to shownCount,
+                ),
+            )
             reminderSetup.value = ReminderSetupRequest(missing, shownCount)
         }
     }
 
     fun refreshPermissions() = permissions.refresh()
+
+    fun preciseLocationRequested() {
+        viewModelScope.launch {
+            permissions.markPreciseLocationRequested()
+            permissions.refresh()
+        }
+    }
 
     fun notificationsRequested() {
         viewModelScope.launch {
@@ -203,7 +218,7 @@ class AppViewModel @Inject constructor(
             if (answer == AlwaysPromptAnswer.NEVER) {
                 preferences.setReminderSetupNever()
             }
-            val isComplete = ReminderSetup.missing(permissions.observe().first()) == null
+            val isComplete = ReminderSetup.missing(permissions.observe().first()).isEmpty()
             alwaysPrompt.answered(if (isComplete) AlwaysPromptAnswer.ALLOW else answer)
         }
     }

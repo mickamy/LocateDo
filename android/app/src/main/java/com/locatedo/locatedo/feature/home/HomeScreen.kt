@@ -50,6 +50,7 @@ import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.SystemSettings
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
+import com.locatedo.locatedo.feature.onboarding.rememberPreciseLocationRequest
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import java.util.UUID
 
@@ -68,6 +69,10 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isExplainingAlwaysLocation by viewModel.isExplainingAlwaysLocation.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val requestPreciseLocation = rememberPreciseLocationRequest(
+        hasRequested = uiState.hasRequestedPreciseLocation,
+        onRequested = viewModel::preciseLocationRequested,
+    )
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissions()
@@ -105,6 +110,7 @@ fun HomeScreen(
                                     when (banner) {
                                         PermissionBanner.LOCATION_ALWAYS -> Unit
                                         PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
+                                        PermissionBanner.PRECISE_LOCATION -> requestPreciseLocation()
                                         PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
                                     }
                                 },

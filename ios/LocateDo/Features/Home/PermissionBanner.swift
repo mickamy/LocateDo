@@ -5,9 +5,10 @@ import UserNotifications
 nonisolated enum PermissionBanner: String {
     case locationAlways = "location_always"
     case locationDenied = "location_denied"
+    case preciseLocation = "precise_location"
     case notifications
 
-    init?(location: CLAuthorizationStatus, notifications: UNAuthorizationStatus) {
+    init?(location: CLAuthorizationStatus, preciseLocation: Bool, notifications: UNAuthorizationStatus) {
         switch location {
         case .authorizedWhenInUse:
             self = .locationAlways
@@ -17,6 +18,10 @@ nonisolated enum PermissionBanner: String {
             return
         default:
             break
+        }
+        if ReminderSetup.needsPrecise(location: location, precise: preciseLocation) {
+            self = .preciseLocation
+            return
         }
         guard notifications == .denied else {
             return nil
@@ -28,6 +33,7 @@ nonisolated enum PermissionBanner: String {
         switch self {
         case .locationAlways: .homePermissionBannerLocation
         case .locationDenied: .homePermissionBannerLocationDenied
+        case .preciseLocation: .homePermissionBannerPreciseLocation
         case .notifications: .homePermissionBannerNotifications
         }
     }

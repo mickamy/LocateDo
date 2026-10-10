@@ -941,6 +941,23 @@
         }
       }
     },
+    "home.permission_banner.precise_location" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow precise location to get arrival reminders."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到着をお知らせするには、正確な位置情報の使用を許可してください。"
+          }
+        }
+      }
+    },
     "invite.already_member" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2615,13 +2632,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "StopBy needs two settings to remind you when you arrive, even with the app closed."
+            "value" : "StopBy needs these settings to remind you when you arrive, even with the app closed."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アプリを閉じている間も到着をお知らせするため、2 つの設定が必要です。"
+            "value" : "アプリを閉じている間も到着をお知らせするため、次の設定が必要です。"
           }
         }
       }
@@ -2694,6 +2711,24 @@
         }
       }
     },
+    "reminder_setup.precise_location" : {
+      "comment" : "Row in the reminder setup sheet for the precise location switch; approximate location gets no arrival reminders.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precise location"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正確な位置情報"
+          }
+        }
+      }
+    },
     "reminder_setup.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2707,6 +2742,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "着いたらお知らせするには"
+          }
+        }
+      }
+    },
+    "reminder_setup.turned_on" : {
+      "comment" : "Shown with a check in place of the button once precise location is on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オン"
           }
         }
       }
@@ -3405,6 +3458,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "アプリを閉じている間も到着をお知らせするには「常に許可」が必要です。"
+          }
+        }
+      }
+    },
+    "settings.location.needs_precise" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrival reminders need precise location to tell when you reach a place."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到着を判定するには、正確な位置情報が必要です。"
           }
         }
       }

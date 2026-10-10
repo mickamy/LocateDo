@@ -5,12 +5,14 @@ import Observation
 final class LocationProvider {
     private(set) var location: CLLocation?
     private(set) var authorizationStatus: CLAuthorizationStatus
+    private(set) var hasPreciseLocation: Bool
 
     private let manager = CLLocationManager()
     private var updates: Task<Void, Never>?
 
     init() {
         authorizationStatus = manager.authorizationStatus
+        hasPreciseLocation = manager.accuracyAuthorization == .fullAccuracy
     }
 
     func start() {
@@ -26,7 +28,7 @@ final class LocationProvider {
                     guard let self else {
                         return
                     }
-                    authorizationStatus = manager.authorizationStatus
+                    refreshAuthorizationStatus()
                     if let location = update.location {
                         self.location = location
                     }
@@ -37,10 +39,6 @@ final class LocationProvider {
         }
     }
 
-    var hasPreciseLocation: Bool {
-        manager.accuracyAuthorization == .fullAccuracy
-    }
-
     func requestAlwaysAuthorization() {
         if manager.authorizationStatus == .authorizedWhenInUse {
             manager.requestAlwaysAuthorization()
@@ -49,6 +47,7 @@ final class LocationProvider {
 
     func refreshAuthorizationStatus() {
         authorizationStatus = manager.authorizationStatus
+        hasPreciseLocation = manager.accuracyAuthorization == .fullAccuracy
     }
 
     func stop() {

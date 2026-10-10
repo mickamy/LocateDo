@@ -24,7 +24,17 @@ enum class LocationAuth { ALWAYS, WHEN_IN_USE, DENIED, NOT_DETERMINED }
 
 enum class NotificationAuth { AUTHORIZED, DENIED, NOT_DETERMINED }
 
-data class Permissions(val location: LocationAuth, val notifications: NotificationAuth)
+// Approximate location gets no geofence events; it only matters once location is allowed at all. The system asks to
+// switch to precise only until it has been turned down, which the app cannot see, so it remembers having asked once.
+data class Permissions(
+    val location: LocationAuth,
+    val notifications: NotificationAuth,
+    val preciseLocation: Boolean = true,
+    val hasRequestedPreciseLocation: Boolean = false,
+) {
+    val needsPreciseLocation: Boolean
+        get() = (location == LocationAuth.ALWAYS || location == LocationAuth.WHEN_IN_USE) && !preciseLocation
+}
 
 // Grants happen in system UI, so screens call refresh() when they come back to the foreground.
 interface PermissionsRepository {
@@ -33,6 +43,7 @@ interface PermissionsRepository {
     fun isBatteryOptimizationExempt(): Boolean
     suspend fun markLocationRequested()
     suspend fun markNotificationsRequested()
+    suspend fun markPreciseLocationRequested()
 }
 
 @Singleton
@@ -46,6 +57,8 @@ class AndroidPermissionsRepository @Inject constructor(
         Permissions(
             location = locationAuth(requested = stored.hasRequestedLocation),
             notifications = notificationAuth(requested = stored.hasRequestedNotifications),
+            preciseLocation = granted(Manifest.permission.ACCESS_FINE_LOCATION),
+            hasRequestedPreciseLocation = stored.hasRequestedPreciseLocation,
         )
     }
 
@@ -57,6 +70,8 @@ class AndroidPermissionsRepository @Inject constructor(
     override suspend fun markLocationRequested() = preferences.setRequestedLocation(true)
 
     override suspend fun markNotificationsRequested() = preferences.setRequestedNotifications(true)
+
+    override suspend fun markPreciseLocationRequested() = preferences.setRequestedPreciseLocation(true)
 
     // Android cannot tell "never asked" from "denied", so the app remembers whether it has asked.
     private fun locationAuth(requested: Boolean): LocationAuth = when {

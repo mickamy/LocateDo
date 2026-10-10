@@ -1,8 +1,10 @@
 -- Whether the Home banner, the Settings buttons, and the reminder setup sheet get permissions fixed, by month and
 -- platform.
--- The sheet asks for whatever was missing when it was shown (`missing`), so it counts once per permission it asked for;
--- events from before it asked for notifications have no `missing` and count as location.
--- A nudge counts as fixed when, within 24 hours, location reaches "Always" or notifications become allowed.
+-- The sheet asks for whatever was missing when it was shown (`missing`), so it counts once per permission it asked for.
+-- `missing` lists them with commas (`notifications`, `location_always`, `precise_location`); before 2026-10-10 it was
+-- `notifications`, `location_always`, or `both`, and events from before it asked for notifications have none (location).
+-- A nudge counts as fixed when, within 24 hours, location reaches "Always", notifications become allowed, or a
+-- daily_state reports precise location; daily_state comes about once a day, so precise fixes may be undercounted.
 -- users_without_always: users whose daily_state that month showed places but no "Always", the banner's audience.
 WITH nudges AS (
   SELECT
@@ -19,10 +21,16 @@ WITH nudges AS (
   FROM `__PROJECT__.__DATASET__.events`,
     UNNEST(
       CASE
-        WHEN event_name != 'always_prompt_answered' THEN [IF(STARTS_WITH(kind, 'location'), 'location', 'notifications')]
-        WHEN missing = 'notifications' THEN ['notifications']
+        WHEN event_name != 'always_prompt_answered' THEN [
+          CASE
+            WHEN kind = 'precise_location' THEN 'precise_location'
+            WHEN STARTS_WITH(kind, 'location') THEN 'location'
+            ELSE 'notifications'
+          END
+        ]
+        WHEN missing IS NULL THEN ['location']
         WHEN missing = 'both' THEN ['location', 'notifications']
-        ELSE ['location']
+        ELSE ARRAY(SELECT IF(need = 'location_always', 'location', need) FROM UNNEST(SPLIT(missing, ',')) AS need)
       END
     ) AS permission
   WHERE event_name IN ('permission_banner_tapped', 'permission_action_tapped', 'always_prompt_answered')
@@ -31,10 +39,15 @@ fixes AS (
   SELECT
     user_pseudo_id,
     event_time,
-    IF(event_name = 'location_auth_changed', 'location', 'notifications') AS permission
+    CASE event_name
+      WHEN 'location_auth_changed' THEN 'location'
+      WHEN 'daily_state' THEN 'precise_location'
+      ELSE 'notifications'
+    END AS permission
   FROM `__PROJECT__.__DATASET__.events`
   WHERE (event_name = 'location_auth_changed' AND auth_to = 'always')
     OR (event_name = 'notification_auth_changed' AND auth_to = 'authorized')
+    OR (event_name = 'daily_state' AND precise_location = 1)
 ),
 judged AS (
   SELECT

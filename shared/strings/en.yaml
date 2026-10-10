@@ -89,9 +89,11 @@ promotions_prompt:
   decline: "Not Now"
 reminder_setup:
   title: "To be reminded when you arrive"
-  description: "StopBy needs two settings to remind you when you arrive, even with the app closed."
+  description: "StopBy needs these settings to remind you when you arrive, even with the app closed."
   notifications: "Notifications"
   location: "Location set to “Always”"
+  precise_location: "Precise location"
+  turned_on: "On"
   allow: "Allow"
   allowed: "Allowed"
   later: "Not now"
@@ -112,6 +114,7 @@ settings:
     not_determined: "Not asked yet"
     needs_always: "Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed."
     android_needs_always: "Arrival reminders need “{option}” so StopBy can notice when you arrive while it is closed."
+    needs_precise: "Arrival reminders need precise location to tell when you reach a place."
     allow: "Allow location"
   notifications:
     title: "Notifications"
@@ -196,6 +199,7 @@ home:
     location: "Allow “Always” location to get reminders while the app is closed."
     location_denied: "Allow location access in Settings to get reminders."
     notifications: "Allow notifications to get reminders."
+    precise_location: "Allow precise location to get arrival reminders."
     android_location: "Set location to “{option}” to get reminders while the app is closed."
   empty:
     title: "No places yet"

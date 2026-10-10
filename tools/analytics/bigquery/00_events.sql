@@ -52,6 +52,7 @@ SELECT
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'shown_count') AS shown_count,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'promotions_consent') AS promotions_consent,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'battery_optimization_exempt') AS battery_optimization_exempt,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'watch_app_installed') AS watch_app_installed,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'has_url') AS has_url,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'count') AS count,
   -- Sent by RevenueCat's Firebase integration on its rc_* events.

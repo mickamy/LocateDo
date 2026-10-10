@@ -11,7 +11,7 @@ import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.Permissions
 import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.core.sharing.InviteRequests
-import com.locatedo.locatedo.feature.onboarding.ReminderSetupMissing
+import com.locatedo.locatedo.feature.onboarding.ReminderSetupNeed
 import com.locatedo.locatedo.feature.onboarding.ReminderSetupRequest
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakePermissionsRepository
@@ -86,7 +86,7 @@ class AppViewModelTest {
         viewModel.placeAdded()
 
         assertEquals(
-            ReminderSetupRequest(ReminderSetupMissing.BOTH, shownCount = 1),
+            ReminderSetupRequest(listOf(ReminderSetupNeed.NOTIFICATIONS, ReminderSetupNeed.LOCATION_ALWAYS), shownCount = 1),
             viewModel.uiState.first { it.reminderSetup != null }.reminderSetup,
         )
         val stored = preferences.data.first()

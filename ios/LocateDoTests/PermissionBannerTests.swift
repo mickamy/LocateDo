@@ -6,23 +6,38 @@ import UserNotifications
 
 struct PermissionBannerTests {
     @Test func locationComesBeforeNotifications() {
-        #expect(PermissionBanner(location: .authorizedWhenInUse, notifications: .denied) == .locationAlways)
-        #expect(PermissionBanner(location: .denied, notifications: .denied) == .locationDenied)
-        #expect(PermissionBanner(location: .restricted, notifications: .authorized) == .locationDenied)
+        #expect(banner(.authorizedWhenInUse, .denied) == .locationAlways)
+        #expect(banner(.denied, .denied) == .locationDenied)
+        #expect(banner(.restricted, .authorized) == .locationDenied)
     }
 
     @Test func deniedNotificationsShowOnlyWhenLocationIsFine() {
-        #expect(PermissionBanner(location: .authorizedAlways, notifications: .denied) == .notifications)
+        #expect(banner(.authorizedAlways, .denied) == .notifications)
+    }
+
+    @Test func approximateLocationComesAfterAlwaysAndBeforeNotifications() {
+        #expect(banner(.authorizedAlways, precise: false, .denied) == .preciseLocation)
+        #expect(banner(.authorizedWhenInUse, precise: false, .authorized) == .locationAlways)
+        #expect(banner(.denied, precise: false, .authorized) == .locationDenied)
     }
 
     @Test func nothingShowsWhenBothAreFineOrUnasked() {
-        #expect(PermissionBanner(location: .authorizedAlways, notifications: .authorized) == nil)
-        #expect(PermissionBanner(location: .notDetermined, notifications: .notDetermined) == nil)
+        #expect(banner(.authorizedAlways, .authorized) == nil)
+        #expect(banner(.notDetermined, .notDetermined) == nil)
     }
 
     @Test func kindsUseTheirReportedNames() {
         #expect(PermissionBanner.locationAlways.rawValue == "location_always")
         #expect(PermissionBanner.locationDenied.rawValue == "location_denied")
+        #expect(PermissionBanner.preciseLocation.rawValue == "precise_location")
         #expect(PermissionBanner.notifications.rawValue == "notifications")
+    }
+
+    private func banner(
+        _ location: CLAuthorizationStatus,
+        precise: Bool = true,
+        _ notifications: UNAuthorizationStatus
+    ) -> PermissionBanner? {
+        PermissionBanner(location: location, preciseLocation: precise, notifications: notifications)
     }
 }

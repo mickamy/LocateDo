@@ -6,13 +6,14 @@ import com.locatedo.locatedo.core.permissions.Permissions
 import java.time.Duration
 import java.time.Instant
 
-enum class ReminderSetupMissing(val key: String) {
+// In the order the sheet lists them and the analytics name them.
+enum class ReminderSetupNeed(val key: String) {
     NOTIFICATIONS("notifications"),
     LOCATION_ALWAYS("location_always"),
-    BOTH("both"),
+    PRECISE_LOCATION("precise_location"),
 }
 
-data class ReminderSetupRequest(val missing: ReminderSetupMissing, val shownCount: Int)
+data class ReminderSetupRequest(val missing: List<ReminderSetupNeed>, val shownCount: Int)
 
 // What arrival reminders still need, and whether to ask for it after a place is saved: at most once a week, until the
 // user says not to.
@@ -23,23 +24,23 @@ object ReminderSetup {
 
     fun needsAlways(permissions: Permissions): Boolean = permissions.location != LocationAuth.ALWAYS
 
-    fun missing(permissions: Permissions): ReminderSetupMissing? {
-        val notifications = needsNotifications(permissions)
-        val always = needsAlways(permissions)
-        return when {
-            notifications && always -> ReminderSetupMissing.BOTH
-            notifications -> ReminderSetupMissing.NOTIFICATIONS
-            always -> ReminderSetupMissing.LOCATION_ALWAYS
-            else -> null
+    fun missing(permissions: Permissions): List<ReminderSetupNeed> = ReminderSetupNeed.entries.filter { need ->
+        when (need) {
+            ReminderSetupNeed.NOTIFICATIONS -> needsNotifications(permissions)
+            ReminderSetupNeed.LOCATION_ALWAYS -> needsAlways(permissions)
+            ReminderSetupNeed.PRECISE_LOCATION -> permissions.needsPreciseLocation
         }
     }
 
-    // Location turned off altogether is left to the home banner; this sheet asks for the step up to "Always".
+    fun analyticsValue(needs: List<ReminderSetupNeed>): String = needs.joinToString(",") { it.key }
+
+    // Location turned off altogether is left to the home banner; this sheet asks for the steps up from "while in use".
     fun isDue(permissions: Permissions, shownAt: Instant?, never: Boolean, now: Instant): Boolean {
         if (never) {
             return false
         }
-        if (!needsNotifications(permissions) && permissions.location != LocationAuth.WHEN_IN_USE) {
+        val canStepUp = permissions.location == LocationAuth.WHEN_IN_USE || permissions.needsPreciseLocation
+        if (!needsNotifications(permissions) && !canStepUp) {
             return false
         }
         if (shownAt == null) {

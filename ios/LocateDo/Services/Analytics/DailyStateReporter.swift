@@ -11,6 +11,7 @@ enum DailyStateReporter {
         locationProvider: LocationProvider,
         notifier: ArrivalNotifier,
         promotionsConsent: Bool,
+        watchAppInstalled: Bool,
         defaults: UserDefaults = .standard,
         now: Date = .now
     ) async {
@@ -29,7 +30,8 @@ enum DailyStateReporter {
                 locationAuth: DailyState.LocationAuth(locationProvider.authorizationStatus),
                 preciseLocation: locationProvider.hasPreciseLocation,
                 notificationAuth: DailyState.NotificationAuth(notifier.authorizationStatus),
-                promotionsConsent: promotionsConsent
+                promotionsConsent: promotionsConsent,
+                watchAppInstalled: watchAppInstalled
             )
         } catch {
             Logger(subsystem: "com.locatedo.LocateDo", category: "analytics")

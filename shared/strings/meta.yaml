@@ -95,3 +95,7 @@ todo.delete_completed_shared_message:
   comment: "Under the confirmation for deleting all completed to-dos, only while the household has other members."
 home.more_todos:
   comment: "Under the first two to-dos of a place in the nearby list, when it has more."
+reminder_setup.precise_location:
+  comment: "Row in the reminder setup sheet for the precise location switch; approximate location gets no arrival reminders."
+reminder_setup.turned_on:
+  comment: "Shown with a check in place of the button once precise location is on."

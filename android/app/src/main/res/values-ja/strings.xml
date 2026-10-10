@@ -65,6 +65,7 @@
     <string name="home_permission_banner_location">アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。</string>
     <string name="home_permission_banner_location_denied">お知らせを受け取るには、設定で位置情報を許可してください。</string>
     <string name="home_permission_banner_notifications">お知らせを受け取るには、通知を許可してください。</string>
+    <string name="home_permission_banner_precise_location">到着をお知らせするには、正確な位置情報の使用を許可してください。</string>
     <string name="invite_already_member">すでにこの世帯に参加しています。</string>
     <string name="invite_android_message">この世帯の人と、場所とやることを共有します。この端末の場所とやることは、その世帯にまとめられます。</string>
     <string name="invite_android_paste">貼り付け</string>
@@ -166,12 +167,14 @@
     <string name="promotions_prompt_title">ちかメモからのお知らせを受け取りますか？</string>
     <string name="reminder_setup_allow">許可する</string>
     <string name="reminder_setup_allowed">許可済み</string>
-    <string name="reminder_setup_description">アプリを閉じている間も到着をお知らせするため、2 つの設定が必要です。</string>
+    <string name="reminder_setup_description">アプリを閉じている間も到着をお知らせするため、次の設定が必要です。</string>
     <string name="reminder_setup_later">あとで</string>
     <string name="reminder_setup_location">位置情報を「常に許可」</string>
     <string name="reminder_setup_never">今後表示しない</string>
     <string name="reminder_setup_notifications">通知</string>
+    <string name="reminder_setup_precise_location">正確な位置情報</string>
     <string name="reminder_setup_title">着いたらお知らせするには</string>
+    <string name="reminder_setup_turned_on">オン</string>
     <string name="removed_android_message">共有している世帯から外されたため、この端末のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_message">共有している世帯から外されたため、この iPhone のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_title">共有から外れました</string>
@@ -221,6 +224,7 @@
     <string name="settings_location_android_needs_always">アプリを閉じている間も到着をお知らせするには「%1$s」が必要です。</string>
     <string name="settings_location_denied">許可されていません</string>
     <string name="settings_location_needs_always">アプリを閉じている間も到着をお知らせするには「常に許可」が必要です。</string>
+    <string name="settings_location_needs_precise">到着を判定するには、正確な位置情報が必要です。</string>
     <string name="settings_location_not_determined">未設定</string>
     <string name="settings_location_title">位置情報</string>
     <string name="settings_location_when_in_use">使用中のみ</string>
