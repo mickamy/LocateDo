@@ -2,11 +2,11 @@ app:
   name: "StopBy"
   bundle_name: "StopBy"
 tab:
-  home: "Home"
   map: "Map"
   todos: "To-Do"
   settings: "Settings"
 common:
+  back: "Back"
   cancel: "Cancel"
   save: "Save"
   done: "Done"
@@ -206,10 +206,6 @@ home:
     plural:
       one: "+{count:int} more"
       other: "+{count:int} more"
-  open_summary:
-    plural:
-      one: "{count:int} open to-do"
-      other: "{count:int} open to-dos"
   permission_banner:
     ios_location: "Allow “Always” location to get reminders while the app is closed."
     location_denied: "Allow location access in Settings to get reminders."
@@ -221,9 +217,6 @@ home:
     message: "Add a place to get reminded when you arrive."
   add_place: "Add a place"
   my_location: "My location"
-map:
-  empty:
-    message: "Places you add appear here."
 place:
   editor:
     title_new: "Add a place"
@@ -300,8 +293,6 @@ todo:
   list:
     empty_title: "No to-dos yet"
     empty_message: "Add a to-do to a place and we’ll remind you when you arrive."
-    no_places_title: "Add a place first"
-    no_places_message: "To-dos belong to places."
     filter_empty: "No to-dos match this filter"
   filter:
     all: "All"

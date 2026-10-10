@@ -22,7 +22,7 @@ import com.locatedo.locatedo.core.notifications.CampaignNotification
 import com.locatedo.locatedo.core.notifications.CompletionHandler
 import com.locatedo.locatedo.core.sharing.InviteLink
 import com.locatedo.locatedo.core.sharing.InviteRequests
-import com.locatedo.locatedo.ui.LocateDoApp
+import com.locatedo.locatedo.app.LocateDoApp
 import com.locatedo.locatedo.ui.analytics.LocalAnalytics
 import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import com.locatedo.locatedo.ui.theme.LocateDoTheme

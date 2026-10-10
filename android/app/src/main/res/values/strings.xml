@@ -46,6 +46,7 @@
     <string name="category_title">Categories</string>
     <string name="category_work">Work</string>
     <string name="common_add">Add</string>
+    <string name="common_back">Back</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>
     <string name="common_done">Done</string>
@@ -64,10 +65,6 @@
         <item quantity="other">+%1$d more</item>
     </plurals>
     <string name="home_my_location">My location</string>
-    <plurals name="home_open_summary">
-        <item quantity="one">%1$d open to-do</item>
-        <item quantity="other">%1$d open to-dos</item>
-    </plurals>
     <string name="home_permission_banner_android_location">Set location to “%1$s” to get reminders while the app is closed.</string>
     <string name="home_permission_banner_location_denied">Allow location access in Settings to get reminders.</string>
     <string name="home_permission_banner_notifications">Allow notifications to get reminders.</string>
@@ -86,7 +83,6 @@
     <string name="maintenance_dismiss">Dismiss</string>
     <string name="maintenance_unavailable">Not available during server maintenance. Try again after %1$s.</string>
     <string name="maintenance_upcoming">Sync will pause for server maintenance from %1$s to %2$s.</string>
-    <string name="map_empty_message">Places you add appear here.</string>
     <plurals name="notification_android_check_off_all">
         <item quantity="one">Mark all %1$d as done</item>
         <item quantity="other">Mark all %1$d as done</item>
@@ -331,7 +327,6 @@
     <string name="sharing_title">Share with family</string>
     <string name="sharing_unnamed_member">Member</string>
     <string name="sharing_you">You</string>
-    <string name="tab_home">Home</string>
     <string name="tab_map">Map</string>
     <string name="tab_settings">Settings</string>
     <string name="tab_todos">To-Do</string>
@@ -363,8 +358,6 @@
     <string name="todo_list_empty_message">Add a to-do to a place and we’ll remind you when you arrive.</string>
     <string name="todo_list_empty_title">No to-dos yet</string>
     <string name="todo_list_filter_empty">No to-dos match this filter</string>
-    <string name="todo_list_no_places_message">To-dos belong to places.</string>
-    <string name="todo_list_no_places_title">Add a place first</string>
     <string name="update_android_open_play">Open Google Play</string>
     <string name="update_message">This version of StopBy is no longer supported. Update to the latest version to keep using it.</string>
     <string name="update_open_app_store">Open App Store</string>

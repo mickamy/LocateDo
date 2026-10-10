@@ -2,11 +2,11 @@ app:
   name: "ちかメモ"
   bundle_name: "ちかメモ"
 tab:
-  home: "ホーム"
   map: "マップ"
   todos: "やること"
   settings: "設定"
 common:
+  back: "戻る"
   add: "追加"
   cancel: "キャンセル"
   save: "保存"
@@ -203,9 +203,6 @@ home:
   more_todos:
     plural:
       other: "他 {count} 件"
-  open_summary:
-    plural:
-      other: "やることが {count} 件残っています"
   permission_banner:
     ios_location: "アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。"
     location_denied: "お知らせを受け取るには、設定で位置情報を許可してください。"
@@ -217,9 +214,6 @@ home:
     message: "場所を追加すると、着いたときにお知らせします。"
   add_place: "場所を追加"
   my_location: "現在地"
-map:
-  empty:
-    message: "追加した場所がここに表示されます。"
 place:
   editor:
     title_new: "場所を追加"
@@ -294,8 +288,6 @@ todo:
   list:
     empty_title: "やることはまだありません"
     empty_message: "場所にやることを追加すると、着いたときにお知らせします。"
-    no_places_title: "先に場所を追加してください"
-    no_places_message: "やることは場所ごとに登録します。"
     filter_empty: "この条件のやることはありません"
   filter:
     all: "すべて"

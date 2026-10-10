@@ -44,6 +44,7 @@
     <string name="category_title">カテゴリ</string>
     <string name="category_work">仕事</string>
     <string name="common_add">追加</string>
+    <string name="common_back">戻る</string>
     <string name="common_cancel">キャンセル</string>
     <string name="common_delete">削除</string>
     <string name="common_done">完了</string>
@@ -60,9 +61,6 @@
         <item quantity="other">他 %1$d 件</item>
     </plurals>
     <string name="home_my_location">現在地</string>
-    <plurals name="home_open_summary">
-        <item quantity="other">やることが %1$d 件残っています</item>
-    </plurals>
     <string name="home_permission_banner_android_location">アプリを閉じている間もお知らせするには、位置情報を「%1$s」にしてください。</string>
     <string name="home_permission_banner_location_denied">お知らせを受け取るには、設定で位置情報を許可してください。</string>
     <string name="home_permission_banner_notifications">お知らせを受け取るには、通知を許可してください。</string>
@@ -81,7 +79,6 @@
     <string name="maintenance_dismiss">閉じる</string>
     <string name="maintenance_unavailable">サーバーのメンテナンス中のため、今は使えません。%1$s 以降にお試しください。</string>
     <string name="maintenance_upcoming">%1$s〜%2$s はサーバーのメンテナンスのため同期を止めます。</string>
-    <string name="map_empty_message">追加した場所がここに表示されます。</string>
     <plurals name="notification_android_check_off_all">
         <item quantity="other">%1$d 件すべて完了</item>
     </plurals>
@@ -318,7 +315,6 @@
     <string name="sharing_title">家族と共有</string>
     <string name="sharing_unnamed_member">メンバー</string>
     <string name="sharing_you">自分</string>
-    <string name="tab_home">ホーム</string>
     <string name="tab_map">マップ</string>
     <string name="tab_settings">設定</string>
     <string name="tab_todos">やること</string>
@@ -346,8 +342,6 @@
     <string name="todo_list_empty_message">場所にやることを追加すると、着いたときにお知らせします。</string>
     <string name="todo_list_empty_title">やることはまだありません</string>
     <string name="todo_list_filter_empty">この条件のやることはありません</string>
-    <string name="todo_list_no_places_message">やることは場所ごとに登録します。</string>
-    <string name="todo_list_no_places_title">先に場所を追加してください</string>
     <string name="update_android_open_play">Google Play を開く</string>
     <string name="update_message">このバージョンのアプリは使えなくなりました。最新のバージョンにアップデートしてください。</string>
     <string name="update_open_app_store">App Store を開く</string>
