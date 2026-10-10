@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -75,8 +76,8 @@ import com.locatedo.locatedo.ui.navigation.CategoriesKey
 import com.locatedo.locatedo.ui.navigation.HomeKey
 import com.locatedo.locatedo.ui.navigation.MapKey
 import com.locatedo.locatedo.ui.navigation.PaywallKey
-import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.PlaceCategoryKey
+import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
@@ -278,7 +279,8 @@ private fun Tabs(
             }
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        // Consumed here, so a screen's own top app bar does not add the status bar height a second time.
+        Column(modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             // Only the tabs carry the banner; a flow screen or the paywall is not the place for it.
             if (showsMaintenanceBanner && current in tabKeys) {
                 MaintenanceBanner(status = LocalAppStatus.current, onDismiss = onDismissMaintenanceBanner)
