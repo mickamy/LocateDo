@@ -54,12 +54,12 @@ struct MainScreen: View {
     @ViewBuilder
     private func destination(_ route: Route) -> some View {
         switch route {
-        case .place(let place):
-            PlaceScreen(place: place)
+        case .place(let place, let entry, let rank):
+            PlaceScreen(place: place, entry: entry, rank: rank)
         case .map:
             MapScreen()
-        case .allTodos:
-            AllTodosScreen()
+        case .allTodos(let entry):
+            AllTodosScreen(entry: entry)
         }
     }
 
@@ -68,7 +68,7 @@ struct MainScreen: View {
               let place = places.first(where: { $0.id == placeID }) else {
             return
         }
-        navigator.show(place)
+        navigator.show(place, entry: .notification)
     }
 
     // A new place first gets the reminder setup it may need; requests from outside wait for their turn.

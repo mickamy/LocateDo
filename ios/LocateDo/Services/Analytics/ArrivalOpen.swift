@@ -6,6 +6,15 @@ nonisolated enum CompletionVia: String {
     case action
     case watch
     case watchAction = "watch_action"
+
+    var isFromReminder: Bool {
+        switch self {
+        case .notification, .action, .watchAction:
+            true
+        case .app, .watch:
+            false
+        }
+    }
 }
 
 // A to-do checked off at the notified place soon after opening the arrival notification counts as done through it.

@@ -36,7 +36,7 @@ struct AddPlaceFlow: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            LocationPicker(initialCoordinate: draft.coordinate, closesOnPick: false) { pick in
+            LocationPicker(initialCoordinate: draft.coordinate, closesOnPick: false, entry: request.entry) { pick in
                 draft.apply(pick, categories: categories)
                 continueAfterPick(at: pick.coordinate)
             }
@@ -128,7 +128,7 @@ struct AddPlaceFlow: View {
             pickExisting(existing)
             return
         }
-        navigator.show(existing)
+        navigator.show(existing, entry: .duplicatePrompt)
     }
 
     private var todoTitles: [String] {
@@ -148,7 +148,13 @@ struct AddPlaceFlow: View {
             radiusMeters: draft.radiusMeters,
             category: draft.category ?? categories.first { $0.builtin == .other }
         )
-        let limit = writes.add(place, source: draft.source, todoTitles: todoTitles, suggestedCategory: draft.suggestion)
+        let limit = writes.add(
+            place,
+            source: draft.source,
+            todoTitles: todoTitles,
+            suggestedCategory: draft.suggestion,
+            entry: request.entry
+        )
         if let limit {
             navigator.present(.paywall(limit.trigger))
             return

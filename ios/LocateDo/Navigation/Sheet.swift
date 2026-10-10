@@ -2,12 +2,12 @@ import CoreLocation
 import Foundation
 
 enum Sheet: Identifiable {
-    case addTodo(place: Place?)
+    case addTodo(place: Place?, entry: ScreenEntry)
     case editTodo(Todo)
     case addPlace(AddPlace)
     case editPlace(Place)
     case pickLocation(PickLocation)
-    case settings
+    case settings(ScreenEntry)
     case sharing
     case paywall(PaywallTrigger)
     case invite(PendingInvite)
@@ -34,6 +34,7 @@ enum Sheet: Identifiable {
 // Adding a place from Home goes on to its to-dos; from the to-do screen it stops at the category and hands the place
 // back, since the to-do being written is the one for it.
 struct AddPlace {
+    let entry: ScreenEntry
     var forTodo: ((Place) -> Void)?
     var pickExisting: ((Place) -> Void)?
 }

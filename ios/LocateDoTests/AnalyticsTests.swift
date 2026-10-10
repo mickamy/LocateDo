@@ -85,3 +85,50 @@ struct InstallDateTests {
         return defaults
     }
 }
+
+struct ScreenStackTests {
+    private func entry(_ screen: AnalyticsScreen) -> ScreenStack.Entry {
+        ScreenStack.Entry(screen: screen, parameters: [:])
+    }
+
+    @Test func closingASheetUncoversTheScreenBelowIt() {
+        var stack = ScreenStack()
+        stack.appeared(entry(.home), at: 0)
+        stack.appeared(entry(.settings), at: 1)
+        stack.appeared(entry(.categories), at: 1)
+
+        #expect(stack.closed(from: 1)?.screen == .home)
+        #expect(stack.screens == [.home])
+    }
+
+    @Test func closingStackedSheetsUncoversTheTopOneLeft() {
+        var stack = ScreenStack()
+        stack.appeared(entry(.placeDetail), at: 0)
+        stack.appeared(entry(.todoEditor), at: 1)
+        stack.appeared(entry(.placePicker), at: 2)
+        stack.appeared(entry(.paywall), at: 3)
+
+        #expect(stack.closed(from: 2)?.screen == .todoEditor)
+        #expect(stack.screens == [.placeDetail, .todoEditor])
+    }
+
+    @Test func aLevelClosedTwiceIsSentOnce() {
+        var stack = ScreenStack()
+        stack.appeared(entry(.home), at: 0)
+        stack.appeared(entry(.sharing), at: 1)
+
+        #expect(stack.closed(from: 1) != nil)
+        #expect(stack.closed(from: 1) == nil)
+    }
+
+    // A notification opens a place behind Settings, which then closes; the place is already the current screen.
+    @Test func aScreenAppearingBelowDropsTheSheetsAboveIt() {
+        var stack = ScreenStack()
+        stack.appeared(entry(.home), at: 0)
+        stack.appeared(entry(.settings), at: 1)
+        stack.appeared(entry(.placeDetail), at: 0)
+
+        #expect(stack.closed(from: 1) == nil)
+        #expect(stack.screens == [.placeDetail])
+    }
+}

@@ -158,6 +158,11 @@ final class GeofenceMonitor {
             await onRegionEvent()
         case .shortStay(let stay):
             logger.notice("Left \(place.name, privacy: .public) after only \(Int(stay)) s")
+            var parameters = Self.reminderParameters(.departure, at: place)
+            parameters[.reason] = "short_stay"
+            parameters[.stayMin] = Int(stay / 60)
+            parameters[.openTodos] = place.openTodos(for: .departure).count
+            Analytics.log(.reminderSuppressed, parameters: parameters)
         case nil:
             logger.notice("Nothing to remind at \(place.name, privacy: .public)")
         }
@@ -194,14 +199,10 @@ final class GeofenceMonitor {
             now: now
         )
         if let suppression {
-            if event == .arrival {
-                Analytics.log(.arrivalSuppressed, parameters: [
-                    .reason: suppression.rawValue,
-                    .openTodos: openTodos.count,
-                    .category: place.analyticsCategory,
-                    .radiusM: Int(place.radiusMeters)
-                ])
-            }
+            var parameters = Self.reminderParameters(event, at: place)
+            parameters[.reason] = suppression.rawValue
+            parameters[.openTodos] = openTodos.count
+            Analytics.log(.reminderSuppressed, parameters: parameters)
             let skipped = "\(event.rawValue) for \(place.name): \(suppression.rawValue)"
             logger.notice("Skipped \(skipped, privacy: .public)")
             return
@@ -210,14 +211,18 @@ final class GeofenceMonitor {
         place.setLastNotifiedAt(now, for: event)
         try? container.mainContext.save()
         onNotified()
-        if event == .arrival {
-            Analytics.log(.arrivalNotified, parameters: [
-                .openTodos: todos.count,
-                .category: place.analyticsCategory,
-                .radiusM: Int(place.radiusMeters)
-            ])
-        }
+        var parameters = Self.reminderParameters(event, at: place)
+        parameters[.openTodos] = todos.count
+        Analytics.log(.reminderNotified, parameters: parameters)
         logger.notice("Notified \(event.rawValue, privacy: .public) at \(place.name, privacy: .public)")
+    }
+
+    private static func reminderParameters(_ event: PlaceEvent, at place: Place) -> AnalyticsParameters {
+        [
+            .placeEvent: event.rawValue,
+            .category: place.analyticsCategory,
+            .radiusM: Int(place.radiusMeters)
+        ]
     }
 
     private static func diagnostics(_ event: CLMonitor.Event) -> String {

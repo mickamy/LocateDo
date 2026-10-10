@@ -8,6 +8,7 @@ struct AllTodosScreen: View {
     @Environment(TodoUndo.self) private var undo
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
     @State private var filter: TodoFilter = .open
+    let entry: ScreenEntry
 
     private var groups: [TodoGroup] {
         TodoGrouping.groups(todos, filter: filter)
@@ -27,7 +28,7 @@ struct AllTodosScreen: View {
                     .syncRefreshable()
             }
         }
-        .trackScreen(.todos)
+        .trackScreen(.todos, opening: entry.parameters)
         .navigationTitle(Text(.homeAllTodos))
         .navigationBarTitleDisplayMode(.inline)
         .maintenanceBanner()
@@ -40,7 +41,7 @@ struct AllTodosScreen: View {
             Text(.todoListEmptyMessage)
         } actions: {
             Button(.todoEditorTitle) {
-                navigator.present(.addTodo(place: nil))
+                navigator.present(.addTodo(place: nil, entry: .allTodosEmpty))
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -74,7 +75,7 @@ struct AllTodosScreen: View {
                         undo.offer(writes.delete(offsets.map { group.todos[$0] }, via: .swipe))
                     }
                 } header: {
-                    NavigationLink(value: Route.place(group.place)) {
+                    NavigationLink(value: Route.place(group.place, entry: .allTodos)) {
                         Label(group.place.name, systemImage: group.place.categoryStyle.systemImage)
                     }
                 }

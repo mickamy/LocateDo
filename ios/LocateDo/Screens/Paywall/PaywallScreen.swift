@@ -242,7 +242,7 @@ struct PaywallScreen: View {
                 hasSubscribed = true
                 analytics.purchased(plan: planName)
             } else {
-                analytics.purchaseCancelled(plan: planName)
+                analytics.purchaseCanceled(plan: planName)
             }
         } catch {
             logger.error("Purchase failed: \(error, privacy: .public)")

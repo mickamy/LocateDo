@@ -129,7 +129,11 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
                 }
             }
         } else if let raw = userInfo[Self.placeIDKey] as? String, let placeID = UUID(uuidString: raw) {
-            Analytics.log(.arrivalOpened, parameters: [.latencyS: latency])
+            var placeEvent = PlaceEvent.arrival
+            if let raw = userInfo[Self.placeEventKey] as? String, let sent = PlaceEvent(rawValue: raw) {
+                placeEvent = sent
+            }
+            Analytics.log(.reminderOpened, parameters: [.latencyS: latency, .placeEvent: placeEvent.rawValue])
             Task { @MainActor in
                 lastOpenedAt = .now
                 onOpened(placeID)

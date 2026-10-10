@@ -15,6 +15,7 @@ struct TodoEditor: View {
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
 
     private let editing: Todo?
+    private let entry: ScreenEntry?
     @State private var title: String
     @State private var place: Place?
     @State private var assigneeID: UUID?
@@ -22,17 +23,29 @@ struct TodoEditor: View {
     // A place made from the picker here; saving a to-do at it lands on that place.
     @State private var newPlace: Place?
     @State private var deletesOnDisappear = false
+    @State private var placePreset: PlacePreset?
+    @State private var presetPlaceID: UUID?
     @FocusState private var isTitleFocused: Bool
 
-    init(adding place: Place?) {
+    init(adding place: Place?, entry: ScreenEntry) {
         editing = nil
+        self.entry = entry
         _title = State(initialValue: "")
         _place = State(initialValue: place)
         _remindsOnLeave = State(initialValue: false)
+        if let place {
+            _presetPlaceID = State(initialValue: place.id)
+            if entry == .homeMenu {
+                _placePreset = State(initialValue: .nearest)
+            } else {
+                _placePreset = State(initialValue: .place)
+            }
+        }
     }
 
     init(editing todo: Todo) {
         editing = todo
+        entry = nil
         _title = State(initialValue: todo.title)
         _place = State(initialValue: todo.place)
         _assigneeID = State(initialValue: todo.assigneeID)
@@ -93,7 +106,11 @@ struct TodoEditor: View {
                     }
                 }
             }
-            .trackScreen(.todoEditor, parameters: [.mode: mode == .new ? "add" : "edit"])
+            .trackScreen(
+                .todoEditor,
+                parameters: [.mode: mode.rawValue],
+                opening: entry?.parameters ?? [:]
+            )
             .navigationTitle(Text(editing == nil ? .todoEditorTitle : .todoEditorEditTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -112,6 +129,7 @@ struct TodoEditor: View {
                     place = places.first
                 }
                 if editing == nil {
+                    recordPresetIfNeeded()
                     isTitleFocused = true
                 }
             }
@@ -147,6 +165,7 @@ struct TodoEditor: View {
                 place = picked
             case .new:
                 navigator.present(.addPlace(AddPlace(
+                    entry: .todoEditor,
                     forTodo: { added in
                         place = added
                         newPlace = added
@@ -172,13 +191,33 @@ struct TodoEditor: View {
         }
         let todo = Todo(title: trimmedTitle, place: place, placeEvent: placeEvent)
         todo.assigneeID = assigneeID
-        if let limit = writes.add(todo) {
+        if let limit = writes.add(todo, origin: origin(savingAt: place)) {
             navigator.present(.paywall(limit.trigger))
             return
         }
         dismiss()
         if let newPlace, newPlace.id == place.id {
-            navigator.push(.place(newPlace))
+            navigator.push(.place(newPlace, entry: .newPlace))
         }
+    }
+
+    // A place handed in was set in init; otherwise the first place, if any, was just filled in.
+    private func recordPresetIfNeeded() {
+        guard placePreset == nil else {
+            return
+        }
+        presetPlaceID = place?.id
+        if place == nil {
+            placePreset = .noPlace
+        } else {
+            placePreset = .first
+        }
+    }
+
+    private func origin(savingAt place: Place) -> TodoAddOrigin? {
+        guard let entry, let placePreset else {
+            return nil
+        }
+        return TodoAddOrigin(entry: entry, placePreset: placePreset, placeChanged: place.id != presetPlaceID)
     }
 }

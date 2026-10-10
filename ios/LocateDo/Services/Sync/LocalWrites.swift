@@ -29,7 +29,8 @@ final class LocalWrites {
         _ place: Place,
         source: PlaceSource? = nil,
         todoTitles: [String] = [],
-        suggestedCategory: BuiltinCategory? = nil
+        suggestedCategory: BuiltinCategory? = nil,
+        entry: ScreenEntry? = nil
     ) -> FreeLimit? {
         if reached(.places) {
             logLimitReached(.places)
@@ -51,6 +52,9 @@ final class LocalWrites {
         ]
         if let source {
             parameters[.source] = source.rawValue
+        }
+        if let entry {
+            parameters[.entry] = entry.rawValue
         }
         analytics.log(.placeAdded, parameters: parameters)
         updateCountProperties()
@@ -93,7 +97,7 @@ final class LocalWrites {
     }
 
     @discardableResult
-    func add(_ todo: Todo, via: TodoAddVia = .todoEditor) -> FreeLimit? {
+    func add(_ todo: Todo, via: TodoAddVia = .todoEditor, origin: TodoAddOrigin? = nil) -> FreeLimit? {
         if reached(.openTodos) {
             logLimitReached(.openTodos)
             return .openTodos
@@ -101,13 +105,20 @@ final class LocalWrites {
         context.insert(todo)
         todo.place?.todos.append(todo)
         commit([Write.put(todo)].compactMap(\.self))
-        analytics.log(.todoAdded, parameters: [
+        var parameters: AnalyticsParameters = [
             .via: via.rawValue,
+            .placeEvent: todo.placeEvent.rawValue,
             .openTodoCount: count(Self.openTodos),
             .placeOpenTodos: todo.place?.openTodos.count ?? 0,
             .assigned: todo.assigneeID != nil,
             .daysSinceInstall: daysSinceInstall()
-        ])
+        ]
+        if let origin {
+            parameters[.entry] = origin.entry.rawValue
+            parameters[.placePreset] = origin.placePreset.rawValue
+            parameters[.placeChanged] = origin.placeChanged
+        }
+        analytics.log(.todoAdded, parameters: parameters)
         updateCountProperties()
         return nil
     }
@@ -226,23 +237,6 @@ final class LocalWrites {
         (try? context.fetchCount(descriptor)) ?? 0
     }
 
-    private func logCompletion(of todo: Todo, now: Date) {
-        var via = CompletionVia.app
-        if let lastArrivalOpen {
-            via = lastArrivalOpen.via(completingAt: todo.place?.id, now: now)
-        }
-        logCompletion(of: todo, via: via, now: now)
-    }
-
-    private func logCompletion(of todo: Todo, via: CompletionVia, now: Date) {
-        let ageHours = Int(now.timeIntervalSince(todo.createdAt) / 3_600)
-        analytics.log(.todoCompleted, parameters: [
-            .via: via.rawValue,
-            .ageHours: max(ageHours, 0),
-            .openTodoCount: count(Self.openTodos)
-        ])
-    }
-
     func logLimitReached(_ limit: FreeLimit) {
         analytics.log(.limitReached, parameters: [
             .kind: limit.analyticsKind,
@@ -292,9 +286,13 @@ extension LocalWrites {
             todo.place = place
         }
         todo.assigneeID = assigneeID
+        let changesTrigger = todo.placeEvent != placeEvent
         todo.placeEvent = placeEvent
         todo.updatedAt = now
         commit([Write.put(todo)].compactMap(\.self))
+        if changesTrigger {
+            analytics.log(.todoTriggerChanged, parameters: [.placeEvent: placeEvent.rawValue])
+        }
     }
 
     @discardableResult
@@ -341,5 +339,28 @@ extension LocalWrites {
         commit(writes)
         analytics.log(.todoDeleteUndone, parameters: [.count: restored])
         updateCountProperties()
+    }
+}
+
+extension LocalWrites {
+    private func logCompletion(of todo: Todo, now: Date) {
+        var via = CompletionVia.app
+        if let lastArrivalOpen {
+            via = lastArrivalOpen.via(completingAt: todo.place?.id, now: now)
+        }
+        logCompletion(of: todo, via: via, now: now)
+    }
+
+    private func logCompletion(of todo: Todo, via: CompletionVia, now: Date) {
+        let ageHours = Int(now.timeIntervalSince(todo.createdAt) / 3_600)
+        var parameters: AnalyticsParameters = [
+            .via: via.rawValue,
+            .ageHours: max(ageHours, 0),
+            .openTodoCount: count(Self.openTodos)
+        ]
+        if via.isFromReminder {
+            parameters[.placeEvent] = todo.placeEvent.rawValue
+        }
+        analytics.log(.todoCompleted, parameters: parameters)
     }
 }

@@ -9,12 +9,19 @@ struct LocationPicker: View {
     @Environment(LocationProvider.self) private var locationProvider
 
     let closesOnPick: Bool
+    let entry: ScreenEntry?
     let onPick: (PlacePick) -> Void
     @State private var model: LocationPickerModel
     @State private var query = ""
     @State private var isSearching = false
 
-    init(initialCoordinate: CLLocationCoordinate2D?, closesOnPick: Bool, onPick: @escaping (PlacePick) -> Void) {
+    init(
+        initialCoordinate: CLLocationCoordinate2D?,
+        closesOnPick: Bool,
+        entry: ScreenEntry? = nil,
+        onPick: @escaping (PlacePick) -> Void
+    ) {
+        self.entry = entry
         self.closesOnPick = closesOnPick
         self.onPick = onPick
         _model = State(initialValue: LocationPickerModel(initialCoordinate: initialCoordinate))
@@ -40,7 +47,7 @@ struct LocationPicker: View {
         .safeAreaInset(edge: .top) {
             nearbyKinds
         }
-        .trackScreen(.placePicker)
+        .trackScreen(.placePicker, opening: entry?.parameters ?? [:])
         .searchable(text: $query, isPresented: $isSearching, prompt: Text(.placePickerSearchPlaceholder))
         .searchSuggestions {
             suggestions

@@ -50,6 +50,7 @@ nonisolated struct DailyState: Equatable {
     struct Counts: Equatable {
         var places = 0
         var openTodos = 0
+        var openDepartureTodos = 0
         var completedTodosLast7Days = 0
         var placesWithOpenTodos = 0
         var customCategories = 0
@@ -73,6 +74,7 @@ nonisolated struct DailyState: Equatable {
         [
             .placeCount: counts.places,
             .openTodoCount: counts.openTodos,
+            .openDepartureTodos: counts.openDepartureTodos,
             .completedTodoCount7d: counts.completedTodosLast7Days,
             .placesWithOpenTodos: counts.placesWithOpenTodos,
             .customCategoryCount: counts.customCategories,
@@ -133,7 +135,9 @@ nonisolated struct DailyState: Equatable {
 
         var counts = Counts()
         counts.places = places.count
-        counts.openTodos = todos.filter { !$0.isCompleted }.count
+        let openTodos = todos.filter { !$0.isCompleted }
+        counts.openTodos = openTodos.count
+        counts.openDepartureTodos = openTodos.filter { $0.placeEvent == .departure }.count
         counts.completedTodosLast7Days = todos.filter { todo in
             guard let completedAt = todo.completedAt else {
                 return false

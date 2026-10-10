@@ -18,7 +18,7 @@ struct DailyStateTests {
         context.insert(grocery)
         context.insert(pharmacy)
         context.insert(Todo(title: "Milk", place: grocery))
-        context.insert(Todo(title: "Eggs", place: grocery))
+        context.insert(Todo(title: "Eggs", place: grocery, placeEvent: .departure))
         let recent = Todo(title: "Bread", place: pharmacy)
         context.insert(recent)
         recent.complete(at: now.addingTimeInterval(-2 * 86_400))
@@ -35,6 +35,7 @@ struct DailyStateTests {
         #expect(counts == DailyState.Counts(
             places: 2,
             openTodos: 2,
+            openDepartureTodos: 1,
             completedTodosLast7Days: 1,
             placesWithOpenTodos: 1,
             customCategories: 1,
@@ -97,6 +98,7 @@ struct DailyStateTests {
 
         #expect(values["place_count"] as? Int == 3)
         #expect(values["open_todo_count"] as? Int == 14)
+        #expect(values["open_departure_todos"] as? Int == 4)
         #expect(values["completed_todo_count_7d"] as? Int == 5)
         #expect(values["days_since_install"] as? Int == 12)
         #expect(values["precise_location"] as? Int == 1)
@@ -113,6 +115,7 @@ struct DailyStateTests {
         counts: DailyState.Counts(
             places: 3,
             openTodos: 14,
+            openDepartureTodos: 4,
             completedTodosLast7Days: 5,
             placesWithOpenTodos: 2,
             customCategories: 0,

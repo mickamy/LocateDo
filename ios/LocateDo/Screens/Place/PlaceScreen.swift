@@ -18,12 +18,16 @@ struct PlaceScreen: View {
     @Environment(\.dismiss) private var dismiss
 
     let place: Place
+    let entry: ScreenEntry
+    let rank: Int?
     @Query private var todos: [Todo]
     @State private var address: Address = .loading
     private let checkOffTip = CheckOffTip()
 
-    init(place: Place) {
+    init(place: Place, entry: ScreenEntry, rank: Int?) {
         self.place = place
+        self.entry = entry
+        self.rank = rank
         let placeID = place.id
         _todos = Query(filter: #Predicate<Todo> { $0.place?.id == placeID }, sort: \Todo.createdAt)
     }
@@ -67,7 +71,7 @@ struct PlaceScreen: View {
             }
         }
         .syncRefreshable()
-        .trackScreen(.placeDetail)
+        .trackScreen(.placeDetail, opening: opening)
         .navigationTitle(place.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -94,6 +98,14 @@ struct PlaceScreen: View {
                 address = .unavailable
             }
         }
+    }
+
+    private var opening: AnalyticsParameters {
+        var parameters = entry.parameters
+        if let rank {
+            parameters[.rank] = rank
+        }
+        return parameters
     }
 
     private func todoRows(_ rows: [Todo]) -> some View {

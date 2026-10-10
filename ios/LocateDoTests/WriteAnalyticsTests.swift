@@ -290,7 +290,7 @@ struct WriteAnalyticsTests {
     }
 }
 
-private final class RecordingAnalytics: AnalyticsSink {
+final class RecordingAnalytics: AnalyticsSink {
     private(set) var events: [(name: AnalyticsEvent, values: [String: Any])] = []
     private(set) var userProperties: [AnalyticsUserProperty: String] = [:]
 

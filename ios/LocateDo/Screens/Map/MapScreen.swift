@@ -26,11 +26,11 @@ struct MapScreen: View {
         .contentMargins(.bottom, 0, for: .scrollContent)
         .onChange(of: selectedPlace) {
             if let selectedPlace {
-                navigator.push(.place(selectedPlace))
+                navigator.push(.place(selectedPlace, entry: .mapPin))
                 self.selectedPlace = nil
             }
         }
-        .trackScreen(.map)
+        .trackScreen(.map, opening: ScreenEntry.home.parameters)
         .navigationTitle(Text(.tabMap))
         .maintenanceBanner()
         .navigationBarTitleDisplayMode(.inline)

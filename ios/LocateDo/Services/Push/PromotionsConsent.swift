@@ -5,7 +5,7 @@ import UserNotifications
 @Observable
 final class PromotionsConsent {
     enum Source: String {
-        case firstArrival = "first_arrival"
+        case firstReminder = "first_reminder"
         case settings
     }
 
@@ -81,6 +81,6 @@ final class PromotionsConsent {
         guard answer == .accepted else {
             return nil
         }
-        return set(true, source: .firstArrival)
+        return set(true, source: .firstReminder)
     }
 }

@@ -6,8 +6,8 @@ struct SheetContent: View {
 
     var body: some View {
         switch sheet {
-        case .addTodo(let place):
-            TodoEditor(adding: place)
+        case .addTodo(let place, let entry):
+            TodoEditor(adding: place, entry: entry)
         case .editTodo(let todo):
             TodoEditor(editing: todo)
         case .addPlace(let request):
@@ -18,8 +18,8 @@ struct SheetContent: View {
             NavigationStack {
                 LocationPicker(initialCoordinate: request.initialCoordinate, closesOnPick: true, onPick: request.onPick)
             }
-        case .settings:
-            SettingsScreen()
+        case .settings(let entry):
+            SettingsScreen(entry: entry)
         case .sharing:
             SharingScreen()
         case .paywall(let trigger):

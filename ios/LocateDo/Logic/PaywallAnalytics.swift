@@ -32,8 +32,8 @@ struct PaywallAnalytics {
         ])
     }
 
-    func purchaseCancelled(plan: String) {
-        Analytics.log(.purchaseCancelled, parameters: [.trigger: trigger.rawValue, .plan: plan])
+    func purchaseCanceled(plan: String) {
+        Analytics.log(.purchaseCanceled, parameters: [.trigger: trigger.rawValue, .plan: plan])
     }
 
     func purchaseFailed(plan: String, error: any Error) {

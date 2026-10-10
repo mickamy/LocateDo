@@ -18,10 +18,10 @@ struct AddButton: View {
             switch navigator.path.last {
             case nil:
                 homeMenu
-            case .place(let place):
-                addTodoButton(at: place)
+            case .place(let place, _, _):
+                addTodoButton(at: place, entry: .place)
             case .allTodos:
-                addTodoButton(at: nil)
+                addTodoButton(at: nil, entry: .allTodos)
             case .map:
                 EmptyView()
             }
@@ -34,10 +34,10 @@ struct AddButton: View {
     private var homeMenu: some View {
         Menu {
             Button(.todoEditorTitle, systemImage: "checklist") {
-                navigator.present(.addTodo(place: nearestPlace))
+                navigator.present(.addTodo(place: nearestPlace, entry: .homeMenu))
             }
             Button(.homeAddPlace, systemImage: "mappin.and.ellipse") {
-                navigator.present(.addPlace(AddPlace()))
+                navigator.present(.addPlace(AddPlace(entry: .homeMenu)))
             }
         } label: {
             Label(.commonAdd, systemImage: "plus")
@@ -59,9 +59,9 @@ struct AddButton: View {
         .accessibilityIdentifier("home.add")
     }
 
-    private func addTodoButton(at place: Place?) -> some View {
+    private func addTodoButton(at place: Place?, entry: ScreenEntry) -> some View {
         Button {
-            navigator.present(.addTodo(place: place))
+            navigator.present(.addTodo(place: place, entry: entry))
         } label: {
             Label(.todoEditorTitle, systemImage: "plus")
                 .font(.body.weight(.semibold))

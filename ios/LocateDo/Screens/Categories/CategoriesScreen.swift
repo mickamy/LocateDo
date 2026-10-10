@@ -45,9 +45,11 @@ struct CategoriesScreen: View {
         }
         .sheet(item: $editing) { category in
             CategoryEditor(category: category)
+                .coversScreen()
         }
         .sheet(isPresented: $isAdding) {
             CategoryEditor(category: nil)
+                .coversScreen()
         }
         .confirmationDialog(
             Text(.categoryDeleteConfirmTitle(pendingDelete?.displayName ?? "")),

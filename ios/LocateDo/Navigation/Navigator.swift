@@ -58,15 +58,15 @@ final class Navigator {
         pendingPlaceID = placeID
     }
 
-    func show(_ place: Place) {
+    func show(_ place: Place, entry: ScreenEntry) {
         pendingPlaceID = nil
         closeSettings()
-        path = [.place(place)]
+        path = [.place(place, entry: entry)]
     }
 
     func openAllTodos() {
         closeSettings()
-        path = [.allTodos]
+        path = [.allTodos(entry: .completionNotice)]
     }
 
     // What a notification opens replaces Settings, the one sheet left open while just looking around.

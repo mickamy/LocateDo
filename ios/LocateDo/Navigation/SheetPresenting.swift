@@ -18,6 +18,7 @@ private struct SheetPresenting: ViewModifier {
             .sheet(item: navigator.sheet(at: level), onDismiss: onClosed) { sheet in
                 SheetContent(sheet: sheet)
                     .presentsSheets(from: level + 1)
+                    .coversScreen()
             }
             .confirmationDialog(
                 Text(navigator.confirmation?.title ?? ""),

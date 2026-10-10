@@ -29,7 +29,7 @@ struct HomeScreen: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
-                    navigator.present(.settings)
+                    navigator.present(.settings(.home))
                 } label: {
                     Label(.tabSettings, systemImage: "gearshape")
                 }
@@ -53,7 +53,7 @@ struct HomeScreen: View {
             Text(.homeEmptyMessage)
         } actions: {
             Button(.homeAddPlace) {
-                navigator.present(.addPlace(AddPlace()))
+                navigator.present(.addPlace(AddPlace(entry: .homeEmpty)))
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -73,7 +73,7 @@ struct HomeScreen: View {
             }
             Section {
                 mapPreview
-                NavigationLink(value: Route.allTodos) {
+                NavigationLink(value: Route.allTodos(entry: .home)) {
                     LabeledContent {
                         Text(Nearby.openTodoCount(nearbyPlaces), format: .number)
                     } label: {
@@ -83,8 +83,8 @@ struct HomeScreen: View {
                 .accessibilityIdentifier("home.allTodos")
             }
             Section {
-                ForEach(nearbyPlaces) { nearby in
-                    NavigationLink(value: Route.place(nearby.place)) {
+                ForEach(Array(nearbyPlaces.enumerated()), id: \.element.id) { index, nearby in
+                    NavigationLink(value: Route.place(nearby.place, entry: .homeList, rank: index + 1)) {
                         NearbyPlaceRow(nearby: nearby)
                     }
                 }
@@ -95,7 +95,7 @@ struct HomeScreen: View {
     private func permissionBanner(_ issue: PermissionBanner) -> some View {
         Button {
             Analytics.log(.permissionBannerTapped, parameters: [.kind: issue.rawValue])
-            navigator.present(.settings)
+            navigator.present(.settings(.permissionBanner))
         } label: {
             Label {
                 Text(issue.message)

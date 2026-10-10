@@ -8,6 +8,7 @@ struct SettingsScreen: View {
     @Environment(ArrivalNotifier.self) private var notifier
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    let entry: ScreenEntry
 
     var body: some View {
         @Bindable var preferences = preferences
@@ -62,7 +63,7 @@ struct SettingsScreen: View {
                 DebugSection()
                 #endif
             }
-            .trackScreen(.settings)
+            .trackScreen(.settings, opening: entry.parameters)
             .navigationTitle(Text(.tabSettings))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
