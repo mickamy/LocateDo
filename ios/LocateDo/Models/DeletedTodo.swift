@@ -16,6 +16,7 @@ nonisolated struct DeletedTodo: Equatable {
     let creatorID: UUID?
     let completedAt: Date?
     let completerID: UUID?
+    let placeEvent: PlaceEvent
     let createdAt: Date
 
     init(_ todo: Todo) {
@@ -26,11 +27,12 @@ nonisolated struct DeletedTodo: Equatable {
         creatorID = todo.creatorID
         completedAt = todo.completedAt
         completerID = todo.completerID
+        placeEvent = todo.placeEvent
         createdAt = todo.createdAt
     }
 
     func recreate(at place: Place) -> Todo {
-        let todo = Todo(id: id, title: title, place: place, now: createdAt)
+        let todo = Todo(id: id, title: title, place: place, placeEvent: placeEvent, now: createdAt)
         todo.assigneeID = assigneeID
         todo.creatorID = creatorID
         todo.completedAt = completedAt

@@ -339,7 +339,7 @@ extension LocalWritesTests {
         let fixture = try Fixture()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         fixture.writes.add(place)
-        let todo = Todo(title: "Milk", place: place, now: Date(timeIntervalSince1970: 10))
+        let todo = Todo(title: "Milk", place: place, placeEvent: .departure, now: Date(timeIntervalSince1970: 10))
         fixture.writes.add(todo)
         todo.assigneeID = UUID()
         let id = todo.id
@@ -353,6 +353,7 @@ extension LocalWritesTests {
         #expect(restored.title == "Milk")
         #expect(restored.place?.id == place.id)
         #expect(restored.assigneeID == assigneeID)
+        #expect(restored.placeEvent == .departure)
         #expect(restored.createdAt == Date(timeIntervalSince1970: 10))
         #expect(!restored.isCompleted)
         #expect(try fixture.queue().suffix(2).map(\.kind) == [.deleteTodo, .putTodo])
