@@ -275,6 +275,7 @@ todo:
     edit_title: "やることを編集"
     title_label: "やること"
     title_placeholder: "例) 牛乳を買う"
+    remind_on_leave: "離れるときに通知"
     place_label: "場所"
   completed_section: "完了済み"
   deleted: "「{title}」を削除しました"

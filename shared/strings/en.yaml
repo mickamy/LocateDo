@@ -281,6 +281,7 @@ todo:
     title_label: "To-do"
     title_placeholder: "e.g., Buy milk"
     place_label: "Place"
+    remind_on_leave: "Remind me when I leave"
   completed_section: "Completed"
   deleted: "Deleted “{title}”"
   delete_completed: "Delete All"

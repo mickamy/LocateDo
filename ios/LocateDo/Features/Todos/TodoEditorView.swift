@@ -11,6 +11,7 @@ struct TodoEditorView: View {
     @State private var title = ""
     @State private var place: Place?
     @State private var assigneeID: UUID?
+    @State private var remindsOnLeave = false
     @FocusState private var isTitleFocused: Bool
     @State private var paywall: PaywallTrigger?
     @State private var deletesOnDisappear = false
@@ -26,6 +27,14 @@ struct TodoEditorView: View {
         _title = State(initialValue: todo.title)
         _place = State(initialValue: todo.place)
         _assigneeID = State(initialValue: todo.assigneeID)
+        _remindsOnLeave = State(initialValue: todo.placeEvent == .departure)
+    }
+
+    private var placeEvent: PlaceEvent {
+        if remindsOnLeave {
+            return .departure
+        }
+        return .arrival
     }
 
     private var canSave: Bool {
@@ -54,6 +63,11 @@ struct TodoEditorView: View {
                     }
                     if memberships.count > 1 {
                         AssigneePicker(memberships: memberships, selection: $assigneeID)
+                    }
+                }
+                Section {
+                    Toggle(isOn: $remindsOnLeave) {
+                        Text(.todoEditorRemindOnLeave)
                     }
                 }
                 if editing != nil {
@@ -113,11 +127,11 @@ struct TodoEditorView: View {
         }
         let title = title.trimmingCharacters(in: .whitespaces)
         if let editing {
-            writes.update(editing, title: title, place: place, assigneeID: assigneeID)
+            writes.update(editing, title: title, place: place, assigneeID: assigneeID, placeEvent: placeEvent)
             dismiss()
             return
         }
-        let todo = Todo(title: title, place: place)
+        let todo = Todo(title: title, place: place, placeEvent: placeEvent)
         todo.assigneeID = assigneeID
         if let limit = writes.add(todo) {
             paywall = limit.trigger

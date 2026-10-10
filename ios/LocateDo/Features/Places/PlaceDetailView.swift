@@ -112,6 +112,18 @@ struct PlaceDetailView: View {
                     Button {
                         Task {
                             await notifier.requestAuthorization()
+                            await geofence.simulateDeparture(at: place)
+                        }
+                    } label: {
+                        Label {
+                            Text(verbatim: "Simulate departure (debug)")
+                        } icon: {
+                            Image(systemName: "figure.walk.departure")
+                        }
+                    }
+                    Button {
+                        Task {
+                            await notifier.requestAuthorization()
                             UNUserNotificationCenter.current().removeAllDeliveredNotifications()
                             await notifier.notify(.arrival, at: place, todos: place.openTodos(for: .arrival), after: 10)
                         }

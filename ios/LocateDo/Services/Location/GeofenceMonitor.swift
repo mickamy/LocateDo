@@ -168,6 +168,11 @@ final class GeofenceMonitor {
         place.lastArrivalNotifiedAt = nil
         await remind(.arrival, at: place)
     }
+
+    func simulateDeparture(at place: Place) async {
+        place.lastDepartureNotifiedAt = nil
+        await remind(.departure, at: place)
+    }
     #endif
 
     private func place(_ id: UUID) -> Place? {

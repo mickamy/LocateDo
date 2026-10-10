@@ -23,9 +23,16 @@ struct TodoRow: View {
                 isEditing = true
             } label: {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(todo.title)
-                        .strikethrough(todo.isCompleted)
-                        .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                    HStack(spacing: 6) {
+                        Text(todo.title)
+                            .strikethrough(todo.isCompleted)
+                            .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                        if todo.placeEvent == .departure {
+                            Image(systemName: "figure.walk.departure")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                     if let detail {
                         Text(detail)
                             .font(.caption)
@@ -101,10 +108,14 @@ struct TodoRow: View {
     }
 
     private var accessibilityTitle: String {
-        guard let detail else {
-            return todo.title
+        var parts = [todo.title]
+        if todo.placeEvent == .departure {
+            parts.append(String(localized: .todoEditorRemindOnLeave))
         }
-        return "\(todo.title), \(detail)"
+        if let detail {
+            parts.append(detail)
+        }
+        return parts.joined(separator: ", ")
     }
 
     private var status: LocalizedStringResource {

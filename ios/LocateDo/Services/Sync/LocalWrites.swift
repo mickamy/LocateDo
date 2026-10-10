@@ -279,12 +279,20 @@ final class LocalWrites {
 
 // Editing a to-do, deleting to-dos, and bringing them back with Undo.
 extension LocalWrites {
-    func update(_ todo: Todo, title: String, place: Place, assigneeID: UUID?, now: Date = .now) {
+    func update(
+        _ todo: Todo,
+        title: String,
+        place: Place,
+        assigneeID: UUID?,
+        placeEvent: PlaceEvent,
+        now: Date = .now
+    ) {
         todo.title = title
         if todo.place?.id != place.id {
             todo.place = place
         }
         todo.assigneeID = assigneeID
+        todo.placeEvent = placeEvent
         todo.updatedAt = now
         commit([Write.put(todo)].compactMap(\.self))
     }

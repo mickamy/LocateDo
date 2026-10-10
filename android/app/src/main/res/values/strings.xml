@@ -350,6 +350,7 @@
     <string name="todo_deleted">Deleted “%1$s”</string>
     <string name="todo_editor_edit_title">Edit To-Do</string>
     <string name="todo_editor_place_label">Place</string>
+    <string name="todo_editor_remind_on_leave">Remind me when I leave</string>
     <string name="todo_editor_title">Add a to-do</string>
     <string name="todo_editor_title_label">To-do</string>
     <string name="todo_editor_title_placeholder">e.g., Buy milk</string>

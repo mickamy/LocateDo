@@ -320,7 +320,7 @@ extension LocalWritesTests {
         let assignee = UUID()
 
         fixture.writes.update(todo, title: "Sunscreen", place: pharmacy, assigneeID: assignee,
-                              now: Date(timeIntervalSince1970: 1_000))
+                              placeEvent: .departure, now: Date(timeIntervalSince1970: 1_000))
 
         #expect(todo.place?.id == pharmacy.id)
         #expect(store.todos.isEmpty)
@@ -333,6 +333,7 @@ extension LocalWritesTests {
         #expect(input.title == "Sunscreen")
         #expect(input.placeID == ProtoInput.id(pharmacy.id))
         #expect(input.assigneeID == ProtoInput.id(assignee))
+        #expect(input.trigger.event == .departure)
     }
 
     @Test func undoingADeleteBringsBackTheSameTodo() throws {

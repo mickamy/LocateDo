@@ -333,6 +333,7 @@
     <string name="todo_deleted">「%1$s」を削除しました</string>
     <string name="todo_editor_edit_title">やることを編集</string>
     <string name="todo_editor_place_label">場所</string>
+    <string name="todo_editor_remind_on_leave">離れるときに通知</string>
     <string name="todo_editor_title">やることを追加</string>
     <string name="todo_editor_title_label">やること</string>
     <string name="todo_editor_title_placeholder">例) 牛乳を買う</string>

@@ -5356,6 +5356,23 @@
         }
       }
     },
+    "todo.editor.remind_on_leave" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remind me when I leave"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "離れるときに通知"
+          }
+        }
+      }
+    },
     "todo.editor.title" : {
       "extractionState" : "manual",
       "localizations" : {
