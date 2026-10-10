@@ -258,6 +258,11 @@ place:
     nearby_drugstore: "Drugstores"
     nearby_convenience: "Convenience stores"
     nearby_hardware: "Hardware stores"
+  duplicate:
+    title: "{name} is already saved"
+    message: "You can add to-dos to the saved place."
+    open: "Open Saved Place"
+    add: "Add as Another Place"
   detail:
     todos_label: "To-dos at this place"
     no_todos: "No to-dos yet"

@@ -253,6 +253,11 @@ place:
     nearby_drugstore: "ドラッグストア"
     nearby_convenience: "コンビニ"
     nearby_hardware: "ホームセンター"
+  duplicate:
+    title: "{name}はもう登録されています"
+    message: "やることは、登録済みの場所に追加できます。"
+    open: "登録済みの場所を開く"
+    add: "別の場所として追加"
   detail:
     todos_label: "この場所でやること"
     no_todos: "やることはまだありません"

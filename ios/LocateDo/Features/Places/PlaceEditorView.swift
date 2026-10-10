@@ -15,6 +15,8 @@ struct PlaceEditorView: View {
     @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Environment(GeofenceMonitor.self) private var geofence
+    @Environment(AppRouter.self) private var router
+    @Query private var savedPlaces: [Place]
     @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
 
     let place: Place?
@@ -32,6 +34,7 @@ struct PlaceEditorView: View {
     @State private var hasChosenCategory = false
     @State private var path: [Step] = []
     @State private var pickedName: String?
+    @State private var duplicate: Place?
 
     init(place: Place? = nil, defaultRadiusMeters: Double = Place.defaultRadiusMeters, onSave: (() -> Void)? = nil) {
         self.place = place
@@ -56,6 +59,26 @@ struct PlaceEditorView: View {
         }
         .sheet(item: $paywall) { trigger in
             PaywallView(trigger: trigger)
+        }
+        .alert(
+            Text(.placeDuplicateTitle(duplicate?.name ?? "")),
+            isPresented: isAskingAboutDuplicate,
+            presenting: duplicate
+        ) { existing in
+            Button(.placeDuplicateOpen) {
+                answerDuplicate(.open)
+                dismiss()
+                router.open(placeID: existing.id)
+            }
+            Button(.placeDuplicateAdd) {
+                answerDuplicate(.add)
+                path = [.details]
+            }
+            Button(.commonCancel, role: .cancel) {
+                answerDuplicate(.cancel)
+            }
+        } message: { _ in
+            Text(.placeDuplicateMessage)
         }
     }
 
@@ -82,7 +105,7 @@ struct PlaceEditorView: View {
                 pickedName = suggestedName
             }
             if isEmbedded {
-                path = [.details]
+                continueAfterPick(at: picked)
             }
         }
     }
@@ -179,14 +202,6 @@ struct PlaceEditorView: View {
         }
     }
 
-    private func chooseOnMap() {
-        if place == nil {
-            path.removeAll()
-        } else {
-            isPickingLocation = true
-        }
-    }
-
     @ViewBuilder
     private func destination(_ step: Step) -> some View {
         switch step {
@@ -209,12 +224,6 @@ struct PlaceEditorView: View {
                 onSave: save
             )
         }
-    }
-
-    private var todoTitles: [String] {
-        (todos.map(\.title) + [todoDraft])
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
     }
 
     private func save() {
@@ -251,6 +260,43 @@ struct PlaceEditorView: View {
 }
 
 extension PlaceEditorView {
+    // A pick on a place already saved asks first: its to-dos most likely belong there.
+    private func continueAfterPick(at coordinate: CLLocationCoordinate2D) {
+        if let existing = PlaceDuplicate.nearest(to: coordinate, among: savedPlaces) {
+            duplicate = existing
+            return
+        }
+        path = [.details]
+    }
+
+    private var isAskingAboutDuplicate: Binding<Bool> {
+        Binding {
+            duplicate != nil
+        } set: { isPresented in
+            if !isPresented {
+                duplicate = nil
+            }
+        }
+    }
+
+    private func answerDuplicate(_ choice: PlaceDuplicateChoice) {
+        Analytics.log(.placeDuplicatePrompted, parameters: [.choice: choice.rawValue])
+    }
+
+    private func chooseOnMap() {
+        if place == nil {
+            path.removeAll()
+        } else {
+            isPickingLocation = true
+        }
+    }
+
+    private var todoTitles: [String] {
+        (todos.map(\.title) + [todoDraft])
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
     private func categoryLabel(_ category: PlaceCategory?) -> some View {
         let style = CategoryStyle(category)
         return Label(style.name, systemImage: style.systemImage)

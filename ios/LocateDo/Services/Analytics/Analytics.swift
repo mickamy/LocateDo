@@ -24,6 +24,7 @@ nonisolated enum AnalyticsEvent: String {
     case permissionBannerTapped = "permission_banner_tapped"
     case placeAdded = "place_added"
     case placeDeleted = "place_deleted"
+    case placeDuplicatePrompted = "place_duplicate_prompted"
     case todoAdded = "todo_added"
     case todoCompleted = "todo_completed"
     case todoDeleted = "todo_deleted"
@@ -46,6 +47,7 @@ nonisolated enum AnalyticsParameter: String {
     case assigned
     case campaignID = "campaign_id"
     case category
+    case choice
     case completedTodoCount7d = "completed_todo_count_7d"
     case count
     case customCategoryCount = "custom_category_count"
