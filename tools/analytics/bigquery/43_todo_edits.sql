@@ -1,7 +1,7 @@
 -- How to-dos get edited and deleted, by month and platform.
--- edit_opens / add_opens: the to-do editor opened to edit an existing to-do or to add one.
+-- new_opens / edit_opens: the to-do editor opened to add a to-do or to edit one.
 -- *_deletions: delete actions by where they came from; deleted_todos counts the to-dos they took, since one
--- completed_bulk deletion takes all of a place's or the To-Do tab's completed to-dos.
+-- completed_bulk deletion takes all of a place's or All To-Dos' completed to-dos.
 -- undo_rate: undos over single deletes (swipe, menu, editor); deleting all completed offers no Undo.
 WITH edits AS (
   SELECT
@@ -20,7 +20,7 @@ WITH edits AS (
 SELECT
   month,
   platform,
-  COUNTIF(event_name = 'screen_view' AND mode = 'add') AS add_opens,
+  COUNTIF(event_name = 'screen_view' AND mode = 'new') AS new_opens,
   COUNTIF(event_name = 'screen_view' AND mode = 'edit') AS edit_opens,
   COUNT(DISTINCT IF(event_name = 'screen_view' AND mode = 'edit', user_pseudo_id, NULL)) AS editing_users,
   COUNTIF(event_name = 'todo_deleted' AND via = 'swipe') AS swipe_deletions,
