@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.core.analytics
 
 import com.locatedo.locatedo.core.datastore.AppPreferences
+import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
@@ -28,11 +29,20 @@ class WriteAnalytics @Inject constructor(
     val lastArrivalOpenedAt: Instant?
         get() = lastArrivalOpen?.openedAt
 
-    suspend fun placeAdded(place: Place, category: Category?, placeCount: Int, source: PlaceSource?) {
+    suspend fun placeAdded(
+        place: Place,
+        category: Category?,
+        placeCount: Int,
+        source: PlaceSource?,
+        todoCount: Int,
+        suggestedCategory: BuiltinCategory?,
+    ) {
         val parameters = mutableMapOf<AnalyticsParameter, Any>(
             AnalyticsParameter.PLACE_COUNT to placeCount,
             AnalyticsParameter.CATEGORY to analyticsCategory(category),
             AnalyticsParameter.RADIUS_M to place.radiusMeters.toInt(),
+            AnalyticsParameter.TODO_COUNT to todoCount,
+            AnalyticsParameter.SUGGESTED_CATEGORY to (suggestedCategory?.key ?: "none"),
             AnalyticsParameter.DAYS_SINCE_INSTALL to daysSinceInstall(),
         )
         if (source != null) {
@@ -53,10 +63,11 @@ class WriteAnalytics @Inject constructor(
         )
     }
 
-    suspend fun todoAdded(todo: Todo, openTodoCount: Int, placeOpenTodos: Int) {
+    suspend fun todoAdded(todo: Todo, openTodoCount: Int, placeOpenTodos: Int, via: TodoAddVia) {
         analytics.log(
             AnalyticsEvent.TODO_ADDED,
             mapOf(
+                AnalyticsParameter.VIA to via.key,
                 AnalyticsParameter.OPEN_TODO_COUNT to openTodoCount,
                 AnalyticsParameter.PLACE_OPEN_TODOS to placeOpenTodos,
                 AnalyticsParameter.ASSIGNED to (todo.assigneeId != null),

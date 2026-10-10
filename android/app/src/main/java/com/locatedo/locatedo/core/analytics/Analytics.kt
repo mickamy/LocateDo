@@ -77,7 +77,9 @@ enum class AnalyticsParameter(val key: String) {
     SIGNED_IN("signed_in"),
     SOURCE("source"),
     STEP("step"),
+    SUGGESTED_CATEGORY("suggested_category"),
     TO("to"),
+    TODO_COUNT("todo_count"),
     TRIGGER("trigger"),
     VIA("via"),
 }

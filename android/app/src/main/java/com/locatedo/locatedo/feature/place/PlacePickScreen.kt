@@ -1,14 +1,22 @@
 package com.locatedo.locatedo.feature.place
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +24,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,11 +53,13 @@ import com.locatedo.locatedo.ui.analytics.TrackScreen
 
 private const val PICK_ZOOM = 16f
 
-// Like the iOS picker: tap the map or a store on it to drop the pin there.
+// The first screen of adding a place, like the iOS picker: tap the map or a store on it, search, or use where you
+// are, then confirm the pin. Editing a place opens it to move the pin.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacePickScreen(
     viewModel: PlaceEditorViewModel,
+    onOpenSearch: () -> Unit,
     onLocationChosen: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -58,6 +72,12 @@ fun PlacePickScreen(
             position = CameraPosition.fromLatLngZoom(initial.toLatLng(), PICK_ZOOM)
         }
     }
+    val nearbyKinds = listOf(
+        stringResource(R.string.place_picker_nearby_grocery),
+        stringResource(R.string.place_picker_nearby_drugstore),
+        stringResource(R.string.place_picker_nearby_convenience),
+        stringResource(R.string.place_picker_nearby_hardware),
+    )
 
     LaunchedEffect(Unit) {
         if (initial == null) {
@@ -67,6 +87,11 @@ fun PlacePickScreen(
         } else if (preview.coordinate == null) {
             viewModel.previewPick(initial)
         }
+    }
+    // A pick from the search or from where you are may be off screen.
+    LaunchedEffect(preview.coordinate) {
+        val coordinate = preview.coordinate ?: return@LaunchedEffect
+        cameraPositionState.animate(CameraUpdateFactory.newLatLng(coordinate.toLatLng()))
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -79,7 +104,7 @@ fun PlacePickScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.place_picker_title)) },
+                title = { SearchField(query = uiState.query, onClick = onOpenSearch) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_cancel))
@@ -94,21 +119,73 @@ fun PlacePickScreen(
                 cameraPositionState = cameraPositionState,
                 uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false),
                 onMapClick = { latLng -> viewModel.previewPick(Coordinate(latLng.latitude, latLng.longitude)) },
-                onPOIClick = { poi -> viewModel.previewPick(Coordinate(poi.latLng.latitude, poi.latLng.longitude), name = poi.name) },
+                onPOIClick = { poi ->
+                    viewModel.previewPick(Coordinate(poi.latLng.latitude, poi.latLng.longitude), name = poi.name, placeId = poi.placeId)
+                },
             ) {
                 preview.coordinate?.let { coordinate ->
                     Marker(state = rememberUpdatedMarkerState(position = coordinate.toLatLng()))
                 }
             }
-            if (preview.coordinate != null) {
-                PickCard(
-                    preview = preview,
-                    onConfirm = viewModel::confirmPick,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp),
-                )
+            // The kinds of store people add most; each opens the search with that word.
+            LazyRow(
+                modifier = Modifier.align(Alignment.TopStart),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(nearbyKinds) { kind ->
+                    SuggestionChip(
+                        onClick = {
+                            viewModel.setQuery(kind)
+                            onOpenSearch()
+                        },
+                        label = { Text(kind) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ),
+                    )
+                }
             }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                SmallFloatingActionButton(onClick = viewModel::previewCurrentLocation) {
+                    Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.place_picker_use_current_location))
+                }
+                if (preview.coordinate != null) {
+                    PickCard(preview = preview, onConfirm = viewModel::confirmPick)
+                }
+            }
+        }
+    }
+}
+
+// Looks like a search field and opens the full-screen search, as Google Maps does.
+@Composable
+private fun SearchField(query: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            var text = query
+            var color = MaterialTheme.colorScheme.onSurface
+            if (query.isBlank()) {
+                text = stringResource(R.string.place_picker_search_placeholder)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Text(text = text, style = MaterialTheme.typography.bodyLarge, color = color, maxLines = 1)
         }
     }
 }

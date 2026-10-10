@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.data
 
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsUserProperty
+import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.FreeLimit
@@ -271,7 +272,25 @@ class RoomTodoRepositoryTest {
         assertEquals(2L, values["open_todo_count"])
         assertEquals(1L, values["place_open_todos"])
         assertEquals(1L, values["assigned"])
+        assertEquals("todo_editor", values["via"])
         assertEquals("2", analytics.userProperties[AnalyticsUserProperty.OPEN_TODO_COUNT])
+    }
+
+    @Test
+    fun aTodoTypedWithANewPlaceSaysSo() = runTest {
+        repository.add(todo("Milk", store.id), TodoAddVia.PLACE_EDITOR)
+
+        assertEquals("place_editor", analytics.values(AnalyticsEvent.TODO_ADDED)["via"])
+    }
+
+    @Test
+    fun theRemainingRoomCountsOpenTodosOnlyOnTheFreePlan() = runTest {
+        repository.add(todo("Milk", store.id))
+        assertEquals(FreeLimit.OPEN_TODOS.max - 1, repository.remainingOpen())
+
+        proStatus.pro = true
+
+        assertNull(repository.remainingOpen())
     }
 
     @Test

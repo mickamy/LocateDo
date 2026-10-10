@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.feature.place
 
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
@@ -21,6 +22,7 @@ import com.locatedo.locatedo.testing.FakeGeocodingRepository
 import com.locatedo.locatedo.testing.FakeLocationRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakePlacesRepository
+import com.locatedo.locatedo.testing.FakeTodoRepository
 import com.locatedo.locatedo.testing.testPreferences
 import java.time.Clock
 import java.time.Instant
@@ -53,6 +55,7 @@ class PlaceEditorViewModelTest {
     private val now = Instant.parse("2026-10-06T00:00:00Z")
     private val clock = Clock.fixed(now, ZoneOffset.UTC)
     private val places = FakePlaceRepository()
+    private val todos = FakeTodoRepository()
     private val paywalls = PaywallRequests()
     private val categories = FakeCategoryRepository()
     private val search = FakePlacesRepository()
@@ -77,7 +80,7 @@ class PlaceEditorViewModelTest {
     }
 
     @Test
-    fun aNewDraftTakesTheDefaultRadiusAndTheOtherCategory() = runTest(dispatcher) {
+    fun aNewDraftTakesTheDefaultRadiusAndNoCategoryUntilOneIsGuessed() = runTest(dispatcher) {
         val preferences = preferencesOf()
         preferences.setDefaultRadiusMeters(250.0)
         val viewModel = viewModel(preferences)
@@ -86,8 +89,109 @@ class PlaceEditorViewModelTest {
 
         val draft = viewModel.uiState.value.draft
         assertEquals(250.0, draft.radiusMeters, 0.0)
-        assertEquals(other.id, draft.categoryId)
+        assertNull(draft.categoryId)
         assertFalse(draft.canSave)
+    }
+
+    @Test
+    fun aSearchedStoreGuessesItsCategory() = runTest(dispatcher) {
+        search.candidates["p1"] = search.candidates.getValue("p1").copy(types = listOf("supermarket", "store"))
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+
+        val draft = viewModel.uiState.value.draft
+        assertEquals(BuiltinCategory.SHOPPING, draft.suggestion)
+        assertEquals(shopping.id, draft.categoryId)
+    }
+
+    @Test
+    fun aStoreTappedOnTheMapGuessesFromItsTypes() = runTest(dispatcher) {
+        search.types["poi1"] = listOf("convenience_store")
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+
+        viewModel.previewPick(store, name = "Corner Store", placeId = "poi1")
+        viewModel.confirmPick()
+
+        assertEquals(shopping.id, viewModel.uiState.value.draft.categoryId)
+        assertEquals("Corner Store", viewModel.uiState.value.draft.name)
+    }
+
+    @Test
+    fun aNewPickReplacesAPickedNameButNotATypedOne() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.previewPick(store, name = "Corner Store", placeId = "poi1")
+        viewModel.confirmPick()
+
+        viewModel.previewPick(Coordinate(35.1, 139.1), name = "Bakery", placeId = "poi2")
+        viewModel.confirmPick()
+        assertEquals("Bakery", viewModel.uiState.value.draft.name)
+
+        viewModel.setName("Mom's favorite")
+        viewModel.previewPick(store, name = "Corner Store", placeId = "poi1")
+        viewModel.confirmPick()
+        assertEquals("Mom's favorite", viewModel.uiState.value.draft.name)
+    }
+
+    @Test
+    fun whereYouAreIsShownOnTheMapBeforeItIsUsed() = runTest(dispatcher) {
+        location.coordinate = store
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        viewModel.start(placeId = null)
+
+        viewModel.previewCurrentLocation()
+
+        assertEquals(store, viewModel.uiState.value.pickPreview.coordinate)
+        assertTrue(events.none { it is PlaceEditorEvent.LocationChosen })
+
+        viewModel.confirmPick()
+
+        assertEquals(PlaceSource.CURRENT_LOCATION, viewModel.uiState.value.draft.source)
+    }
+
+    @Test
+    fun aPlainMapPointGuessesNothing() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+
+        viewModel.previewPick(store)
+        viewModel.confirmPick()
+
+        assertNull(viewModel.uiState.value.draft.suggestion)
+        assertNull(viewModel.uiState.value.draft.categoryId)
+    }
+
+    @Test
+    fun aCategoryChosenByHandSurvivesANewPick() = runTest(dispatcher) {
+        search.candidates["p1"] = search.candidates.getValue("p1").copy(types = listOf("supermarket"))
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.setCategory(other.id)
+
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+
+        assertEquals(other.id, viewModel.uiState.value.draft.categoryId)
+        assertEquals(BuiltinCategory.SHOPPING, viewModel.uiState.value.draft.suggestion)
+    }
+
+    @Test
+    fun savingWithoutACategoryUsesOtherAndLogsTheGuess() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.previewPick(store)
+        viewModel.confirmPick()
+        viewModel.setName("Home")
+
+        viewModel.save()
+
+        assertEquals(other.id, places.added.single().categoryId)
+        assertEquals(listOf<BuiltinCategory?>(null), places.suggestions)
     }
 
     @Test
@@ -214,6 +318,82 @@ class PlaceEditorViewModelTest {
     }
 
     @Test
+    fun todosTypedWithANewPlaceFollowIt() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+        viewModel.setTodoDraft("Milk")
+        viewModel.addTodoDraft()
+        viewModel.setTodoDraft(" Eggs ")
+        viewModel.addTodoDraft()
+        viewModel.setTodo(1, "Bread")
+        viewModel.setTodoDraft("  ")
+        viewModel.addTodoDraft()
+        viewModel.setTodoDraft("Butter")
+
+        viewModel.save()
+
+        val place = places.added.single()
+        assertEquals(listOf(3), places.todoCounts)
+        assertEquals(listOf("Milk", "Bread", "Butter"), todos.added.map { it.title })
+        assertTrue(todos.added.all { it.placeId == place.id && it.assigneeId == null })
+        assertEquals(List(3) { TodoAddVia.PLACE_EDITOR }, todos.addedVia)
+    }
+
+    @Test
+    fun removingATypedTodoLeavesItOut() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+        viewModel.setTodoDraft("Milk")
+        viewModel.addTodoDraft()
+        viewModel.setTodoDraft("Eggs")
+        viewModel.addTodoDraft()
+
+        viewModel.removeTodo(0)
+        viewModel.save()
+
+        assertEquals(listOf("Eggs"), todos.added.map { it.title })
+    }
+
+    @Test
+    fun theFreePlanStopsTypedTodosAtTheLimit() = runTest(dispatcher) {
+        todos.remaining = 1
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+        viewModel.setTodoDraft("Milk")
+        viewModel.addTodoDraft()
+
+        assertEquals(0, viewModel.uiState.value.todosLeft)
+        viewModel.setTodoDraft("Eggs")
+        viewModel.addTodoDraft()
+        assertEquals(listOf("Milk"), viewModel.uiState.value.draft.todos)
+
+        viewModel.save()
+
+        assertEquals(listOf("Milk"), todos.added.map { it.title })
+        assertEquals(listOf(1), places.todoCounts)
+    }
+
+    @Test
+    fun aPlaceOverTheLimitAddsNoTodos() = runTest(dispatcher) {
+        places.limit = FreeLimit.PLACES
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+        viewModel.setTodoDraft("Milk")
+
+        viewModel.save()
+
+        assertTrue(todos.added.isEmpty())
+    }
+
+    @Test
     fun theFormReportsWhetherItCreatesOrEdits() = runTest(dispatcher) {
         val stored = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
         places.state.value = listOf(PlaceWithTodos(stored, emptyList()))
@@ -226,7 +406,7 @@ class PlaceEditorViewModelTest {
 
         assertEquals(
             listOf(
-                AnalyticsScreen.PLACE_EDITOR to mapOf("mode" to "new"),
+                AnalyticsScreen.PLACE_EDITOR to mapOf("mode" to "new", "step" to "details"),
                 AnalyticsScreen.PLACE_EDITOR to mapOf("mode" to "edit"),
             ),
             analytics.screens,
@@ -317,6 +497,7 @@ class PlaceEditorViewModelTest {
     private fun TestScope.viewModel(preferences: AppPreferences = preferencesOf()): PlaceEditorViewModel {
         val viewModel = PlaceEditorViewModel(
             placeRepository = places,
+            todoRepository = todos,
             categoryRepository = categories,
             placesRepository = search,
             geocodingRepository = geocoding,

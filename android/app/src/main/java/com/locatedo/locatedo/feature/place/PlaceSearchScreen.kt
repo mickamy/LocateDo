@@ -6,8 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,14 +31,13 @@ import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 
-// Google Maps' search: the field is the title, suggestions fill the page, and two shortcuts sit on top.
+// Google Maps' search, opened from the map: the field is the title and suggestions fill the page. A suggestion goes
+// back to the map with its pin.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceSearchScreen(
     viewModel: PlaceEditorViewModel,
-    onChooseOnMap: () -> Unit,
     onPredictionFetched: () -> Unit,
-    onLocationChosen: () -> Unit,
     onBack: () -> Unit,
 ) {
     TrackScreen(AnalyticsScreen.PLACE_SEARCH)
@@ -52,10 +49,8 @@ fun PlaceSearchScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
-            when (event) {
-                PlaceEditorEvent.PredictionFetched -> onPredictionFetched()
-                PlaceEditorEvent.LocationChosen -> onLocationChosen()
-                is PlaceEditorEvent.Saved -> Unit
+            if (event is PlaceEditorEvent.PredictionFetched) {
+                onPredictionFetched()
             }
         }
     }
@@ -89,25 +84,6 @@ fun PlaceSearchScreen(
         },
     ) { padding ->
         LazyColumn(contentPadding = padding) {
-            if (uiState.query.isBlank()) {
-                item {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.place_picker_use_current_location)) },
-                        leadingContent = { Icon(Icons.Filled.MyLocation, contentDescription = null) },
-                        modifier = Modifier.clickable(onClick = viewModel::useCurrentLocation),
-                    )
-                }
-                item {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.place_editor_choose_on_map)) },
-                        leadingContent = { Icon(Icons.Filled.Map, contentDescription = null) },
-                        modifier = Modifier.clickable {
-                            viewModel.pickOnMap()
-                            onChooseOnMap()
-                        },
-                    )
-                }
-            }
             items(uiState.predictions, key = { it.id }) { prediction ->
                 ListItem(
                     headlineContent = { Text(prediction.primaryText) },

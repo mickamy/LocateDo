@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.testing
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
@@ -12,6 +13,7 @@ import com.locatedo.locatedo.core.geofence.GeofenceRegistrar
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.location.GeocodingRepository
 import com.locatedo.locatedo.core.location.LocationRepository
+import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
@@ -52,6 +54,8 @@ class FakePlaceRepository : PlaceRepository {
     val state = MutableStateFlow<List<PlaceWithTodos>>(emptyList())
     val added = mutableListOf<Place>()
     val sources = mutableListOf<PlaceSource?>()
+    val todoCounts = mutableListOf<Int>()
+    val suggestions = mutableListOf<BuiltinCategory?>()
     val updated = mutableListOf<Place>()
     var limit: FreeLimit? = null
 
@@ -62,10 +66,17 @@ class FakePlaceRepository : PlaceRepository {
     override fun observeWithTodos(id: UUID): Flow<PlaceWithTodos?> =
         state.map { entries -> entries.firstOrNull { it.place.id == id } }
 
-    override suspend fun add(place: Place, source: PlaceSource?): FreeLimit? {
+    override suspend fun add(
+        place: Place,
+        source: PlaceSource?,
+        todoCount: Int,
+        suggestedCategory: BuiltinCategory?,
+    ): FreeLimit? {
         limit?.let { return it }
         added += place
         sources += source
+        todoCounts += todoCount
+        suggestions += suggestedCategory
         state.value = state.value + PlaceWithTodos(place, emptyList())
         return null
     }
@@ -234,16 +245,21 @@ class FakeTodoRepository : TodoRepository {
     val deleted = mutableListOf<UUID>()
     val deletedVia = mutableListOf<TodoDeletionVia>()
     val restored = mutableListOf<Todo>()
+    val addedVia = mutableListOf<TodoAddVia>()
     var limit: FreeLimit? = null
+    var remaining: Int? = null
 
     override fun observeAll(): Flow<List<Todo>> = state
 
-    override suspend fun add(todo: Todo): FreeLimit? {
+    override suspend fun add(todo: Todo, via: TodoAddVia): FreeLimit? {
         limit?.let { return it }
         added += todo
+        addedVia += via
         state.value = state.value + todo
         return null
     }
+
+    override suspend fun remainingOpen(): Int? = remaining
 
     override suspend fun update(todo: Todo) {
         updated += todo
@@ -369,7 +385,11 @@ class FakePlacesRepository : PlacesRepository {
         return predictions
     }
 
+    val types = mutableMapOf<String, List<String>>()
+
     override suspend fun fetch(id: String): PlaceCandidate? = candidates[id]
+
+    override suspend fun types(id: String): List<String> = types[id].orEmpty()
 }
 
 class FakeGeocodingRepository(var result: GeocodedPlace? = null) : GeocodingRepository {

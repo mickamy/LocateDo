@@ -188,6 +188,8 @@ class RoomPlaceRepositoryTest {
         assertEquals(1L, values["place_count"])
         assertEquals("shopping", values["category"])
         assertEquals(150L, values["radius_m"])
+        assertEquals(0L, values["todo_count"])
+        assertEquals("none", values["suggested_category"])
         assertEquals("search", values["source"])
         assertEquals(4L, values["days_since_install"])
         assertEquals("1", analytics.userProperties[AnalyticsUserProperty.PLACE_COUNT])

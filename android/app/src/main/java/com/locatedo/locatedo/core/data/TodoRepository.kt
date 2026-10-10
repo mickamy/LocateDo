@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.core.data
 
 import androidx.room.withTransaction
+import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.database.LocateDoDatabase
@@ -22,7 +23,10 @@ interface TodoRepository {
     fun observeAll(): Flow<List<Todo>>
 
     // Returns the limit that stopped the write on a free plan, or null when it went through.
-    suspend fun add(todo: Todo): FreeLimit?
+    suspend fun add(todo: Todo, via: TodoAddVia = TodoAddVia.TODO_EDITOR): FreeLimit?
+
+    // How many more open to-dos the free plan allows, or null when there is no limit (Pro).
+    suspend fun remainingOpen(): Int?
     suspend fun update(todo: Todo)
     suspend fun setCompleted(id: UUID, completed: Boolean): FreeLimit?
 
@@ -52,7 +56,7 @@ class RoomTodoRepository @Inject constructor(
     override fun observeAll(): Flow<List<Todo>> =
         todoDao.observeAll().map { todos -> todos.map(TodoEntity::asModel) }
 
-    override suspend fun add(todo: Todo): FreeLimit? {
+    override suspend fun add(todo: Todo, via: TodoAddVia): FreeLimit? {
         val limit = database.withTransaction {
             if (openLimitReached()) {
                 return@withTransaction FreeLimit.OPEN_TODOS
@@ -65,9 +69,16 @@ class RoomTodoRepository @Inject constructor(
             analytics.limitReached(limit)
             return limit
         }
-        analytics.todoAdded(todo, todoDao.countOpen(), todoDao.countOpen(todo.placeId.toString()))
+        analytics.todoAdded(todo, todoDao.countOpen(), todoDao.countOpen(todo.placeId.toString()), via)
         reportCounts()
         return null
+    }
+
+    override suspend fun remainingOpen(): Int? {
+        if (proStatus.isPro()) {
+            return null
+        }
+        return (FreeLimit.OPEN_TODOS.max - todoDao.countOpen()).coerceAtLeast(0)
     }
 
     override suspend fun update(todo: Todo) {

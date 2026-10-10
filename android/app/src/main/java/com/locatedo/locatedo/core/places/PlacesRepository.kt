@@ -22,11 +22,19 @@ import kotlinx.coroutines.tasks.await
 
 data class PlacePrediction(val id: String, val primaryText: String, val secondaryText: String?, val distanceMeters: Int? = null)
 
-data class PlaceCandidate(val name: String?, val address: String?, val coordinate: Coordinate)
+data class PlaceCandidate(
+    val name: String?,
+    val address: String?,
+    val coordinate: Coordinate,
+    val types: List<String> = emptyList(),
+)
 
 interface PlacesRepository {
     suspend fun autocomplete(query: String, near: Coordinate?, origin: Coordinate?): List<PlacePrediction>
     suspend fun fetch(id: String): PlaceCandidate?
+
+    // For a store tapped on the map, which comes with an id and a name only.
+    suspend fun types(id: String): List<String>
 }
 
 @Singleton
@@ -66,7 +74,8 @@ class GooglePlacesRepository @Inject constructor(@param:ApplicationContext priva
     }
 
     override suspend fun fetch(id: String): PlaceCandidate? {
-        val request = FetchPlaceRequest.builder(id, listOf(Place.Field.DISPLAY_NAME, Place.Field.FORMATTED_ADDRESS, Place.Field.LOCATION))
+        val fields = listOf(Place.Field.DISPLAY_NAME, Place.Field.FORMATTED_ADDRESS, Place.Field.LOCATION, Place.Field.TYPES)
+        val request = FetchPlaceRequest.builder(id, fields)
             .setSessionToken(sessionToken)
             .build()
         sessionToken = null
@@ -76,7 +85,14 @@ class GooglePlacesRepository @Inject constructor(@param:ApplicationContext priva
             name = place.displayName,
             address = place.formattedAddress,
             coordinate = Coordinate(location.latitude, location.longitude),
+            types = place.placeTypes.orEmpty(),
         )
+    }
+
+    // Types alone bill as Place Details Essentials.
+    override suspend fun types(id: String): List<String> {
+        val request = FetchPlaceRequest.newInstance(id, listOf(Place.Field.TYPES))
+        return runCatching { client.fetchPlace(request).await().place.placeTypes }.getOrNull().orEmpty()
     }
 
     private companion object {

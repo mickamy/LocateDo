@@ -6,6 +6,7 @@ import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.database.PlaceAndTodos
 import com.locatedo.locatedo.core.database.PlaceDao
 import com.locatedo.locatedo.core.database.PlaceEntity
+import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
@@ -27,7 +28,13 @@ interface PlaceRepository {
     fun observeWithTodos(id: UUID): Flow<PlaceWithTodos?>
 
     // Returns the limit that stopped the write on a free plan, or null when it went through.
-    suspend fun add(place: Place, source: PlaceSource? = null): FreeLimit?
+    // todoCount is how many to-dos were typed with a new place; they are added through TodoRepository afterwards.
+    suspend fun add(
+        place: Place,
+        source: PlaceSource? = null,
+        todoCount: Int = 0,
+        suggestedCategory: BuiltinCategory? = null,
+    ): FreeLimit?
     suspend fun update(place: Place)
     suspend fun delete(id: UUID)
     // Null forgets the last notification, as the debug arrival does.
@@ -53,7 +60,12 @@ class RoomPlaceRepository @Inject constructor(
         placeDao.observeWithTodos(id.toString()).map { it?.asModel() }
 
     // Counting and inserting in one transaction keeps two quick adds from both slipping under the limit.
-    override suspend fun add(place: Place, source: PlaceSource?): FreeLimit? {
+    override suspend fun add(
+        place: Place,
+        source: PlaceSource?,
+        todoCount: Int,
+        suggestedCategory: BuiltinCategory?,
+    ): FreeLimit? {
         val limit = database.withTransaction {
             if (!proStatus.isPro() && placeDao.count() >= FreeLimit.PLACES.max) {
                 return@withTransaction FreeLimit.PLACES
@@ -67,7 +79,7 @@ class RoomPlaceRepository @Inject constructor(
             return limit
         }
         val category = place.categoryId?.let { database.categoryDao().get(it.toString())?.asModel() }
-        analytics.placeAdded(place, category, placeDao.count(), source)
+        analytics.placeAdded(place, category, placeDao.count(), source, todoCount, suggestedCategory)
         reportCounts()
         return null
     }

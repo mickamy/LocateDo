@@ -54,11 +54,13 @@ import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
 import com.locatedo.locatedo.feature.onboarding.ReminderSetupNeed
 import com.locatedo.locatedo.feature.onboarding.ReminderSetupSheet
 import com.locatedo.locatedo.feature.paywall.PaywallScreen
+import com.locatedo.locatedo.feature.place.PlaceCategoryScreen
 import com.locatedo.locatedo.feature.place.PlaceDetailScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorScreen
 import com.locatedo.locatedo.feature.place.PlaceEditorViewModel
 import com.locatedo.locatedo.feature.place.PlacePickScreen
 import com.locatedo.locatedo.feature.place.PlaceSearchScreen
+import com.locatedo.locatedo.feature.place.PlaceTodosScreen
 import com.locatedo.locatedo.feature.promotions.PromotionsConsentSheet
 import com.locatedo.locatedo.feature.settings.SettingsScreen
 import com.locatedo.locatedo.feature.sharing.AcceptInviteScreen
@@ -74,9 +76,11 @@ import com.locatedo.locatedo.ui.navigation.HomeKey
 import com.locatedo.locatedo.ui.navigation.MapKey
 import com.locatedo.locatedo.ui.navigation.PaywallKey
 import com.locatedo.locatedo.ui.navigation.PlaceDetailKey
+import com.locatedo.locatedo.ui.navigation.PlaceCategoryKey
 import com.locatedo.locatedo.ui.navigation.PlaceEditorKey
 import com.locatedo.locatedo.ui.navigation.PlacePickKey
 import com.locatedo.locatedo.ui.navigation.PlaceSearchKey
+import com.locatedo.locatedo.ui.navigation.PlaceTodosKey
 import com.locatedo.locatedo.ui.navigation.SettingsKey
 import com.locatedo.locatedo.ui.navigation.SharingKey
 import com.locatedo.locatedo.ui.navigation.TodosKey
@@ -292,7 +296,7 @@ private fun Tabs(
                         HomeScreen(
                             onAddPlace = {
                                 placeEditor.start(placeId = null)
-                                backStack.add(PlaceSearchKey)
+                                backStack.add(PlacePickKey)
                             },
                             onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                             onOpenSharing = {
@@ -305,7 +309,7 @@ private fun Tabs(
                         MapScreen(
                             onAddPlace = {
                                 placeEditor.start(placeId = null)
-                                backStack.add(PlaceSearchKey)
+                                backStack.add(PlacePickKey)
                             },
                             onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                         )
@@ -314,7 +318,7 @@ private fun Tabs(
                         TodoListScreen(
                             onAddPlace = {
                                 placeEditor.start(placeId = null)
-                                backStack.add(PlaceSearchKey)
+                                backStack.add(PlacePickKey)
                             },
                             onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
                         )
@@ -365,18 +369,19 @@ private fun Tabs(
                     entry<PlaceSearchKey> {
                         PlaceSearchScreen(
                             viewModel = placeEditor,
-                            onChooseOnMap = { backStack.add(PlacePickKey) },
-                            onPredictionFetched = { backStack.add(PlacePickKey) },
-                            onLocationChosen = { backStack.add(PlaceEditorKey) },
+                            onPredictionFetched = { backStack.removeLastOrNull() },
                             onBack = { backStack.removeLastOrNull() },
                         )
                     }
+                    // A new place starts here and goes on to its details; an edited one comes back to them.
                     entry<PlacePickKey> {
                         PlacePickScreen(
                             viewModel = placeEditor,
+                            onOpenSearch = { backStack.add(PlaceSearchKey) },
                             onLocationChosen = {
-                                backStack.removeLastOrNull()
-                                if (backStack.lastOrNull() != PlaceEditorKey) {
+                                if (placeEditor.uiState.value.draft.isEditing) {
+                                    backStack.removeLastOrNull()
+                                } else {
                                     backStack.add(PlaceEditorKey)
                                 }
                             },
@@ -386,8 +391,16 @@ private fun Tabs(
                     entry<PlaceEditorKey> {
                         PlaceEditorScreen(
                             viewModel = placeEditor,
-                            onChooseOnMap = { backStack.add(PlacePickKey) },
+                            onChooseOnMap = {
+                                if (placeEditor.uiState.value.draft.isEditing) {
+                                    placeEditor.pickOnMap()
+                                    backStack.add(PlacePickKey)
+                                } else {
+                                    backStack.removeLastOrNull()
+                                }
+                            },
                             onManageCategories = { backStack.add(CategoriesKey) },
+                            onNext = { backStack.add(PlaceCategoryKey) },
                             onSaved = { isNew ->
                                 backStack.leaveFlow()
                                 if (isNew) {
@@ -395,6 +408,25 @@ private fun Tabs(
                                 }
                             },
                             onCancel = { backStack.leaveFlow() },
+                            onBack = { backStack.removeLastOrNull() },
+                        )
+                    }
+                    entry<PlaceCategoryKey> {
+                        PlaceCategoryScreen(
+                            viewModel = placeEditor,
+                            onNext = { backStack.add(PlaceTodosKey) },
+                            onManageCategories = { backStack.add(CategoriesKey) },
+                            onBack = { backStack.removeLastOrNull() },
+                        )
+                    }
+                    entry<PlaceTodosKey> {
+                        PlaceTodosScreen(
+                            viewModel = placeEditor,
+                            onSaved = {
+                                backStack.leaveFlow()
+                                onPlaceAdded()
+                            },
+                            onBack = { backStack.removeLastOrNull() },
                         )
                     }
                 },

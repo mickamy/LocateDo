@@ -35,7 +35,7 @@ data class PaywallKey(val trigger: PaywallTrigger) : NavKey
 @Serializable
 data class AcceptInviteKey(val token: String? = null) : NavKey
 
-// The add / edit flow: search, pick on the map, then the form. Its draft lives in PlaceEditorViewModel.
+// The add / edit flow: the map (with the search on top), then the form. Its draft lives in PlaceEditorViewModel.
 @Serializable
 data object PlaceSearchKey : NavKey
 
@@ -44,3 +44,10 @@ data object PlacePickKey : NavKey
 
 @Serializable
 data object PlaceEditorKey : NavKey
+
+// A new place goes on to pick its category, then its to-dos.
+@Serializable
+data object PlaceCategoryKey : NavKey
+
+@Serializable
+data object PlaceTodosKey : NavKey

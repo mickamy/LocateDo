@@ -4,6 +4,11 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
+enum class TodoAddVia(val key: String) {
+    TODO_EDITOR("todo_editor"),
+    PLACE_EDITOR("place_editor"),
+}
+
 enum class CompletionVia(val key: String) {
     NOTIFICATION("notification"),
     APP("app"),

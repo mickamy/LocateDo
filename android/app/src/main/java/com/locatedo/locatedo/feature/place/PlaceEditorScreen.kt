@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Map
@@ -57,8 +58,10 @@ fun PlaceEditorScreen(
     viewModel: PlaceEditorViewModel,
     onChooseOnMap: () -> Unit,
     onManageCategories: () -> Unit,
+    onNext: () -> Unit,
     onSaved: (isNew: Boolean) -> Unit,
     onCancel: () -> Unit,
+    onBack: () -> Unit,
 ) {
     LaunchedEffect(Unit) {
         viewModel.editorShown()
@@ -69,7 +72,8 @@ fun PlaceEditorScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is PlaceEditorEvent.Saved -> onSaved(event.isNew)
+                // A new place is saved from its last screen, which handles it.
+                is PlaceEditorEvent.Saved -> if (!event.isNew) onSaved(false)
                 PlaceEditorEvent.PredictionFetched, PlaceEditorEvent.LocationChosen -> Unit
             }
         }
@@ -81,14 +85,27 @@ fun PlaceEditorScreen(
                 title = {
                     Text(stringResource(if (draft.isEditing) R.string.place_editor_title_edit else R.string.place_editor_title_new))
                 },
+                // A new place goes back to its map; an edit is closed.
                 navigationIcon = {
-                    IconButton(onClick = onCancel) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_cancel))
+                    if (draft.isEditing) {
+                        IconButton(onClick = onCancel) {
+                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_cancel))
+                        }
+                    } else {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        }
                     }
                 },
                 actions = {
-                    TextButton(onClick = viewModel::save, enabled = draft.canSave) {
-                        Text(stringResource(R.string.common_save))
+                    if (draft.isEditing) {
+                        TextButton(onClick = viewModel::save, enabled = draft.canSave) {
+                            Text(stringResource(R.string.common_save))
+                        }
+                    } else {
+                        TextButton(onClick = onNext, enabled = draft.canSave) {
+                            Text(stringResource(R.string.place_editor_next))
+                        }
                     }
                 },
             )
@@ -102,15 +119,6 @@ fun PlaceEditorScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            OutlinedTextField(
-                value = draft.name,
-                onValueChange = viewModel::setName,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.place_editor_name_label)) },
-                placeholder = { Text(stringResource(R.string.place_editor_name_placeholder)) },
-                singleLine = true,
-            )
-
             SectionTitle(stringResource(R.string.place_editor_location_label))
             val coordinate = draft.coordinate
             if (coordinate != null) {
@@ -124,16 +132,20 @@ fun PlaceEditorScreen(
             draft.address?.let { address ->
                 Text(text = address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            TextButton(
-                onClick = {
-                    viewModel.pickOnMap()
-                    onChooseOnMap()
-                },
-            ) {
+            TextButton(onClick = onChooseOnMap) {
                 Icon(Icons.Filled.Map, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.place_editor_choose_on_map))
             }
+
+            SectionTitle(stringResource(R.string.place_editor_name_label))
+            OutlinedTextField(
+                value = draft.name,
+                onValueChange = viewModel::setName,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.place_editor_name_placeholder)) },
+                singleLine = true,
+            )
 
             SectionTitle(stringResource(R.string.place_editor_radius_label))
             RadiusSlider(
@@ -142,35 +154,38 @@ fun PlaceEditorScreen(
                 label = stringResource(R.string.place_editor_radius_label),
             )
 
-            SectionTitle(stringResource(R.string.place_editor_category_label))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(uiState.categories, key = { it.id }) { category ->
-                    FilterChip(
-                        selected = draft.categoryId == category.id,
-                        onClick = { viewModel.setCategory(category.id) },
-                        label = { Text(categoryName(category)) },
-                        leadingIcon = {
-                            Icon(
-                                CategoryStyle.icon(category.icon),
-                                contentDescription = null,
-                                tint = CategoryStyle.tint(category.color),
-                            )
-                        },
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = draft.categoryId == null,
-                        onClick = { viewModel.setCategory(null) },
-                        label = { Text(categoryName(null)) },
-                    )
-                }
-                item {
-                    AssistChip(
-                        onClick = onManageCategories,
-                        label = { Text(stringResource(R.string.category_manage)) },
-                        leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
-                    )
+            // A new place picks its category on the next screen.
+            if (draft.isEditing) {
+                SectionTitle(stringResource(R.string.place_editor_category_label))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(uiState.categories, key = { it.id }) { category ->
+                        FilterChip(
+                            selected = draft.categoryId == category.id,
+                            onClick = { viewModel.setCategory(category.id) },
+                            label = { Text(categoryName(category)) },
+                            leadingIcon = {
+                                Icon(
+                                    CategoryStyle.icon(category.icon),
+                                    contentDescription = null,
+                                    tint = CategoryStyle.tint(category.color),
+                                )
+                            },
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = draft.categoryId == null,
+                            onClick = { viewModel.setCategory(null) },
+                            label = { Text(categoryName(null)) },
+                        )
+                    }
+                    item {
+                        AssistChip(
+                            onClick = onManageCategories,
+                            label = { Text(stringResource(R.string.category_manage)) },
+                            leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                        )
+                    }
                 }
             }
         }
