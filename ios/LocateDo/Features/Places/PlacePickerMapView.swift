@@ -66,8 +66,9 @@ struct PlacePickerMapView: View {
             MapReader { proxy in
                 Map(position: $position) {
                     UserAnnotation()
-                    if let selection {
-                        Marker(coordinate: selection.coordinate) {
+                    // The confirmed pick keeps its pin while the picker closes.
+                    if let pinned = selection ?? confirmed {
+                        Marker(coordinate: pinned.coordinate) {
                             Text(.placePickerSelected)
                         }
                     }
