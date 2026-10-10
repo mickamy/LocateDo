@@ -8,9 +8,11 @@ import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.util.UUID
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,6 +33,7 @@ data class TodoDraft(
     val placeId: UUID? = null,
     val isPlaceFixed: Boolean = false,
     val assigneeId: UUID? = null,
+    val isEditing: Boolean = false,
 ) {
     val canSave: Boolean
         get() = title.isNotBlank() && placeId != null
@@ -51,9 +55,11 @@ class TodoEditorViewModel @Inject constructor(
     placeRepository: PlaceRepository,
     membershipRepository: MembershipRepository,
     private val paywallRequests: PaywallRequests,
+    private val undo: TodoUndo,
     private val clock: Clock,
 ) : ViewModel() {
     private val draft = MutableStateFlow(TodoDraft())
+    private var editing: Todo? = null
     private val _events = MutableSharedFlow<TodoEditorEvent>()
 
     val events: SharedFlow<TodoEditorEvent> = _events
@@ -68,7 +74,22 @@ class TodoEditorViewModel @Inject constructor(
 
     // A place given here is fixed (opened from that place); without one the sheet offers a picker.
     fun start(placeId: UUID?) {
+        editing = null
         draft.value = TodoDraft(placeId = placeId, isPlaceFixed = placeId != null)
+    }
+
+    // Editing can move the to-do to another place, so the picker is always there.
+    fun startEditing(todoId: UUID) {
+        viewModelScope.launch {
+            val todo = todoRepository.observeAll().first().firstOrNull { it.id == todoId } ?: return@launch
+            editing = todo
+            draft.value = TodoDraft(
+                title = todo.title,
+                placeId = todo.placeId,
+                assigneeId = todo.assigneeId,
+                isEditing = true,
+            )
+        }
     }
 
     fun setTitle(title: String) = draft.update { it.copy(title = title) }
@@ -81,6 +102,16 @@ class TodoEditorViewModel @Inject constructor(
         val current = draft.value
         val placeId = current.placeId
         if (!current.canSave || placeId == null) {
+            return
+        }
+        val edited = editing
+        if (edited != null) {
+            viewModelScope.launch {
+                todoRepository.update(
+                    edited.copy(title = current.title.trim(), placeId = placeId, assigneeId = current.assigneeId),
+                )
+                _events.emit(TodoEditorEvent.Saved)
+            }
             return
         }
         viewModelScope.launch {
@@ -98,6 +129,14 @@ class TodoEditorViewModel @Inject constructor(
             } else {
                 paywallRequests.request(limit.paywallTrigger)
             }
+        }
+    }
+
+    fun delete() {
+        val edited = editing ?: return
+        viewModelScope.launch {
+            undo.offer(todoRepository.delete(listOf(edited.id), TodoDeletionVia.EDITOR))
+            _events.emit(TodoEditorEvent.Saved)
         }
     }
 

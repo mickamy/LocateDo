@@ -3,16 +3,19 @@ package com.locatedo.locatedo.feature.todos
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakeTodoRepository
-import java.util.UUID
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -35,6 +38,7 @@ class TodoEditorViewModelTest {
     private val todos = FakeTodoRepository()
     private val places = FakePlaceRepository()
     private val paywalls = PaywallRequests()
+    private val undo = TodoUndo()
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
 
     @Before
@@ -105,8 +109,48 @@ class TodoEditorViewModelTest {
         assertTrue(todos.added.isEmpty())
     }
 
+    @Test
+    fun editingFillsTheDraftAndSavesTheChangesToTheSameTodo() = runTest(dispatcher) {
+        val pharmacy = Place(id = uuidV7(now), name = "Pharmacy", latitude = 35.0, longitude = 139.0, createdAt = now)
+        val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
+        todos.state.value = listOf(milk)
+        val viewModel = viewModel()
+        val events = events(viewModel)
+
+        viewModel.startEditing(milk.id)
+        val draft = viewModel.uiState.value.draft
+        assertTrue(draft.isEditing)
+        assertFalse(draft.isPlaceFixed)
+        assertEquals("Milk", draft.title)
+        viewModel.setTitle("Sunscreen ")
+        viewModel.setPlace(pharmacy.id)
+        viewModel.save()
+
+        assertEquals(listOf(milk.copy(title = "Sunscreen", placeId = pharmacy.id)), todos.updated)
+        assertTrue(todos.added.isEmpty())
+        assertEquals(listOf(TodoEditorEvent.Saved), events)
+    }
+
+    @Test
+    fun deletingFromTheEditorOffersUndo() = runTest(dispatcher) {
+        val milk = Todo(id = uuidV7(now), title = "Milk", placeId = store.id, createdAt = now)
+        todos.state.value = listOf(milk)
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        val offers = mutableListOf<List<Todo>>()
+        backgroundScope.launch { undo.offers.collect { offers += it } }
+
+        viewModel.startEditing(milk.id)
+        viewModel.delete()
+
+        assertEquals(listOf(milk.id), todos.deleted)
+        assertEquals(listOf(TodoDeletionVia.EDITOR), todos.deletedVia)
+        assertEquals(listOf(listOf(milk)), offers)
+        assertEquals(listOf(TodoEditorEvent.Saved), events)
+    }
+
     private fun TestScope.viewModel(): TodoEditorViewModel {
-        val viewModel = TodoEditorViewModel(todos, places, FakeMembershipRepository(), paywalls, Clock.fixed(now, ZoneOffset.UTC))
+        val viewModel = TodoEditorViewModel(todos, places, FakeMembershipRepository(), paywalls, undo, Clock.fixed(now, ZoneOffset.UTC))
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

@@ -41,6 +41,7 @@ import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.assigneeChoices
 import com.locatedo.locatedo.ui.components.todoDetail
@@ -57,6 +58,7 @@ fun TodoListScreen(
     TrackScreen(AnalyticsScreen.TODOS)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isAddingTodo by remember { mutableStateOf(false) }
+    var editingTodo by remember { mutableStateOf<UUID?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_todos)) }) },
@@ -72,12 +74,23 @@ fun TodoListScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 FilterChipFor(TodoFilter.ALL, R.string.todo_filter_all, uiState.filter, viewModel::setFilter)
                 FilterChipFor(TodoFilter.OPEN, R.string.todo_filter_open, uiState.filter, viewModel::setFilter)
                 FilterChipFor(TodoFilter.DONE, R.string.todo_filter_done, uiState.filter, viewModel::setFilter)
+                if (uiState.filter == TodoFilter.DONE && uiState.completedTodoIds.isNotEmpty()) {
+                    Spacer(Modifier.weight(1f))
+                    DeleteCompletedButton(
+                        count = uiState.completedTodoIds.size,
+                        isShared = uiState.isShared,
+                        onConfirm = viewModel::deleteCompleted,
+                    )
+                }
             }
             // Pulling down syncs, as on iOS; without an account there is nothing to pull.
             val content: @Composable () -> Unit = {
@@ -100,6 +113,7 @@ fun TodoListScreen(
                         members = uiState.members,
                         onOpenPlace = onOpenPlace,
                         onToggle = viewModel::setTodoCompleted,
+                        onEdit = { editingTodo = it },
                         onDelete = viewModel::deleteTodo,
                         onAssign = viewModel::setAssignee,
                     )
@@ -121,6 +135,9 @@ fun TodoListScreen(
     if (isAddingTodo) {
         TodoEditorSheet(placeId = null, onDismiss = { isAddingTodo = false })
     }
+    editingTodo?.let { todoId ->
+        TodoEditorSheet(placeId = null, onDismiss = { editingTodo = null }, editingId = todoId)
+    }
 }
 
 @Composable
@@ -138,7 +155,8 @@ private fun TodoGroups(
     members: List<Membership>,
     onOpenPlace: (UUID) -> Unit,
     onToggle: (UUID, Boolean) -> Unit,
-    onDelete: (UUID) -> Unit,
+    onEdit: (UUID) -> Unit,
+    onDelete: (UUID, TodoDeletionVia) -> Unit,
     onAssign: (UUID, UUID?) -> Unit,
 ) {
     val assignees = assigneeChoices(members)
@@ -165,7 +183,8 @@ private fun TodoGroups(
                 TodoRow(
                     todo = todo,
                     onToggle = { onToggle(todo.id, it) },
-                    onDelete = { onDelete(todo.id) },
+                    onEdit = { onEdit(todo.id) },
+                    onDelete = { onDelete(todo.id, it) },
                     detail = todoDetail(members, todo),
                     assignees = assignees,
                     onAssign = { onAssign(todo.id, it) },

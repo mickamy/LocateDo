@@ -20,6 +20,8 @@ enum class AnalyticsEvent(val key: String) {
     PLACE_DELETED("place_deleted"),
     TODO_ADDED("todo_added"),
     TODO_COMPLETED("todo_completed"),
+    TODO_DELETED("todo_deleted"),
+    TODO_DELETE_UNDONE("todo_delete_undone"),
     SHARE_TAPPED("share_tapped"),
     INVITE_ACCEPTED("invite_accepted"),
     PAYWALL_SHOWN("paywall_shown"),

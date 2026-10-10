@@ -136,15 +136,6 @@ final class LocalWrites {
         commit([Write.put(todo)].compactMap(\.self))
     }
 
-    func delete(_ todos: [Todo]) {
-        let writes = todos.map(Write.delete)
-        for todo in todos {
-            context.delete(todo)
-        }
-        commit(writes)
-        updateCountProperties()
-    }
-
     func add(_ category: PlaceCategory) {
         let last = FetchDescriptor<PlaceCategory>(sortBy: [SortDescriptor(\.sortOrder, order: .reverse)])
         let highest = (try? context.fetch(last).first?.sortOrder) ?? -1
@@ -254,5 +245,64 @@ final class LocalWrites {
         if queues {
             onQueued()
         }
+    }
+}
+
+// Editing a to-do, deleting to-dos, and bringing them back with Undo.
+extension LocalWrites {
+    func update(_ todo: Todo, title: String, place: Place, assigneeID: UUID?, now: Date = .now) {
+        todo.title = title
+        if todo.place?.id != place.id {
+            todo.place = place
+        }
+        todo.assigneeID = assigneeID
+        todo.updatedAt = now
+        commit([Write.put(todo)].compactMap(\.self))
+    }
+
+    @discardableResult
+    func delete(_ todos: [Todo], via: TodoDeletionVia) -> [DeletedTodo] {
+        if todos.isEmpty {
+            return []
+        }
+        let deleted = todos.map(DeletedTodo.init)
+        let writes = todos.map(Write.delete)
+        for todo in todos {
+            context.delete(todo)
+        }
+        commit(writes)
+        analytics.log(.todoDeleted, parameters: [.via: via.rawValue, .count: todos.count])
+        updateCountProperties()
+        return deleted
+    }
+
+    // Undo after a delete: the same ID comes back, so the server sees a put after the delete.
+    func restore(_ deleted: [DeletedTodo]) {
+        var writes: [Write] = []
+        var restored = 0
+        for entry in deleted {
+            let placeID = entry.placeID
+            var descriptor = FetchDescriptor<Place>(predicate: #Predicate { $0.id == placeID })
+            descriptor.fetchLimit = 1
+            guard let place = try? context.fetch(descriptor).first else {
+                continue
+            }
+            let todo = entry.recreate(at: place)
+            context.insert(todo)
+            place.todos.append(todo)
+            if let put = Write.put(todo) {
+                writes.append(put)
+            }
+            if todo.isCompleted {
+                writes.append(.completion(of: todo))
+            }
+            restored += 1
+        }
+        if restored == 0 {
+            return
+        }
+        commit(writes)
+        analytics.log(.todoDeleteUndone, parameters: [.count: restored])
+        updateCountProperties()
     }
 }

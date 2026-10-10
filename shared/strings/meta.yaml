@@ -87,3 +87,11 @@ watch.all_done:
 watch.complete_hint:
   comment: "VoiceOver hint on a to-do row on the Apple Watch, which completes it when tapped."
   platforms: [ios]
+todo.deleted:
+  comment: "Shown briefly at the bottom after a to-do is deleted, next to the Undo button."
+todo.delete_completed:
+  comment: "Button in the header of the completed to-dos; deletes all of them after a confirmation."
+todo.delete_completed_shared_message:
+  comment: "Under the confirmation for deleting all completed to-dos, only while the household has other members."
+home.more_todos:
+  comment: "Under the first two to-dos of a place in the nearby list, when it has more."

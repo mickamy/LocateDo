@@ -50,9 +50,13 @@
     <string name="common_more">その他</string>
     <string name="common_ok">OK</string>
     <string name="common_save">保存</string>
+    <string name="common_undo">元に戻す</string>
     <string name="home_add_place">場所を追加</string>
     <string name="home_empty_message">場所を追加すると、着いたときにお知らせします。</string>
     <string name="home_empty_title">場所がまだありません</string>
+    <plurals name="home_more_todos">
+        <item quantity="other">他 %1$d 件</item>
+    </plurals>
     <string name="home_my_location">現在地</string>
     <plurals name="home_open_summary">
         <item quantity="other">やることが %1$d 件残っています</item>
@@ -295,6 +299,13 @@
     <string name="todo_assignee_label">担当</string>
     <string name="todo_completed_by">%1$sが完了</string>
     <string name="todo_completed_section">完了済み</string>
+    <string name="todo_delete_completed">すべて削除</string>
+    <plurals name="todo_delete_completed_confirm">
+        <item quantity="other">完了済みのやること %1$d 件を削除しますか？</item>
+    </plurals>
+    <string name="todo_delete_completed_shared_message">共有している家族の画面からも消えます。</string>
+    <string name="todo_deleted">「%1$s」を削除しました</string>
+    <string name="todo_editor_edit_title">やることを編集</string>
     <string name="todo_editor_place_label">場所</string>
     <string name="todo_editor_title">やることを追加</string>
     <string name="todo_editor_title_label">やること</string>

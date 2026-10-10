@@ -9,10 +9,12 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
@@ -47,7 +49,11 @@ data class TodoListUiState(
     val isSignedIn: Boolean = false,
     val isRefreshing: Boolean = false,
     val members: List<Membership> = emptyList(),
+    val completedTodoIds: List<UUID> = emptyList(),
 ) {
+    val isShared: Boolean
+        get() = members.size > 1
+
     val emptyState: TodoListEmptyState?
         get() = when {
             isLoading -> null
@@ -67,6 +73,7 @@ class TodoListViewModel @Inject constructor(
     private val paywallRequests: PaywallRequests,
     authenticator: Authenticator,
     private val sync: SyncEngine,
+    private val undo: TodoUndo,
 ) : ViewModel() {
     private val filter = MutableStateFlow(TodoFilter.OPEN)
     private val isRefreshing = MutableStateFlow(false)
@@ -87,6 +94,7 @@ class TodoListViewModel @Inject constructor(
             isSignedIn = session != null,
             isRefreshing = refreshing,
             members = members,
+            completedTodoIds = places.flatMap { entry -> entry.completedTodosNewestFirst.map { it.id } },
             groups = places.mapNotNull { entry ->
                 val todos = when (filter) {
                     TodoFilter.ALL -> entry.openTodos + entry.completedTodosNewestFirst
@@ -120,9 +128,16 @@ class TodoListViewModel @Inject constructor(
         }
     }
 
-    fun deleteTodo(todoId: UUID) {
+    fun deleteTodo(todoId: UUID, via: TodoDeletionVia) {
         viewModelScope.launch {
-            todoRepository.delete(listOf(todoId))
+            undo.offer(todoRepository.delete(listOf(todoId), via))
+        }
+    }
+
+    fun deleteCompleted() {
+        val ids = uiState.value.completedTodoIds
+        viewModelScope.launch {
+            todoRepository.delete(ids, TodoDeletionVia.COMPLETED_BULK)
         }
     }
 

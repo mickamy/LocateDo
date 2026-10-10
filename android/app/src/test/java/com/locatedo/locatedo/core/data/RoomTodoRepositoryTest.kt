@@ -6,6 +6,7 @@ import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.core.sync.toInstant
@@ -114,9 +115,66 @@ class RoomTodoRepositoryTest {
         repository.add(milk)
         repository.add(eggs)
 
-        repository.delete(listOf(milk.id))
+        repository.delete(listOf(milk.id), TodoDeletionVia.SWIPE)
 
         assertEquals(listOf(eggs), repository.observeAll().first())
+    }
+
+    @Test
+    fun undoingADeleteBringsBackTheSameTodo() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id).copy(assigneeId = UUID.randomUUID())
+        repository.add(milk)
+
+        val deleted = repository.delete(listOf(milk.id), TodoDeletionVia.MENU)
+        repository.restore(deleted)
+
+        assertEquals(listOf(milk), deleted)
+        assertEquals(listOf(milk), repository.observeAll().first())
+        val kinds = database.queuedWrites().takeLast(2).map { it::class }
+        assertEquals(listOf(Write.DeleteTodo::class, Write.PutTodo::class), kinds)
+    }
+
+    @Test
+    fun undoingADeleteKeepsItCompleted() = runTest {
+        authenticator.signIn(testSession)
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+        repository.setCompleted(milk.id, true)
+
+        repository.restore(repository.delete(listOf(milk.id), TodoDeletionVia.SWIPE))
+
+        assertEquals(fixedNow, repository.observeAll().first().single().completedAt)
+        val kinds = database.queuedWrites().takeLast(3).map { it::class }
+        assertEquals(listOf(Write.DeleteTodo::class, Write.PutTodo::class, Write.SetTodoCompletion::class), kinds)
+    }
+
+    @Test
+    fun undoingADeleteSkipsTodosWhosePlaceIsGone() = runTest {
+        val milk = todo("Milk", store.id)
+        repository.add(milk)
+        val deleted = repository.delete(listOf(milk.id), TodoDeletionVia.SWIPE)
+        places.delete(store.id)
+
+        repository.restore(deleted)
+
+        assertEquals(emptyList<Any>(), repository.observeAll().first())
+        assertEquals(0, analytics.count(AnalyticsEvent.TODO_DELETE_UNDONE))
+    }
+
+    @Test
+    fun deletingAndUndoingSayWhereAndHowMany() = runTest {
+        val milk = todo("Milk", store.id)
+        val eggs = todo("Eggs", store.id)
+        repository.add(milk)
+        repository.add(eggs)
+
+        repository.restore(repository.delete(listOf(milk.id, eggs.id), TodoDeletionVia.COMPLETED_BULK))
+
+        val deletion = analytics.values(AnalyticsEvent.TODO_DELETED)
+        assertEquals("completed_bulk", deletion["via"])
+        assertEquals(2L, deletion["count"])
+        assertEquals(2L, analytics.values(AnalyticsEvent.TODO_DELETE_UNDONE)["count"])
     }
 
     @Test
@@ -194,7 +252,7 @@ class RoomTodoRepositoryTest {
         repository.add(milk)
         repository.add(bread)
 
-        repository.delete(listOf(milk.id, bread.id))
+        repository.delete(listOf(milk.id, bread.id), TodoDeletionVia.SWIPE)
 
         val deletes = database.queuedWrites().filterIsInstance<Write.DeleteTodo>().map { it.request.id }
         assertEquals(listOf(milk.id.toString(), bread.id.toString()), deletes)
@@ -240,7 +298,7 @@ class RoomTodoRepositoryTest {
         repository.setCompleted(milk.id, completed = true)
         assertEquals("1", analytics.userProperties[AnalyticsUserProperty.OPEN_TODO_COUNT])
 
-        repository.delete(listOf(eggs.id))
+        repository.delete(listOf(eggs.id), TodoDeletionVia.SWIPE)
         assertEquals("0", analytics.userProperties[AnalyticsUserProperty.OPEN_TODO_COUNT])
     }
 

@@ -3,10 +3,12 @@ package com.locatedo.locatedo.feature.todos
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
@@ -104,6 +106,34 @@ class TodoListViewModelTest {
     }
 
     @Test
+    fun deletingCompletedTakesThemFromEveryPlace() = runTest(dispatcher) {
+        val sunscreen = Todo(id = uuidV7(now), title = "Sunscreen", placeId = pharmacy.id, createdAt = now, completedAt = now)
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk, bread)), PlaceWithTodos(pharmacy, listOf(sunscreen)))
+        todos.state.value = listOf(milk, bread, sunscreen)
+        val viewModel = viewModel()
+
+        viewModel.deleteCompleted()
+
+        assertEquals(setOf(bread.id, sunscreen.id), todos.deleted.toSet())
+        assertEquals(listOf(TodoDeletionVia.COMPLETED_BULK), todos.deletedVia)
+    }
+
+    @Test
+    fun deletingOneTodoOffersUndo() = runTest(dispatcher) {
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk)))
+        todos.state.value = listOf(milk)
+        val undo = TodoUndo()
+        val offers = mutableListOf<List<Todo>>()
+        backgroundScope.launch { undo.offers.collect { offers += it } }
+        val viewModel = viewModel(undo)
+
+        viewModel.deleteTodo(milk.id, TodoDeletionVia.MENU)
+
+        assertEquals(listOf(listOf(milk)), offers)
+        assertEquals(listOf(TodoDeletionVia.MENU), todos.deletedVia)
+    }
+
+    @Test
     fun reopeningOverTheFreeLimitAsksForThePaywall() = runTest(dispatcher) {
         places.state.value = listOf(PlaceWithTodos(store, listOf(bread)))
         val viewModel = viewModel()
@@ -114,8 +144,8 @@ class TodoListViewModelTest {
         assertEquals(PaywallTrigger.TODO_LIMIT, paywalls.pending.value)
     }
 
-    private fun TestScope.viewModel(): TodoListViewModel {
-        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(), FakeSyncEngine())
+    private fun TestScope.viewModel(undo: TodoUndo = TodoUndo()): TodoListViewModel {
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(), FakeSyncEngine(), undo)
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }
@@ -135,7 +165,7 @@ class TodoListViewModelTest {
     @Test
     fun pullingToRefreshSyncsOnceSignedIn() = runTest(dispatcher) {
         val sync = FakeSyncEngine()
-        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(testSession), sync)
+        val viewModel = TodoListViewModel(places, categories, memberships, todos, paywalls, fakeAuthenticator(testSession), sync, TodoUndo())
         backgroundScope.launch { viewModel.uiState.collect {} }
         assertTrue(viewModel.uiState.value.isSignedIn)
 

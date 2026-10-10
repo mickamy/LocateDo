@@ -112,8 +112,27 @@ struct WriteAnalyticsTests {
         fixture.writes.toggleCompletion(milk)
         #expect(fixture.recorder.userProperties[.openTodoCount] == "1")
 
-        fixture.writes.delete([eggs])
+        fixture.writes.delete([eggs], via: .swipe)
         #expect(fixture.recorder.userProperties[.openTodoCount] == "0")
+    }
+
+    @Test func deletingAndUndoingSayWhereAndHowMany() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        let milk = Todo(title: "Milk", place: place)
+        let eggs = Todo(title: "Eggs", place: place)
+        fixture.writes.add(milk)
+        fixture.writes.add(eggs)
+
+        let deleted = fixture.writes.delete([milk, eggs], via: .completedBulk)
+        fixture.writes.restore(deleted)
+
+        let deletion = try fixture.recorder.values(of: .todoDeleted)
+        #expect(deletion["via"] as? String == "completed_bulk")
+        #expect(deletion["count"] as? Int == 2)
+        #expect(try fixture.recorder.values(of: .todoDeleteUndone)["count"] as? Int == 2)
+        #expect(fixture.recorder.userProperties[.openTodoCount] == "2")
     }
 
     @Test func completingATodoInTheAppSaysSo() throws {

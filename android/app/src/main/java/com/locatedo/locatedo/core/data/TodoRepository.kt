@@ -8,6 +8,7 @@ import com.locatedo.locatedo.core.database.TodoDao
 import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteQueue
 import java.time.Clock
@@ -27,7 +28,12 @@ interface TodoRepository {
 
     // Checks off from an arrival notification; false when the to-do is gone or someone already checked it off.
     suspend fun checkOff(id: UUID): Boolean
-    suspend fun delete(ids: List<UUID>)
+    // Returns what was deleted, which restore brings back for Undo.
+    suspend fun delete(ids: List<UUID>, via: TodoDeletionVia): List<Todo>
+
+    // Undo after a delete: the same IDs come back, so the server sees a put after the delete. To-dos whose place is
+    // gone are skipped.
+    suspend fun restore(todos: List<Todo>)
 }
 
 @Singleton
@@ -129,11 +135,38 @@ class RoomTodoRepository @Inject constructor(
         return true
     }
 
-    override suspend fun delete(ids: List<UUID>) {
-        database.withTransaction {
-            todoDao.delete(ids.map(UUID::toString))
-            queue.enqueue(ids.map { Write.deleteTodo(it) })
+    override suspend fun delete(ids: List<UUID>, via: TodoDeletionVia): List<Todo> {
+        val deleted = database.withTransaction {
+            val found = ids.mapNotNull { todoDao.get(it.toString())?.asModel() }
+            todoDao.delete(found.map { it.id.toString() })
+            queue.enqueue(found.map { Write.deleteTodo(it.id) })
+            found
         }
+        if (deleted.isEmpty()) {
+            return deleted
+        }
+        analytics.todoDeleted(via, deleted.size)
+        reportCounts()
+        return deleted
+    }
+
+    override suspend fun restore(todos: List<Todo>) {
+        val restored = database.withTransaction {
+            val placeDao = database.placeDao()
+            val kept = todos.filter { placeDao.get(it.placeId.toString()) != null }
+            for (todo in kept) {
+                todoDao.upsert(todo.asEntity())
+                queue.enqueue(Write.put(todo))
+                if (todo.completedAt != null) {
+                    queue.enqueue(Write.completion(todo.id, todo.completedAt))
+                }
+            }
+            kept.size
+        }
+        if (restored == 0) {
+            return
+        }
+        analytics.todoDeleteUndone(restored)
         reportCounts()
     }
 

@@ -68,6 +68,8 @@ import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.common.zoomForRadius
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
+import com.locatedo.locatedo.feature.todos.DeleteCompletedButton
 import com.locatedo.locatedo.feature.todos.TodoEditorSheet
 import com.locatedo.locatedo.feature.todos.TodoRow
 import com.locatedo.locatedo.ui.analytics.TrackScreen
@@ -95,6 +97,7 @@ fun PlaceDetailScreen(
     val detail = uiState.detail
     var isConfirmingDelete by remember { mutableStateOf(false) }
     var isAddingTodo by remember { mutableStateOf(false) }
+    var editingTodo by remember { mutableStateOf<UUID?>(null) }
 
     LaunchedEffect(uiState.isLoading, detail == null) {
         if (!uiState.isLoading && detail == null) {
@@ -138,8 +141,10 @@ fun PlaceDetailScreen(
                 members = uiState.members,
                 onAddTodo = { isAddingTodo = true },
                 onToggle = viewModel::setTodoCompleted,
+                onEdit = { editingTodo = it },
                 onDelete = viewModel::deleteTodo,
                 onAssign = viewModel::setAssignee,
+                onDeleteCompleted = viewModel::deleteCompleted,
             )
             Spacer(Modifier.height(16.dp))
         }
@@ -170,14 +175,21 @@ fun PlaceDetailScreen(
     if (isAddingTodo) {
         TodoEditorSheet(placeId = placeId, onDismiss = { isAddingTodo = false })
     }
+    editingTodo?.let { todoId ->
+        TodoEditorSheet(placeId = null, onDismiss = { editingTodo = null }, editingId = todoId)
+    }
 }
 
 @Composable
 private fun AreaMap(detail: PlaceDetail) {
     val place = detail.place
     val center = LatLng(place.latitude, place.longitude)
-    val cameraPositionState = rememberCameraPositionState(key = "${place.id}-${place.radiusMeters}") {
+    val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(center, zoomForRadius(place.radiusMeters))
+    }
+    // An edit to the place moves the map along with it.
+    LaunchedEffect(center, place.radiusMeters) {
+        cameraPositionState.position = CameraPosition.fromLatLngZoom(center, zoomForRadius(place.radiusMeters))
     }
     Card(
         modifier = Modifier
@@ -255,8 +267,10 @@ private fun Todos(
     members: List<Membership>,
     onAddTodo: () -> Unit,
     onToggle: (UUID, Boolean) -> Unit,
-    onDelete: (UUID) -> Unit,
+    onEdit: (UUID) -> Unit,
+    onDelete: (UUID, TodoDeletionVia) -> Unit,
     onAssign: (UUID, UUID?) -> Unit,
+    onDeleteCompleted: () -> Unit,
 ) {
     val assignees = assigneeChoices(members)
     Text(
@@ -269,7 +283,8 @@ private fun Todos(
         TodoRow(
             todo = todo,
             onToggle = { onToggle(todo.id, it) },
-            onDelete = { onDelete(todo.id) },
+            onEdit = { onEdit(todo.id) },
+            onDelete = { onDelete(todo.id, it) },
             detail = todoDetail(members, todo),
             assignees = assignees,
             onAssign = { onAssign(todo.id, it) },
@@ -286,8 +301,10 @@ private fun Todos(
         CompletedTodos(
             todos = detail.completedTodos,
             members = members,
+            onDeleteAll = onDeleteCompleted,
             assignees = assignees,
             onToggle = onToggle,
+            onEdit = onEdit,
             onDelete = onDelete,
             onAssign = onAssign,
         )
@@ -351,9 +368,11 @@ private fun PlaceMenu(
 private fun CompletedTodos(
     todos: List<Todo>,
     members: List<Membership>,
+    onDeleteAll: () -> Unit,
     assignees: List<AssigneeChoice>,
     onToggle: (UUID, Boolean) -> Unit,
-    onDelete: (UUID) -> Unit,
+    onEdit: (UUID) -> Unit,
+    onDelete: (UUID, TodoDeletionVia) -> Unit,
     onAssign: (UUID, UUID?) -> Unit,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
@@ -370,6 +389,7 @@ private fun CompletedTodos(
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        DeleteCompletedButton(count = todos.size, isShared = members.size > 1, onConfirm = onDeleteAll)
         Icon(if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
     }
     if (isExpanded) {
@@ -377,7 +397,8 @@ private fun CompletedTodos(
             TodoRow(
                 todo = todo,
                 onToggle = { onToggle(todo.id, it) },
-                onDelete = { onDelete(todo.id) },
+                onEdit = { onEdit(todo.id) },
+                onDelete = { onDelete(todo.id, it) },
                 detail = todoDetail(members, todo),
                 assignees = assignees,
                 onAssign = { onAssign(todo.id, it) },

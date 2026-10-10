@@ -3,9 +3,11 @@ import SwiftUI
 
 struct TodoRow: View {
     @Environment(LocalWrites.self) private var writes
+    @Environment(TodoUndo.self) private var undo
     @Query(sort: \Membership.joinedAt) private var memberships: [Membership]
     let todo: Todo
     @State private var paywall: PaywallTrigger?
+    @State private var isEditing = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -17,18 +19,28 @@ struct TodoRow: View {
                     .foregroundStyle(todo.isCompleted ? Color.accentColor : Color.secondary)
             }
             .buttonStyle(.plain)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(todo.title)
-                    .strikethrough(todo.isCompleted)
-                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
-                if let detail {
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            Button {
+                isEditing = true
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(todo.title)
+                        .strikethrough(todo.isCompleted)
+                        .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                    if let detail {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
         .contextMenu {
+            Button(.commonEdit, systemImage: "pencil") {
+                isEditing = true
+            }
             if memberships.count > 1 {
                 Menu {
                     AssigneePicker(memberships: memberships, selection: assigneeSelection)
@@ -37,9 +49,15 @@ struct TodoRow: View {
                     Label(.todoAssigneeChange, systemImage: "person.crop.circle")
                 }
             }
+            Button(.commonDelete, systemImage: "trash", role: .destructive) {
+                undo.offer(writes.delete([todo], via: .menu))
+            }
         }
         .sheet(item: $paywall) { trigger in
             PaywallView(trigger: trigger)
+        }
+        .sheet(isPresented: $isEditing) {
+            TodoEditorView(editing: todo)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityTitle)
@@ -47,6 +65,12 @@ struct TodoRow: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityAction {
             toggle()
+        }
+        .accessibilityAction(named: Text(.commonEdit)) {
+            isEditing = true
+        }
+        .accessibilityAction(named: Text(.commonDelete)) {
+            undo.offer(writes.delete([todo], via: .menu))
         }
     }
 

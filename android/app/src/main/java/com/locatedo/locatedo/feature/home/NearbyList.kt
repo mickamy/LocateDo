@@ -10,7 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
@@ -34,13 +34,18 @@ private fun NearbyRow(nearby: NearbyPlace, category: Category?, onClick: () -> U
     ListItem(
         headlineContent = { Text(place.name) },
         modifier = Modifier.clickable(onClick = onClick),
-        supportingContent = {
-            Column {
-                nearby.distanceMeters?.let { meters ->
-                    Text(stringResource(R.string.place_detail_distance, DistanceFormatting.string(meters)))
-                }
-                for (todo in openTodos.take(PREVIEW_TODOS)) {
-                    Text(todo.title, maxLines = 1)
+        supportingContent = if (openTodos.isEmpty()) {
+            null
+        } else {
+            {
+                Column {
+                    for (todo in openTodos.take(PREVIEW_TODOS)) {
+                        Text(todo.title, maxLines = 1)
+                    }
+                    val more = openTodos.size - PREVIEW_TODOS
+                    if (more > 0) {
+                        Text(pluralStringResource(R.plurals.home_more_todos, more, more))
+                    }
                 }
             }
         },
@@ -51,10 +56,8 @@ private fun NearbyRow(nearby: NearbyPlace, category: Category?, onClick: () -> U
                 tint = CategoryStyle.tint(category?.color),
             )
         },
-        trailingContent = {
-            if (openTodos.isNotEmpty()) {
-                Text(openTodos.size.toString(), style = MaterialTheme.typography.labelLarge)
-            }
+        trailingContent = nearby.distanceMeters?.let { meters ->
+            { Text(DistanceFormatting.string(meters), style = MaterialTheme.typography.bodyMedium) }
         },
     )
 }

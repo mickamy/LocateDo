@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.AssigneeChoice
@@ -46,16 +47,22 @@ import java.util.UUID
 fun TodoEditorSheet(
     placeId: UUID?,
     onDismiss: () -> Unit,
+    editingId: UUID? = null,
     viewModel: TodoEditorViewModel = hiltViewModel(),
 ) {
-    TrackScreen(AnalyticsScreen.TODO_EDITOR)
+    val mode = if (editingId == null) "add" else "edit"
+    TrackScreen(AnalyticsScreen.TODO_EDITOR, mapOf(AnalyticsParameter.MODE to mode))
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val draft = uiState.draft
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        viewModel.start(placeId)
-        focusRequester.requestFocus()
+        if (editingId == null) {
+            viewModel.start(placeId)
+            focusRequester.requestFocus()
+        } else {
+            viewModel.startEditing(editingId)
+        }
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -72,7 +79,8 @@ fun TodoEditorSheet(
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(stringResource(R.string.todo_editor_title), style = MaterialTheme.typography.titleLarge)
+            val title = if (draft.isEditing) R.string.todo_editor_edit_title else R.string.todo_editor_title
+            Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
             OutlinedTextField(
                 value = draft.title,
                 onValueChange = viewModel::setTitle,
@@ -95,6 +103,12 @@ fun TodoEditorSheet(
                 AssigneePicker(choices = assignees, selectedId = draft.assigneeId, onSelect = viewModel::setAssignee)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                if (draft.isEditing) {
+                    TextButton(onClick = viewModel::delete) {
+                        Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
+                    }
+                    Spacer(Modifier.weight(1f))
+                }
                 TextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.common_cancel))
                 }

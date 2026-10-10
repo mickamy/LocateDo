@@ -14,6 +14,7 @@ common:
   delete: "削除"
   more: "その他"
   ok: "OK"
+  undo: "元に戻す"
 sharing:
   title: "家族と共有"
   sign_in_message: "場所とやることを家族と共有するには、サインインしてください。"
@@ -181,6 +182,9 @@ settings:
     billing_issue: "お支払いに問題があります。サブスクリプションの管理から確認してください。"
     household: "世帯の Pro で利用中です。"
 home:
+  more_todos:
+    plural:
+      other: "他 {count} 件"
   open_summary:
     plural:
       other: "やることが {count} 件残っています"
@@ -232,10 +236,17 @@ todo:
   completed_by: "{name}が完了"
   editor:
     title: "やることを追加"
+    edit_title: "やることを編集"
     title_label: "やること"
     title_placeholder: "例) 牛乳を買う"
     place_label: "場所"
   completed_section: "完了済み"
+  deleted: "「{title}」を削除しました"
+  delete_completed: "すべて削除"
+  delete_completed_shared_message: "共有している家族の画面からも消えます。"
+  delete_completed_confirm:
+    plural:
+      other: "完了済みのやること {count} 件を削除しますか？"
   assignee:
     label: "担当"
     anyone: "誰でも"

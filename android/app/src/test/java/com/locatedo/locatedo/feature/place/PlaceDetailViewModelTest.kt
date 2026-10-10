@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.place
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
+import com.locatedo.locatedo.core.data.TodoUndo
 import com.locatedo.locatedo.core.location.GeocodedPlace
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
@@ -10,6 +11,7 @@ import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.testing.FakeArrivalSimulator
 import com.locatedo.locatedo.testing.FakeCategoryRepository
 import com.locatedo.locatedo.testing.FakeGeocodingRepository
@@ -118,6 +120,19 @@ class PlaceDetailViewModelTest {
     }
 
     @Test
+    fun deletingCompletedTakesOnlyThisPlacesCompletedTodos() = runTest(dispatcher) {
+        val bread = Todo(id = UUID.randomUUID(), title = "Bread", placeId = store.id, createdAt = now, completedAt = now)
+        places.state.value = listOf(PlaceWithTodos(store, listOf(milk, bread)))
+        todos.state.value = listOf(milk, bread)
+        val viewModel = viewModel(store.id)
+
+        viewModel.deleteCompleted()
+
+        assertEquals(listOf(bread.id), todos.deleted)
+        assertEquals(listOf(TodoDeletionVia.COMPLETED_BULK), todos.deletedVia)
+    }
+
+    @Test
     fun aDebugArrivalIsHandedOnWithItsDelay() = runTest(dispatcher) {
         val viewModel = viewModel(store.id)
 
@@ -127,7 +142,7 @@ class PlaceDetailViewModelTest {
     }
 
     private fun TestScope.viewModel(placeId: UUID): PlaceDetailViewModel {
-        val viewModel = PlaceDetailViewModel(placeId, places, categories, memberships, todos, location, geocoding, paywalls, arrivals)
+        val viewModel = PlaceDetailViewModel(placeId, places, categories, memberships, todos, location, geocoding, paywalls, arrivals, TodoUndo())
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

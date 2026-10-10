@@ -6,6 +6,7 @@ import UserNotifications
 
 struct PlaceDetailView: View {
     @Environment(LocalWrites.self) private var writes
+    @Environment(TodoUndo.self) private var undo
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(GeofenceMonitor.self) private var geofence
@@ -74,7 +75,11 @@ struct PlaceDetailView: View {
                         delete(todos.completedNewestFirst, at: offsets)
                     }
                 } header: {
-                    Text(.todoCompletedSection)
+                    HStack {
+                        Text(.todoCompletedSection)
+                        Spacer()
+                        DeleteCompletedButton(todos: todos.completedNewestFirst)
+                    }
                 }
             }
         }
@@ -203,7 +208,7 @@ struct PlaceDetailView: View {
     }
 
     private func delete(_ todos: [Todo], at offsets: IndexSet) {
-        writes.delete(offsets.map { todos[$0] })
+        undo.offer(writes.delete(offsets.map { todos[$0] }, via: .swipe))
     }
 
     private func deletePlace() {
