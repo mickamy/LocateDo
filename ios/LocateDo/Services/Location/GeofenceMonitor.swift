@@ -199,15 +199,14 @@ final class GeofenceMonitor {
             now: now
         )
         if let suppression {
-            var parameters = Self.reminderParameters(event, at: place)
-            parameters[.reason] = suppression.rawValue
-            parameters[.openTodos] = openTodos.count
-            Analytics.log(.reminderSuppressed, parameters: parameters)
-            let skipped = "\(event.rawValue) for \(place.name): \(suppression.rawValue)"
-            logger.notice("Skipped \(skipped, privacy: .public)")
+            logSuppressed(event, at: place, reason: suppression, openTodos: openTodos.count)
             return
         }
-        await notifier.notify(event, at: place, todos: todos)
+        // A refused notification is not delivered, so it neither starts the cooldown nor counts as a reminder.
+        guard await notifier.notify(event, at: place, todos: todos) else {
+            logSuppressed(event, at: place, reason: .scheduleFailed, openTodos: openTodos.count)
+            return
+        }
         place.setLastNotifiedAt(now, for: event)
         try? container.mainContext.save()
         onNotified()
@@ -215,6 +214,20 @@ final class GeofenceMonitor {
         parameters[.openTodos] = todos.count
         Analytics.log(.reminderNotified, parameters: parameters)
         logger.notice("Notified \(event.rawValue, privacy: .public) at \(place.name, privacy: .public)")
+    }
+
+    private func logSuppressed(
+        _ event: PlaceEvent,
+        at place: Place,
+        reason: NotificationPolicy.Suppression,
+        openTodos: Int
+    ) {
+        var parameters = Self.reminderParameters(event, at: place)
+        parameters[.reason] = reason.rawValue
+        parameters[.openTodos] = openTodos
+        Analytics.log(.reminderSuppressed, parameters: parameters)
+        let skipped = "\(event.rawValue) for \(place.name): \(reason.rawValue)"
+        logger.notice("Skipped \(skipped, privacy: .public)")
     }
 
     private static func reminderParameters(_ event: PlaceEvent, at place: Place) -> AnalyticsParameters {

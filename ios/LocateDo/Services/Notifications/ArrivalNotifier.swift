@@ -44,7 +44,9 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         await refreshAuthorizationStatus()
     }
 
-    func notify(_ event: PlaceEvent, at place: Place, todos: [Todo], after delay: TimeInterval? = nil) async {
+    // False when the system refused it, so the caller does not count it as delivered.
+    @discardableResult
+    func notify(_ event: PlaceEvent, at place: Place, todos: [Todo], after delay: TimeInterval? = nil) async -> Bool {
         let checklist = ArrivalChecklist(
             items: todos.map { ArrivalChecklist.Item(id: $0.id, title: $0.title) },
             categoryIcon: place.category?.icon,
@@ -78,10 +80,12 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         )
         do {
             try await center.add(request)
+            return true
         } catch {
             let kind = event.rawValue
             logger.error("Could not schedule the \(kind, privacy: .public) notification: \(error, privacy: .public)")
             CrashReporting.record(error, site: "notifications.\(event.rawValue)")
+            return false
         }
     }
 

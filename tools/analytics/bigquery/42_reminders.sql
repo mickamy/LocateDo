@@ -1,5 +1,6 @@
 -- Arrivals and departures the app noticed and why some were not announced, by month, platform, and kind, to tell
 -- "they are not detected" from "there was nothing to remind".
+-- suppressed_schedule_failed: the system refused a notification the app meant to show, so nobody saw it.
 -- suppressed_short_stay: left within 5 minutes of entering (departures only); short_stays_with_todos are the ones
 -- that had departure to-dos waiting, and median_short_stay_min how long those stays were.
 -- users_waiting_without_detection: users whose daily_state that month showed to-dos of that kind waiting (any open
@@ -17,6 +18,7 @@ WITH detected AS (
     COUNTIF(reason = 'assigned_to_others') AS suppressed_assigned_to_others,
     COUNTIF(reason = 'recently_notified') AS suppressed_recently_notified,
     COUNTIF(reason = 'notifications_off') AS suppressed_notifications_off,
+    COUNTIF(reason = 'schedule_failed') AS suppressed_schedule_failed,
     COUNTIF(reason = 'short_stay') AS suppressed_short_stay,
     COUNTIF(reason = 'short_stay' AND open_todos > 0) AS short_stays_with_todos,
     APPROX_QUANTILES(IF(reason = 'short_stay' AND open_todos > 0, stay_min, NULL), 2)[OFFSET(1)]
@@ -64,6 +66,7 @@ SELECT
   COALESCE(d.suppressed_assigned_to_others, 0) AS suppressed_assigned_to_others,
   COALESCE(d.suppressed_recently_notified, 0) AS suppressed_recently_notified,
   COALESCE(d.suppressed_notifications_off, 0) AS suppressed_notifications_off,
+  COALESCE(d.suppressed_schedule_failed, 0) AS suppressed_schedule_failed,
   COALESCE(d.suppressed_short_stay, 0) AS suppressed_short_stay,
   COALESCE(d.short_stays_with_todos, 0) AS short_stays_with_todos,
   d.median_short_stay_min,

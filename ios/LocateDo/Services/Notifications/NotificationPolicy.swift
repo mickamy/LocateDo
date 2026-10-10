@@ -6,6 +6,8 @@ nonisolated enum NotificationPolicy {
         case assignedToOthers = "assigned_to_others"
         case recentlyNotified = "recently_notified"
         case notificationsOff = "notifications_off"
+        // Not decided by the policy: the system refused a notification the policy let through.
+        case scheduleFailed = "schedule_failed"
     }
 
     static let cooldown: TimeInterval = 30 * 60
