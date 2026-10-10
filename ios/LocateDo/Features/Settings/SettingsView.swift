@@ -39,6 +39,14 @@ struct SettingsView: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         locationAction
+                    } else if !locationProvider.hasPreciseLocation {
+                        Text(.settingsLocationNeedsPrecise)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Button(.settingsOpenSettings) {
+                            Self.logAction(.preciseLocation, .openSettings)
+                            openSystemSettings()
+                        }
                     }
                 }
                 Section {
@@ -200,6 +208,7 @@ struct SettingsView: View {
 
     private enum Permission: String {
         case location
+        case preciseLocation = "precise_location"
         case notifications
     }
 

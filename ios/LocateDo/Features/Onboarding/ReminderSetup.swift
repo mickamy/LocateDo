@@ -5,10 +5,17 @@ import UserNotifications
 // What arrival reminders still need, and whether to ask for it after a place is saved: at most once a week, until the
 // user says not to.
 nonisolated enum ReminderSetup {
-    enum Missing: String {
+    struct Permissions: Equatable {
+        let location: CLAuthorizationStatus
+        let preciseLocation: Bool
+        let notifications: UNAuthorizationStatus
+    }
+
+    // In the order the sheet lists them and the analytics name them.
+    enum Need: String, CaseIterable {
         case notifications
         case locationAlways = "location_always"
-        case both
+        case preciseLocation = "precise_location"
     }
 
     static let interval: TimeInterval = 7 * 24 * 60 * 60
@@ -21,27 +28,34 @@ nonisolated enum ReminderSetup {
         status != .authorizedAlways
     }
 
-    static func missing(location: CLAuthorizationStatus, notifications: UNAuthorizationStatus) -> Missing? {
-        switch (needsNotifications(notifications), needsAlways(location)) {
-        case (true, true): .both
-        case (true, false): .notifications
-        case (false, true): .locationAlways
-        case (false, false): nil
+    // Only a granted location can be approximate; without one the home banner asks for location first.
+    static func needsPrecise(location: CLAuthorizationStatus, precise: Bool) -> Bool {
+        (location == .authorizedAlways || location == .authorizedWhenInUse) && !precise
+    }
+
+    static func missing(_ permissions: Permissions) -> [Need] {
+        Need.allCases.filter { need in
+            switch need {
+            case .notifications: needsNotifications(permissions.notifications)
+            case .locationAlways: needsAlways(permissions.location)
+            case .preciseLocation: needsPrecise(location: permissions.location, precise: permissions.preciseLocation)
+            }
         }
     }
 
-    // Location turned off altogether is left to the home banner; this sheet asks for the step up to "Always".
-    static func isDue(
-        location: CLAuthorizationStatus,
-        notifications: UNAuthorizationStatus,
-        shownAt: Date?,
-        never: Bool,
-        now: Date
-    ) -> Bool {
+    static func analyticsValue(_ needs: [Need]) -> String {
+        needs.map(\.rawValue).joined(separator: ",")
+    }
+
+    // Location turned off altogether is left to the home banner; this sheet asks for the steps up from "While Using".
+    static func isDue(_ permissions: Permissions, shownAt: Date?, never: Bool, now: Date) -> Bool {
         if never {
             return false
         }
-        guard needsNotifications(notifications) || location == .authorizedWhenInUse else {
+        let location = permissions.location
+        guard needsNotifications(permissions.notifications)
+                || location == .authorizedWhenInUse
+                || needsPrecise(location: location, precise: permissions.preciseLocation) else {
             return false
         }
         guard let shownAt else {

@@ -87,13 +87,16 @@ struct NearbyView: View {
         didSavePlace = false
         Task {
             await notifier.refreshAuthorizationStatus()
-            let location = locationProvider.authorizationStatus
-            let notifications = notifier.authorizationStatus
+            let permissions = ReminderSetup.Permissions(
+                location: locationProvider.authorizationStatus,
+                preciseLocation: locationProvider.hasPreciseLocation,
+                notifications: notifier.authorizationStatus
+            )
             let now = Date.now
-            guard ReminderSetup.isDue(location: location, notifications: notifications,
-                                      shownAt: preferences.reminderSetupShownAt,
+            let missing = ReminderSetup.missing(permissions)
+            guard ReminderSetup.isDue(permissions, shownAt: preferences.reminderSetupShownAt,
                                       never: preferences.reminderSetupNever, now: now),
-                  let missing = ReminderSetup.missing(location: location, notifications: notifications) else {
+                  !missing.isEmpty else {
                 return
             }
             preferences.reminderSetupShownAt = now
@@ -126,7 +129,11 @@ struct NearbyView: View {
     }
 
     private var permissionIssue: PermissionBanner? {
-        PermissionBanner(location: locationProvider.authorizationStatus, notifications: notifier.authorizationStatus)
+        PermissionBanner(
+            location: locationProvider.authorizationStatus,
+            preciseLocation: locationProvider.hasPreciseLocation,
+            notifications: notifier.authorizationStatus
+        )
     }
 
     private var list: some View {
@@ -175,5 +182,5 @@ struct NearbyView: View {
 private struct ReminderSetupRequest: Identifiable {
     let id = UUID()
     let shownCount: Int
-    let missing: ReminderSetup.Missing
+    let missing: [ReminderSetup.Need]
 }

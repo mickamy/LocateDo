@@ -3,8 +3,8 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-// What arrival reminders still need, offered right after a place is saved: notifications and "Always" location, each
-// with a check once done. It closes itself when nothing is left.
+// What arrival reminders still need, offered right after a place is saved: notifications, "Always" location, and
+// precise location when it was off, each with a check once done. It closes itself when nothing is left.
 struct ReminderSetupView: View {
     private enum Answer: String {
         case allow
@@ -14,7 +14,7 @@ struct ReminderSetupView: View {
     }
 
     let shownCount: Int
-    let missing: ReminderSetup.Missing
+    let missing: [ReminderSetup.Need]
 
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
@@ -26,9 +26,16 @@ struct ReminderSetupView: View {
     @State private var answer: Answer = .dismissed
     @State private var contentHeight: CGFloat = 520
 
+    private var permissions: ReminderSetup.Permissions {
+        ReminderSetup.Permissions(
+            location: locationProvider.authorizationStatus,
+            preciseLocation: locationProvider.hasPreciseLocation,
+            notifications: notifier.authorizationStatus
+        )
+    }
+
     private var isComplete: Bool {
-        ReminderSetup.missing(location: locationProvider.authorizationStatus,
-                              notifications: notifier.authorizationStatus) == nil
+        ReminderSetup.missing(permissions).isEmpty
     }
 
     var body: some View {
@@ -48,6 +55,9 @@ struct ReminderSetupView: View {
             VStack(spacing: 12) {
                 notificationsRow
                 locationRow
+                if missing.contains(.preciseLocation) {
+                    preciseLocationRow
+                }
             }
             PrivacyNote(text: .alwaysPromptPrivacy)
             Button(.reminderSetupLater) {
@@ -90,7 +100,7 @@ struct ReminderSetupView: View {
         .onDisappear {
             Analytics.log(.alwaysPromptAnswered, parameters: [
                 .result: answer.rawValue,
-                .missing: missing.rawValue,
+                .missing: ReminderSetup.analyticsValue(missing),
                 .shownCount: shownCount,
                 .durationS: max(Int(Date().timeIntervalSince(shownAt)), 0)
             ])
@@ -132,6 +142,22 @@ struct ReminderSetupView: View {
                 Button(.settingsOpenSettings) {
                     open(UIApplication.openSettingsURLString)
                 }
+            }
+        }
+    }
+
+    // Full accuracy granted from the app lasts only while it is in use, so the lasting switch is in Settings.
+    private var preciseLocationRow: some View {
+        row(
+            .reminderSetupPreciseLocation,
+            systemImage: "scope",
+            done: ReminderSetup.needsPrecise(
+                location: locationProvider.authorizationStatus,
+                precise: locationProvider.hasPreciseLocation
+            ) ? nil : .reminderSetupTurnedOn
+        ) {
+            Button(.settingsOpenSettings) {
+                open(UIApplication.openSettingsURLString)
             }
         }
     }
