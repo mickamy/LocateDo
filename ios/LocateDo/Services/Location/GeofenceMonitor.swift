@@ -13,6 +13,7 @@ final class GeofenceMonitor {
     private var serviceSession: CLServiceSession?
     private var eventLoop: Task<Void, Never>?
     private var authorizationWatch: Task<Void, Never>?
+    private var awaitingFirstReport: Set<String> = []
     @ObservationIgnored var onArrival: () async -> Void = {}
     @ObservationIgnored var onNotified: () -> Void = {}
     @ObservationIgnored var currentUserID: () -> UUID? = { nil }
@@ -63,6 +64,7 @@ final class GeofenceMonitor {
             if current[region.identifier] != nil {
                 await monitor.remove(region.identifier)
             }
+            awaitingFirstReport.insert(region.identifier)
             let condition = CLMonitor.CircularGeographicCondition(center: region.center, radius: region.radiusMeters)
             await monitor.add(condition, identifier: region.identifier, assuming: .unsatisfied)
         }
@@ -132,28 +134,48 @@ final class GeofenceMonitor {
         let state = Self.describe(event.state)
         let flags = Self.diagnostics(event)
         logger.notice("Event \(id, privacy: .public) \(state, privacy: .public) [\(flags, privacy: .public)]")
-        guard event.state == .satisfied, let placeID = UUID(uuidString: event.identifier) else {
+        let report: PlacePresence.Report
+        switch event.state {
+        case .satisfied: report = .inside
+        case .unsatisfied: report = .outside
+        default: return
+        }
+        let isFirstReport = awaitingFirstReport.remove(id) != nil
+        guard let placeID = UUID(uuidString: id), let place = place(placeID) else {
+            logger.notice("No place for \(id, privacy: .public)")
             return
         }
-        await arrived(at: placeID)
-        await onArrival()
+        let outcome = PlacePresence.next(report, enteredAt: place.enteredAt, isFirstReport: isFirstReport, now: .now)
+        place.enteredAt = outcome.enteredAt
+        try? container.mainContext.save()
+        switch outcome.event {
+        case .arrival:
+            await arrived(at: place)
+            await onArrival()
+        case .departure(let stay):
+            logger.notice("Left \(place.name, privacy: .public) after \(Int(stay / 60)) min")
+        case .shortStay(let stay):
+            logger.notice("Left \(place.name, privacy: .public) after only \(Int(stay)) s")
+        case nil:
+            logger.notice("First report for \(place.name, privacy: .public); not notifying")
+        }
     }
 
     #if DEBUG || STAGING
     func simulateArrival(at place: Place) async {
         place.lastNotifiedAt = nil
-        await arrived(at: place.id)
+        await arrived(at: place)
     }
     #endif
 
-    private func arrived(at placeID: UUID) async {
-        let context = container.mainContext
-        var descriptor = FetchDescriptor<Place>(predicate: #Predicate { $0.id == placeID })
+    private func place(_ id: UUID) -> Place? {
+        var descriptor = FetchDescriptor<Place>(predicate: #Predicate { $0.id == id })
         descriptor.fetchLimit = 1
-        guard let place = try? context.fetch(descriptor).first else {
-            logger.notice("No place for \(placeID.uuidString, privacy: .public)")
-            return
-        }
+        return try? container.mainContext.fetch(descriptor).first
+    }
+
+    private func arrived(at place: Place) async {
+        let context = container.mainContext
         let openTodos = NotificationPolicy.notifiableTodos(place.openTodos, for: currentUserID())
         let now = Date()
         await notifier.refreshAuthorizationStatus()
