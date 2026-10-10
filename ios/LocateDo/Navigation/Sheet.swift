@@ -11,6 +11,7 @@ enum Sheet: Identifiable {
     case sharing
     case paywall(PaywallTrigger)
     case invite(PendingInvite)
+    case account
     case reminderSetup(ReminderSetupRequest)
     case promotions
 
@@ -25,6 +26,7 @@ enum Sheet: Identifiable {
         case .sharing: "sharing"
         case .paywall(let trigger): "paywall-\(trigger.id)"
         case .invite(let invite): "invite-\(invite.id)"
+        case .account: "account"
         case .reminderSetup(let request): "reminderSetup-\(request.id)"
         case .promotions: "promotions"
         }
@@ -44,11 +46,12 @@ struct PickLocation {
     let onPick: (PlacePick) -> Void
 }
 
+// Without a token, the link is pasted on the invite screen.
 struct PendingInvite: Identifiable {
-    let token: String
+    var token: String?
 
     var id: String {
-        token
+        token ?? "pasted"
     }
 }
 

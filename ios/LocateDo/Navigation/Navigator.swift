@@ -19,6 +19,16 @@ final class Navigator {
         !sheets.isEmpty || confirmation != nil
     }
 
+    // An invite link opened before Home is up, which onboarding hands over to.
+    var hasInvite: Bool {
+        sheets.contains { sheet in
+            if case .invite = sheet {
+                return true
+            }
+            return false
+        }
+    }
+
     var hasWaiting: Bool {
         !waiting.isEmpty || pendingPlaceID != nil
     }

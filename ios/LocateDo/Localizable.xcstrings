@@ -649,6 +649,23 @@
         }
       }
     },
+    "common.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "戻る"
+          }
+        }
+      }
+    },
     "common.cancel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -893,7 +910,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which convenience store do you go to?"
+            "value" : "Which convenience store?"
           }
         },
         "ja" : {
@@ -1029,7 +1046,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which drugstore do you go to?"
+            "value" : "Which drugstore?"
           }
         },
         "ja" : {
@@ -1165,7 +1182,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which grocery store do you go to?"
+            "value" : "Which grocery store?"
           }
         },
         "ja" : {
@@ -1301,7 +1318,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which hardware store do you go to?"
+            "value" : "Which hardware store?"
           }
         },
         "ja" : {
@@ -1471,7 +1488,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which %@ do you go to?"
+            "value" : "Which %@?"
           }
         },
         "ja" : {
@@ -2138,13 +2155,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Get to the store, and your list pops up."
+            "value" : "Never forget the milk again."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "お店に着いたら、買うものをお知らせ。"
+            "value" : "もう、買い忘れない。"
           }
         }
       }
@@ -2234,6 +2251,108 @@
         }
       }
     },
+    "onboarding.returning_invite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept a family invite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "家族の招待を受ける"
+          }
+        }
+      }
+    },
+    "onboarding.returning_invite_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste the link you were sent"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送られてきたリンクを貼り付けます"
+          }
+        }
+      }
+    },
+    "onboarding.returning_link" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invited, or used StopBy before?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "招待された方・前に使っていた方"
+          }
+        }
+      }
+    },
+    "onboarding.returning_sign_in" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in and restore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サインインしてデータを戻す"
+          }
+        }
+      }
+    },
+    "onboarding.returning_sign_in_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With the account you used before"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前に使っていたアカウントで"
+          }
+        }
+      }
+    },
+    "onboarding.returning_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ようこそ"
+          }
+        }
+      }
+    },
     "onboarding.sample_place" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2298,6 +2417,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "はじめる"
+          }
+        }
+      }
+    },
+    "onboarding.subheadline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your list arrives when you get to the store, even with the app closed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お店に着くと、買うものがスマホに届きます。アプリを閉じていても大丈夫。"
           }
         }
       }
@@ -3084,19 +3220,36 @@
         }
       }
     },
-    "place.editor.preview_empty" : {
+    "place.editor.preview_caption" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What you add shows up here."
+            "value" : "You'll get this when you arrive"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "書いたやることがここに出ます"
+            "value" : "着くと、こんな通知が届きます"
+          }
+        }
+      }
+    },
+    "place.editor.preview_example" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g., %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例) %@"
           }
         }
       }

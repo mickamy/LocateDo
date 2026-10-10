@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SheetContent: View {
     @Environment(AppPreferences.self) private var preferences
+    @Environment(\.dismiss) private var dismiss
     let sheet: Sheet
 
     var body: some View {
@@ -27,11 +28,29 @@ struct SheetContent: View {
         case .invite(let invite):
             NavigationStack {
                 AcceptInviteScreen(token: invite.token)
+                    .toolbar {
+                        doneButton
+                    }
+            }
+        case .account:
+            NavigationStack {
+                AccountScreen()
+                    .toolbar {
+                        doneButton
+                    }
             }
         case .reminderSetup(let request):
             ReminderSetupScreen(shownCount: request.shownCount, missing: request.missing)
         case .promotions:
             PromotionsConsentScreen()
+        }
+    }
+
+    private var doneButton: some ToolbarContent {
+        ToolbarItem(placement: .confirmationAction) {
+            Button(.commonDone) {
+                dismiss()
+            }
         }
     }
 }

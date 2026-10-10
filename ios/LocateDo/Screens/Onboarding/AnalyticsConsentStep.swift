@@ -13,6 +13,7 @@ struct AnalyticsConsentStep: View {
         Text(.onboardingAnalyticsTitle)
             .font(.title2.bold())
             .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
         VStack(alignment: .leading, spacing: 16) {
             point(.onboardingAnalyticsMessage, systemImage: "person")
             point(.onboardingAnalyticsNotSent, systemImage: "lock")

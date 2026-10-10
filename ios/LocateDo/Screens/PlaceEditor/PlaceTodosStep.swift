@@ -20,6 +20,7 @@ struct PlaceTodosStep: View {
             DraftTodosSection(
                 placeName: placeName,
                 title: .placeEditorTodosTitle(placeName),
+                example: String(localized: placeholderExample),
                 todos: $todos,
                 draft: $draft,
                 remaining: remaining,
@@ -34,6 +35,14 @@ struct PlaceTodosStep: View {
             }
         }
         .trackScreen(.placeEditor, parameters: [.mode: EditorMode.new.rawValue, .step: "todos"])
+    }
+
+    private var placeholderExample: LocalizedStringResource {
+        switch category?.builtin {
+        case .life: .placeEditorTodoExampleLife
+        case .work: .placeEditorTodoExampleWork
+        case .shopping, .other, nil: .placeEditorTodoExampleShopping
+        }
     }
 
     private var placeholder: LocalizedStringResource {
@@ -51,6 +60,8 @@ struct PlaceTodosStep: View {
 struct DraftTodosSection: View {
     let placeName: String
     let title: LocalizedStringResource
+    // The notification body while nothing is written yet, as an example of what to write.
+    let example: String
     @Binding var todos: [DraftTodo]
     @Binding var draft: String
     let remaining: Int?
@@ -84,7 +95,12 @@ struct DraftTodosSection: View {
             }
         } header: {
             VStack(alignment: .leading, spacing: 20) {
-                preview
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(.placeEditorPreviewCaption)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    preview
+                }
                 Text(title)
                     .font(.title3.bold())
                     .foregroundStyle(.primary)
@@ -138,7 +154,7 @@ struct DraftTodosSection: View {
         let titles = (todos.map(\.title) + [draft])
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
-        var message = String(localized: .placeEditorPreviewEmpty)
+        var message = example
         if !titles.isEmpty {
             message = NotificationPolicy.body(todoTitles: titles)
         }

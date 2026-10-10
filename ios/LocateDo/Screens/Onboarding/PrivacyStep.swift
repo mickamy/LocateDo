@@ -10,8 +10,10 @@ struct PrivacyStep: View {
     @State private var isRequesting = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        OnboardingPage { isSpaced in
+            if isSpaced {
+                Spacer()
+            }
             Image(systemName: "lock.circle.fill")
                 .font(.system(size: 88))
                 .foregroundStyle(.tint)
@@ -19,16 +21,20 @@ struct PrivacyStep: View {
             Text(.onboardingPrivacyTitle)
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 16) {
                 point(.onboardingPrivacyOnDevice, systemImage: "iphone")
                 point(.onboardingPrivacyNotSent, systemImage: "person.2.slash")
                 point(.onboardingPrivacyNoAds, systemImage: "hand.raised")
             }
-            Spacer()
+            if isSpaced {
+                Spacer()
+            }
             Text(reason)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             Button {
                 requestLocation()
             } label: {
@@ -40,7 +46,6 @@ struct PrivacyStep: View {
             .disabled(isRequesting)
             .accessibilityIdentifier("onboarding.allowLocation")
         }
-        .padding(32)
         .onAppear {
             Analytics.logScreen(.onboarding, parameters: [.step: "privacy"])
         }
