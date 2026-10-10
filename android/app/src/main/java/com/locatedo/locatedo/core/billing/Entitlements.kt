@@ -63,10 +63,13 @@ class Entitlements @Inject constructor(
         }
     }
 
+    suspend fun analyticsIdChanged() {
+        attachAnalytics()
+    }
+
     // The store ties attributes to its current app user id, so the Firebase id is handed over again after each switch.
     private suspend fun attachAnalytics() {
-        val instanceId = analytics.appInstanceId() ?: return
-        source.setAnalyticsId(instanceId)
+        source.setAnalyticsId(analytics.appInstanceId())
     }
 
     suspend fun plans(): List<PaywallPlan> = source.plans()

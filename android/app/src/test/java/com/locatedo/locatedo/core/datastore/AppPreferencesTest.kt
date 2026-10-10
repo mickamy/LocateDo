@@ -49,6 +49,20 @@ class AppPreferencesTest {
     }
 
     @Test
+    fun analyticsConsentIsKeptAcrossResetsAndStartsOverWithADebugOverride() = runTest {
+        val preferences = preferences()
+        assertEquals(AnalyticsConsentRecord(), preferences.analyticsConsent.first())
+
+        preferences.setAnalyticsConsent(false)
+        preferences.setAnalyticsConsentRequired(true)
+        preferences.reset()
+        assertEquals(AnalyticsConsentRecord(answer = false, required = true), preferences.analyticsConsent.first())
+
+        preferences.setConsentStoreCountryOverride("GB")
+        assertEquals(AnalyticsConsentRecord(storeCountryOverride = "GB"), preferences.analyticsConsent.first())
+    }
+
+    @Test
     fun anOutOfRangeRadiusFallsBackToTheDefault() = runTest {
         val preferences = preferences()
 

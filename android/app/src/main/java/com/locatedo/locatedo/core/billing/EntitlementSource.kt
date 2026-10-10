@@ -20,7 +20,8 @@ interface EntitlementSource {
 
     suspend fun restore(): ProSubscription?
 
-    fun setAnalyticsId(instanceId: String)
+    // null takes the id away, when usage analytics is off.
+    fun setAnalyticsId(instanceId: String?)
 }
 
 // Builds without a RevenueCat key: nothing to buy, nothing active.
@@ -39,5 +40,5 @@ object UnavailableEntitlementSource : EntitlementSource {
 
     override suspend fun restore(): ProSubscription? = null
 
-    override fun setAnalyticsId(instanceId: String) = Unit
+    override fun setAnalyticsId(instanceId: String?) = Unit
 }

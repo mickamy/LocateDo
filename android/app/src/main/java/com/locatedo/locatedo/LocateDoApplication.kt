@@ -6,7 +6,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.locatedo.locatedo.core.account.AccountManager
-import com.locatedo.locatedo.core.analytics.CrashReporting
+import com.locatedo.locatedo.core.analytics.AnalyticsConsent
 import com.locatedo.locatedo.core.analytics.DailyStateReporter
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
@@ -65,7 +65,7 @@ class LocateDoApplication : Application() {
 
     @Inject lateinit var dailyStateReporter: DailyStateReporter
 
-    @Inject lateinit var crashReporting: CrashReporting
+    @Inject lateinit var analyticsConsent: AnalyticsConsent
 
     @Inject lateinit var writeAnalytics: WriteAnalytics
 
@@ -89,7 +89,7 @@ class LocateDoApplication : Application() {
             categories.ensureBuiltins()
         }
         applicationScope.launch {
-            crashReporting.tagWithAppInstanceId()
+            analyticsConsent.start()
         }
         geofenceSync.start()
         syncEngine.start()

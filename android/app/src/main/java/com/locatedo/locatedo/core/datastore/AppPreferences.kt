@@ -51,6 +51,14 @@ data class PromotionsRecord(
     val hasShownPrompt: Boolean = false,
 )
 
+// Consent to usage analytics and crash reports in the EEA and the UK, per device. storeCountryOverride is set only from
+// the debug tools.
+data class AnalyticsConsentRecord(
+    val answer: Boolean? = null,
+    val required: Boolean? = null,
+    val storeCountryOverride: String? = null,
+)
+
 @Singleton
 class AppPreferences @Inject constructor(private val dataStore: DataStore<Preferences>) {
     private object Keys {
@@ -76,6 +84,9 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val receivedArrivalNotification = booleanPreferencesKey("receivedArrivalNotification")
         val shownPromotionsPrompt = booleanPreferencesKey("shownPromotionsPrompt")
         val completionNotices = booleanPreferencesKey("completionNotices")
+        val analyticsConsent = booleanPreferencesKey("analyticsConsent")
+        val analyticsConsentRequired = booleanPreferencesKey("analyticsConsentRequired")
+        val consentStoreCountry = stringPreferencesKey("consentStoreCountry")
     }
 
     // Device state rather than a preference: what the app last handed to the geofencing client (see GeofenceRecord).
@@ -103,6 +114,14 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             consent = preferences[Keys.promotionsConsent] ?: false,
             hasReceivedArrivalNotification = preferences[Keys.receivedArrivalNotification] ?: false,
             hasShownPrompt = preferences[Keys.shownPromotionsPrompt] ?: false,
+        )
+    }
+
+    val analyticsConsent: Flow<AnalyticsConsentRecord> = dataStore.data.map { preferences ->
+        AnalyticsConsentRecord(
+            answer = preferences[Keys.analyticsConsent],
+            required = preferences[Keys.analyticsConsentRequired],
+            storeCountryOverride = preferences[Keys.consentStoreCountry],
         )
     }
 
@@ -221,6 +240,27 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setCompletionNotices(isOn: Boolean) {
         dataStore.edit { it[Keys.completionNotices] = isOn }
+    }
+
+    suspend fun setAnalyticsConsent(answer: Boolean) {
+        dataStore.edit { it[Keys.analyticsConsent] = answer }
+    }
+
+    suspend fun setAnalyticsConsentRequired(required: Boolean) {
+        dataStore.edit { it[Keys.analyticsConsentRequired] = required }
+    }
+
+    // Starts the consent over, so the debug tools can try another region from a fresh install's state.
+    suspend fun setConsentStoreCountryOverride(country: String?) {
+        dataStore.edit {
+            if (country == null) {
+                it.remove(Keys.consentStoreCountry)
+            } else {
+                it[Keys.consentStoreCountry] = country
+            }
+            it.remove(Keys.analyticsConsent)
+            it.remove(Keys.analyticsConsentRequired)
+        }
     }
 
     suspend fun reset() {
