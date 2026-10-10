@@ -7,7 +7,7 @@ struct AllTodosScreen: View {
     @Environment(LocalWrites.self) private var writes
     @Environment(TodoUndo.self) private var undo
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
-    @State private var filter: TodoFilter = .all
+    @State private var filter: TodoFilter = .open
 
     private var groups: [TodoGroup] {
         TodoGrouping.groups(todos, filter: filter)
@@ -29,6 +29,7 @@ struct AllTodosScreen: View {
         }
         .trackScreen(.todos)
         .navigationTitle(Text(.homeAllTodos))
+        .navigationBarTitleDisplayMode(.inline)
         .maintenanceBanner()
     }
 
@@ -79,6 +80,7 @@ struct AllTodosScreen: View {
                 }
             }
         }
+        .contentMargins(.top, 8, for: .scrollContent)
     }
 
     private var filterPicker: some View {

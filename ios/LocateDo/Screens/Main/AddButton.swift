@@ -42,13 +42,20 @@ struct AddButton: View {
         } label: {
             Label(.commonAdd, systemImage: "plus")
                 .labelStyle(.iconOnly)
-                .font(.title3.weight(.semibold))
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: Self.height, height: Self.height)
+                .contentShape(.circle)
         }
         .menuOrder(.fixed)
-        // The system style, unlike a glass effect on the label, keeps its tint off the menu it opens into.
-        .buttonStyle(.glassProminent)
-        .buttonBorderShape(.circle)
-        .controlSize(.large)
+        .buttonStyle(.plain)
+        // The menu grows out of its label and shrinks back into it, taking the label's look along; the tinted
+        // circle sits behind, outside the menu, so the menu keeps the system look.
+        .background {
+            Circle()
+                .fill(.clear)
+                .glassEffect(.regular.tint(.accentColor).interactive(), in: .circle)
+        }
         .accessibilityIdentifier("home.add")
     }
 

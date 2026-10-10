@@ -22,6 +22,8 @@ struct MapScreen: View {
             MapUserLocationButton()
             MapCompass()
         }
+        // No add button over the map, so none of the room Home leaves for it.
+        .contentMargins(.bottom, 0, for: .scrollContent)
         .onChange(of: selectedPlace) {
             if let selectedPlace {
                 navigator.push(.place(selectedPlace))
