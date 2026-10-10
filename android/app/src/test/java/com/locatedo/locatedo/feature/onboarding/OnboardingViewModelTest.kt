@@ -120,9 +120,8 @@ class OnboardingViewModelTest {
     @Test
     fun asksAboutUsageDataLastInTheEeaAndTheUk() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        preferences.setAnalyticsConsentRequired(true)
         val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
-        val viewModel = viewModel(preferences, permissions)
+        val viewModel = viewModel(preferences, permissions, inScope = true)
         viewModel.locationRequested()
 
         viewModel.notificationsRequested()
@@ -140,7 +139,6 @@ class OnboardingViewModelTest {
     @Test
     fun doesNotAskAboutUsageDataElsewhere() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        preferences.setAnalyticsConsentRequired(false)
         val viewModel = viewModel(preferences, FakePermissionsRepository())
         viewModel.locationRequested()
 
@@ -150,6 +148,13 @@ class OnboardingViewModelTest {
         assertEquals(null, preferences.analyticsConsent.first().answer)
     }
 
-    private fun viewModel(preferences: AppPreferences, permissions: FakePermissionsRepository) =
-        OnboardingViewModel(preferences, permissions, analytics, fakeAnalyticsConsent(preferences, analytics), clock)
+    // The region is set explicitly, so the result does not depend on the machine's locale.
+    private suspend fun viewModel(
+        preferences: AppPreferences,
+        permissions: FakePermissionsRepository,
+        inScope: Boolean = false,
+    ): OnboardingViewModel {
+        preferences.setAnalyticsConsentRequired(inScope)
+        return OnboardingViewModel(preferences, permissions, analytics, fakeAnalyticsConsent(preferences, analytics), clock)
+    }
 }
