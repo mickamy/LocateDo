@@ -41,7 +41,7 @@ struct NewPlaceTodosSection: View {
                         }
                         .focused($isDraftFocused)
                         .submitLabel(.next)
-                        .onSubmit(addDraft)
+                        .onSubmit { addDraft() }
                         .accessibilityIdentifier("placeEditor.todoDraft")
                         // Return does the same; the button says that the row can be added and another typed.
                         Button(action: addFromButton) {
@@ -80,6 +80,12 @@ struct NewPlaceTodosSection: View {
                 startTyping()
             }
         }
+        // Text the keyboard commits after the field has closed must not linger, unseen, and get saved.
+        .onChange(of: draft) {
+            if !isTyping, !draft.isEmpty {
+                draft = ""
+            }
+        }
     }
 
     // Follows the typing, with the same wording and cut-off as the real notification.
@@ -113,24 +119,36 @@ struct NewPlaceTodosSection: View {
         isDraftFocused = false
         Task {
             try? await Task.sleep(for: .milliseconds(100))
-            addDraft()
+            addDraft(closesWhenEmpty: false)
         }
     }
 
-    // An empty Return closes the field back into "Add To-Do".
-    private func addDraft() {
+    // Only an empty Return closes the field back into "Add To-Do"; the button never does.
+    private func addDraft(closesWhenEmpty: Bool = true) {
         let title = draft.trimmingCharacters(in: .whitespaces)
-        guard !title.isEmpty else {
-            draft = ""
-            isTyping = false
+        if title.isEmpty {
+            if closesWhenEmpty {
+                stopTyping()
+            } else {
+                refocus()
+            }
             return
         }
         todos.append(DraftTodo(title: title))
         draft = ""
         if left == 0 {
-            isTyping = false
+            stopTyping()
             return
         }
+        refocus()
+    }
+
+    private func stopTyping() {
+        isTyping = false
+        draft = ""
+    }
+
+    private func refocus() {
         Task {
             isDraftFocused = true
         }
