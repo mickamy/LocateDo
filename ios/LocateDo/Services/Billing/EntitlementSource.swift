@@ -24,6 +24,7 @@ protocol EntitlementSource {
     func plans() async throws -> [PaywallPlan]
     func purchase(_ kind: PaywallPlan.Kind) async throws -> PurchaseOutcome
     func restore() async throws -> ProSubscription?
+    func analyticsIDChanged()
 }
 
 final class RevenueCatEntitlementSource: EntitlementSource {
@@ -107,6 +108,10 @@ final class RevenueCatEntitlementSource: EntitlementSource {
 
     func restore() async throws -> ProSubscription? {
         Self.subscription(in: try await Purchases.shared.restorePurchases())
+    }
+
+    func analyticsIDChanged() {
+        Self.attachAnalyticsID()
     }
 
     // Attributes belong to the current App User ID; without it the Firebase integration skips the user.

@@ -39,7 +39,7 @@ struct AnalyticsConsentTests {
     @Test func sendsNothingBeforeTheFirstRegionCheck() throws {
         let consent = AnalyticsConsent(preferences: try Self.preferences(), region: "US")
 
-        #expect(!consent.isSending)
+        #expect(consent.decision == nil)
         #expect(!consent.needsAnswer)
     }
 
@@ -64,9 +64,31 @@ struct AnalyticsConsentTests {
 
         consent.resolveRegion(storefront: "GBR", region: "US")
 
-        #expect(!consent.isSending)
+        #expect(consent.decision == nil)
         #expect(consent.needsAnswer)
         #expect(changes.values.isEmpty)
+    }
+
+    @Test func showsTheSettingOnlyInScope() throws {
+        let consent = AnalyticsConsent(preferences: try Self.preferences(), region: nil)
+
+        consent.resolveRegion(storefront: "JPN", region: "JP")
+        #expect(!consent.showsSetting)
+
+        consent.resolveRegion(storefront: "FRA", region: "FR")
+        #expect(consent.showsSetting)
+    }
+
+    @Test func keepsTheSettingAfterAnAnswerAndAMoveOutOfScope() throws {
+        let preferences = try Self.preferences()
+        preferences.analyticsConsentRequired = true
+        let consent = AnalyticsConsent(preferences: preferences, region: nil)
+        consent.set(false, source: .onboarding)
+
+        consent.resolveRegion(storefront: "USA", region: "US")
+
+        #expect(consent.showsSetting)
+        #expect(consent.decision == false)
     }
 
     @Test func guessesFromTheDeviceRegionUntilTheStorefrontIsKnown() throws {
@@ -108,9 +130,9 @@ struct AnalyticsConsentTests {
 
         consent.set(false, source: .onboarding)
 
-        #expect(!consent.isSending)
+        #expect(consent.decision == false)
         #expect(!consent.needsAnswer)
-        #expect(changes.values.isEmpty)
+        #expect(changes.values == [false])
     }
 
     @Test func turningOffInSettingsStopsSendingAnywhere() throws {
@@ -147,9 +169,9 @@ struct AnalyticsConsentTests {
 
         consent.resolveRegion(storefront: "DEU", region: "DE")
 
-        #expect(!consent.isSending)
+        #expect(consent.decision == nil)
         #expect(consent.needsAnswer)
-        #expect(changes.values == [false])
+        #expect(changes.values == [nil])
     }
 
     private static func preferences() throws -> AppPreferences {
@@ -161,9 +183,9 @@ struct AnalyticsConsentTests {
 }
 
 private final class Changes {
-    var values: [Bool] = []
+    var values: [Bool?] = []
 
-    func record(_ isSending: Bool) {
-        values.append(isSending)
+    func record(_ decision: Bool?) {
+        values.append(decision)
     }
 }

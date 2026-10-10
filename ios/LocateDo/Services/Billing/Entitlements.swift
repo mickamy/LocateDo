@@ -75,6 +75,10 @@ final class Entitlements {
         subscription = try await source.restore()
     }
 
+    func analyticsIDChanged() {
+        source?.analyticsIDChanged()
+    }
+
     func logOut() async {
         guard let source else {
             return

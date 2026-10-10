@@ -79,6 +79,7 @@ struct LocateDoApp: App {
     }
 
     private func connectServices() {
+        connectAnalytics()
         connectAccount()
         connectNotifications()
         connectWatch()
@@ -300,6 +301,16 @@ extension LocateDoApp {
                 region: ConsentRegion.currentRegion
             )
         }
+    }
+
+    // Firebase was configured with collection off, before RevenueCat; this turns it on once the answer is known.
+    private func connectAnalytics() {
+        analyticsConsent.onChanged = { [entitlements] decision in
+            Analytics.apply(decision)
+            entitlements.analyticsIDChanged()
+        }
+        Analytics.apply(analyticsConsent.decision)
+        entitlements.analyticsIDChanged()
     }
 
     private func connectWatch() {
