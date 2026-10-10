@@ -29,6 +29,7 @@ nonisolated struct SupportDiagnostics: Equatable {
     var language: String
     var timeZone: String
     var supportID: String?
+    var sharesUsageData: Bool
     var userID: UUID?
     var plan: DailyState.PlanState
     var locationAuth: DailyState.LocationAuth
@@ -45,6 +46,9 @@ nonisolated struct SupportDiagnostics: Equatable {
         ]
         if let supportID {
             lines.append("Support ID: \(supportID)")
+        } else if !sharesUsageData {
+            // Says why there is no Support ID, rather than leaving it to look like a failure.
+            lines.append("Usage data: off")
         }
         if let userID {
             lines.append("User ID: \(userID.uuidString.lowercased())")

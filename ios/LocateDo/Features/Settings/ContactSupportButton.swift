@@ -5,6 +5,7 @@ import UIKit
 struct ContactSupportButton: View {
     @Environment(Authenticator.self) private var authenticator
     @Environment(Entitlements.self) private var entitlements
+    @Environment(AnalyticsConsent.self) private var analyticsConsent
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
     @Environment(\.openURL) private var openURL
@@ -49,6 +50,7 @@ struct ContactSupportButton: View {
             language: Bundle.main.preferredLocalizations.first ?? "-",
             timeZone: TimeZone.current.identifier,
             supportID: Analytics.appInstanceID(),
+            sharesUsageData: analyticsConsent.isSending,
             userID: authenticator.session?.userID,
             plan: DailyState.plan(subscription: entitlements.subscription, householdPlan: syncStates.first?.plan),
             locationAuth: DailyState.LocationAuth(locationProvider.authorizationStatus),

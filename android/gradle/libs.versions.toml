@@ -30,6 +30,8 @@ browser = "1.10.0"
 googleid = "1.2.1"
 firebaseBom = "34.19.0"
 revenuecat = "10.24.2"
+# The version RevenueCat brings in; the app reads the store country from it directly.
+billing = "8.3.0"
 androidxTestCore = "1.7.0"
 protobuf = "4.36.2"
 junit = "4.13.2"
@@ -81,6 +83,7 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-installations = { group = "com.google.firebase", name = "firebase-installations" }
 revenuecat-purchases = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "revenuecat" }
+billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 

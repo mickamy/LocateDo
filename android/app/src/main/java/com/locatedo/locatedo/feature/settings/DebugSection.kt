@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun DebugSection(viewModel: DebugViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val consentStoreCountry by viewModel.consentStoreCountry.collectAsStateWithLifecycle()
 
     SectionHeader("Debug")
     DebugRow("Server", uiState.server)
@@ -53,6 +55,14 @@ fun DebugSection(viewModel: DebugViewModel = hiltViewModel()) {
     }
     if (BuildConfig.DEBUG) {
         LocalNetworkAccess()
+    }
+    DebugRow("Consent store country", consentStoreCountry ?: "Play account")
+    Row(modifier = Modifier.padding(horizontal = 8.dp)) {
+        for (country in listOf(null, "GB", "JP")) {
+            TextButton(onClick = { viewModel.setConsentStoreCountry(country) }) {
+                Text(country ?: "Play account")
+            }
+        }
     }
     uiState.serverStatus?.let { status ->
         Text(

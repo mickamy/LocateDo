@@ -17,9 +17,11 @@ struct OnboardingView: View {
         case intro
         case privacy
         case notifications
+        case analytics
     }
 
     @Environment(AppPreferences.self) private var preferences
+    @Environment(AnalyticsConsent.self) private var analyticsConsent
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
     @State private var step: Step = .intro
@@ -38,6 +40,8 @@ struct OnboardingView: View {
                 privacy
             case .notifications:
                 notifications
+            case .analytics:
+                AnalyticsConsentStep(onAnswered: complete)
             }
         }
         .padding(32)
@@ -219,6 +223,15 @@ struct OnboardingView: View {
     }
 
     private func finish() {
+        isRequesting = false
+        if analyticsConsent.needsAnswer {
+            step = .analytics
+        } else {
+            complete()
+        }
+    }
+
+    private func complete() {
         Analytics.log(.onboardingCompleted, parameters: [
             .locationAuth: DailyState.LocationAuth(locationProvider.authorizationStatus).rawValue,
             .notificationAuth: DailyState.NotificationAuth(notifier.authorizationStatus).rawValue,

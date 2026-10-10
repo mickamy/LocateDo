@@ -163,6 +163,8 @@ nonisolated final class FakeEntitlementSource: EntitlementSource {
         ]
     }
 
+    func analyticsIDChanged() {}
+
     func purchase(_ kind: PaywallPlan.Kind) async throws -> PurchaseOutcome {
         state.withLock { state in
             if state.cancelsPurchase {

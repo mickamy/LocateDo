@@ -16,6 +16,8 @@ final class AppPreferences {
         static let receivedArrivalNotification = "receivedArrivalNotification"
         static let shownPromotionsPrompt = "shownPromotionsPrompt"
         static let completionNotices = "completionNotices"
+        static let analyticsConsent = "analyticsConsent"
+        static let analyticsConsentRequired = "analyticsConsentRequired"
     }
 
     private let defaults: UserDefaults
@@ -69,6 +71,16 @@ final class AppPreferences {
         didSet { defaults.set(completionNotices, forKey: Key.completionNotices) }
     }
 
+    // nil until the person answers; set from Settings in any region.
+    var analyticsConsent: Bool? {
+        didSet { defaults.set(analyticsConsent, forKey: Key.analyticsConsent) }
+    }
+
+    // The last region check, so later launches know before StoreKit answers.
+    var analyticsConsentRequired: Bool? {
+        didSet { defaults.set(analyticsConsentRequired, forKey: Key.analyticsConsentRequired) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         hasCompletedOnboarding = defaults.bool(forKey: Key.completedOnboarding)
@@ -82,6 +94,8 @@ final class AppPreferences {
         hasReceivedArrivalNotification = defaults.bool(forKey: Key.receivedArrivalNotification)
         hasShownPromotionsPrompt = defaults.bool(forKey: Key.shownPromotionsPrompt)
         completionNotices = defaults.object(forKey: Key.completionNotices) as? Bool ?? true
+        analyticsConsent = defaults.object(forKey: Key.analyticsConsent) as? Bool
+        analyticsConsentRequired = defaults.object(forKey: Key.analyticsConsentRequired) as? Bool
         let storedRadius = defaults.double(forKey: Key.defaultRadiusMeters)
         defaultRadiusMeters = Place.radiusRange.contains(storedRadius) ? storedRadius : Place.defaultRadiusMeters
     }

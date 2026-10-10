@@ -1317,6 +1317,108 @@
         }
       }
     },
+    "onboarding.analytics_allow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信する"
+          }
+        }
+      }
+    },
+    "onboarding.analytics_deny" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don’t Share"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信しない"
+          }
+        }
+      }
+    },
+    "onboarding.analytics_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StopBy is made by one developer. Knowing how it’s used shows what to improve next."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ちかメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。"
+          }
+        }
+      }
+    },
+    "onboarding.analytics_not_sent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only which features you use, whether reminders arrive, and crash reports are sent. Never your places, to-dos, or location."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送るのは、使った機能、通知が届いたか、クラッシュの情報だけ。場所、やること、現在地は送りません。"
+          }
+        }
+      }
+    },
+    "onboarding.analytics_settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change this anytime in Settings."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定からいつでも変えられます。"
+          }
+        }
+      }
+    },
+    "onboarding.analytics_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help improve StopBy?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ちかメモの改善に協力しますか？"
+          }
+        }
+      }
+    },
     "onboarding.description" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3713,6 +3815,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定を開く"
+          }
+        }
+      }
+    },
+    "settings.privacy.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プライバシー"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which features you use, whether reminders arrive, and crash reports, to decide what to improve. Never your places, to-dos, or location."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使った機能、通知が届いたか、クラッシュの情報を送り、何を良くするかを決めるのに使います。場所、やること、現在地は送りません。"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn Off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフにする"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_off_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the app crashes or something goes wrong, we won’t get a report, so it may take longer to find and fix the problem."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリが落ちたり不具合が起きたりしても報告が届かないため、原因を見つけて直すのに時間がかかることがあります。"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_off_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off usage data and crash reports?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使い方のデータとクラッシュレポートの送信をオフにしますか？"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share usage data and crash reports"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使い方のデータとクラッシュレポートを送信"
           }
         }
       }

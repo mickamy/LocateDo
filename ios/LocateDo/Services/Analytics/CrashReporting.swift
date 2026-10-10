@@ -8,11 +8,23 @@ nonisolated enum CrashReporting {
         configuration != "Debug"
     }
 
-    // The app instance ID is the Support ID in support mail, so reports can be found from it.
-    static func configure(configuration: String, appInstanceID: String?) {
-        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(isCollectionEnabled(for: configuration))
+    // Reports from before the answer stay on the device until it is known.
+    static func apply(_ decision: Bool?, configuration: String?, appInstanceID: String?) {
+        let crashlytics = Crashlytics.crashlytics()
+        guard let decision else {
+            crashlytics.setCrashlyticsCollectionEnabled(false)
+            return
+        }
+        guard decision, let configuration, isCollectionEnabled(for: configuration) else {
+            crashlytics.setCrashlyticsCollectionEnabled(false)
+            crashlytics.deleteUnsentReports()
+            return
+        }
+        crashlytics.sendUnsentReports()
+        crashlytics.setCrashlyticsCollectionEnabled(true)
+        // The app instance ID is the Support ID in support mail, so reports can be found from it.
         if let appInstanceID {
-            Crashlytics.crashlytics().setUserID(appInstanceID)
+            crashlytics.setUserID(appInstanceID)
         }
     }
 

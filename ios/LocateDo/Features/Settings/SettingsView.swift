@@ -105,6 +105,7 @@ struct SettingsView: View {
                     }
                 }
                 ProSection()
+                UsageDataSection()
                 Section {
                     LabeledContent {
                         Text(Self.version)

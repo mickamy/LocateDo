@@ -9,6 +9,8 @@ struct AppPreferencesTests {
         let preferences = AppPreferences(defaults: defaults)
         #expect(!preferences.hasCompletedOnboarding)
         #expect(preferences.defaultRadiusMeters == Place.defaultRadiusMeters)
+        #expect(preferences.analyticsConsent == nil)
+        #expect(preferences.analyticsConsentRequired == nil)
     }
 
     @Test func persistsChanges() throws {
@@ -24,6 +26,8 @@ struct AppPreferencesTests {
         preferences.promotionsConsent = true
         preferences.hasReceivedArrivalNotification = true
         preferences.hasShownPromotionsPrompt = true
+        preferences.analyticsConsent = false
+        preferences.analyticsConsentRequired = true
 
         let reloaded = AppPreferences(defaults: defaults)
         #expect(reloaded.hasCompletedOnboarding)
@@ -36,6 +40,8 @@ struct AppPreferencesTests {
         #expect(reloaded.promotionsConsent)
         #expect(reloaded.hasReceivedArrivalNotification)
         #expect(reloaded.hasShownPromotionsPrompt)
+        #expect(reloaded.analyticsConsent == false)
+        #expect(reloaded.analyticsConsentRequired == true)
     }
 
     @Test func resetKeepsPromotionsConsent() throws {
@@ -49,6 +55,17 @@ struct AppPreferencesTests {
         #expect(preferences.promotionsConsent)
         #expect(preferences.hasReceivedArrivalNotification)
         #expect(preferences.hasShownPromotionsPrompt)
+    }
+
+    @Test func resetKeepsAnalyticsConsent() throws {
+        let preferences = AppPreferences(defaults: try makeDefaults())
+        preferences.analyticsConsent = true
+        preferences.analyticsConsentRequired = true
+
+        preferences.reset()
+
+        #expect(preferences.analyticsConsent == true)
+        #expect(preferences.analyticsConsentRequired == true)
     }
 
     @Test func ignoresAnOutOfRangeStoredRadius() throws {

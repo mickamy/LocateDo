@@ -36,6 +36,7 @@ data class SupportDiagnostics(
     val language: String,
     val timeZone: String,
     val supportId: String?,
+    val sharesUsageData: Boolean,
     val userId: UUID?,
     val plan: DailyState.PlanState,
     val locationAuth: LocationAuth,
@@ -59,6 +60,9 @@ data class SupportDiagnostics(
             )
             if (supportId != null) {
                 lines.add("Support ID: $supportId")
+            } else if (!sharesUsageData) {
+                // Says why there is no Support ID, rather than leaving it to look like a failure.
+                lines.add("Usage data: off")
             }
             if (userId != null) {
                 lines.add("User ID: $userId")

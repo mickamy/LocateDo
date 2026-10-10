@@ -10,6 +10,7 @@ struct LocateDoApp: App {
     private let router = AppRouter()
     private let preferences = AppPreferences()
     private let promotionsConsent: PromotionsConsent
+    private let analyticsConsent: AnalyticsConsent
     private let completionNotices: CompletionNotices
     private let locationProvider = LocationProvider()
     private let notifier: ArrivalNotifier
@@ -30,6 +31,7 @@ struct LocateDoApp: App {
     init() {
         container = Self.makeContainer()
         promotionsConsent = PromotionsConsent(preferences: preferences)
+        analyticsConsent = AnalyticsConsent(preferences: preferences)
         completionNotices = CompletionNotices(preferences: preferences)
         #if DEBUG
         ScreenshotSeed.replaceIfRequested(in: container.mainContext)
@@ -72,15 +74,12 @@ struct LocateDoApp: App {
         } onQueued: {
             sync.scheduleDrain()
         }
-        network = NetworkMonitor {
-            Task {
-                await sync.sync()
-            }
-        }
+        network = Self.makeNetwork(sync: sync)
         connectServices()
     }
 
     private func connectServices() {
+        connectAnalytics()
         connectAccount()
         connectNotifications()
         connectWatch()
@@ -152,19 +151,6 @@ struct LocateDoApp: App {
         }
     }
 
-    private func startServices() {
-        InstallDate.record(defaults: .standard, now: .now)
-        try? Tips.configure()
-        GoogleSignInSetup.configure()
-        geofence.start()
-        network.start()
-        entitlements.start()
-        watch.start()
-        Task { [account, entitlements] in
-            await account.linkPurchases(entitlements)
-        }
-    }
-
     var body: some Scene {
         WindowGroup {
             if Self.isRunningTests {
@@ -177,6 +163,7 @@ struct LocateDoApp: App {
         .environment(router)
         .environment(preferences)
         .environment(promotionsConsent)
+        .environment(analyticsConsent)
         .environment(completionNotices)
         .environment(locationProvider)
         .environment(notifier)
@@ -276,6 +263,14 @@ extension LocateDoApp {
         return AppStatusStore(url: url, currentVersion: version, gate: gate)
     }
 
+    private static func makeNetwork(sync: SyncEngine) -> NetworkMonitor {
+        NetworkMonitor {
+            Task {
+                await sync.sync()
+            }
+        }
+    }
+
     private static func makeDevices(
         api: APIClient,
         authenticator: Authenticator,
@@ -287,6 +282,35 @@ extension LocateDoApp {
             promotionsConsent: { [preferences] in preferences.promotionsConsent },
             completionNotices: { [preferences] in preferences.completionNotices }
         )
+    }
+
+    private func startServices() {
+        InstallDate.record(defaults: .standard, now: .now)
+        try? Tips.configure()
+        GoogleSignInSetup.configure()
+        geofence.start()
+        network.start()
+        entitlements.start()
+        watch.start()
+        Task { [account, entitlements] in
+            await account.linkPurchases(entitlements)
+        }
+        Task { [analyticsConsent] in
+            analyticsConsent.resolveRegion(
+                storefront: await ConsentRegion.currentStorefront(),
+                region: ConsentRegion.currentRegion
+            )
+        }
+    }
+
+    // Firebase was configured with collection off, before RevenueCat; this turns it on once the answer is known.
+    private func connectAnalytics() {
+        analyticsConsent.onChanged = { [entitlements] decision in
+            Analytics.apply(decision)
+            entitlements.analyticsIDChanged()
+        }
+        Analytics.apply(analyticsConsent.decision)
+        entitlements.analyticsIDChanged()
     }
 
     private func connectWatch() {

@@ -10,7 +10,9 @@ import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteQueue
 import com.locatedo.locatedo.testing.FakeSyncEngine
 import com.locatedo.locatedo.testing.FakeSyncStateRepository
+import com.locatedo.locatedo.testing.fakeAnalyticsConsent
 import com.locatedo.locatedo.testing.fakeAuthenticator
+import com.locatedo.locatedo.testing.testPreferences
 import com.locatedo.locatedo.testing.testSession
 import java.io.IOException
 import java.util.UUID
@@ -26,12 +28,17 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class DebugViewModelTest {
+    @get:Rule
+    val folder = TemporaryFolder()
+
     private val dispatcher = UnconfinedTestDispatcher()
     private val householdId = UUID.randomUUID()
     private val syncState = FakeSyncStateRepository(SyncState(householdId = householdId, cursor = 42))
@@ -80,6 +87,16 @@ class DebugViewModelTest {
     }
 
     @Test
+    fun overridingTheConsentStoreCountryStartsTheAnswerOver() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        backgroundScope.launch { viewModel.consentStoreCountry.collect {} }
+
+        viewModel.setConsentStoreCountry("GB")
+
+        assertEquals("GB", viewModel.consentStoreCountry.first { it != null })
+    }
+
+    @Test
     fun aFailedConnectionCheckSaysWhy() = runTest(dispatcher) {
         health.failure = IOException("timeout")
         val viewModel = viewModel()
@@ -92,7 +109,16 @@ class DebugViewModelTest {
     private fun TestScope.viewModel(
         queue: WriteQueue = WriteQueue(database.pendingWriteDao(), authenticator, fixedClock),
     ): DebugViewModel {
-        val viewModel = DebugViewModel(authenticator, syncState, queue, syncEngine, health)
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = DebugViewModel(
+            authenticator,
+            syncState,
+            queue,
+            syncEngine,
+            health,
+            preferences,
+            fakeAnalyticsConsent(preferences),
+        )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

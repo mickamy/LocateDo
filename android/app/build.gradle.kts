@@ -50,7 +50,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".dev"
-            manifestPlaceholders["CRASHLYTICS_COLLECTION_ENABLED"] = "false"
+            buildConfigField("boolean", "CRASH_REPORTS", "false")
             // 10.0.2.2 is the emulator's alias for the host machine.
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
             buildConfigField("boolean", "DEBUG_TOOLS", "true")
@@ -70,7 +70,7 @@ android {
                 }
             }
             signingConfig = signingConfigs.findByName("upload")
-            manifestPlaceholders["CRASHLYTICS_COLLECTION_ENABLED"] = "true"
+            buildConfigField("boolean", "CRASH_REPORTS", "true")
             buildConfigField("String", "API_BASE_URL", "\"https://api.locatedo.com\"")
             buildConfigField("boolean", "DEBUG_TOOLS", "false")
             buildConfigField("String", "GOOGLE_CLIENT_ID", "\"44680780234-mdnjqmlqu23rgas8dhojvoq6pcnoulq8.apps.googleusercontent.com\"")
@@ -183,6 +183,7 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.installations)
     implementation(libs.revenuecat.purchases)
+    implementation(libs.billing)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     debugImplementation(libs.androidx.compose.ui.tooling)

@@ -41,7 +41,7 @@ class RevenueCatEntitlementSource(context: Context, apiKey: String) : Entitlemen
 
     override suspend fun refresh(): ProSubscription? = subscription(purchases.awaitCustomerInfo())
 
-    override fun setAnalyticsId(instanceId: String) = purchases.setFirebaseAppInstanceID(instanceId)
+    override fun setAnalyticsId(instanceId: String?) = purchases.setFirebaseAppInstanceID(instanceId)
 
     override fun updates(): Flow<ProSubscription?> = callbackFlow {
         purchases.updatedCustomerInfoListener = UpdatedCustomerInfoListener { info -> trySend(subscription(info)) }
