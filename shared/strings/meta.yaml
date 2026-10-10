@@ -217,3 +217,13 @@ onboarding.notifications_description:
   platforms: [android]
 onboarding.allow_notifications:
   platforms: [android]
+first_place.other.label:
+  platforms: [ios]
+first_place.other.name:
+  platforms: [ios]
+first_place.other.name_title:
+  platforms: [ios]
+first_place.other.name_placeholder:
+  platforms: [ios]
+first_place.other.store_title:
+  platforms: [ios]

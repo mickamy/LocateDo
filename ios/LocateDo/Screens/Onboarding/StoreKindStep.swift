@@ -41,7 +41,7 @@ struct StoreKindStep: View {
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
                     .background(.tint, in: Circle())
-                Text(kind.name)
+                Text(kind.label)
                     .font(.headline)
                     .foregroundStyle(.primary)
                 Spacer()

@@ -1,11 +1,12 @@
 import SwiftUI
 
-// The kinds of store onboarding starts from, the same four the map offers nearby.
+// The kinds of store onboarding starts from, the same four the map offers nearby, and any other store.
 enum StoreKind: String, CaseIterable, Identifiable {
     case grocery
     case drugstore
     case convenience
     case hardware
+    case other
 
     var id: Self {
         self
@@ -17,6 +18,7 @@ enum StoreKind: String, CaseIterable, Identifiable {
         case .drugstore: .firstPlaceDrugstoreName
         case .convenience: .firstPlaceConvenienceName
         case .hardware: .firstPlaceHardwareName
+        case .other: .firstPlaceOtherName
         }
     }
 
@@ -26,33 +28,24 @@ enum StoreKind: String, CaseIterable, Identifiable {
         case .drugstore: "cross.case"
         case .convenience: "storefront"
         case .hardware: "hammer"
+        case .other: "bag"
         }
     }
 
-    var todosTitle: LocalizedStringResource {
-        switch self {
-        case .grocery: .firstPlaceGroceryTodosTitle
-        case .drugstore: .firstPlaceDrugstoreTodosTitle
-        case .convenience: .firstPlaceConvenienceTodosTitle
-        case .hardware: .firstPlaceHardwareTodosTitle
+    var label: LocalizedStringResource {
+        if self == .other {
+            return .firstPlaceOtherLabel
         }
+        return name
     }
 
-    var storeTitle: LocalizedStringResource {
-        switch self {
-        case .grocery: .firstPlaceGroceryStoreTitle
-        case .drugstore: .firstPlaceDrugstoreStoreTitle
-        case .convenience: .firstPlaceConvenienceStoreTitle
-        case .hardware: .firstPlaceHardwareStoreTitle
-        }
-    }
-
-    var searchTerm: LocalizedStringResource {
+    var searchTerm: LocalizedStringResource? {
         switch self {
         case .grocery: .placePickerNearbyGrocery
         case .drugstore: .placePickerNearbyDrugstore
         case .convenience: .placePickerNearbyConvenience
         case .hardware: .placePickerNearbyHardware
+        case .other: nil
         }
     }
 
@@ -70,6 +63,45 @@ enum StoreKind: String, CaseIterable, Identifiable {
         case .hardware:
             [.firstPlaceHardwareIdea1, .firstPlaceHardwareIdea2, .firstPlaceHardwareIdea3, .firstPlaceHardwareIdea4,
              .firstPlaceHardwareIdea5]
+        case .other:
+            []
         }
+    }
+}
+
+// The store onboarding is about: one of the kinds, or any other store by what was typed for it.
+struct FirstStore: Hashable {
+    let kind: StoreKind
+    var customName: String?
+
+    var name: String {
+        customName ?? String(localized: kind.name)
+    }
+
+    var todosTitle: LocalizedStringResource {
+        switch kind {
+        case .grocery: .firstPlaceGroceryTodosTitle
+        case .drugstore: .firstPlaceDrugstoreTodosTitle
+        case .convenience: .firstPlaceConvenienceTodosTitle
+        case .hardware: .firstPlaceHardwareTodosTitle
+        case .other: .placeEditorTodosTitle(name)
+        }
+    }
+
+    var storeTitle: LocalizedStringResource {
+        switch kind {
+        case .grocery: .firstPlaceGroceryStoreTitle
+        case .drugstore: .firstPlaceDrugstoreStoreTitle
+        case .convenience: .firstPlaceConvenienceStoreTitle
+        case .hardware: .firstPlaceHardwareStoreTitle
+        case .other: .firstPlaceOtherStoreTitle(name)
+        }
+    }
+
+    var searchTerm: String? {
+        if let customName {
+            return customName
+        }
+        return kind.searchTerm.map { String(localized: $0) }
     }
 }

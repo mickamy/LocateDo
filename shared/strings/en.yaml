@@ -444,6 +444,12 @@ first_place:
     idea_3: "Trash bags"
     idea_4: "Tape"
     idea_5: "Screws"
+  other:
+    label: "Somewhere else"
+    name: "Store"
+    name_title: "What kind of store?"
+    name_placeholder: "e.g., Bakery, Bookstore"
+    store_title: "Which {name} do you go to?"
 update:
   title: "Update Required"
   message: "This version of StopBy is no longer supported. Update to the latest version to keep using it."

@@ -2,7 +2,7 @@ import SwiftUI
 
 // What to do at the kind of store picked, with the notification it will make growing above as it is typed.
 struct FirstTodosStep: View {
-    let kind: StoreKind
+    let store: FirstStore
     @Binding var todos: [DraftTodo]
     @Binding var draft: String
     let remaining: Int?
@@ -10,14 +10,14 @@ struct FirstTodosStep: View {
 
     private var ideasLeft: [String] {
         let added = Set(todos.map(\.title))
-        return kind.ideas.map { String(localized: $0) }.filter { !added.contains($0) }
+        return store.kind.ideas.map { String(localized: $0) }.filter { !added.contains($0) }
     }
 
     var body: some View {
         Form {
             DraftTodosSection(
-                placeName: String(localized: kind.name),
-                title: kind.todosTitle,
+                placeName: store.name,
+                title: store.todosTitle,
                 todos: $todos,
                 draft: $draft,
                 remaining: remaining,

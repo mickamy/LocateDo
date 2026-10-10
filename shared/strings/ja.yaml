@@ -435,6 +435,12 @@ first_place:
     idea_3: "ゴミ袋"
     idea_4: "ガムテープ"
     idea_5: "ねじ"
+  other:
+    label: "ほかのお店"
+    name: "お店"
+    name_title: "どんなお店？"
+    name_placeholder: "例) パン屋、本屋、100円ショップ"
+    store_title: "いつも行く{name}は？"
 update:
   title: "アップデートが必要です"
   message: "このバージョンのアプリは使えなくなりました。最新のバージョンにアップデートしてください。"

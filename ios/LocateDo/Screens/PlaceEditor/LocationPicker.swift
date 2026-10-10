@@ -11,7 +11,7 @@ struct LocationPicker: View {
     let closesOnPick: Bool
     let entry: ScreenEntry?
     let title: LocalizedStringResource
-    let initialSearch: LocalizedStringResource?
+    let initialSearch: String?
     let showsCancel: Bool
     let onPick: (PlacePick) -> Void
     @State private var model: LocationPickerModel
@@ -24,7 +24,7 @@ struct LocationPicker: View {
         closesOnPick: Bool,
         entry: ScreenEntry? = nil,
         title: LocalizedStringResource = .placePickerTitle,
-        initialSearch: LocalizedStringResource? = nil,
+        initialSearch: String? = nil,
         showsCancel: Bool = true,
         onPick: @escaping (PlacePick) -> Void
     ) {
@@ -35,6 +35,7 @@ struct LocationPicker: View {
         self.closesOnPick = closesOnPick
         self.onPick = onPick
         _model = State(initialValue: LocationPickerModel(initialCoordinate: initialCoordinate))
+        _query = State(initialValue: initialSearch ?? "")
     }
 
     var body: some View {
@@ -108,13 +109,13 @@ struct LocationPicker: View {
         }
     }
 
-    // The stores of the kind around you, once where you are is known.
+    // The stores matching the words already in the search field, around you once where you are is known.
     private func searchInitially() async {
         guard let initialSearch, !hasSearchedInitially, locationProvider.location != nil else {
             return
         }
         hasSearchedInitially = true
-        await model.searchNearby(String(localized: initialSearch))
+        await model.searchNearby(initialSearch)
     }
 
     private var isSheetPresented: Binding<Bool> {
