@@ -3,9 +3,9 @@ CATALOG = ../../../shared/analytics/catalog.yaml
 SWIFT = ../../../ios/LocateDo/Services/Analytics/AnalyticsCatalog.swift
 KOTLIN = ../../../android/app/src/main/java/com/locatedo/locatedo/core/analytics/AnalyticsCatalog.kt
 KOTLIN_PACKAGE = com.locatedo.locatedo.core.analytics
-GA4 = ../ga4_definitions.json
+JSON = ../catalog.json
 SQL = ../bigquery/00_events.sql
-FLAGS = -catalog $(CATALOG) -swift $(SWIFT) -kotlin $(KOTLIN) -kotlin-package $(KOTLIN_PACKAGE) -ga4 $(GA4) -sql $(SQL)
+FLAGS = -catalog $(CATALOG) -swift $(SWIFT) -kotlin $(KOTLIN) -kotlin-package $(KOTLIN_PACKAGE) -json $(JSON) -sql $(SQL)
 
 .PHONY: build \
 		clean \

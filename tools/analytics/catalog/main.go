@@ -13,14 +13,14 @@ import (
 )
 
 const usage = "usage: catalog <generate|check> -catalog <path> -swift <path> -kotlin <path> -kotlin-package <name>" +
-	" -ga4 <path> -sql <path>"
+	" -json <path> -sql <path>"
 
 type options struct {
 	catalog       string
 	swift         string
 	kotlin        string
 	kotlinPackage string
-	ga4           string
+	json          string
 	sql           string
 }
 
@@ -66,12 +66,12 @@ func parseFlags(cmd string, args []string, stderr io.Writer) (options, error) {
 	fs.StringVar(&opts.swift, "swift", "", "Swift file to generate")
 	fs.StringVar(&opts.kotlin, "kotlin", "", "Kotlin file to generate")
 	fs.StringVar(&opts.kotlinPackage, "kotlin-package", "", "package of the Kotlin file")
-	fs.StringVar(&opts.ga4, "ga4", "", "GA4 custom definitions JSON to generate")
+	fs.StringVar(&opts.json, "json", "", "catalog JSON for the Python tools to generate")
 	fs.StringVar(&opts.sql, "sql", "", "BigQuery events view to generate")
 	if err := fs.Parse(args); err != nil {
 		return options{}, fmt.Errorf("parse flags: %w", err)
 	}
-	if opts.catalog == "" || opts.swift == "" || opts.kotlin == "" || opts.kotlinPackage == "" || opts.ga4 == "" ||
+	if opts.catalog == "" || opts.swift == "" || opts.kotlin == "" || opts.kotlinPackage == "" || opts.json == "" ||
 		opts.sql == "" {
 		return options{}, errors.New(usage)
 	}
@@ -83,14 +83,14 @@ func build(opts options) ([]output, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load %s: %w", opts.catalog, err)
 	}
-	ga4, err := c.GA4()
+	jsonData, err := c.JSON()
 	if err != nil {
-		return nil, fmt.Errorf("render ga4 definitions: %w", err)
+		return nil, fmt.Errorf("render catalog json: %w", err)
 	}
 	return []output{
 		{opts.swift, c.Swift()},
 		{opts.kotlin, c.Kotlin(opts.kotlinPackage)},
-		{opts.ga4, ga4},
+		{opts.json, jsonData},
 		{opts.sql, c.SQL()},
 	}, nil
 }

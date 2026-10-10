@@ -60,17 +60,34 @@ type ga4Metric struct {
 	Unit string `json:"unit"`
 }
 
-type ga4Definitions struct {
+// The names the Python tools read: the GA4 definitions to register and what the views may refer to.
+type catalogJSON struct {
 	Comment         string      `json:"comment"`
+	Events          []string    `json:"events"`
+	Screens         []string    `json:"screens"`
+	Entries         []string    `json:"entries"`
 	UserDimensions  []string    `json:"user_dimensions"`
 	EventDimensions []string    `json:"event_dimensions"`
 	Metrics         []ga4Metric `json:"metrics"`
 }
 
-func (c Catalog) GA4() ([]byte, error) {
-	definitions := ga4Definitions{Comment: header, EventDimensions: []string{}, Metrics: []ga4Metric{}}
-	for _, p := range c.UserProperties {
-		definitions.UserDimensions = append(definitions.UserDimensions, p.Name)
+func names(list []Name) []string {
+	out := make([]string, 0, len(list))
+	for _, n := range list {
+		out = append(out, n.Name)
+	}
+	return out
+}
+
+func (c Catalog) JSON() ([]byte, error) {
+	definitions := catalogJSON{
+		Comment:         header,
+		Events:          names(c.Events),
+		Screens:         names(c.Screens),
+		Entries:         names(c.Entries),
+		UserDimensions:  names(c.UserProperties),
+		EventDimensions: []string{},
+		Metrics:         []ga4Metric{},
 	}
 	for _, p := range c.Parameters {
 		switch p.GA4 {
@@ -82,7 +99,7 @@ func (c Catalog) GA4() ([]byte, error) {
 	}
 	data, err := json.MarshalIndent(definitions, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("encode ga4 definitions: %w", err)
+		return nil, fmt.Errorf("encode catalog json: %w", err)
 	}
 	return append(data, '\n'), nil
 }

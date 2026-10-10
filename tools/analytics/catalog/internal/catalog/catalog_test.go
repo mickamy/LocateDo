@@ -19,14 +19,14 @@ func TestRenderMatchesGoldenFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ga4, err := c.GA4()
+	jsonData, err := c.JSON()
 	if err != nil {
 		t.Fatal(err)
 	}
 	outputs := map[string][]byte{
 		"catalog.swift": c.Swift(),
 		"catalog.kt":    c.Kotlin("com.example.analytics"),
-		"ga4.json":      ga4,
+		"catalog.json":  jsonData,
 		"events.sql":    c.SQL(),
 	}
 	for name, got := range outputs {

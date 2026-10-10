@@ -3,7 +3,7 @@
 
 Usage: python3 tools/analytics/ga4_setup.py [--archive-unused] [--property ID] [service_account_key.json]
 
-The definitions come from ga4_definitions.json, generated from shared/analytics/catalog.yaml. The service account
+The definitions come from catalog.json, generated from shared/analytics/catalog.yaml. The service account
 needs the Editor role on the GA4 property, and the Google Analytics Admin API must be enabled in the key's Google
 Cloud project. Safe to rerun: existing definitions are skipped. --archive-unused also archives definitions the catalog
 no longer has, which GA4 cannot undo.
@@ -21,7 +21,7 @@ PROPERTY_ID = "483038986"
 API = "https://analyticsadmin.googleapis.com/v1beta"
 SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 
-DEFINITIONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ga4_definitions.json")
+DEFINITIONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog.json")
 
 
 def list_all(token, path, field):
