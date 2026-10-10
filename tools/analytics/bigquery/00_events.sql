@@ -32,6 +32,8 @@ SELECT
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'missing') AS missing,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'household_plan') AS household_plan,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'campaign_id') AS campaign_id,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'suggested_category') AS suggested_category,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'choice') AS choice,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'place_count') AS place_count,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'open_todo_count') AS open_todo_count,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'completed_todo_count_7d') AS completed_todo_count_7d,
@@ -55,6 +57,7 @@ SELECT
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'watch_app_installed') AS watch_app_installed,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'has_url') AS has_url,
   (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'count') AS count,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'todo_count') AS todo_count,
   -- Sent by RevenueCat's Firebase integration on its rc_* events.
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'product_id') AS product_id,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'currency') AS currency,
