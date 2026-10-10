@@ -37,7 +37,7 @@ class AndroidArrivalNotifierTest {
         val manager = shadowOf(application.getSystemService(NotificationManager::class.java))
         assertEquals(listOf(AndroidArrivalNotifier.CHANNEL_ID), manager.notificationChannels.map { (it as android.app.NotificationChannel).id })
         val posted = manager.allNotifications.single()
-        assertEquals("You’re at Store", posted.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("Store", posted.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         assertEquals("Milk", posted.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString())
     }
 

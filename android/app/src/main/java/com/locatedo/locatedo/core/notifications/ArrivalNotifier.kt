@@ -3,6 +3,7 @@ package com.locatedo.locatedo.core.notifications
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.icu.text.ListFormatter
 import android.util.Log
 import androidx.core.app.NotificationChannelCompat
@@ -55,7 +56,7 @@ class AndroidArrivalNotifier @Inject constructor(
     // One notification per place, replaced on the next arrival; tapping it opens the place on the home map, and each
     // of the first to-dos gets a button that checks it off without opening the app.
     override fun notifyArrival(place: Place, todos: List<Todo>, silent: Boolean) {
-        val text = bodyText(todos.map { it.title })
+        val text = arrivalNotificationText(context.resources, todos.map { it.title })
         val contentIntent = PendingIntent.getActivity(
             context,
             place.id.hashCode(),
@@ -64,7 +65,8 @@ class AndroidArrivalNotifier @Inject constructor(
         )
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notification_arrived_title, place.name))
+            // Titles are cut at one line, so the place name alone keeps long names whole.
+            .setContentTitle(place.name)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -108,16 +110,6 @@ class AndroidArrivalNotifier @Inject constructor(
         manager.cancel(placeId.hashCode())
     }
 
-    private fun bodyText(todoTitles: List<String>): String {
-        val body = NotificationPolicy.body(todoTitles)
-        val locale = context.resources.configuration.locales[0]
-        val shown = ListFormatter.getInstance(locale).format(body.titles)
-        if (body.more == 0) {
-            return shown
-        }
-        return shown + "\n" + context.resources.getQuantityString(R.plurals.notification_more, body.more, body.more)
-    }
-
     companion object {
         const val CHANNEL_ID = "arrivals"
         const val CHECK_OFF_ALL_FROM = 3
@@ -130,4 +122,16 @@ class AndroidArrivalNotifier @Inject constructor(
 abstract class NotificationsModule {
     @Binds
     abstract fun arrivalNotifier(notifier: AndroidArrivalNotifier): ArrivalNotifier
+}
+
+// The arrival notification's text: the first to-dos as a list, then how many more. Shared with the preview shown
+// while adding a place.
+fun arrivalNotificationText(resources: Resources, todoTitles: List<String>): String {
+    val body = NotificationPolicy.body(todoTitles)
+    val locale = resources.configuration.locales[0]
+    val shown = ListFormatter.getInstance(locale).format(body.titles)
+    if (body.more == 0) {
+        return shown
+    }
+    return shown + "\n" + resources.getQuantityString(R.plurals.notification_more, body.more, body.more)
 }
