@@ -169,6 +169,7 @@
     <string name="place_editor_name_placeholder">e.g., Supermarket, Office</string>
     <string name="place_editor_next">Next</string>
     <string name="place_editor_no_location">No location selected yet</string>
+    <string name="place_editor_preview_empty">What you add shows up here.</string>
     <string name="place_editor_radius_label">Notify within</string>
     <string name="place_editor_title_edit">Edit place</string>
     <string name="place_editor_title_new">Add a place</string>
@@ -183,6 +184,10 @@
         <item quantity="other">On the free plan, you can add %1$d more to-dos.</item>
     </plurals>
     <string name="place_editor_todos_title">What to do at %1$s?</string>
+    <string name="place_picker_nearby_convenience">Convenience stores</string>
+    <string name="place_picker_nearby_drugstore">Drugstores</string>
+    <string name="place_picker_nearby_grocery">Grocery stores</string>
+    <string name="place_picker_nearby_hardware">Hardware stores</string>
     <string name="place_picker_search_placeholder">Search for a place</string>
     <string name="place_picker_selected">Selected location</string>
     <string name="place_picker_title">Choose a location</string>
