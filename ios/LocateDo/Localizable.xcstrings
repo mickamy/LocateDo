@@ -2473,6 +2473,23 @@
         }
       }
     },
+    "place.editor.preview_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you add shows up here."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書いたやることがここに出ます"
+          }
+        }
+      }
+    },
     "place.editor.radius_label" : {
       "extractionState" : "manual",
       "localizations" : {

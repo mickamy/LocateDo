@@ -235,6 +235,7 @@ place:
     todos_label: "やること"
     todo_placeholder: "やることを追加"
     todos_title: "{name} でやることは？"
+    preview_empty: "書いたやることがここに出ます"
     todo_example_shopping: "例) 牛乳"
     todo_example_life: "例) 荷物を受け取る"
     todo_example_work: "例) 資料を印刷する"

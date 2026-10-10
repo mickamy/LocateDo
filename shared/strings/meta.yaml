@@ -99,3 +99,5 @@ reminder_setup.precise_location:
   comment: "Row in the reminder setup sheet for the precise location switch; approximate location gets no arrival reminders."
 reminder_setup.turned_on:
   comment: "Shown with a check in place of the button once precise location is on."
+place.editor.preview_empty:
+  platforms: [ios]

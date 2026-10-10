@@ -239,6 +239,7 @@ place:
     todos_label: "To-dos"
     todo_placeholder: "Add a to-do"
     todos_title: "What to do at {name}?"
+    preview_empty: "What you add shows up here."
     todo_example_shopping: "e.g., Milk"
     todo_example_life: "e.g., Pick up a package"
     todo_example_work: "e.g., Print the handouts"
