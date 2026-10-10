@@ -175,7 +175,7 @@
     <plurals name="place_editor_todos_remaining">
         <item quantity="other">無料プランでは、あと %1$d 件追加できます。</item>
     </plurals>
-    <string name="place_editor_todos_title">%1$s でやることは？</string>
+    <string name="place_editor_todos_title">%1$sでやることは？</string>
     <string name="place_picker_nearby_convenience">コンビニ</string>
     <string name="place_picker_nearby_drugstore">ドラッグストア</string>
     <string name="place_picker_nearby_grocery">スーパー</string>

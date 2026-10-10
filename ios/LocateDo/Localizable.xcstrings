@@ -2690,7 +2690,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ でやることは？"
+            "value" : "%@でやることは？"
           }
         }
       }
