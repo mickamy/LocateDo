@@ -6,6 +6,8 @@ struct PlacePickerMapView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationProvider.self) private var locationProvider
 
+    // Embedded as the first screen of adding a place, it pushes on rather than closing itself.
+    let isEmbedded: Bool
     let onPick: (CLLocationCoordinate2D, String?, PlaceSource, BuiltinCategory?) -> Void
 
     @State private var position: MapCameraPosition
@@ -13,8 +15,8 @@ struct PlacePickerMapView: View {
     @State private var isSearching = false
     @State private var completer = PlaceSearchCompleter()
     @State private var results: [MKMapItem] = []
-    @State private var selection: Selection?
-    @State private var confirmed: Selection?
+    @State private var selection: PlacePick?
+    @State private var confirmed: PlacePick?
     @State private var detent: PresentationDetent = Self.listDetent
     @State private var cardHeight: CGFloat = 160
 
@@ -24,25 +26,15 @@ struct PlacePickerMapView: View {
         .height(cardHeight)
     }
 
-    private struct Selection {
-        let coordinate: CLLocationCoordinate2D
-        let source: PlaceSource
-        var name: String?
-        var address: String?
-        var suggestion: BuiltinCategory?
-
-        func isAt(_ other: CLLocationCoordinate2D) -> Bool {
-            coordinate.latitude == other.latitude && coordinate.longitude == other.longitude
-        }
-    }
-
     init(
         initialCoordinate: CLLocationCoordinate2D?,
+        isEmbedded: Bool = false,
         onPick: @escaping (CLLocationCoordinate2D, String?, PlaceSource, BuiltinCategory?) -> Void
     ) {
+        self.isEmbedded = isEmbedded
         self.onPick = onPick
         if let initialCoordinate {
-            _selection = State(initialValue: Selection(coordinate: initialCoordinate, source: .map))
+            _selection = State(initialValue: PlacePick(coordinate: initialCoordinate, source: .map))
             _position = State(initialValue: .region(Self.region(around: initialCoordinate)))
         } else {
             _position = State(initialValue: .userLocation(fallback: .automatic))
@@ -62,86 +54,94 @@ struct PlacePickerMapView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            MapReader { proxy in
-                Map(position: $position) {
-                    UserAnnotation()
-                    // The confirmed pick keeps its pin while the picker closes.
-                    if let pinned = selection ?? confirmed {
-                        Marker(coordinate: pinned.coordinate) {
-                            Text(.placePickerSelected)
+        if isEmbedded {
+            content
+        } else {
+            NavigationStack {
+                content
+            }
+        }
+    }
+
+    private var content: some View {
+        MapReader { proxy in
+            Map(position: $position) {
+                UserAnnotation()
+                // The confirmed pick keeps its pin while the picker closes.
+                if let pinned = selection ?? confirmed {
+                    Marker(coordinate: pinned.coordinate) {
+                        Text(.placePickerSelected)
+                    }
+                }
+            }
+            .onTapGesture { point in
+                if let tapped = proxy.convert(point, from: .local) {
+                    selectTapped(tapped)
+                }
+            }
+        }
+        .safeAreaInset(edge: .top) {
+            nearbyKinds
+        }
+        .trackScreen(.placePicker)
+        .searchable(text: $query, isPresented: $isSearching, prompt: Text(.placePickerSearchPlaceholder))
+        .searchSuggestions {
+            ForEach(completer.completions, id: \.self) { completion in
+                Button {
+                    Task {
+                        await pick(completion)
+                    }
+                } label: {
+                    VStack(alignment: .leading) {
+                        Text(completion.title)
+                            .foregroundStyle(.primary)
+                        if !completion.subtitle.isEmpty {
+                            Text(completion.subtitle)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
-                .onTapGesture { point in
-                    if let tapped = proxy.convert(point, from: .local) {
-                        selectTapped(tapped)
+            }
+        }
+        .onChange(of: query) {
+            completer.update(query, near: searchCenter)
+        }
+        .onSubmit(of: .search) {
+            Task {
+                await search()
+            }
+        }
+        .sheet(isPresented: isSheetPresented, onDismiss: finishIfConfirmed) {
+            Group {
+                if let selection {
+                    selectionCard(selection)
+                } else {
+                    resultList
+                }
+            }
+            .presentationDetents(selection == nil ? [Self.listDetent, .large] : [cardDetent], selection: $detent)
+            .presentationBackgroundInteraction(.enabled)
+            .presentationBackground(.thickMaterial)
+            .presentationDragIndicator(.visible)
+        }
+        .navigationTitle(Text(.placePickerTitle))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.thickMaterial, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(.commonCancel) {
+                    dismiss()
+                }
+            }
+            ToolbarItem(placement: .bottomBar) {
+                Button(.placePickerUseCurrentLocation, systemImage: "location") {
+                    if let current = locationProvider.location {
+                        select(current.coordinate, source: .currentLocation, name: nil, address: nil)
                     }
                 }
-            }
-            .safeAreaInset(edge: .top) {
-                nearbyKinds
-            }
-            .trackScreen(.placePicker)
-            .searchable(text: $query, isPresented: $isSearching, prompt: Text(.placePickerSearchPlaceholder))
-            .searchSuggestions {
-                ForEach(completer.completions, id: \.self) { completion in
-                    Button {
-                        Task {
-                            await pick(completion)
-                        }
-                    } label: {
-                        VStack(alignment: .leading) {
-                            Text(completion.title)
-                                .foregroundStyle(.primary)
-                            if !completion.subtitle.isEmpty {
-                                Text(completion.subtitle)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-            }
-            .onChange(of: query) {
-                completer.update(query, near: searchCenter)
-            }
-            .onSubmit(of: .search) {
-                Task {
-                    await search()
-                }
-            }
-            .sheet(isPresented: isSheetPresented, onDismiss: finishIfConfirmed) {
-                Group {
-                    if let selection {
-                        selectionCard(selection)
-                    } else {
-                        resultList
-                    }
-                }
-                .presentationDetents(selection == nil ? [Self.listDetent, .large] : [cardDetent], selection: $detent)
-                .presentationBackgroundInteraction(.enabled)
-                .presentationBackground(.thickMaterial)
-                .presentationDragIndicator(.visible)
-            }
-            .navigationTitle(Text(.placePickerTitle))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.thickMaterial, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(.commonCancel) {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .bottomBar) {
-                    Button(.placePickerUseCurrentLocation, systemImage: "location") {
-                        if let current = locationProvider.location {
-                            select(current.coordinate, source: .currentLocation, name: nil, address: nil)
-                        }
-                    }
-                    .disabled(locationProvider.location == nil)
-                }
+                .disabled(locationProvider.location == nil)
             }
         }
     }
@@ -174,7 +174,7 @@ struct PlacePickerMapView: View {
         .scrollContentBackground(.hidden)
     }
 
-    private func selectionCard(_ selection: Selection) -> some View {
+    private func selectionCard(_ selection: PlacePick) -> some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -233,7 +233,9 @@ struct PlacePickerMapView: View {
             return
         }
         onPick(confirmed.coordinate, confirmed.name, confirmed.source, confirmed.suggestion)
-        dismiss()
+        if !isEmbedded {
+            dismiss()
+        }
     }
 
     private static func region(around coordinate: CLLocationCoordinate2D) -> MKCoordinateRegion {
@@ -273,7 +275,7 @@ extension PlacePickerMapView {
         address: String?,
         suggestion: BuiltinCategory? = nil
     ) {
-        selection = Selection(coordinate: coordinate, source: source, name: name, address: address,
+        selection = PlacePick(coordinate: coordinate, source: source, name: name, address: address,
                               suggestion: suggestion)
         detent = cardDetent
         withAnimation {
