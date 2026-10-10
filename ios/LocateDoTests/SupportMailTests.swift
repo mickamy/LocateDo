@@ -11,6 +11,7 @@ struct SupportMailTests {
         language: "ja",
         timeZone: "Asia/Tokyo",
         supportID: "1A2B3C",
+        sharesUsageData: true,
         userID: UUID(uuidString: "0198F2A4-1C3B-7D2E-9F00-0123456789AB"),
         plan: .trial,
         locationAuth: .always,
@@ -46,6 +47,16 @@ struct SupportMailTests {
         #expect(!signedOut.text.contains("User ID"))
         #expect(signedOut.text.contains("Location: always, approximate"))
         #expect(signedOut.text.contains("Low Power Mode: on"))
+        #expect(!signedOut.text.contains("Usage data"))
+    }
+
+    @Test func saysUsageDataIsOffInsteadOfTheSupportID() {
+        var declined = diagnostics
+        declined.supportID = nil
+        declined.sharesUsageData = false
+
+        #expect(!declined.text.contains("Support ID"))
+        #expect(declined.text.contains("Usage data: off"))
     }
 
     @Test func encodesSubjectAndBody() throws {

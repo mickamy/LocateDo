@@ -3819,6 +3819,108 @@
         }
       }
     },
+    "settings.privacy.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プライバシー"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which features you use, whether reminders arrive, and crash reports, to decide what to improve. Never your places, to-dos, or location."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使った機能、通知が届いたか、クラッシュの情報を送り、何を良くするかを決めるのに使います。場所、やること、現在地は送りません。"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn Off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフにする"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_off_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the app crashes or something goes wrong, we won’t get a report, so it may take longer to find and fix the problem."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリが落ちたり不具合が起きたりしても報告が届かないため、原因を見つけて直すのに時間がかかることがあります。"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_off_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn off usage data and crash reports?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使い方のデータとクラッシュレポートの送信をオフにしますか？"
+          }
+        }
+      }
+    },
+    "settings.privacy.usage_data_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share usage data and crash reports"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使い方のデータとクラッシュレポートを送信"
+          }
+        }
+      }
+    },
     "settings.pro.active" : {
       "extractionState" : "manual",
       "localizations" : {
