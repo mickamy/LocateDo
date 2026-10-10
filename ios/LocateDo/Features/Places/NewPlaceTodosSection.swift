@@ -75,8 +75,9 @@ struct NewPlaceTodosSection: View {
                 }
             }
         }
+        // Text left half-typed when going back comes back open, so it is never hidden yet saved.
         .onAppear {
-            if todos.isEmpty, left != 0 {
+            if left != 0, todos.isEmpty || !draft.isEmpty {
                 startTyping()
             }
         }
