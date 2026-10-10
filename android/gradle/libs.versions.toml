@@ -31,7 +31,7 @@ googleid = "1.2.1"
 firebaseBom = "34.19.0"
 revenuecat = "10.24.2"
 # The version RevenueCat brings in; the app reads the store country from it directly.
-billing = "8.3.0"
+billing = "9.1.0"
 androidxTestCore = "1.7.0"
 protobuf = "4.36.2"
 junit = "4.13.2"
