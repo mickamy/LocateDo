@@ -11,14 +11,14 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored var onCheckOff: ([UUID]) async -> Void = { _ in }
     @ObservationIgnored var selection = ArrivalSelection.shared()
 
-    private let router: AppRouter
+    private let navigator: Navigator
     private let center = UNUserNotificationCenter.current()
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "notifications")
     private nonisolated static let placeIDKey = "placeID"
     private nonisolated static let placeEventKey = "placeEvent"
 
-    init(router: AppRouter) {
-        self.router = router
+    init(navigator: Navigator) {
+        self.navigator = navigator
         super.init()
         center.delegate = self
         center.setNotificationCategories([
@@ -115,7 +115,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             }
             Analytics.log(.completionNoticeOpened, parameters: [.count: count])
             Task { @MainActor in
-                router.openAllTodos()
+                navigator.openAllTodos()
             }
         } else if let campaign = CampaignNotification(userInfo: userInfo) {
             Analytics.log(.campaignOpened, parameters: [
@@ -133,7 +133,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             Task { @MainActor in
                 lastOpenedAt = .now
                 onOpened(placeID)
-                router.open(placeID: placeID)
+                navigator.open(placeID: placeID)
             }
         }
         completionHandler()

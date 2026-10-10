@@ -7,7 +7,7 @@ import UIKit
 struct LocateDoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let container: ModelContainer
-    private let router = AppRouter()
+    private let navigator = Navigator()
     private let preferences = AppPreferences()
     private let promotionsConsent: PromotionsConsent
     private let analyticsConsent: AnalyticsConsent
@@ -36,7 +36,7 @@ struct LocateDoApp: App {
         #if DEBUG
         ScreenshotSeed.replaceIfRequested(in: container.mainContext)
         #endif
-        notifier = ArrivalNotifier(router: router)
+        notifier = ArrivalNotifier(navigator: navigator)
         geofence = GeofenceMonitor(container: container, notifier: notifier, locationProvider: locationProvider)
         let tokens = AccessTokenStore()
         let gate = MaintenanceGate()
@@ -92,9 +92,9 @@ struct LocateDoApp: App {
             authenticator.session?.userID
         }
         sync.isPro = isPro
-        sync.onLimitRejected = { [router, writes] limit in
+        sync.onLimitRejected = { [navigator, writes] limit in
             writes.logLimitReached(limit)
-            router.pendingPaywall = limit.trigger
+            navigator.request(.paywall(limit.trigger))
         }
         authenticator.onSessionEnded = { [account] in
             Task {
@@ -160,7 +160,7 @@ struct LocateDoApp: App {
             }
         }
         .modelContainer(container)
-        .environment(router)
+        .environment(navigator)
         .environment(preferences)
         .environment(promotionsConsent)
         .environment(analyticsConsent)

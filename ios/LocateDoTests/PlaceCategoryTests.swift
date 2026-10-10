@@ -49,9 +49,9 @@ struct PlaceCategoryTests {
     @Test func aBuiltinKeepsNoNameWhileItShowsItsTranslation() {
         let title = String(localized: BuiltinCategory.shopping.title)
 
-        #expect(CategoryEditorView.storedName(title, for: .shopping) == nil)
-        #expect(CategoryEditorView.storedName("Costco", for: .shopping) == "Costco")
-        #expect(CategoryEditorView.storedName(title, for: nil) == title)
+        #expect(CategoryEditor.storedName(title, for: .shopping) == nil)
+        #expect(CategoryEditor.storedName("Costco", for: .shopping) == "Costco")
+        #expect(CategoryEditor.storedName(title, for: nil) == title)
     }
 
     @Test func everyPaletteKeyHasItsOwnStyle() {
