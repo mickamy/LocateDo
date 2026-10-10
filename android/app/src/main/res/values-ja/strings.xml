@@ -154,14 +154,27 @@
     <string name="place_detail_no_todos">やることはまだありません</string>
     <string name="place_detail_todos_label">この場所でやること</string>
     <string name="place_editor_category_label">カテゴリ</string>
+    <string name="place_editor_category_suggested">選んだ場所の種類から選んでいます。変えても大丈夫です。</string>
+    <string name="place_editor_category_title">カテゴリを選ぶ</string>
     <string name="place_editor_choose_on_map">地図から選択</string>
     <string name="place_editor_location_label">位置</string>
     <string name="place_editor_name_label">場所の名前</string>
     <string name="place_editor_name_placeholder">例) 自宅、会社、スーパー</string>
+    <string name="place_editor_next">次へ</string>
     <string name="place_editor_no_location">位置がまだ選ばれていません</string>
     <string name="place_editor_radius_label">通知の範囲（半径）</string>
     <string name="place_editor_title_edit">場所を編集</string>
     <string name="place_editor_title_new">場所を追加</string>
+    <string name="place_editor_todo_example_life">例) 荷物を受け取る</string>
+    <string name="place_editor_todo_example_shopping">例) 牛乳</string>
+    <string name="place_editor_todo_example_work">例) 資料を印刷する</string>
+    <string name="place_editor_todo_placeholder">やることを追加</string>
+    <string name="place_editor_todos_footer">着いたときにお知らせします。</string>
+    <string name="place_editor_todos_label">やること</string>
+    <plurals name="place_editor_todos_remaining">
+        <item quantity="other">無料プランでは、あと %1$d 件追加できます。</item>
+    </plurals>
+    <string name="place_editor_todos_title">%1$s でやることは？</string>
     <string name="place_picker_search_placeholder">場所を検索</string>
     <string name="place_picker_selected">選択した位置</string>
     <string name="place_picker_title">位置を選択</string>

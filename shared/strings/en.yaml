@@ -233,6 +233,20 @@ place:
     no_location: "No location selected yet"
     radius_label: "Notify within"
     category_label: "Category"
+    next: "Next"
+    category_title: "Choose a category"
+    category_suggested: "Picked from the kind of place. Change it if you like."
+    todos_label: "To-dos"
+    todo_placeholder: "Add a to-do"
+    todos_title: "What to do at {name}?"
+    todo_example_shopping: "e.g., Milk"
+    todo_example_life: "e.g., Pick up a package"
+    todo_example_work: "e.g., Print the handouts"
+    todos_footer: "You’ll be reminded of these when you arrive."
+    todos_remaining:
+      plural:
+        one: "On the free plan, you can add {count:int} more to-do."
+        other: "On the free plan, you can add {count:int} more to-dos."
   picker:
     title: "Choose a location"
     search_placeholder: "Search for a place"

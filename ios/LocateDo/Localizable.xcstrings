@@ -2337,6 +2337,40 @@
         }
       }
     },
+    "place.editor.category_suggested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picked from the kind of place. Change it if you like."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選んだ場所の種類から選んでいます。変えても大丈夫です。"
+          }
+        }
+      }
+    },
+    "place.editor.category_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a category"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カテゴリを選ぶ"
+          }
+        }
+      }
+    },
     "place.editor.choose_on_map" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2405,6 +2439,23 @@
         }
       }
     },
+    "place.editor.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次へ"
+          }
+        }
+      }
+    },
     "place.editor.no_location" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2469,6 +2520,160 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "場所を追加"
+          }
+        }
+      }
+    },
+    "place.editor.todo_example_life" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g., Pick up a package"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例) 荷物を受け取る"
+          }
+        }
+      }
+    },
+    "place.editor.todo_example_shopping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g., Milk"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例) 牛乳"
+          }
+        }
+      }
+    },
+    "place.editor.todo_example_work" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g., Print the handouts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例) 資料を印刷する"
+          }
+        }
+      }
+    },
+    "place.editor.todo_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a to-do"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "やることを追加"
+          }
+        }
+      }
+    },
+    "place.editor.todos_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll be reminded of these when you arrive."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "着いたときにお知らせします。"
+          }
+        }
+      }
+    },
+    "place.editor.todos_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To-dos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "やること"
+          }
+        }
+      }
+    },
+    "place.editor.todos_remaining" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "On the free plan, you can add %lld more to-do."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "On the free plan, you can add %lld more to-dos."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "無料プランでは、あと %lld 件追加できます。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "place.editor.todos_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What to do at %@?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ でやることは？"
           }
         }
       }

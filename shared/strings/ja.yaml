@@ -229,6 +229,19 @@ place:
     no_location: "位置がまだ選ばれていません"
     radius_label: "通知の範囲（半径）"
     category_label: "カテゴリ"
+    next: "次へ"
+    category_title: "カテゴリを選ぶ"
+    category_suggested: "選んだ場所の種類から選んでいます。変えても大丈夫です。"
+    todos_label: "やること"
+    todo_placeholder: "やることを追加"
+    todos_title: "{name} でやることは？"
+    todo_example_shopping: "例) 牛乳"
+    todo_example_life: "例) 荷物を受け取る"
+    todo_example_work: "例) 資料を印刷する"
+    todos_footer: "着いたときにお知らせします。"
+    todos_remaining:
+      plural:
+        other: "無料プランでは、あと {count} 件追加できます。"
   picker:
     title: "位置を選択"
     search_placeholder: "場所を検索"
