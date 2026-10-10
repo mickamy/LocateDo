@@ -117,3 +117,13 @@ sharing.ios_leave_confirm_message:
   platforms: [ios]
 sharing.ios_shared_header_message:
   platforms: [ios]
+home.open_summary:
+  platforms: [android]
+todo.list.no_places_title:
+  platforms: [android]
+todo.list.no_places_message:
+  platforms: [android]
+map.empty.message:
+  platforms: [android]
+tab.home:
+  platforms: [android]

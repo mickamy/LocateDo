@@ -4,7 +4,6 @@ import SwiftData
 import SwiftUI
 
 struct ProSection: View {
-    @Environment(AppRouter.self) private var router
     @Environment(Entitlements.self) private var entitlements
     @Environment(Authenticator.self) private var authenticator
     @Query private var syncStates: [SyncState]
@@ -14,6 +13,7 @@ struct ProSection: View {
     @State private var isRestoring = false
     @State private var isShowingRestored = false
     @State private var failure: LocalizedStringResource?
+    let upgrade: () -> Void
 
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "billing")
 
@@ -32,9 +32,7 @@ struct ProSection: View {
                     isManaging = true
                 }
             } else if !isPro && !isMember {
-                Button(.settingsProUpgrade) {
-                    router.pendingPaywall = .settings
-                }
+                Button(.settingsProUpgrade, action: upgrade)
             }
             if !isMember {
                 Button {

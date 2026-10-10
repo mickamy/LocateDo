@@ -19,17 +19,22 @@ struct TodoEditorView: View {
     @State private var assigneeID: UUID?
     @State private var remindsOnLeave = false
     @State private var isAddingPlace = false
-    @State private var placeIDsBeforeAdding: Set<UUID> = []
     @State private var addedPlace: Place?
     @FocusState private var isTitleFocused: Bool
     @State private var paywall: PaywallTrigger?
     @State private var deletesOnDisappear = false
     private let editing: Todo?
+    private var onPlaceAdded: (Place) -> Void = { _ in }
     private var onAddedAtNewPlace: (Place) -> Void = { _ in }
 
-    init(place: Place? = nil, onAddedAtNewPlace: @escaping (Place) -> Void = { _ in }) {
+    init(
+        place: Place? = nil,
+        onPlaceAdded: @escaping (Place) -> Void = { _ in },
+        onAddedAtNewPlace: @escaping (Place) -> Void = { _ in }
+    ) {
         editing = nil
         _place = State(initialValue: place)
+        self.onPlaceAdded = onPlaceAdded
         self.onAddedAtNewPlace = onAddedAtNewPlace
     }
 
@@ -56,7 +61,6 @@ struct TodoEditorView: View {
             case .existing(let picked):
                 place = picked
             case .new:
-                placeIDsBeforeAdding = Set(places.map(\.id))
                 isAddingPlace = true
             case nil:
                 break
@@ -115,12 +119,16 @@ struct TodoEditorView: View {
                 PaywallView(trigger: trigger)
             }
             .sheet(isPresented: $isAddingPlace) {
-                PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters, asksForTodos: false) { picked in
-                    place = picked
-                    if !placeIDsBeforeAdding.contains(picked.id) {
-                        addedPlace = picked
+                PlaceEditorView(
+                    defaultRadiusMeters: preferences.defaultRadiusMeters,
+                    asksForTodos: false,
+                    onPickExisting: { place = $0 },
+                    onSave: { added in
+                        place = added
+                        addedPlace = added
+                        onPlaceAdded(added)
                     }
-                }
+                )
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -3,7 +3,6 @@ import SwiftData
 import SwiftUI
 
 struct PlacesMapView: View {
-    @Environment(AppRouter.self) private var router
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var selectedPlace: Place?
@@ -22,11 +21,6 @@ struct PlacesMapView: View {
             MapUserLocationButton()
             MapCompass()
         }
-        .safeAreaInset(edge: .bottom) {
-            if places.isEmpty {
-                emptyCard
-            }
-        }
         .onChange(of: selectedPlace) {
             if let selectedPlace {
                 open(selectedPlace)
@@ -37,24 +31,5 @@ struct PlacesMapView: View {
         .navigationTitle(Text(.tabMap))
         .maintenanceBanner()
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var emptyCard: some View {
-        VStack(spacing: 12) {
-            Text(.homeEmptyTitle)
-                .font(.headline)
-            Text(.mapEmptyMessage)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button(.homeAddPlace) {
-                router.requestAddPlace()
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .padding()
     }
 }

@@ -889,41 +889,6 @@
         }
       }
     },
-    "home.open_summary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld open to-do"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld open to-dos"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "やることが %lld 件残っています"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "home.permission_banner.ios_location" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1209,23 +1174,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@〜%2$@ はサーバーのメンテナンスのため同期を止めます。"
-          }
-        }
-      }
-    },
-    "map.empty.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Places you add appear here."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "追加した場所がここに表示されます。"
           }
         }
       }
@@ -1992,7 +1940,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@\/月"
+            "value" : "%@/月"
           }
         }
       }
@@ -2009,7 +1957,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@\/年"
+            "value" : "%@/年"
           }
         }
       }
@@ -2196,7 +2144,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 日間無料、その後 %2$@\/年"
+            "value" : "%1$@ 日間無料、その後 %2$@/年"
           }
         }
       }
@@ -5114,23 +5062,6 @@
         }
       }
     },
-    "tab.home" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ホーム"
-          }
-        }
-      }
-    },
     "tab.map" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5573,40 +5504,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "この条件のやることはありません"
-          }
-        }
-      }
-    },
-    "todo.list.no_places_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To-dos belong to places."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "やることは場所ごとに登録します。"
-          }
-        }
-      }
-    },
-    "todo.list.no_places_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a place first"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先に場所を追加してください"
           }
         }
       }

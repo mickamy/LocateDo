@@ -4,8 +4,6 @@ import SwiftUI
 struct TodoListView: View {
     @Environment(LocalWrites.self) private var writes
     @Environment(TodoUndo.self) private var undo
-    @Environment(AppRouter.self) private var router
-    @Query(sort: \Place.sortOrder) private var places: [Place]
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
     @State private var filter: TodoFilter = .all
     let addTodo: () -> Void
@@ -20,10 +18,7 @@ struct TodoListView: View {
 
     var body: some View {
         Group {
-            if places.isEmpty {
-                noPlaces
-                    .syncRefreshableEmptyState()
-            } else if todos.isEmpty {
+            if todos.isEmpty {
                 empty
                     .syncRefreshableEmptyState()
             } else {
@@ -34,20 +29,6 @@ struct TodoListView: View {
         .trackScreen(.todos)
         .navigationTitle(Text(.homeAllTodos))
         .maintenanceBanner()
-    }
-
-    private var noPlaces: some View {
-        ContentUnavailableView {
-            Label(.todoListNoPlacesTitle, systemImage: "mappin.and.ellipse")
-        } description: {
-            Text(.todoListNoPlacesMessage)
-        } actions: {
-            Button(.homeAddPlace) {
-                router.requestAddPlace()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-        }
     }
 
     private var empty: some View {

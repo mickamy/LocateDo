@@ -15,13 +15,13 @@ struct PlaceEditorView: View {
     @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Environment(GeofenceMonitor.self) private var geofence
-    @Environment(AppRouter.self) private var router
     @Query private var savedPlaces: [Place]
     @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
 
     let place: Place?
     let asksForTodos: Bool
     var onSave: ((Place) -> Void)?
+    var onPickExisting: (Place) -> Void = { _ in }
     @State private var name: String
     @State private var coordinate: CLLocationCoordinate2D?
     @State private var source: PlaceSource?
@@ -41,10 +41,12 @@ struct PlaceEditorView: View {
         place: Place? = nil,
         defaultRadiusMeters: Double = Place.defaultRadiusMeters,
         asksForTodos: Bool = true,
+        onPickExisting: @escaping (Place) -> Void = { _ in },
         onSave: ((Place) -> Void)? = nil
     ) {
         self.place = place
         self.asksForTodos = asksForTodos
+        self.onPickExisting = onPickExisting
         self.onSave = onSave
         _name = State(initialValue: place?.name ?? "")
         _coordinate = State(initialValue: place?.coordinate)
@@ -75,12 +77,7 @@ struct PlaceEditorView: View {
             Button(.placeDuplicateOpen) {
                 answerDuplicate(.open)
                 dismiss()
-                // From the to-do screen, the saved place is picked for the to-do instead of opened.
-                if asksForTodos {
-                    router.open(placeID: existing.id)
-                } else {
-                    onSave?(existing)
-                }
+                onPickExisting(existing)
             }
             Button(.placeDuplicateAdd) {
                 answerDuplicate(.add)
@@ -268,7 +265,6 @@ extension PlaceEditorView {
                 paywall = limit.trigger
                 return
             }
-            router.didAddPlace = true
         }
         onSave?(saved)
         dismiss()

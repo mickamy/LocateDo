@@ -66,6 +66,7 @@ struct TodoRow: View {
         .sheet(isPresented: $isEditing) {
             TodoEditorView(editing: todo)
         }
+        .tracksPresentation(isEditing || paywall != nil)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityTitle)
         .accessibilityValue(Text(status))

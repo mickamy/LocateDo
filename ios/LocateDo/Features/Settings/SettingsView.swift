@@ -12,6 +12,7 @@ struct SettingsView: View {
     @Environment(CompletionNotices.self) private var completionNotices
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
+    @State private var paywall: PaywallTrigger?
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -105,7 +106,9 @@ struct SettingsView: View {
                         Label(.sharingTitle, systemImage: "person.2")
                     }
                 }
-                ProSection()
+                ProSection {
+                    paywall = .settings
+                }
                 UsageDataSection()
                 Section {
                     LabeledContent {
@@ -133,6 +136,10 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings.done")
                 }
+            }
+            // Outside the form, whose redraws would close a sheet attached to one of its sections.
+            .sheet(item: $paywall) { trigger in
+                PaywallView(trigger: trigger)
             }
             .maintenanceBanner()
             .task {

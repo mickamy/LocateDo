@@ -49,12 +49,12 @@ struct FloatingAddMenu<Items: View>: View {
         } label: {
             Label(.commonAdd, systemImage: "plus")
                 .labelStyle(.iconOnly)
-                .font(.title2)
-                .foregroundStyle(.white)
-                .frame(width: buttonHeight, height: buttonHeight)
-                .glassEffect(.regular.tint(.accentColor).interactive(), in: .circle)
+                .font(.title3.weight(.semibold))
         }
         .menuOrder(.fixed)
-        .buttonStyle(.plain)
+        // The system style, unlike a glass effect on the label, keeps its tint off the menu it opens into.
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.circle)
+        .controlSize(.large)
     }
 }

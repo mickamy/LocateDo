@@ -17,7 +17,6 @@ struct RootView: View {
     @Environment(WatchBridge.self) private var watch
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
-    @State private var isPromotionsPromptPresented = false
 
     var body: some View {
         Group {
@@ -51,40 +50,28 @@ struct RootView: View {
     }
 
     private var main: some View {
-        @Bindable var router = router
-        return home
-                .alert(
-                    Text(.announcementTitle),
-                    isPresented: announcement,
-                    presenting: appStatus.pendingNotice
-                ) { notice in
-                    Button(.commonOk) {
-                        appStatus.markNoticeShown(notice)
-                    }
-                } message: { notice in
-                    Text(notice.message.text(for: Bundle.main.preferredLocalizations.first) ?? "")
+        home
+            .alert(
+                Text(.announcementTitle),
+                isPresented: announcement,
+                presenting: appStatus.pendingNotice
+            ) { notice in
+                Button(.commonOk) {
+                    appStatus.markNoticeShown(notice)
                 }
-                .alert(Text(.sessionEndedTitle), isPresented: sessionEndedNotice) {
-                    Button(.commonOk) {}
-                } message: {
-                    Text(.sessionEndedIosMessage)
-                }
-                .alert(Text(.removedTitle), isPresented: removedNotice) {
-                    Button(.commonOk) {}
-                } message: {
-                    Text(.removedIosMessage)
-                }
-                .sheet(item: $router.pendingInvite) { invite in
-                    NavigationStack {
-                        AcceptInviteView(token: invite.token)
-                    }
-                }
-                .sheet(item: $router.pendingPaywall) { trigger in
-                    PaywallView(trigger: trigger)
-                }
-                .sheet(isPresented: $isPromotionsPromptPresented) {
-                    PromotionsConsentSheet()
-                }
+            } message: { notice in
+                Text(notice.message.text(for: Bundle.main.preferredLocalizations.first) ?? "")
+            }
+            .alert(Text(.sessionEndedTitle), isPresented: sessionEndedNotice) {
+                Button(.commonOk) {}
+            } message: {
+                Text(.sessionEndedIosMessage)
+            }
+            .alert(Text(.removedTitle), isPresented: removedNotice) {
+                Button(.commonOk) {}
+            } message: {
+                Text(.removedIosMessage)
+            }
     }
 
     private func refreshAppStatus() async {
@@ -117,42 +104,38 @@ struct RootView: View {
     }
 
     private var home: some View {
-        @Bindable var router = router
-        return NearbyView()
+        NearbyView()
             // Above the floating add button, which the overlay does not leave room for by itself.
             .overlay(alignment: .bottom) {
                 TodoUndoBanner()
                     .padding(.bottom, 72)
             }
-            .sheet(isPresented: $router.isSettingsPresented) {
-                SettingsView()
+            .task(id: scenePhase) {
+                guard scenePhase == .active else {
+                    return
+                }
+                await appStatus.refresh()
+                guard !appStatus.requiresUpdate else {
+                    return
+                }
+                do {
+                    try await account.uploadLocalDataIfNeeded()
+                } catch {
+                    Logger(subsystem: "com.locatedo.LocateDo", category: "account")
+                        .error("Initial upload failed: \(error, privacy: .public)")
+                }
+                await sync.sync()
+                await DailyStateReporter.report(
+                    context: modelContext,
+                    entitlements: entitlements,
+                    authenticator: authenticator,
+                    locationProvider: locationProvider,
+                    notifier: notifier,
+                    promotionsConsent: promotionsConsent.isOn,
+                    watchAppInstalled: watch.hasWatchApp
+                )
+                presentPromotionsPromptIfDue()
             }
-        .task(id: scenePhase) {
-            guard scenePhase == .active else {
-                return
-            }
-            await appStatus.refresh()
-            guard !appStatus.requiresUpdate else {
-                return
-            }
-            do {
-                try await account.uploadLocalDataIfNeeded()
-            } catch {
-                Logger(subsystem: "com.locatedo.LocateDo", category: "account")
-                    .error("Initial upload failed: \(error, privacy: .public)")
-            }
-            await sync.sync()
-            await DailyStateReporter.report(
-                context: modelContext,
-                entitlements: entitlements,
-                authenticator: authenticator,
-                locationProvider: locationProvider,
-                notifier: notifier,
-                promotionsConsent: promotionsConsent.isOn,
-                watchAppInstalled: watch.hasWatchApp
-            )
-            presentPromotionsPromptIfDue()
-        }
     }
 
     private func presentPromotionsPromptIfDue() {
@@ -165,11 +148,7 @@ struct RootView: View {
         guard isDue, !isShowingSomethingElse else {
             return
         }
-        promotionsConsent.promptShown(
-            daysSinceInstall: InstallDate.daysSinceInstall(defaults: .standard, now: now),
-            notificationAuth: notifier.authorizationStatus
-        )
-        isPromotionsPromptPresented = true
+        router.isPromotionsPromptRequested = true
     }
 
     private var isShowingSomethingElse: Bool {

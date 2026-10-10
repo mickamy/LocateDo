@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct SharingButton<Label: View>: View {
-    enum Source: String {
-        case home
-        case settings
-    }
+enum SharingSource: String {
+    case home
+    case settings
+}
 
-    let source: Source
+struct SharingButton<Label: View>: View {
+    let source: SharingSource
     @ViewBuilder let label: () -> Label
     @State private var isPresented = false
 

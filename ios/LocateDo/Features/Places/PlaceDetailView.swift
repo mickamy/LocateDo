@@ -164,6 +164,7 @@ struct PlaceDetailView: View {
         .sheet(isPresented: $isEditing) {
             PlaceEditorView(place: place)
         }
+        .tracksPresentation(isEditing || isConfirmingDelete)
         .task(id: "\(place.latitude),\(place.longitude)") {
             address = .loading
             if let found = await Geocoding.lookUp(place.coordinate)?.address {

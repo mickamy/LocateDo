@@ -1,30 +1,23 @@
 import Foundation
 import Observation
 
+// Requests that come from outside the screens: notifications, links, and sync.
 @Observable
 final class AppRouter {
     var pendingPlaceID: UUID?
     var isAllTodosRequested = false
-    var isAddPlaceRequested = false
-    var isSettingsPresented = false
     var pendingInvite: PendingInvite?
     var pendingPaywall: PaywallTrigger?
-    // Set when a new place is saved from anywhere, so Home can offer the reminder setup once its sheets close.
-    @ObservationIgnored var didAddPlace = false
+    var isPromotionsPromptRequested = false
+    // Sheets and dialogs open on screens inside Home, which Home cannot present over.
+    var presentationsInsideHome = 0
 
     func open(placeID: UUID) {
-        isSettingsPresented = false
         pendingPlaceID = placeID
     }
 
     func openAllTodos() {
-        isSettingsPresented = false
         isAllTodosRequested = true
-    }
-
-    func requestAddPlace() {
-        isSettingsPresented = false
-        isAddPlaceRequested = true
     }
 }
 

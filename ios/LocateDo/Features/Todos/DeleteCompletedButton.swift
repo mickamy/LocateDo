@@ -30,5 +30,6 @@ struct DeleteCompletedButton: View {
                 Text(.todoDeleteCompletedSharedMessage)
             }
         }
+        .tracksPresentation(isConfirming)
     }
 }
