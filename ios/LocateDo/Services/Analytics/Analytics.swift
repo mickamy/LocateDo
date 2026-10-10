@@ -76,6 +76,7 @@ nonisolated enum AnalyticsParameter: String {
     case to
     case trigger
     case via
+    case watchAppInstalled = "watch_app_installed"
 }
 
 nonisolated enum AnalyticsUserProperty: String {

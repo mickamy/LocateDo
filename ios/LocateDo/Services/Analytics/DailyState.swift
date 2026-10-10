@@ -67,6 +67,7 @@ nonisolated struct DailyState: Equatable {
     var preciseLocation: Bool
     var notificationAuth: NotificationAuth
     var promotionsConsent: Bool
+    var watchAppInstalled: Bool
 
     var parameters: AnalyticsParameters {
         [
@@ -82,7 +83,8 @@ nonisolated struct DailyState: Equatable {
             .locationAuth: locationAuth.rawValue,
             .preciseLocation: preciseLocation,
             .notificationAuth: notificationAuth.rawValue,
-            .promotionsConsent: promotionsConsent
+            .promotionsConsent: promotionsConsent,
+            .watchAppInstalled: watchAppInstalled
         ]
     }
 

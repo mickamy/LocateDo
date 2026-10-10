@@ -16,6 +16,15 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     @ObservationIgnored private var lastSent: WatchSnapshot?
     @ObservationIgnored private var observers: [any NSObjectProtocol] = []
 
+    // Read once the session has activated; before that it says false.
+    var hasWatchApp: Bool {
+        guard WCSession.isSupported() else {
+            return false
+        }
+        let session = WCSession.default
+        return session.activationState == .activated && session.isPaired && session.isWatchAppInstalled
+    }
+
     var state: String {
         guard WCSession.isSupported() else {
             return "unsupported"
