@@ -4,6 +4,7 @@ import Foundation
 
 nonisolated enum AnalyticsEvent: String {
     case alwaysPromptAnswered = "always_prompt_answered"
+    case analyticsConsentGranted = "analytics_consent_granted"
     case arrivalNotified = "arrival_notified"
     case arrivalOpened = "arrival_opened"
     case arrivalSuppressed = "arrival_suppressed"
