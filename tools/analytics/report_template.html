@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocateDo Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f6f8;
+    --card: #ffffff;
+    --fg: #1c1c1e;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+    --accent: #0a84ff;
+    --ios: #0a84ff;
+    --android: #30a46c;
+    --series-1: #0a84ff;
+    --series-2: #f5a524;
+    --series-3: #a855f7;
+    --target: #30a46c;
+    --review: #e5484d;
+    --up: #30a46c;
+    --down: #e5484d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --fg: #f2f2f7;
+      --muted: #98989d;
+      --rule: #2c2c2e;
+      --accent: #3b9bff;
+      --ios: #3b9bff;
+      --android: #3dd68c;
+      --series-1: #3b9bff;
+      --series-2: #ffb224;
+      --series-3: #bf7af0;
+      --target: #3dd68c;
+      --review: #ff6369;
+      --up: #3dd68c;
+      --down: #ff6369;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+  .segmented { display: inline-flex; background: var(--rule); border-radius: 8px; padding: 2px; }
+  .segmented button {
+    border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 13px;
+    padding: 4px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .segmented button[aria-pressed="true"] { background: var(--card); font-weight: 600; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 16px; }
+  .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 16px; }
+  .card { background: var(--card); border-radius: 12px; padding: 16px; min-width: 0; }
+  .stat-label { color: var(--muted); font-size: 13px; }
+  .stat-value { font-size: 28px; font-weight: 600; line-height: 1.2; }
+  .stat-delta { font-size: 13px; color: var(--muted); }
+  .stat-delta.up { color: var(--up); }
+  .stat-delta.down { color: var(--down); }
+  .chart { position: relative; height: 240px; }
+  .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>LocateDo Analytics</h1>
+      <div class="meta" id="generated"></div>
+    </div>
+    <div class="controls">
+      <div class="segmented" id="tabs">
+        <button data-value="daily" aria-pressed="true">毎日</button>
+        <button data-value="kpi" aria-pressed="false">KPI</button>
+      </div>
+      <div class="segmented" id="platforms">
+        <button data-value="ALL" aria-pressed="true">すべて</button>
+        <button data-value="IOS" aria-pressed="false">iOS</button>
+        <button data-value="ANDROID" aria-pressed="false">Android</button>
+      </div>
+      <div class="segmented" id="ranges">
+        <button data-value="28" aria-pressed="true">28 日</button>
+        <button data-value="90" aria-pressed="false">90 日</button>
+        <button data-value="0" aria-pressed="false">全期間</button>
+      </div>
+    </div>
+  </header>
+
+  <section id="daily">
+    <div class="cards" id="daily-cards"></div>
+    <div class="grid">
+      <div class="card"><h2>利用者（アプリを開いた人）</h2><div class="chart"><canvas id="chart-active"></canvas></div></div>
+      <div class="card"><h2>登録</h2><div class="chart"><canvas id="chart-setup"></canvas></div></div>
+      <div class="card"><h2>到着通知</h2><div class="chart"><canvas id="chart-reminders"></canvas></div></div>
+      <div class="card"><h2>課金</h2><div class="chart"><canvas id="chart-billing"></canvas></div></div>
+    </div>
+    <div class="card table-wrap"><h2>明細</h2><table id="daily-table"></table></div>
+    <p class="note">データは GA4 のエクスポートが入った日（だいたい昨日）まで。利用者は日ごとの人数なので、期間で足すと毎日来た人を重ねて数える。</p>
+  </section>
+
+  <section id="kpi" hidden>
+    <div class="grid">
+      <div class="card"><h2>7 日後継続率</h2><div class="chart"><canvas id="chart-retention"></canvas></div></div>
+      <div class="card"><h2>共有の押下率</h2><div class="chart"><canvas id="chart-share"></canvas></div></div>
+      <div class="card"><h2>お試しの転換率</h2><div class="chart"><canvas id="chart-conversion"></canvas></div></div>
+      <div class="card"><h2>有料ユーザーと月のアクティブ</h2><div class="chart"><canvas id="chart-paid"></canvas></div></div>
+    </div>
+    <div class="card table-wrap"><h2>明細</h2><table id="kpi-table"></table></div>
+    <p class="note">継続率は開始から 14 日たった人、転換率はお試しが終わった人（同期が止まった人を除く）だけで数える。緑の線が目標、赤の線が見直しの基準。</p>
+  </section>
+</main>
+
+<script>
+const DATA = __DATA__;
+const PLATFORMS = ["IOS", "ANDROID"];
+const PLATFORM_LABELS = { IOS: "iOS", ANDROID: "Android" };
+
+const state = { tab: "daily", platform: "ALL", range: 28 };
+const charts = {};
+
+function token(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function selectedPlatforms() {
+  if (state.platform === "ALL") {
+    return PLATFORMS;
+  }
+  return [state.platform];
+}
+
+function sum(rows, key) {
+  let total = 0;
+  for (const row of rows) {
+    total += row[key] || 0;
+  }
+  return total;
+}
+
+function ratio(numerator, denominator) {
+  if (!denominator) {
+    return null;
+  }
+  return numerator / denominator;
+}
+
+function percent(value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  return (value * 100).toFixed(1) + "%";
+}
+
+function number(value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  return value.toLocaleString("ja-JP");
+}
+
+function isoDate(date) {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+}
+
+function addDays(day, days) {
+  const date = new Date(day + "T00:00:00");
+  date.setDate(date.getDate() + days);
+  return isoDate(date);
+}
+
+function dailyDays() {
+  const rows = DATA.daily_overview;
+  if (rows.length === 0) {
+    return [];
+  }
+  let first = rows[0].event_date;
+  let last = rows[0].event_date;
+  for (const row of rows) {
+    if (row.event_date < first) first = row.event_date;
+    if (row.event_date > last) last = row.event_date;
+  }
+  if (state.range > 0) {
+    first = addDays(last, 1 - state.range);
+  }
+  const days = [];
+  for (let day = first; day <= last; day = addDays(day, 1)) {
+    days.push(day);
+  }
+  return days;
+}
+
+function dailyRows(days, platforms) {
+  const byDay = {};
+  for (const day of days) {
+    byDay[day] = [];
+  }
+  for (const row of DATA.daily_overview) {
+    if (byDay[row.event_date] && platforms.includes(row.platform)) {
+      byDay[row.event_date].push(row);
+    }
+  }
+  return byDay;
+}
+
+function series(days, byDay, key) {
+  return days.map((day) => sum(byDay[day], key));
+}
+
+function draw(id, config) {
+  if (charts[id]) {
+    charts[id].destroy();
+  }
+  const muted = token("--muted");
+  const rule = token("--rule");
+  config.options = Object.assign({
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: { legend: { labels: { color: muted, boxWidth: 12 } } },
+  }, config.options || {});
+  const scales = config.options.scales || {};
+  for (const axis of ["x", "y"]) {
+    scales[axis] = Object.assign({ ticks: { color: muted }, grid: { color: rule } }, scales[axis] || {});
+  }
+  config.options.scales = scales;
+  charts[id] = new Chart(document.getElementById(id), config);
+}
+
+function platformBars(labels, valuesByPlatform, stacked) {
+  const datasets = selectedPlatforms().map((platform) => ({
+    label: PLATFORM_LABELS[platform],
+    data: valuesByPlatform[platform],
+    backgroundColor: token(platform === "IOS" ? "--ios" : "--android"),
+  }));
+  return {
+    type: "bar",
+    data: { labels, datasets },
+    options: { scales: { x: { stacked }, y: { stacked, beginAtZero: true, ticks: { precision: 0 } } } },
+  };
+}
+
+function groupedBars(labels, entries) {
+  const colors = ["--series-1", "--series-2", "--series-3"];
+  return {
+    type: "bar",
+    data: {
+      labels,
+      datasets: entries.map((entry, index) => ({
+        label: entry.label,
+        data: entry.data,
+        backgroundColor: token(colors[index]),
+      })),
+    },
+    options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+  };
+}
+
+function card(label, value, previous) {
+  let delta = "前の期間なし";
+  let tone = "";
+  if (previous !== null) {
+    const change = value - previous;
+    delta = `前の期間 ${number(previous)}（${change >= 0 ? "+" : ""}${number(change)}）`;
+    if (change > 0) tone = "up";
+    if (change < 0) tone = "down";
+  }
+  return `<div class="card"><div class="stat-label">${label}</div>` +
+    `<div class="stat-value">${number(value)}</div>` +
+    `<div class="stat-delta ${tone}">${delta}</div></div>`;
+}
+
+function renderDaily() {
+  const days = dailyDays();
+  const platforms = selectedPlatforms();
+  const byDay = dailyRows(days, platforms);
+  const labels = days.map((day) => day.slice(5));
+
+  let previousByDay = null;
+  if (state.range > 0 && days.length > 0) {
+    const previousDays = [];
+    for (let i = state.range; i >= 1; i--) {
+      previousDays.push(addDays(days[0], -i));
+    }
+    previousByDay = dailyRows(previousDays, platforms);
+  }
+  const cards = [
+    ["新しいインストール", "new_users"],
+    ["やることの追加", "todos_added"],
+    ["到着通知", "reminders"],
+    ["購入", "purchases"],
+  ];
+  document.getElementById("daily-cards").innerHTML = cards.map(([label, key]) => {
+    const value = sum(Object.values(byDay).flat(), key);
+    let previous = null;
+    if (previousByDay) {
+      previous = sum(Object.values(previousByDay).flat(), key);
+    }
+    return card(label, value, previous);
+  }).join("");
+
+  const activeByPlatform = {};
+  for (const platform of platforms) {
+    const one = dailyRows(days, [platform]);
+    activeByPlatform[platform] = series(days, one, "active_users");
+  }
+  draw("chart-active", platformBars(labels, activeByPlatform, true));
+  draw("chart-setup", groupedBars(labels, [
+    { label: "インストール", data: series(days, byDay, "new_users") },
+    { label: "場所の追加", data: series(days, byDay, "places_added") },
+    { label: "やることの追加", data: series(days, byDay, "todos_added") },
+  ]));
+  draw("chart-reminders", groupedBars(labels, [
+    { label: "通知", data: series(days, byDay, "reminders") },
+    { label: "開いた", data: series(days, byDay, "reminders_opened") },
+    { label: "通知から完了", data: series(days, byDay, "todos_completed_from_reminders") },
+  ]));
+  draw("chart-billing", groupedBars(labels, [
+    { label: "ペイウォール", data: series(days, byDay, "paywalls_shown") },
+    { label: "購入", data: series(days, byDay, "purchases") },
+    { label: "お試しの開始", data: series(days, byDay, "trials_started") },
+  ]));
+
+  const columns = [
+    ["active_users", "利用者"], ["new_users", "インストール"], ["places_added", "場所"], ["todos_added", "やること"],
+    ["todos_completed", "完了"], ["todos_completed_from_reminders", "通知から完了"], ["reminders", "通知"],
+    ["reminders_opened", "開いた"], ["paywalls_shown", "ペイウォール"], ["purchases", "購入"],
+    ["trials_started", "お試し"],
+  ];
+  const rows = DATA.daily_overview
+    .filter((row) => days.includes(row.event_date) && platforms.includes(row.platform))
+    .sort((a, b) => b.event_date.localeCompare(a.event_date) || a.platform.localeCompare(b.platform));
+  renderTable("daily-table", ["日付", "OS"].concat(columns.map((column) => column[1])), rows.map((row) =>
+    [row.event_date, PLATFORM_LABELS[row.platform] || row.platform].concat(columns.map((column) => number(row[column[0]])))
+  ));
+}
+
+function kpiMonths() {
+  const months = [...new Set(DATA.kpi_monthly.map((row) => row.month))];
+  return months.sort();
+}
+
+function kpiRows(month, platforms) {
+  return DATA.kpi_monthly.filter((row) => row.month === month && platforms.includes(row.platform));
+}
+
+function kpi(rows) {
+  return {
+    cohortUsers: sum(rows, "cohort_users"),
+    retention: ratio(sum(rows, "notified_week_2_users"), sum(rows, "cohort_users")),
+    activeUsers: sum(rows, "monthly_active_users"),
+    shareRate: ratio(sum(rows, "share_tappers"), sum(rows, "monthly_active_users")),
+    trialsEnded: sum(rows, "trials_ended_unaffected"),
+    conversion: ratio(sum(rows, "trials_converted_unaffected"), sum(rows, "trials_ended_unaffected")),
+    paidUsers: sum(rows, "paid_users"),
+  };
+}
+
+function rateChart(id, labels, valuesByPlatform, target, review) {
+  const datasets = selectedPlatforms().map((platform) => ({
+    type: "bar",
+    label: PLATFORM_LABELS[platform],
+    data: valuesByPlatform[platform],
+    backgroundColor: token(platform === "IOS" ? "--ios" : "--android"),
+  }));
+  datasets.push({
+    type: "line", label: `目標 ${percent(target)}`, data: labels.map(() => target),
+    borderColor: token("--target"), borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5,
+  });
+  datasets.push({
+    type: "line", label: `見直し ${percent(review)}`, data: labels.map(() => review),
+    borderColor: token("--review"), borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5,
+  });
+  draw(id, {
+    data: { labels, datasets },
+    options: {
+      scales: { y: { beginAtZero: true, suggestedMax: target * 1.5, ticks: { callback: (value) => percent(value) } } },
+      plugins: { tooltip: { callbacks: { label: (item) => `${item.dataset.label}: ${percent(item.raw)}` } } },
+    },
+  });
+}
+
+function renderKpi() {
+  const months = kpiMonths();
+  const labels = months.map((month) => month.slice(0, 7));
+  const platforms = selectedPlatforms();
+
+  const perPlatform = {};
+  for (const platform of platforms) {
+    perPlatform[platform] = months.map((month) => kpi(kpiRows(month, [platform])));
+  }
+  const pick = (key) => {
+    const values = {};
+    for (const platform of platforms) {
+      values[platform] = perPlatform[platform].map((value) => value[key]);
+    }
+    return values;
+  };
+  rateChart("chart-retention", labels, pick("retention"), 0.3, 0.15);
+  rateChart("chart-share", labels, pick("shareRate"), 0.1, 0.05);
+  rateChart("chart-conversion", labels, pick("conversion"), 0.2, 0.1);
+
+  const combined = months.map((month) => kpi(kpiRows(month, platforms)));
+  draw("chart-paid", groupedBars(labels, [
+    { label: "有料ユーザー", data: combined.map((value) => value.paidUsers) },
+    { label: "月のアクティブ", data: combined.map((value) => value.activeUsers) },
+  ]));
+
+  const header = ["月", "OS", "開始した人", "継続率", "月のアクティブ", "共有の押下率", "お試しの終了", "転換率", "有料ユーザー"];
+  const rows = [];
+  for (const month of months.slice().reverse()) {
+    const groups = platforms.map((platform) => [PLATFORM_LABELS[platform], [platform]]);
+    if (platforms.length > 1) {
+      groups.unshift(["合計", platforms]);
+    }
+    for (const [label, group] of groups) {
+      const value = kpi(kpiRows(month, group));
+      rows.push([
+        month.slice(0, 7), label, number(value.cohortUsers), percent(value.retention), number(value.activeUsers),
+        percent(value.shareRate), number(value.trialsEnded), percent(value.conversion), number(value.paidUsers),
+      ]);
+    }
+  }
+  renderTable("kpi-table", header, rows);
+}
+
+function renderTable(id, header, rows) {
+  const head = "<tr>" + header.map((cell) => `<th>${cell}</th>`).join("") + "</tr>";
+  let body = rows.map((row) => "<tr>" + row.map((cell) => `<td>${cell}</td>`).join("") + "</tr>").join("");
+  if (rows.length === 0) {
+    body = `<tr><td colspan="${header.length}">データなし</td></tr>`;
+  }
+  document.getElementById(id).innerHTML = head + body;
+}
+
+function render() {
+  document.getElementById("daily").hidden = state.tab !== "daily";
+  document.getElementById("kpi").hidden = state.tab !== "kpi";
+  document.getElementById("ranges").hidden = state.tab !== "daily";
+  if (state.tab === "daily") {
+    renderDaily();
+  } else {
+    renderKpi();
+  }
+}
+
+function bindSegmented(id, onChange) {
+  const group = document.getElementById(id);
+  group.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) {
+      return;
+    }
+    for (const other of group.querySelectorAll("button")) {
+      other.setAttribute("aria-pressed", String(other === button));
+    }
+    onChange(button.dataset.value);
+    render();
+  });
+}
+
+bindSegmented("tabs", (value) => { state.tab = value; });
+bindSegmented("platforms", (value) => { state.platform = value; });
+bindSegmented("ranges", (value) => { state.range = Number(value); });
+document.getElementById("generated").textContent = "作成: " + new Date(DATA.generated_at).toLocaleString("ja-JP");
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>
