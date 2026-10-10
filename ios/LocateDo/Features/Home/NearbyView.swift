@@ -157,7 +157,7 @@ struct NearbyView: View {
             Section {
                 // A glance at where you are; the Map tab is where it can be moved around.
                 Button {
-                    router.selectedTab = .map
+                    router.openMapFromHomePreview()
                 } label: {
                     Map(initialPosition: .userLocation(fallback: .automatic)) {
                         UserAnnotation()

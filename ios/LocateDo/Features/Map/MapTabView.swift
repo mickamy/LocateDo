@@ -27,7 +27,9 @@ struct MapTabView: View {
                     emptyCard
                 }
             }
-            .trackScreen(.map)
+            .onAppear {
+                Analytics.logScreen(.map, parameters: [.source: router.takeMapSource()])
+            }
             .navigationTitle(Text(.tabMap))
             .maintenanceBanner()
             .navigationBarTitleDisplayMode(.inline)
