@@ -48,13 +48,14 @@ final class AppPreviewTests: XCTestCase {
 
         app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
         XCTAssertTrue(grocery.waitForExistence(timeout: 5))
-        app.tabBars.buttons.element(boundBy: 1).tapWhenReady()
+        app.buttons["home.map"].tapWhenReady()
         pause(2)
         scene("map") {
             pause(4)
         }
 
-        app.tabBars.buttons.element(boundBy: 2).tapWhenReady()
+        app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
+        app.buttons["home.allTodos"].tapWhenReady()
         pause(1)
         scene("todos") {
             pause(2)
@@ -62,7 +63,7 @@ final class AppPreviewTests: XCTestCase {
             pause(3)
         }
 
-        app.tabBars.buttons.element(boundBy: 0).tapWhenReady()
+        app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
         XCTAssertTrue(grocery.waitForExistence(timeout: 5))
         scene("home") {
             pause(4)
@@ -130,13 +131,13 @@ final class AppPreviewTests: XCTestCase {
     // simulator.
     @MainActor
     private func allowNotifications(_ app: XCUIApplication) {
-        app.tabBars.buttons.element(boundBy: 3).tapWhenReady()
+        app.buttons["home.settings"].tapWhenReady()
         app.buttons["settings.allowNotifications"].tapWhenReady()
         let alert = springboard.alerts.firstMatch
         XCTAssertTrue(alert.waitForExistence(timeout: 60))
         alert.buttons.element(boundBy: 1).tap()
         XCTAssertTrue(app.buttons["settings.allowNotifications"].waitForNonExistence(timeout: 10))
-        app.tabBars.buttons.element(boundBy: 0).tapWhenReady()
+        app.buttons["settings.done"].tapWhenReady()
     }
 
     private func pause(_ seconds: UInt32) {

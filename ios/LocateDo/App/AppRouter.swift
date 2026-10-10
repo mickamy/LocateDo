@@ -1,46 +1,29 @@
 import Foundation
 import Observation
 
-enum AppTab: Hashable {
-    case home
-    case map
-    case todos
-    case settings
-}
-
 @Observable
 final class AppRouter {
-    var selectedTab: AppTab = .home
     var pendingPlaceID: UUID?
+    var isAllTodosRequested = false
     var isAddPlaceRequested = false
+    var isSettingsPresented = false
     var pendingInvite: PendingInvite?
     var pendingPaywall: PaywallTrigger?
-    // Set when Home's map preview switches to the Map tab, so the Map tab's screen view can say where it came from.
-    @ObservationIgnored private var isMapFromHomePreview = false
+    // Set when a new place is saved from anywhere, so Home can offer the reminder setup once its sheets close.
+    @ObservationIgnored var didAddPlace = false
 
     func open(placeID: UUID) {
-        selectedTab = .home
+        isSettingsPresented = false
         pendingPlaceID = placeID
     }
 
-    func openMapFromHomePreview() {
-        isMapFromHomePreview = true
-        selectedTab = .map
-    }
-
-    // Read once per Map tab appearance.
-    func takeMapSource() -> String {
-        defer {
-            isMapFromHomePreview = false
-        }
-        if isMapFromHomePreview {
-            return "home_preview"
-        }
-        return "tab"
+    func openAllTodos() {
+        isSettingsPresented = false
+        isAllTodosRequested = true
     }
 
     func requestAddPlace() {
-        selectedTab = .home
+        isSettingsPresented = false
         isAddPlaceRequested = true
     }
 }

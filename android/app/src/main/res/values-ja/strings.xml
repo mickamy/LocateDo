@@ -43,6 +43,7 @@
     <string name="category_shopping">買い物</string>
     <string name="category_title">カテゴリ</string>
     <string name="category_work">仕事</string>
+    <string name="common_add">追加</string>
     <string name="common_cancel">キャンセル</string>
     <string name="common_delete">削除</string>
     <string name="common_done">完了</string>
@@ -52,6 +53,7 @@
     <string name="common_save">保存</string>
     <string name="common_undo">元に戻す</string>
     <string name="home_add_place">場所を追加</string>
+    <string name="home_all_todos">すべてのやること</string>
     <string name="home_empty_message">場所を追加すると、着いたときにお知らせします。</string>
     <string name="home_empty_title">場所がまだありません</string>
     <plurals name="home_more_todos">

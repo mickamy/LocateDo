@@ -9,17 +9,15 @@ struct NearbyView: View {
     @Environment(AppRouter.self) private var router
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @State private var isAddingPlace = false
-    @State private var didSavePlace = false
     @State private var reminderSetup: ReminderSetupRequest?
-    @State private var path: [Place] = []
+    @State private var path: [HomeRoute] = []
     @State private var isAddingTodo = false
 
-    // Home itself adds places; a place opened from it adds to-dos.
-    private var floatingButtonTitle: LocalizedStringResource {
-        if path.isEmpty {
-            return .homeAddPlace
+    private var placeForNewTodo: Place? {
+        if let last = path.last {
+            return last.place
         }
-        return .todoEditorTitle
+        return nearbyPlaces.first?.place
     }
 
     private var nearbyPlaces: [NearbyPlace] {
@@ -42,29 +40,20 @@ struct NearbyView: View {
             .maintenanceBanner()
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        router.isSettingsPresented = true
+                    } label: {
+                        Label(.tabSettings, systemImage: "gearshape")
+                    }
+                    .accessibilityIdentifier("home.settings")
+                }
+                ToolbarItem(placement: .primaryAction) {
                     SharingButton(source: .home) {
                         Label(.sharingTitle, systemImage: "person.2")
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        isAddingTodo = true
-                    } label: {
-                        Label(.todoEditorTitle, systemImage: "text.badge.plus")
-                    }
-                }
             }
-            .sheet(isPresented: $isAddingPlace, onDismiss: offerReminderSetupIfNeeded) {
-                PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters) { _ in
-                    didSavePlace = true
-                }
-            }
-            .sheet(item: $reminderSetup) { request in
-                ReminderSetupView(shownCount: request.shownCount, missing: request.missing)
-            }
-            .navigationDestination(for: Place.self) { place in
-                PlaceDetailView(place: place)
-            }
+            .navigationDestination(for: HomeRoute.self, destination: destination)
             .task {
                 locationProvider.start()
                 await notifier.refreshAuthorizationStatus()
@@ -78,19 +67,64 @@ struct NearbyView: View {
             .onChange(of: router.isAddPlaceRequested, initial: true) {
                 openRequestedAddPlace()
             }
+            .onChange(of: router.isAllTodosRequested, initial: true) {
+                openRequestedAllTodos()
+            }
         }
-        .floatingAddButton(floatingButtonTitle) {
+        // Home offers both; the screens opened from it add to-dos, except the map.
+        .floatingAddArea(isShown: path.last != .map) {
             if path.isEmpty {
-                isAddingPlace = true
+                FloatingAddMenu {
+                    Button(.todoEditorTitle, systemImage: "checklist") {
+                        isAddingTodo = true
+                    }
+                    Button(.homeAddPlace, systemImage: "mappin.and.ellipse") {
+                        isAddingPlace = true
+                    }
+                }
+                .accessibilityIdentifier("home.add")
             } else {
+                FloatingAddButton(.todoEditorTitle) {
+                    isAddingTodo = true
+                }
+            }
+        }
+        .animation(.snappy, value: path.isEmpty)
+        .sheet(isPresented: $isAddingTodo, onDismiss: offerReminderSetupIfNeeded) {
+            TodoEditorView(place: placeForNewTodo) { added in
+                path.append(.place(added))
+            }
+        }
+        .sheet(isPresented: $isAddingPlace, onDismiss: offerReminderSetupIfNeeded) {
+            PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters)
+        }
+        .sheet(item: $reminderSetup) { request in
+            ReminderSetupView(shownCount: request.shownCount, missing: request.missing)
+        }
+    }
+
+    @ViewBuilder
+    private func destination(_ route: HomeRoute) -> some View {
+        switch route {
+        case .place(let place):
+            PlaceDetailView(place: place)
+        case .map:
+            PlacesMapView { place in
+                path.append(.place(place))
+            }
+        case .allTodos:
+            TodoListView {
                 isAddingTodo = true
             }
         }
-        .sheet(isPresented: $isAddingTodo) {
-            TodoEditorView(place: path.last ?? nearbyPlaces.first?.place) { added in
-                path.append(added)
-            }
+    }
+
+    private func openRequestedAllTodos() {
+        guard router.isAllTodosRequested else {
+            return
         }
+        router.isAllTodosRequested = false
+        path = [.allTodos]
     }
 
     private func openRequestedAddPlace() {
@@ -102,10 +136,10 @@ struct NearbyView: View {
     }
 
     private func offerReminderSetupIfNeeded() {
-        guard didSavePlace else {
+        guard router.didAddPlace else {
             return
         }
-        didSavePlace = false
+        router.didAddPlace = false
         Task {
             await notifier.refreshAuthorizationStatus()
             let permissions = ReminderSetup.Permissions(
@@ -132,7 +166,7 @@ struct NearbyView: View {
             return
         }
         router.pendingPlaceID = nil
-        path = [place]
+        path = [.place(place)]
     }
 
     private var emptyState: some View {
@@ -163,7 +197,7 @@ struct NearbyView: View {
                 Section {
                     Button {
                         Analytics.log(.permissionBannerTapped, parameters: [.kind: permissionIssue.rawValue])
-                        router.selectedTab = .settings
+                        router.isSettingsPresented = true
                     } label: {
                         Label {
                             Text(permissionIssue.message)
@@ -176,9 +210,9 @@ struct NearbyView: View {
                 }
             }
             Section {
-                // A glance at where you are; the Map tab is where it can be moved around.
+                // A glance at where you are; the full map is where it can be moved around.
                 Button {
-                    router.openMapFromHomePreview()
+                    path.append(.map)
                 } label: {
                     Map(initialPosition: .userLocation(fallback: .automatic)) {
                         UserAnnotation()
@@ -192,16 +226,20 @@ struct NearbyView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(.tabMap))
+                .accessibilityIdentifier("home.map")
                 .listRowInsets(EdgeInsets())
-            } footer: {
-                let count = Nearby.openTodoCount(nearbyPlaces)
-                if count > 0 {
-                    Text(.homeOpenSummary(count))
+                NavigationLink(value: HomeRoute.allTodos) {
+                    LabeledContent {
+                        Text(Nearby.openTodoCount(nearbyPlaces), format: .number)
+                    } label: {
+                        Label(.homeAllTodos, systemImage: "checklist")
+                    }
                 }
+                .accessibilityIdentifier("home.allTodos")
             }
             Section {
                 ForEach(nearbyPlaces) { nearby in
-                    NavigationLink(value: nearby.place) {
+                    NavigationLink(value: HomeRoute.place(nearby.place)) {
                         PlaceRow(nearby: nearby)
                     }
                 }

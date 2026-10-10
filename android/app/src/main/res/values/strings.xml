@@ -45,6 +45,7 @@
     <string name="category_shopping">Shopping</string>
     <string name="category_title">Categories</string>
     <string name="category_work">Work</string>
+    <string name="common_add">Add</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>
     <string name="common_done">Done</string>
@@ -54,6 +55,7 @@
     <string name="common_save">Save</string>
     <string name="common_undo">Undo</string>
     <string name="home_add_place">Add a place</string>
+    <string name="home_all_todos">All To-Dos</string>
     <string name="home_empty_message">Add a place to get reminded when you arrive.</string>
     <string name="home_empty_title">No places yet</string>
     <!-- Under the first two to-dos of a place in the nearby list, when it has more. -->

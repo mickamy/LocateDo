@@ -52,7 +52,7 @@ struct RootView: View {
 
     private var main: some View {
         @Bindable var router = router
-        return tabs
+        return home
                 .alert(
                     Text(.announcementTitle),
                     isPresented: announcement,
@@ -116,27 +116,17 @@ struct RootView: View {
         }
     }
 
-    private var tabs: some View {
+    private var home: some View {
         @Bindable var router = router
-        return TabView(selection: $router.selectedTab) {
-            Tab(.tabHome, systemImage: "house", value: AppTab.home) {
-                NearbyView()
+        return NearbyView()
+            // Above the floating add button, which the overlay does not leave room for by itself.
+            .overlay(alignment: .bottom) {
+                TodoUndoBanner()
+                    .padding(.bottom, 72)
             }
-            Tab(.tabMap, systemImage: "map", value: AppTab.map) {
-                MapTabView()
-            }
-            Tab(.tabTodos, systemImage: "checklist", value: AppTab.todos) {
-                TodoListView()
-            }
-            Tab(.tabSettings, systemImage: "gearshape", value: AppTab.settings) {
+            .sheet(isPresented: $router.isSettingsPresented) {
                 SettingsView()
             }
-        }
-        // Above the tab bar, which the overlay does not leave room for by itself.
-        .overlay(alignment: .bottom) {
-            TodoUndoBanner()
-                .padding(.bottom, 72)
-        }
         .task(id: scenePhase) {
             guard scenePhase == .active else {
                 return

@@ -8,8 +8,7 @@ struct TodoListView: View {
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
     @State private var filter: TodoFilter = .all
-    @State private var isAddingTodo = false
-    @State private var path: [Place] = []
+    let addTodo: () -> Void
 
     private var groups: [TodoGroup] {
         TodoGrouping.groups(todos, filter: filter)
@@ -20,34 +19,21 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            Group {
-                if places.isEmpty {
-                    noPlaces
-                        .syncRefreshableEmptyState()
-                } else if todos.isEmpty {
-                    empty
-                        .syncRefreshableEmptyState()
-                } else {
-                    list
-                        .syncRefreshable()
-                }
-            }
-            .trackScreen(.todos)
-            .navigationTitle(Text(.tabTodos))
-            .maintenanceBanner()
-            .navigationDestination(for: Place.self) { place in
-                PlaceDetailView(place: place)
+        Group {
+            if places.isEmpty {
+                noPlaces
+                    .syncRefreshableEmptyState()
+            } else if todos.isEmpty {
+                empty
+                    .syncRefreshableEmptyState()
+            } else {
+                list
+                    .syncRefreshable()
             }
         }
-        .floatingAddButton(.todoEditorTitle) {
-            isAddingTodo = true
-        }
-        .sheet(isPresented: $isAddingTodo) {
-            TodoEditorView(place: path.last) { added in
-                path.append(added)
-            }
-        }
+        .trackScreen(.todos)
+        .navigationTitle(Text(.homeAllTodos))
+        .maintenanceBanner()
     }
 
     private var noPlaces: some View {
@@ -70,9 +56,7 @@ struct TodoListView: View {
         } description: {
             Text(.todoListEmptyMessage)
         } actions: {
-            Button(.todoEditorTitle) {
-                isAddingTodo = true
-            }
+            Button(.todoEditorTitle, action: addTodo)
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
         }
@@ -105,7 +89,7 @@ struct TodoListView: View {
                         delete(group.todos, at: offsets)
                     }
                 } header: {
-                    NavigationLink(value: group.place) {
+                    NavigationLink(value: HomeRoute.place(group.place)) {
                         Label(group.place.name, systemImage: group.place.categoryStyle.systemImage)
                     }
                 }

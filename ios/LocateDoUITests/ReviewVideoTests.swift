@@ -42,7 +42,8 @@ final class ReviewVideoTests: XCTestCase {
         app.buttons["Save"].tapWhenReady()
         pause(2)
 
-        app.tabBars.buttons.element(boundBy: 3).tapWhenReady()
+        app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
+        app.buttons["home.settings"].tapWhenReady()
         XCTAssertTrue(app.staticTexts["Always"].waitForExistence(timeout: 5))
         pause(3)
         print("REVIEW_VIDEO_END \(Date().timeIntervalSince1970)")
@@ -52,13 +53,13 @@ final class ReviewVideoTests: XCTestCase {
     // more than 10 seconds to appear on a freshly erased simulator.
     @MainActor
     private func allowNotifications(_ app: XCUIApplication) {
-        app.tabBars.buttons.element(boundBy: 3).tapWhenReady()
+        app.buttons["home.settings"].tapWhenReady()
         app.buttons["settings.allowNotifications"].tapWhenReady()
         let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
         XCTAssertTrue(alert.waitForExistence(timeout: 60))
         alert.buttons["Allow"].tap()
         XCTAssertTrue(app.staticTexts["Allowed"].waitForExistence(timeout: 10))
-        app.tabBars.buttons.element(boundBy: 0).tapWhenReady()
+        app.buttons["settings.done"].tapWhenReady()
     }
 
     // The first keyboard on an erased simulator shows a swipe-typing tip; it is dismissed here, off camera.

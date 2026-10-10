@@ -10,6 +10,7 @@ common:
   cancel: "Cancel"
   save: "Save"
   done: "Done"
+  add: "Add"
   edit: "Edit"
   delete: "Delete"
   more: "More"
@@ -200,6 +201,7 @@ settings:
     billing_issue: "There’s a problem with your payment. Check it in Manage Subscription."
     household: "Pro comes with your household’s plan."
 home:
+  all_todos: "All To-Dos"
   more_todos:
     plural:
       one: "+{count:int} more"

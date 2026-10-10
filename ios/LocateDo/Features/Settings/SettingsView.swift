@@ -11,6 +11,7 @@ struct SettingsView: View {
     @Environment(PromotionsConsent.self) private var promotionsConsent
     @Environment(CompletionNotices.self) private var completionNotices
     @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -125,6 +126,14 @@ struct SettingsView: View {
             }
             .trackScreen(.settings)
             .navigationTitle(Text(.tabSettings))
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(.commonDone) {
+                        dismiss()
+                    }
+                    .accessibilityIdentifier("settings.done")
+                }
+            }
             .maintenanceBanner()
             .task {
                 await refresh()

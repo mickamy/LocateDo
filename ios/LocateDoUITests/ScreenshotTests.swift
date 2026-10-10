@@ -31,16 +31,17 @@ final class ScreenshotTests: XCTestCase {
         snapshot("03-Place")
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        app.tabBars.buttons.element(boundBy: 1).tap()
+        app.buttons["home.map"].tap()
         sleep(3)
         snapshot("05-Map")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        app.tabBars.buttons.element(boundBy: 2).tap()
+        app.buttons["home.allTodos"].tap()
         XCTAssertTrue(app.staticTexts[seed.firstTodo].waitForExistence(timeout: 5))
         snapshot("06-Todos")
 
         // Last, the lock screen: each debug action clears what was delivered before, so one notification shows.
-        app.tabBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars.buttons.element(boundBy: 0).tap()
         grocery.tap()
         catchOnLockScreen(app, action: "Simulate completion notice in 10 s (debug)", containing: seed.partnerName)
         snapshot("02-Checked")

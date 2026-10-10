@@ -7,6 +7,7 @@ tab:
   todos: "やること"
   settings: "設定"
 common:
+  add: "追加"
   cancel: "キャンセル"
   save: "保存"
   done: "完了"
@@ -198,6 +199,7 @@ settings:
     billing_issue: "お支払いに問題があります。サブスクリプションの管理から確認してください。"
     household: "世帯の Pro で利用中です。"
 home:
+  all_todos: "すべてのやること"
   more_todos:
     plural:
       other: "他 {count} 件"

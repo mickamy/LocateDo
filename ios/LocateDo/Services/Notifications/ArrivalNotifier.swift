@@ -115,7 +115,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             }
             Analytics.log(.completionNoticeOpened, parameters: [.count: count])
             Task { @MainActor in
-                router.selectedTab = .todos
+                router.openAllTodos()
             }
         } else if let campaign = CampaignNotification(userInfo: userInfo) {
             Analytics.log(.campaignOpened, parameters: [

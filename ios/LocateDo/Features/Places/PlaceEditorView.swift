@@ -268,6 +268,7 @@ extension PlaceEditorView {
                 paywall = limit.trigger
                 return
             }
+            router.didAddPlace = true
         }
         onSave?(saved)
         dismiss()
