@@ -8,7 +8,7 @@
     <string name="always_prompt_privacy">到着したかどうかはスマホの中だけで判定し、現在地は私たちのサーバーにも家族にも送りません。</string>
     <string name="always_prompt_title">アプリを閉じていてもお知らせ</string>
     <string name="announcement_title">お知らせ</string>
-    <string name="app_name">ちかメモ</string>
+    <string name="app_name">ここメモ</string>
     <string name="category_add">カテゴリを追加</string>
     <string name="category_color">色</string>
     <string name="category_color_blue">青</string>
@@ -69,7 +69,7 @@
     <string name="invite_android_message">この世帯の人と、場所とやることを共有します。この端末の場所とやることは、その世帯にまとめられます。</string>
     <string name="invite_android_paste">貼り付け</string>
     <string name="invite_failed">参加できませんでした。もう一度お試しください。</string>
-    <string name="invite_invalid">ちかメモの招待リンクではないようです。</string>
+    <string name="invite_invalid">ここメモの招待リンクではないようです。</string>
     <string name="invite_join">参加する</string>
     <string name="invite_leave_first">今ほかの人と共有しています。先にその共有から抜けてください。</string>
     <string name="invite_link_placeholder">招待リンク</string>
@@ -94,10 +94,10 @@
     <string name="onboarding_allow_notifications">通知を許可</string>
     <string name="onboarding_analytics_allow">送信する</string>
     <string name="onboarding_analytics_deny">送信しない</string>
-    <string name="onboarding_analytics_message">ちかメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。</string>
+    <string name="onboarding_analytics_message">ここメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。</string>
     <string name="onboarding_analytics_not_sent">送るのは、使った機能、通知が届いたか、クラッシュの情報だけ。場所、やること、現在地は送りません。</string>
     <string name="onboarding_analytics_settings">設定からいつでも変えられます。</string>
-    <string name="onboarding_analytics_title">ちかメモの改善に協力しますか？</string>
+    <string name="onboarding_analytics_title">ここメモの改善に協力しますか？</string>
     <string name="onboarding_description">よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。</string>
     <string name="onboarding_feature_arrival_message">アプリを閉じていても届きます</string>
     <string name="onboarding_feature_arrival_title">着いたら、すぐお知らせ</string>
@@ -134,15 +134,15 @@
     <string name="paywall_reason_share">家族との共有は Pro の機能です。</string>
     <string name="paywall_reason_todos">無料プランでは、残っているやることを 15 件まで登録できます。</string>
     <string name="paywall_restore">購入を復元</string>
-    <string name="paywall_restored_message">ちかメモ Pro をご利用いただけます。</string>
+    <string name="paywall_restored_message">ここメモ Pro をご利用いただけます。</string>
     <string name="paywall_restored_title">購入を復元しました</string>
     <string name="paywall_start_trial">無料で試す</string>
     <string name="paywall_subscribe">登録する</string>
     <string name="paywall_terms">利用規約</string>
-    <string name="paywall_title">ちかメモ Pro</string>
+    <string name="paywall_title">ここメモ Pro</string>
     <string name="paywall_trial_then">%1$s 日間無料、その後 %2$s/年</string>
     <string name="paywall_unavailable">プランを読み込めませんでした。しばらくしてからお試しください。</string>
-    <string name="permission_android_background">ちかメモは、アプリを閉じているときや使っていないときも場所に着いたらお知らせするため、バックグラウンドで位置情報を取得します。</string>
+    <string name="permission_android_background">ここメモは、アプリを閉じているときや使っていないときも場所に着いたらお知らせするため、バックグラウンドで位置情報を取得します。</string>
     <string name="place_detail_add_todo">やることを追加</string>
     <string name="place_detail_delete">この場所を削除</string>
     <string name="place_detail_delete_confirm_message">この場所のやることも削除されます。</string>
@@ -189,7 +189,7 @@
     <string name="promotions_prompt_accept">受け取る</string>
     <string name="promotions_prompt_decline">今はいい</string>
     <string name="promotions_prompt_message">新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。</string>
-    <string name="promotions_prompt_title">ちかメモからのお知らせを受け取りますか？</string>
+    <string name="promotions_prompt_title">ここメモからのお知らせを受け取りますか？</string>
     <string name="reminder_setup_allow">許可する</string>
     <string name="reminder_setup_allowed">許可済み</string>
     <string name="reminder_setup_description">アプリを閉じている間も到着をお知らせするため、次の設定が必要です。</string>
@@ -208,7 +208,7 @@
     <string name="settings_about_contact_body">■ お問い合わせ内容\n\n\n■ 不具合の場合は、わかる範囲でお書きください\n・起きた日時：\n・どんなことが起きたか（例：お店に着いたのに通知が来なかった）：\n・そのときの操作：\n・スクリーンショットや画面収録があれば、このメールに添付してください\n\n――――――――――\n以下は調査に使う情報です。消さずにそのままお送りください。\n</string>
     <string name="settings_about_contact_failed_message">調査に使う情報をコピーしました。%1$s 宛のメールに貼り付けてお送りください。</string>
     <string name="settings_about_contact_failed_title">メールアプリを開けませんでした</string>
-    <string name="settings_about_contact_subject">ちかメモへのお問い合わせ</string>
+    <string name="settings_about_contact_subject">ここメモへのお問い合わせ</string>
     <string name="settings_about_privacy_policy">プライバシーポリシー</string>
     <string name="settings_about_title">このアプリについて</string>
     <string name="settings_about_version">バージョン</string>
@@ -274,7 +274,7 @@
     <string name="settings_pro_monthly">月額</string>
     <string name="settings_pro_renews">次回の更新</string>
     <string name="settings_pro_term">プラン</string>
-    <string name="settings_pro_title">ちかメモ Pro</string>
+    <string name="settings_pro_title">ここメモ Pro</string>
     <string name="settings_pro_trial">%1$s（無料お試し中）</string>
     <string name="settings_pro_upgrade">Pro にする</string>
     <string name="sharing_accept">招待を受ける</string>
@@ -294,7 +294,7 @@
     <string name="sharing_invite_expiry">招待リンクは 72 時間有効です。</string>
     <string name="sharing_invite_header_message">招待した人と、場所とやることを一緒に使えます。</string>
     <string name="sharing_invite_header_title">家族を招待しましょう</string>
-    <string name="sharing_invite_message">ちかメモで場所とやることを一緒に使いましょう。このリンクから参加できます（72 時間有効）：</string>
+    <string name="sharing_invite_message">ここメモで場所とやることを一緒に使いましょう。このリンクから参加できます（72 時間有効）：</string>
     <string name="sharing_invited_hint">招待リンクをもらった方も、サインインすると参加できます。</string>
     <string name="sharing_leave">共有から抜ける</string>
     <string name="sharing_leave_confirm_title">共有から抜けますか？</string>

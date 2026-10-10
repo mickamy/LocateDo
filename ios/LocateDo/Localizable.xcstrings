@@ -115,7 +115,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモ"
+            "value" : "ここメモ"
           }
         }
       }
@@ -1802,7 +1802,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモの招待リンクではないようです。"
+            "value" : "ここメモの招待リンクではないようです。"
           }
         }
       }
@@ -2144,7 +2144,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。"
+            "value" : "ここメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。"
           }
         }
       }
@@ -2195,7 +2195,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモの改善に協力しますか？"
+            "value" : "ここメモの改善に協力しますか？"
           }
         }
       }
@@ -2790,7 +2790,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモ Pro をご利用いただけます。"
+            "value" : "ここメモ Pro をご利用いただけます。"
           }
         }
       }
@@ -2875,7 +2875,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモ Pro"
+            "value" : "ここメモ Pro"
           }
         }
       }
@@ -3743,7 +3743,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモからのお知らせを受け取りますか？"
+            "value" : "ここメモからのお知らせを受け取りますか？"
           }
         }
       }
@@ -4068,7 +4068,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモへのお問い合わせ"
+            "value" : "ここメモへのお問い合わせ"
           }
         }
       }
@@ -5174,7 +5174,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモ Pro"
+            "value" : "ここメモ Pro"
           }
         }
       }
@@ -5463,7 +5463,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ちかメモで場所とやることを一緒に使いましょう。このリンクから参加できます（72 時間有効）："
+            "value" : "ここメモで場所とやることを一緒に使いましょう。このリンクから参加できます（72 時間有効）："
           }
         }
       }
