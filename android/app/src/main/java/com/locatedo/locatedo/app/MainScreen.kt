@@ -2,10 +2,12 @@ package com.locatedo.locatedo.app
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -142,10 +144,12 @@ fun MainScreen(appViewModel: AppViewModel) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             contentWindowInsets = WindowInsets(0),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = { SnackbarHost(snackbarHostState, modifier = Modifier.navigationBarsPadding()) },
             floatingActionButton = {
                 if (navigator.visibleOverlay == null) {
-                    AddButton(top = navigator.top, onAddTodo = ::addTodo, onAddPlace = { addPlace(isForTodo = false) })
+                    Box(modifier = Modifier.navigationBarsPadding()) {
+                        AddButton(top = navigator.top, onAddTodo = ::addTodo, onAddPlace = { addPlace(isForTodo = false) })
+                    }
                 }
             },
         ) { padding ->
