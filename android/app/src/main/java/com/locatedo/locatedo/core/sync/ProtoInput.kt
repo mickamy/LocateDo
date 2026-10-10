@@ -9,12 +9,14 @@ import com.locatedo.household.v1.initialTodo
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.place.v1.PlaceInput
 import com.locatedo.place.v1.placeInput
 import com.locatedo.todo.v1.TodoInput
 import com.locatedo.todo.v1.todoInput
+import com.locatedo.todo.v1.trigger
 import java.time.Instant
 import java.util.UUID
 import kotlin.math.roundToInt
@@ -54,6 +56,12 @@ object ProtoInput {
         placeId = ProtoInput.id(todo.placeId)
         title = todo.title
         todo.assigneeId?.let { assigneeId = ProtoInput.id(it) }
+        trigger = trigger { event = placeEvent(todo.placeEvent) }
+    }
+
+    private fun placeEvent(event: PlaceEvent): com.locatedo.todo.v1.PlaceEvent = when (event) {
+        PlaceEvent.ARRIVAL -> com.locatedo.todo.v1.PlaceEvent.PLACE_EVENT_ARRIVAL
+        PlaceEvent.DEPARTURE -> com.locatedo.todo.v1.PlaceEvent.PLACE_EVENT_DEPARTURE
     }
 
     private fun builtin(builtin: BuiltinCategory?): com.locatedo.category.v1.BuiltinCategory = when (builtin) {

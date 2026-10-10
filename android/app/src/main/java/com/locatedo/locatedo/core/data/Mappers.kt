@@ -11,8 +11,9 @@ import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.MemberRole
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
-import com.locatedo.locatedo.core.model.Plan
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
+import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.SyncState
 import com.locatedo.locatedo.core.model.Todo
 import java.time.Instant
@@ -52,6 +53,7 @@ internal fun TodoEntity.asModel() = Todo(
     creatorId = creatorId?.let(UUID::fromString),
     completedAt = completedAt?.let(Instant::ofEpochMilli),
     completerId = completerId?.let(UUID::fromString),
+    placeEvent = PlaceEvent.fromKey(placeEvent),
     createdAt = Instant.ofEpochMilli(createdAt),
     updatedAt = Instant.ofEpochMilli(updatedAt),
 )
@@ -64,6 +66,7 @@ internal fun Todo.asEntity() = TodoEntity(
     creatorId = creatorId?.toString(),
     completedAt = completedAt?.toEpochMilli(),
     completerId = completerId?.toString(),
+    placeEvent = placeEvent.key,
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
 )

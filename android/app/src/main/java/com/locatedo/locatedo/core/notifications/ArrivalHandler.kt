@@ -10,6 +10,7 @@ import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.Coordinate
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import java.time.Clock
 import java.util.UUID
@@ -39,12 +40,14 @@ class ArrivalHandler @Inject constructor(
 
     // Every place looked at and left unannounced is reported with the reason; arrival_notified counts only
     // notifications that are actually shown.
+    // Only to-dos for arriving; those for leaving belong to a departure, which Android does not announce yet.
     private suspend fun notify(entry: PlaceWithTodos): Boolean {
-        val todos = NotificationPolicy.notifiableTodos(entry.openTodos, userId = authenticator.current()?.userId)
+        val openTodos = entry.openTodos.filter { it.placeEvent == PlaceEvent.ARRIVAL }
+        val todos = NotificationPolicy.notifiableTodos(openTodos, userId = authenticator.current()?.userId)
         val now = clock.instant()
         val category = categoryRepository.observeAll().first().firstOrNull { it.id == entry.place.categoryId }
         val suppression = NotificationPolicy.suppression(
-            openTodoCount = entry.openTodos.size,
+            openTodoCount = openTodos.size,
             notifiableTodoCount = todos.size,
             lastNotifiedAt = entry.place.lastNotifiedAt,
             notificationsAllowed = notifier.canNotify(),
@@ -55,7 +58,7 @@ class ArrivalHandler @Inject constructor(
                 AnalyticsEvent.ARRIVAL_SUPPRESSED,
                 mapOf(
                     AnalyticsParameter.REASON to suppression.key,
-                    AnalyticsParameter.OPEN_TODOS to entry.openTodos.size,
+                    AnalyticsParameter.OPEN_TODOS to openTodos.size,
                     AnalyticsParameter.CATEGORY to analyticsCategory(category),
                     AnalyticsParameter.RADIUS_M to entry.place.radiusMeters.toInt(),
                 ),

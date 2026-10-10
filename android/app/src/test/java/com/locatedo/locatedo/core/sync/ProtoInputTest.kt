@@ -6,6 +6,7 @@ import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
+import com.locatedo.todo.v1.PlaceEvent
 import java.time.Instant
 import java.util.UUID
 import org.junit.Assert.assertEquals
@@ -49,6 +50,15 @@ class ProtoInputTest {
         assertEquals(shopping.id.toString(), input.categoryId)
         assertEquals(2, input.sortOrder)
         assertFalse(ProtoInput.place(store.copy(categoryId = null)).hasCategoryId())
+    }
+
+    @Test
+    fun aTodoCarriesWhenItReminds() {
+        val todo = Todo(id = uuidV7(now), title = "Umbrella", placeId = store.id, createdAt = now)
+
+        assertEquals(PlaceEvent.PLACE_EVENT_ARRIVAL, ProtoInput.todo(todo).trigger.event)
+        val departure = todo.copy(placeEvent = com.locatedo.locatedo.core.model.PlaceEvent.DEPARTURE)
+        assertEquals(PlaceEvent.PLACE_EVENT_DEPARTURE, ProtoInput.todo(departure).trigger.event)
     }
 
     @Test

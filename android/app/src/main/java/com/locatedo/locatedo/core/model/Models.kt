@@ -29,6 +29,7 @@ data class Todo(
     val creatorId: UUID? = null,
     val completedAt: Instant? = null,
     val completerId: UUID? = null,
+    val placeEvent: PlaceEvent = PlaceEvent.ARRIVAL,
     val createdAt: Instant,
     val updatedAt: Instant = createdAt,
 ) {
@@ -79,6 +80,15 @@ enum class TodoDeletionVia(val key: String) {
 enum class FreeLimit(val max: Int) {
     PLACES(3),
     OPEN_TODOS(15),
+}
+
+enum class PlaceEvent(val key: String) {
+    ARRIVAL("arrival"),
+    DEPARTURE("departure");
+
+    companion object {
+        fun fromKey(key: String): PlaceEvent = entries.firstOrNull { it.key == key } ?: ARRIVAL
+    }
 }
 
 enum class PlaceSource(val key: String) {

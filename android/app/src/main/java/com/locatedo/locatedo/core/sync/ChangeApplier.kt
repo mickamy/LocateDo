@@ -15,6 +15,7 @@ import com.locatedo.locatedo.core.database.TodoDao
 import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.MemberRole
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.place.v1.Place
 import com.locatedo.sync.v1.Change
 import com.locatedo.sync.v1.Deletion
@@ -141,6 +142,11 @@ class ChangeApplier @Inject constructor(
             Log.e(TAG, "Skipping todo ${proto.id} for a missing place")
             return
         }
+        val placeEvent = placeEvent(proto.trigger.event)
+        if (placeEvent == null) {
+            Log.e(TAG, "Skipping todo ${proto.id} without a place event")
+            return
+        }
         val existing = todoDao.get(id)
         val updatedAt = proto.updatedAt.toInstant().toEpochMilli()
         todoDao.upsert(
@@ -152,10 +158,17 @@ class ChangeApplier @Inject constructor(
                 creatorId = if (proto.hasCreatorId()) uuid(proto.creatorId, "creator") else null,
                 completedAt = if (proto.hasCompletedAt()) proto.completedAt.toInstant().toEpochMilli() else null,
                 completerId = if (proto.hasCompleterId()) uuid(proto.completerId, "completer") else null,
+                placeEvent = placeEvent.key,
                 createdAt = existing?.createdAt ?: createdAt(id, updatedAt),
                 updatedAt = updatedAt,
             ),
         )
+    }
+
+    private fun placeEvent(event: com.locatedo.todo.v1.PlaceEvent): PlaceEvent? = when (event) {
+        com.locatedo.todo.v1.PlaceEvent.PLACE_EVENT_ARRIVAL -> PlaceEvent.ARRIVAL
+        com.locatedo.todo.v1.PlaceEvent.PLACE_EVENT_DEPARTURE -> PlaceEvent.DEPARTURE
+        else -> null
     }
 
     private suspend fun delete(deletion: Deletion) {

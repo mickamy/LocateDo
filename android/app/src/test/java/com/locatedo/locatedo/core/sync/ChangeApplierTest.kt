@@ -44,6 +44,22 @@ class ChangeApplierTest {
     }
 
     @Test
+    fun todosKeepTheirPlaceEventAndOnesWithoutItAreSkipped() = runTest {
+        val placeId = uuidV7(created)
+        val departureId = uuidV7(created)
+        val unsetId = uuidV7(created)
+
+        apply(
+            placeChange(placeId, version = 1),
+            todoChange(departureId, placeId, version = 2, event = com.locatedo.todo.v1.PlaceEvent.PLACE_EVENT_DEPARTURE),
+            todoChange(unsetId, placeId, version = 3, event = com.locatedo.todo.v1.PlaceEvent.PLACE_EVENT_UNSPECIFIED),
+        )
+
+        assertEquals("departure", database.todoDao().get(departureId.toString())?.placeEvent)
+        assertNull(database.todoDao().get(unsetId.toString()))
+    }
+
+    @Test
     fun insertsRowsEvenWhenAPlaceArrivesBeforeItsCategory() = runTest {
         val categoryId = uuidV7(created)
         val placeId = uuidV7(created)

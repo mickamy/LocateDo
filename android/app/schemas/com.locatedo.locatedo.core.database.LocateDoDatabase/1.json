@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3ba7870ce9fdc397d293e75cb2df1540",
+    "identityHash": "6679e158501f518109a4b0912b9ca060",
     "entities": [
       {
         "tableName": "categories",
@@ -152,7 +152,7 @@
       },
       {
         "tableName": "todos",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `placeId` TEXT NOT NULL, `assigneeId` TEXT, `creatorId` TEXT, `completedAt` INTEGER, `completerId` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`placeId`) REFERENCES `places`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `placeId` TEXT NOT NULL, `assigneeId` TEXT, `creatorId` TEXT, `completedAt` INTEGER, `completerId` TEXT, `placeEvent` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`placeId`) REFERENCES `places`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -191,6 +191,12 @@
             "fieldPath": "completerId",
             "columnName": "completerId",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "placeEvent",
+            "columnName": "placeEvent",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "createdAt",
@@ -358,7 +364,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3ba7870ce9fdc397d293e75cb2df1540')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6679e158501f518109a4b0912b9ca060')"
     ]
   }
 }

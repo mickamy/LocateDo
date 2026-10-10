@@ -13,7 +13,9 @@ import com.locatedo.sync.v1.PullResponse
 import com.locatedo.sync.v1.change
 import com.locatedo.sync.v1.deletion
 import com.locatedo.sync.v1.pullResponse
+import com.locatedo.todo.v1.PlaceEvent
 import com.locatedo.todo.v1.todo
+import com.locatedo.todo.v1.trigger
 import java.time.Instant
 import java.util.UUID
 
@@ -58,6 +60,7 @@ fun todoChange(
     completedAt: Instant? = null,
     creatorId: UUID? = null,
     completerId: UUID? = null,
+    event: PlaceEvent = PlaceEvent.PLACE_EVENT_ARRIVAL,
 ): Change = change {
     todo = todo {
         this.id = id.toString()
@@ -66,6 +69,7 @@ fun todoChange(
         completedAt?.let { this.completedAt = it.toTimestamp() }
         creatorId?.let { this.creatorId = it.toString() }
         completerId?.let { this.completerId = it.toString() }
+        trigger = trigger { this.event = event }
         updatedAt = updated.toTimestamp()
         this.version = version
     }

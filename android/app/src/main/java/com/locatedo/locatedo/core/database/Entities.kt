@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.locatedo.locatedo.core.model.PlaceEvent
 
 @Entity(tableName = "categories")
 data class CategoryEntity(
@@ -63,6 +64,7 @@ data class TodoEntity(
     val creatorId: String? = null,
     val completedAt: Long?,
     val completerId: String? = null,
+    val placeEvent: String = PlaceEvent.ARRIVAL.key,
     val createdAt: Long,
     val updatedAt: Long,
 )

@@ -4,6 +4,7 @@ import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.testing.FakeAnalytics
@@ -83,6 +84,18 @@ class ArrivalHandlerTest {
         assertEquals("none", values["category"])
         assertEquals(100L, values["radius_m"])
         assertTrue(preferences.promotions.first().hasReceivedArrivalNotification)
+    }
+
+    @Test
+    fun aPlaceWithOnlyTodosForLeavingIsNotAnnouncedOnArrival() = runTest {
+        places.state.value = listOf(
+            PlaceWithTodos(store, listOf(todo("Umbrella", store).copy(placeEvent = PlaceEvent.DEPARTURE))),
+        )
+
+        handler.arrived(listOf(store.id), near = here)
+
+        assertTrue(notifier.notified.isEmpty())
+        assertEquals(0L, analytics.values(AnalyticsEvent.ARRIVAL_SUPPRESSED)["open_todos"])
     }
 
     @Test
