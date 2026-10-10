@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -116,21 +118,30 @@ fun MapScreen(
                     .padding(16.dp),
             )
         } else {
-            FloatingActionButton(
-                onClick = {
-                    if (hasLocationPermission) {
-                        viewModel.locateMe()
-                    } else {
-                        requestPermission.launch(
-                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                        )
-                    }
-                },
+            // Adding a place sits above finding yourself, as in map apps.
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.home_my_location))
+                SmallFloatingActionButton(onClick = onAddPlace) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.home_add_place))
+                }
+                FloatingActionButton(
+                    onClick = {
+                        if (hasLocationPermission) {
+                            viewModel.locateMe()
+                        } else {
+                            requestPermission.launch(
+                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                            )
+                        }
+                    },
+                ) {
+                    Icon(Icons.Filled.MyLocation, contentDescription = stringResource(R.string.home_my_location))
+                }
             }
         }
     }

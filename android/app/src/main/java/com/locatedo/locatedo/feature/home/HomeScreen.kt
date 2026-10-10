@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +30,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +60,7 @@ import com.locatedo.locatedo.ui.analytics.TrackScreen
 import java.util.UUID
 
 private const val PREVIEW_ZOOM = 14f
+private val FAB_CLEARANCE = 88.dp
 
 // Mirrors the iOS home: what is waiting where, closest first; the map has its own tab.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,6 +80,9 @@ fun HomeScreen(
         onRequested = viewModel::preciseLocationRequested,
     )
 
+    val listState = rememberLazyListState()
+    val isAtTop by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissions()
         viewModel.refreshLocation()
@@ -88,19 +97,29 @@ fun HomeScreen(
                         Icon(Icons.Filled.Group, contentDescription = stringResource(R.string.sharing_title))
                     }
                 },
-                actions = {
-                    IconButton(onClick = onAddPlace) {
-                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.home_add_place))
-                    }
-                },
             )
+        },
+        // Adding a place is the screen's main action, as a FAB that shrinks to its icon once the list scrolls.
+        floatingActionButton = {
+            if (!uiState.isLoading && uiState.places.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    onClick = onAddPlace,
+                    expanded = isAtTop,
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.home_add_place)) },
+                )
+            }
         },
     ) { padding ->
         val content: @Composable () -> Unit = {
             when {
                 uiState.isLoading -> Box(Modifier.fillMaxSize())
                 uiState.places.isEmpty() -> EmptyPlaces(onAddPlace = onAddPlace)
-                else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(bottom = FAB_CLEARANCE),
+                ) {
                     uiState.permissionBanner?.let { banner ->
                         item {
                             PermissionBannerCard(
