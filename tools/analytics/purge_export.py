@@ -11,12 +11,10 @@ import argparse
 import re
 import sys
 
+import bigquery
 from google_token import access_token, call, default_key_path
 
-PROJECT = "locatedo"
-DATASET = "analytics_483038986"
-API = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT}/datasets/{DATASET}/tables"
-SCOPE = "https://www.googleapis.com/auth/bigquery"
+API = f"{bigquery.API}/datasets/{bigquery.SOURCE_DATASET}/tables"
 TABLE = re.compile(r"^events_(?:intraday_)?(\d{8})$")
 
 
@@ -42,8 +40,8 @@ def main():
     if not re.fullmatch(r"\d{8}", args.through):
         raise SystemExit("--through takes a day as YYYYMMDD")
 
-    token, email = access_token(args.key or default_key_path(), SCOPE)
-    print(f"Using {email} on {PROJECT}.{DATASET}")
+    token, email = access_token(args.key or default_key_path(), bigquery.SCOPE)
+    print(f"Using {email} on {bigquery.PROJECT}.{bigquery.SOURCE_DATASET}")
     doomed = []
     for name in tables(token):
         match = TABLE.match(name)

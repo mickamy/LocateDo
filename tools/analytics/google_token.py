@@ -13,9 +13,12 @@ def _b64(data):
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 def default_key_path():
     """The production Firebase admin key in ios/fastlane/credentials, whatever its key ID."""
-    paths = glob.glob("ios/fastlane/credentials/locatedo-firebase-adminsdk-*.json")
+    paths = glob.glob(os.path.join(REPO_ROOT, "ios", "fastlane", "credentials", "locatedo-firebase-adminsdk-*.json"))
     if len(paths) != 1:
         raise SystemExit(f"Expected one locatedo-firebase-adminsdk-*.json in ios/fastlane/credentials, found {len(paths)}; "
                          "pass the key path as an argument instead.")

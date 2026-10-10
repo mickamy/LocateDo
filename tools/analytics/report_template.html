@@ -77,6 +77,12 @@
   th, td { padding: 6px 8px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
   th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
   th { color: var(--muted); font-weight: 600; }
+  select {
+    font: inherit; font-size: 13px; color: var(--fg); background: var(--card);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 4px 8px;
+  }
+  .view-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 8px; }
+  .view-head h2 { margin: 0; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -92,6 +98,8 @@
         <button data-value="daily" aria-pressed="true">毎日</button>
         <button data-value="kpi" aria-pressed="false">KPI</button>
         <button data-value="home" aria-pressed="false">ホーム</button>
+        <button data-value="reminders" aria-pressed="false">通知</button>
+        <button data-value="views" aria-pressed="false">ビュー</button>
       </div>
       <div class="segmented" id="platforms">
         <button data-value="ALL" aria-pressed="true">すべて</button>
@@ -138,14 +146,33 @@
     <div class="card table-wrap"><h2>追加の入口</h2><table id="home-table"></table></div>
     <p class="note" id="home-note"></p>
   </section>
+
+  <section id="reminders" hidden>
+    <div class="grid">
+      <div class="card"><h2>通知と開いた数</h2><div class="chart"><canvas id="chart-reminder-counts"></canvas></div></div>
+      <div class="card"><h2>開いた割合</h2><div class="chart"><canvas id="chart-reminder-open"></canvas></div></div>
+      <div class="card"><h2>知らせなかった理由（最新の月）</h2><div class="chart"><canvas id="chart-reminder-suppressed"></canvas></div></div>
+    </div>
+    <div class="card table-wrap"><h2>検知と通知</h2><table id="reminders-table"></table></div>
+    <p class="note">到着は「着いたとき」、離れたときは「離れるとき」のやることの通知。短い滞在は、入ってから 5 分たたずに出たもの（離れるときのやることがあったものだけ数える）。取りこぼしの目安は、その種類のやることが残っていたのに 1 度も検知しなかった人の割合。</p>
+  </section>
+
+  <section id="views" hidden>
+    <div class="card table-wrap">
+      <div class="view-head"><h2>ビュー</h2><select id="view-select" aria-label="ビュー"></select></div>
+      <table id="view-table"></table>
+    </div>
+    <p class="note">BigQuery のビューをそのまま表にしたもの（行ごとのビュー events / daily_state / users は除く）。OS の切り替えは platform の列があるビューに効く。</p>
+  </section>
 </main>
 
 <script>
 const DATA = __DATA__;
+const VIEWS = DATA.views;
 const PLATFORMS = ["IOS", "ANDROID"];
 const PLATFORM_LABELS = { IOS: "iOS", ANDROID: "Android" };
 
-const state = { tab: "daily", platform: "ALL", range: 28 };
+const state = { tab: "daily", platform: "ALL", range: 28, view: "kpi_monthly" };
 const charts = {};
 
 function token(name) {
@@ -200,7 +227,7 @@ function addDays(day, days) {
 }
 
 function dailyDays() {
-  const rows = DATA.daily_overview;
+  const rows = VIEWS.daily_overview;
   if (rows.length === 0) {
     return [];
   }
@@ -225,7 +252,7 @@ function dailyRows(days, platforms) {
   for (const day of days) {
     byDay[day] = [];
   }
-  for (const row of DATA.daily_overview) {
+  for (const row of VIEWS.daily_overview) {
     if (byDay[row.event_date] && platforms.includes(row.platform)) {
       byDay[row.event_date].push(row);
     }
@@ -357,7 +384,7 @@ function renderDaily() {
     ["reminders_opened", "開いた"], ["paywalls_shown", "ペイウォール"], ["purchases", "購入"],
     ["trials_started", "お試し"],
   ];
-  const rows = DATA.daily_overview
+  const rows = VIEWS.daily_overview
     .filter((row) => days.includes(row.event_date) && platforms.includes(row.platform))
     .sort((a, b) => b.event_date.localeCompare(a.event_date) || a.platform.localeCompare(b.platform));
   renderTable("daily-table", ["日付", "OS"].concat(columns.map((column) => column[1])), rows.map((row) =>
@@ -366,12 +393,12 @@ function renderDaily() {
 }
 
 function kpiMonths() {
-  const months = [...new Set(DATA.kpi_monthly.map((row) => row.month))];
+  const months = [...new Set(VIEWS.kpi_monthly.map((row) => row.month))];
   return months.sort();
 }
 
 function kpiRows(month, platforms) {
-  return DATA.kpi_monthly.filter((row) => row.month === month && platforms.includes(row.platform));
+  return VIEWS.kpi_monthly.filter((row) => row.month === month && platforms.includes(row.platform));
 }
 
 function kpi(rows) {
@@ -467,7 +494,7 @@ const ENTRY_LABELS = {
 const KIND_LABELS = { todo: "やること", place: "場所" };
 
 function homeRows(view, month, platforms) {
-  return DATA[view].filter((row) => row.month === month && platforms.includes(row.platform));
+  return VIEWS[view].filter((row) => row.month === month && platforms.includes(row.platform));
 }
 
 // Rows summed over the selected platforms, keyed by the given columns.
@@ -489,7 +516,7 @@ function grouped(rows, keys, columns) {
 
 function renderHome() {
   const platforms = selectedPlatforms();
-  const months = [...new Set(DATA.home_navigation.map((row) => row.month))].sort();
+  const months = [...new Set(VIEWS.home_navigation.map((row) => row.month))].sort();
   const month = months[months.length - 1];
   const label = (row) => `${SCREEN_LABELS[row.screen] || row.screen} ← ${ENTRY_LABELS[row.entry] || row.entry}`;
 
@@ -549,6 +576,118 @@ function renderHome() {
   document.getElementById("home-note").textContent = note;
 }
 
+const KIND_COLORS = { arrival: "--series-1", departure: "--series-2" };
+const KIND_NAMES = { arrival: "到着", departure: "離れたとき" };
+
+function renderReminders() {
+  const platforms = selectedPlatforms();
+  const usefulness = VIEWS.reminder_usefulness.filter((row) => platforms.includes(row.platform));
+  const months = [...new Set(usefulness.map((row) => row.month))].sort();
+  const labels = months.map((month) => month.slice(0, 7));
+  const monthly = (key) => months.map((month) => sum(usefulness.filter((row) => row.month === month), key));
+  draw("chart-reminder-counts", groupedBars(labels, [
+    { label: "到着の通知", data: monthly("arrival_reminders") },
+    { label: "離れたときの通知", data: monthly("departure_reminders") },
+    { label: "通知から完了", data: monthly("todos_completed_from_reminders") },
+  ]));
+  const rate = (opened, notified) => months.map((month, index) => ratio(monthly(opened)[index], monthly(notified)[index]));
+  draw("chart-reminder-open", {
+    type: "line",
+    data: {
+      labels,
+      datasets: ["arrival", "departure"].map((kind) => ({
+        label: KIND_NAMES[kind],
+        data: rate(`${kind}_reminders_opened`, `${kind}_reminders`),
+        borderColor: token(KIND_COLORS[kind]),
+        backgroundColor: token(KIND_COLORS[kind]),
+      })),
+    },
+    options: { scales: { y: { beginAtZero: true, ticks: { callback: (value) => percent(value) } } } },
+  });
+
+  const detected = VIEWS.reminders.filter((row) => platforms.includes(row.platform));
+  const latest = [...new Set(detected.map((row) => row.month))].sort().pop();
+  const reasons = [
+    ["suppressed_no_open_todos", "やることなし"],
+    ["suppressed_assigned_to_others", "ほかの人の担当"],
+    ["suppressed_recently_notified", "30 分以内に通知済み"],
+    ["suppressed_notifications_off", "通知が許可されていない"],
+    ["suppressed_short_stay", "短い滞在"],
+  ];
+  const latestRows = detected.filter((row) => row.month === latest);
+  draw("chart-reminder-suppressed", {
+    type: "bar",
+    data: {
+      labels: reasons.map(([, label]) => label),
+      datasets: ["arrival", "departure"].map((kind) => ({
+        label: KIND_NAMES[kind],
+        data: reasons.map(([key]) => sum(latestRows.filter((row) => row.place_event === kind), key)),
+        backgroundColor: token(KIND_COLORS[kind]),
+      })),
+    },
+    options: { indexAxis: "y", scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+
+  const header = ["月", "種類", "検知", "通知", "通知した割合", "短い滞在", "やることが待っていた人", "取りこぼしの目安"];
+  const rows = [];
+  for (const month of [...new Set(detected.map((row) => row.month))].sort().reverse()) {
+    for (const kind of ["arrival", "departure"]) {
+      const group = detected.filter((row) => row.month === month && row.place_event === kind);
+      if (group.length === 0) {
+        continue;
+      }
+      rows.push([
+        month.slice(0, 7), KIND_NAMES[kind], number(sum(group, "detected")), number(sum(group, "reminders")),
+        percent(ratio(sum(group, "reminders"), sum(group, "detected"))), number(sum(group, "short_stays_with_todos")),
+        number(sum(group, "users_waiting")),
+        percent(ratio(sum(group, "users_waiting_without_detection"), sum(group, "users_waiting"))),
+      ]);
+    }
+  }
+  renderTable("reminders-table", header, rows);
+}
+
+// A rate column is a share of something, shown as a percentage; ids and dates stay as they are.
+function cell(column, value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  if (typeof value === "number") {
+    if (column.endsWith("_rate") || column === "reach" || column.startsWith("retention")) {
+      return percent(value);
+    }
+    if (Number.isInteger(value)) {
+      return number(value);
+    }
+    return value.toLocaleString("ja-JP", { maximumFractionDigits: 2 });
+  }
+  return String(value);
+}
+
+function renderViews() {
+  const select = document.getElementById("view-select");
+  if (select.options.length === 0) {
+    for (const name of Object.keys(VIEWS).sort()) {
+      select.add(new Option(name, name));
+    }
+    select.value = state.view;
+    select.addEventListener("change", () => {
+      state.view = select.value;
+      renderViews();
+    });
+  }
+  const platforms = selectedPlatforms();
+  let rows = VIEWS[state.view] || [];
+  if (rows.length > 0 && "platform" in rows[0]) {
+    rows = rows.filter((row) => row.platform === null || platforms.includes(row.platform));
+  }
+  let columns = [];
+  if (rows.length > 0) {
+    columns = Object.keys(rows[0]);
+  }
+  renderTable("view-table", columns, rows.map((row) => columns.map((column) => cell(column, row[column]))));
+}
+
 function renderTable(id, header, rows) {
   const head = "<tr>" + header.map((cell) => `<th>${cell}</th>`).join("") + "</tr>";
   let body = rows.map((row) => "<tr>" + row.map((cell) => `<td>${cell}</td>`).join("") + "</tr>").join("");
@@ -562,13 +701,19 @@ function render() {
   document.getElementById("daily").hidden = state.tab !== "daily";
   document.getElementById("kpi").hidden = state.tab !== "kpi";
   document.getElementById("home").hidden = state.tab !== "home";
+  document.getElementById("reminders").hidden = state.tab !== "reminders";
+  document.getElementById("views").hidden = state.tab !== "views";
   document.getElementById("ranges").hidden = state.tab !== "daily";
   if (state.tab === "daily") {
     renderDaily();
   } else if (state.tab === "kpi") {
     renderKpi();
-  } else {
+  } else if (state.tab === "home") {
     renderHome();
+  } else if (state.tab === "reminders") {
+    renderReminders();
+  } else {
+    renderViews();
   }
 }
 
