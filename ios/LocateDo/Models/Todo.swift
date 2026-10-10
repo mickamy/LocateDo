@@ -10,13 +10,21 @@ final class Todo {
     var creatorID: UUID?
     var completedAt: Date?
     var completerID: UUID?
+    var placeEvent: PlaceEvent
     var createdAt: Date
     var updatedAt: Date
 
-    init(id: UUID = .v7(), title: String, place: Place, now: Date = .now) {
+    init(
+        id: UUID = .v7(),
+        title: String,
+        place: Place,
+        placeEvent: PlaceEvent = .arrival,
+        now: Date = .now
+    ) {
         self.id = id
         self.title = title
         self.place = place
+        self.placeEvent = placeEvent
         createdAt = now
         updatedAt = now
     }

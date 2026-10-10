@@ -43,7 +43,15 @@ nonisolated enum ProtoInput {
         if let assigneeID = todo.assigneeID {
             input.assigneeID = id(assigneeID)
         }
+        input.trigger.event = placeEvent(todo.placeEvent)
         return input
+    }
+
+    private static func placeEvent(_ event: PlaceEvent) -> Locatedo_Todo_V1_PlaceEvent {
+        switch event {
+        case .arrival: .arrival
+        case .departure: .departure
+        }
     }
 
     private static func builtin(_ builtin: BuiltinCategory?) -> Locatedo_Category_V1_BuiltinCategory {

@@ -155,6 +155,19 @@ struct LocalWritesTests {
         #expect(input.assigneeID == ProtoInput.id(assignee))
     }
 
+    @Test func aDepartureTodoIsSentAsADeparture() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Home", latitude: 35.0, longitude: 139.0)
+        fixture.writes.add(place)
+        fixture.writes.add(Todo(title: "Umbrella", place: place, placeEvent: .departure))
+
+        guard case .putTodo(let input) = try fixture.queue().last else {
+            Issue.record("Expected putTodo")
+            return
+        }
+        #expect(input.trigger.event == .departure)
+    }
+
     @Test func theFourthPlaceHitsTheFreeLimit() throws {
         let fixture = try Fixture()
         for index in 0..<FreeLimit.maxPlaces {

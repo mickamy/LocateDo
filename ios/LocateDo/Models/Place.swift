@@ -15,6 +15,7 @@ final class Place {
     var category: PlaceCategory?
     var sortOrder: Int
     var lastNotifiedAt: Date?
+    var enteredAt: Date?
     var createdAt: Date
     var updatedAt: Date
 

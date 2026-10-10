@@ -203,6 +203,10 @@ struct ChangeApplier {
             logger.error("Skipping todo \(proto.id, privacy: .public) for a missing place")
             return
         }
+        guard let placeEvent = PlaceEvent(proto.trigger.event) else {
+            logger.error("Skipping todo \(proto.id, privacy: .public) without a place event")
+            return
+        }
         let todo: Todo
         if let existing = todos[id] {
             todo = existing
@@ -217,6 +221,7 @@ struct ChangeApplier {
         todo.assigneeID = optionalUUID(proto.assigneeID, isSet: proto.hasAssigneeID)
         todo.creatorID = optionalUUID(proto.creatorID, isSet: proto.hasCreatorID)
         todo.completerID = optionalUUID(proto.completerID, isSet: proto.hasCompleterID)
+        todo.placeEvent = placeEvent
         todo.completedAt = nil
         if proto.hasCompletedAt {
             todo.completedAt = proto.completedAt.date
@@ -258,8 +263,10 @@ struct ChangeApplier {
         context.delete(place)
         outcome.placesChanged = true
     }
+}
 
-    private func uuid(_ string: String, kind: String) -> UUID? {
+private extension ChangeApplier {
+    func uuid(_ string: String, kind: String) -> UUID? {
         guard let id = UUID(uuidString: string) else {
             logger.error("Skipping a \(kind, privacy: .public) with an invalid id \(string, privacy: .public)")
             return nil
@@ -275,6 +282,16 @@ private extension BuiltinCategory {
         case .work: self = .work
         case .life: self = .life
         case .other: self = .other
+        case .unspecified, .UNRECOGNIZED: return nil
+        }
+    }
+}
+
+private extension PlaceEvent {
+    nonisolated init?(_ proto: Locatedo_Todo_V1_PlaceEvent) {
+        switch proto {
+        case .arrival: self = .arrival
+        case .departure: self = .departure
         case .unspecified, .UNRECOGNIZED: return nil
         }
     }

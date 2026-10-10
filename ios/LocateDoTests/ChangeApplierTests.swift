@@ -42,6 +42,7 @@ struct ChangeApplierTests {
         let context = try makeContext()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
         place.lastNotifiedAt = Self.created
+        place.enteredAt = Self.created
         let todo = Todo(title: "Milk", place: place)
         context.insert(place)
         context.insert(todo)
@@ -56,6 +57,7 @@ struct ChangeApplierTests {
 
         #expect(place.name == "Supermarket")
         #expect(place.lastNotifiedAt == Self.created)
+        #expect(place.enteredAt == Self.created)
         #expect(todo.title == "Oat milk")
         #expect(todo.completedAt == Self.updated)
         #expect(try fetch(Place.self, in: context).count == 1)
@@ -84,6 +86,26 @@ struct ChangeApplierTests {
         _ = try ChangeApplier.apply([.todo(reopened)], reset: false, to: context)
         #expect(todo.creatorID == creator)
         #expect(todo.completerID == nil)
+    }
+
+    @Test func todosTakeTheirPlaceEventAndOnesWithoutItAreSkipped() throws {
+        let context = try makeContext()
+        let placeID = UUID.v7()
+        let departureID = UUID.v7()
+        var departure = Self.todo(departureID, placeID: placeID, version: 2)
+        departure.trigger.event = .departure
+        var unset = Self.todo(UUID.v7(), placeID: placeID, version: 3)
+        unset.trigger.event = .unspecified
+
+        _ = try ChangeApplier.apply(
+            [.place(Self.place(placeID, version: 1)), .todo(departure), .todo(unset)],
+            reset: false,
+            to: context
+        )
+
+        let todos = try fetch(Todo.self, in: context)
+        #expect(todos.map(\.id) == [departureID])
+        #expect(todos.first?.placeEvent == .departure)
     }
 
     @Test func unknownCategoryLeavesThePlaceUncategorizedAndOrphanTodosAreSkipped() throws {
@@ -266,6 +288,7 @@ extension ChangeApplierTests {
         todo.id = ProtoInput.id(id)
         todo.placeID = ProtoInput.id(placeID)
         todo.title = "Milk"
+        todo.trigger.event = .arrival
         todo.updatedAt = Google_Protobuf_Timestamp(date: updated)
         todo.version = version
         return todo

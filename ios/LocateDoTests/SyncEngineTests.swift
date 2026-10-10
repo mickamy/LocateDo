@@ -300,6 +300,7 @@ struct SyncEngineTests {
         todo.id = ProtoInput.id(id)
         todo.placeID = ProtoInput.id(placeID)
         todo.title = "Milk"
+        todo.trigger.event = .arrival
         todo.version = version
         return todo
     }
