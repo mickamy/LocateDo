@@ -1357,13 +1357,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "StopBy can send which features you use, whether reminders arrive, and crash reports, so we can see what to fix and improve."
+            "value" : "StopBy is made by one developer. Knowing how it’s used shows what to improve next."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使った機能、通知が届いたかどうか、クラッシュの情報を送り、直すところや良くするところを探すのに使います。"
+            "value" : "ちかメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。"
           }
         }
       }
@@ -1374,13 +1374,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your places, to-dos, and location are never included."
+            "value" : "Only which features you use, whether reminders arrive, and crash reports are sent. Never your places, to-dos, or location."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場所、やること、現在地は送りません。"
+            "value" : "送るのは、使った機能、通知が届いたか、クラッシュの情報だけ。場所、やること、現在地は送りません。"
           }
         }
       }

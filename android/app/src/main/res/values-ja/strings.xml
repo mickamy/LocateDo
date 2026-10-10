@@ -96,8 +96,8 @@
     <string name="onboarding_allow_notifications">通知を許可</string>
     <string name="onboarding_analytics_allow">送信する</string>
     <string name="onboarding_analytics_deny">送信しない</string>
-    <string name="onboarding_analytics_message">使った機能、通知が届いたかどうか、クラッシュの情報を送り、直すところや良くするところを探すのに使います。</string>
-    <string name="onboarding_analytics_not_sent">場所、やること、現在地は送りません。</string>
+    <string name="onboarding_analytics_message">ちかメモは個人で開発しています。使われ方が分かると、次に何を良くするかを決められます。</string>
+    <string name="onboarding_analytics_not_sent">送るのは、使った機能、通知が届いたか、クラッシュの情報だけ。場所、やること、現在地は送りません。</string>
     <string name="onboarding_analytics_settings">設定からいつでも変えられます。</string>
     <string name="onboarding_analytics_title">ちかメモの改善に協力しますか？</string>
     <string name="onboarding_description">よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。</string>
