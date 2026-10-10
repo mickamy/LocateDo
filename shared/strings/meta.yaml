@@ -91,3 +91,29 @@ reminder_setup.precise_location:
   comment: "Row in the reminder setup sheet for the precise location switch; approximate location gets no arrival reminders."
 reminder_setup.turned_on:
   comment: "Shown with a check in place of the button once precise location is on."
+home.permission_banner.ios_location:
+  platforms: [ios]
+invite.ios_message:
+  platforms: [ios]
+paywall.ios_renewal_note:
+  platforms: [ios]
+removed.ios_message:
+  platforms: [ios]
+session_ended.ios_message:
+  platforms: [ios]
+settings.account.ios_replace_confirm_message:
+  platforms: [ios]
+settings.account.ios_replace_confirm_title:
+  platforms: [ios]
+settings.account.ios_sign_out_confirm_message:
+  platforms: [ios]
+settings.account.ios_sign_out_unsynced_message:
+  platforms: [ios]
+settings.location.ios_needs_always:
+  platforms: [ios]
+sharing.ios_benefit_lists_message:
+  platforms: [ios]
+sharing.ios_leave_confirm_message:
+  platforms: [ios]
+sharing.ios_shared_header_message:
+  platforms: [ios]

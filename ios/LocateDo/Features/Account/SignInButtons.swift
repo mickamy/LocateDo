@@ -30,7 +30,7 @@ struct SignInButtons: View {
                 googleButton
             }
         }
-        .alert(Text(.settingsAccountReplaceConfirmTitle), isPresented: $isConfirmingReplace) {
+        .alert(Text(.settingsAccountIosReplaceConfirmTitle), isPresented: $isConfirmingReplace) {
             Button(.settingsAccountReplace, role: .destructive) {
                 Task {
                     await replaceLocalData()
@@ -40,7 +40,7 @@ struct SignInButtons: View {
                 account.cancelReplacingLocalData()
             }
         } message: {
-            Text(.settingsAccountReplaceConfirmMessage)
+            Text(.settingsAccountIosReplaceConfirmMessage)
         }
     }
 

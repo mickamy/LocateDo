@@ -62,7 +62,6 @@
         <item quantity="other">やることが %1$d 件残っています</item>
     </plurals>
     <string name="home_permission_banner_android_location">アプリを閉じている間もお知らせするには、位置情報を「%1$s」にしてください。</string>
-    <string name="home_permission_banner_location">アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。</string>
     <string name="home_permission_banner_location_denied">お知らせを受け取るには、設定で位置情報を許可してください。</string>
     <string name="home_permission_banner_notifications">お知らせを受け取るには、通知を許可してください。</string>
     <string name="home_permission_banner_precise_location">到着をお知らせするには、正確な位置情報の使用を許可してください。</string>
@@ -74,7 +73,6 @@
     <string name="invite_join">参加する</string>
     <string name="invite_leave_first">今ほかの人と共有しています。先にその共有から抜けてください。</string>
     <string name="invite_link_placeholder">招待リンク</string>
-    <string name="invite_message">この世帯の人と、場所とやることを共有します。この iPhone の場所とやることは、その世帯にまとめられます。</string>
     <string name="invite_title">世帯に参加</string>
     <string name="invite_unavailable">この招待は期限切れか、すでに使われているか、世帯が満員です。新しい招待をもらってください。</string>
     <string name="maintenance_active">サーバーのメンテナンス中です。%1$s ごろに再開し、ためた変更を同期します。</string>
@@ -135,7 +133,6 @@
     <string name="paywall_reason_places">無料プランで登録できる場所は 3 件までです。</string>
     <string name="paywall_reason_share">家族との共有は Pro の機能です。</string>
     <string name="paywall_reason_todos">無料プランでは、残っているやることを 15 件まで登録できます。</string>
-    <string name="paywall_renewal_note">解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、設定からいつでも解約できます。</string>
     <string name="paywall_restore">購入を復元</string>
     <string name="paywall_restored_message">ちかメモ Pro をご利用いただけます。</string>
     <string name="paywall_restored_title">購入を復元しました</string>
@@ -204,10 +201,8 @@
     <string name="reminder_setup_title">着いたらお知らせするには</string>
     <string name="reminder_setup_turned_on">オン</string>
     <string name="removed_android_message">共有している世帯から外されたため、この端末のデータを消去し、ひとりで使う状態に戻りました。</string>
-    <string name="removed_message">共有している世帯から外されたため、この iPhone のデータを消去し、ひとりで使う状態に戻りました。</string>
     <string name="removed_title">共有から外れました</string>
     <string name="session_ended_android_message">別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この端末のデータを消去しました。</string>
-    <string name="session_ended_message">別の端末でアカウントが削除されたか、サインインの有効期限が切れたため、この iPhone のデータを消去しました。</string>
     <string name="session_ended_title">サインアウトしました</string>
     <string name="settings_about_contact">お問い合わせ</string>
     <string name="settings_about_contact_body">■ お問い合わせ内容\n\n\n■ 不具合の場合は、わかる範囲でお書きください\n・起きた日時：\n・どんなことが起きたか（例：お店に着いたのに通知が来なかった）：\n・そのときの操作：\n・スクリーンショットや画面収録があれば、このメールに添付してください\n\n――――――――――\n以下は調査に使う情報です。消さずにそのままお送りください。\n</string>
@@ -236,13 +231,9 @@
     <string name="settings_account_description">サインインすると、場所とやることをアカウントに保存できます。</string>
     <string name="settings_account_not_signed_in">未サインイン</string>
     <string name="settings_account_replace">置き換える</string>
-    <string name="settings_account_replace_confirm_message">このアカウントにはすでに場所とやることがあります。この iPhone の場所とやることはアカウントのデータに置き換わります。</string>
-    <string name="settings_account_replace_confirm_title">この iPhone のデータを置き換えますか？</string>
     <string name="settings_account_sign_in_failed">サインインできませんでした。もう一度お試しください。</string>
     <string name="settings_account_sign_out">サインアウト</string>
-    <string name="settings_account_sign_out_confirm_message">この iPhone の場所とやることは消えます。もう一度サインインすると戻ります。</string>
     <string name="settings_account_sign_out_confirm_title">サインアウトしますか？</string>
-    <string name="settings_account_sign_out_unsynced_message">まだ同期されていない変更があり、サインアウトすると失われます。この iPhone の場所とやることは消えます。</string>
     <string name="settings_account_signed_in">サインイン中</string>
     <string name="settings_account_title">アカウント</string>
     <string name="settings_default_radius_label">通知の範囲（半径）の初期値</string>
@@ -251,7 +242,6 @@
     <string name="settings_location_always">常に許可</string>
     <string name="settings_location_android_needs_always">アプリを閉じている間も到着をお知らせするには「%1$s」が必要です。</string>
     <string name="settings_location_denied">許可されていません</string>
-    <string name="settings_location_needs_always">アプリを閉じている間も到着をお知らせするには「常に許可」が必要です。</string>
     <string name="settings_location_needs_precise">到着を判定するには、正確な位置情報が必要です。</string>
     <string name="settings_location_not_determined">未設定</string>
     <string name="settings_location_title">位置情報</string>
@@ -293,7 +283,6 @@
     <string name="sharing_android_shared_header_message">誰かが足した場所とやることが、全員の端末に届きます。</string>
     <string name="sharing_benefit_assign_message">やることに担当を決めると、着いたときにその人にだけ知らせます。</string>
     <string name="sharing_benefit_assign_title">着いた人に、その人の用事を</string>
-    <string name="sharing_benefit_lists_message">誰かが足した場所とやることが、全員の iPhone にすぐ届きます。</string>
     <string name="sharing_benefit_lists_title">みんなで同じリスト</string>
     <string name="sharing_benefit_plan_message">オーナーが Pro なら、家族は無料で参加できます。</string>
     <string name="sharing_benefit_plan_title">1 つの契約で全員が使える</string>
@@ -308,7 +297,6 @@
     <string name="sharing_invite_message">ちかメモで場所とやることを一緒に使いましょう。このリンクから参加できます（72 時間有効）：</string>
     <string name="sharing_invited_hint">招待リンクをもらった方も、サインインすると参加できます。</string>
     <string name="sharing_leave">共有から抜ける</string>
-    <string name="sharing_leave_confirm_message">この iPhone の場所とやることは消え、ひとりで使う状態に戻ります。</string>
     <string name="sharing_leave_confirm_title">共有から抜けますか？</string>
     <string name="sharing_member_header_message">この世帯の全員と、場所とやることを共有しています。</string>
     <string name="sharing_member_header_title">%1$sさんの世帯に参加しています</string>
@@ -320,7 +308,6 @@
     <plurals name="sharing_seats_left">
         <item quantity="other">あと %1$d 人招待できます。</item>
     </plurals>
-    <string name="sharing_shared_header_message">誰かが足した場所とやることが、全員の iPhone に届きます。</string>
     <plurals name="sharing_shared_header_title">
         <item quantity="other">%1$d 人で共有しています</item>
     </plurals>

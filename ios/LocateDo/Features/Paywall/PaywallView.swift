@@ -160,7 +160,7 @@ struct PaywallView: View {
 
     private var footer: some View {
         VStack(spacing: 12) {
-            Text(.paywallRenewalNote)
+            Text(.paywallIosRenewalNote)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

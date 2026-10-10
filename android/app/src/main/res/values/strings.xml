@@ -67,7 +67,6 @@
         <item quantity="other">%1$d open to-dos</item>
     </plurals>
     <string name="home_permission_banner_android_location">Set location to “%1$s” to get reminders while the app is closed.</string>
-    <string name="home_permission_banner_location">Allow “Always” location to get reminders while the app is closed.</string>
     <string name="home_permission_banner_location_denied">Allow location access in Settings to get reminders.</string>
     <string name="home_permission_banner_notifications">Allow notifications to get reminders.</string>
     <string name="home_permission_banner_precise_location">Allow precise location to get arrival reminders.</string>
@@ -79,7 +78,6 @@
     <string name="invite_join">Join</string>
     <string name="invite_leave_first">You’re sharing with others now. Leave that sharing first.</string>
     <string name="invite_link_placeholder">Invite link</string>
-    <string name="invite_message">You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it.</string>
     <string name="invite_title">Join a Household</string>
     <string name="invite_unavailable">This invite has expired, was already used, or the household is full. Ask for a new one.</string>
     <string name="maintenance_active">Server maintenance is in progress. Sync resumes around %1$s, and your changes will be sent then.</string>
@@ -142,7 +140,6 @@
     <string name="paywall_reason_places">The free plan has up to 3 places.</string>
     <string name="paywall_reason_share">Sharing with family is a Pro feature.</string>
     <string name="paywall_reason_todos">The free plan has up to 15 open to-dos.</string>
-    <string name="paywall_renewal_note">Subscriptions renew automatically until canceled. Cancel anytime in Settings at least 24 hours before the current period ends.</string>
     <string name="paywall_restore">Restore Purchases</string>
     <string name="paywall_restored_message">StopBy Pro is active again.</string>
     <string name="paywall_restored_title">Purchases Restored</string>
@@ -214,10 +211,8 @@
     <!-- Shown with a check in place of the button once precise location is on. -->
     <string name="reminder_setup_turned_on">On</string>
     <string name="removed_android_message">You were removed from the shared household, so the data on this phone was removed and you’re starting over on your own.</string>
-    <string name="removed_message">You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own.</string>
     <string name="removed_title">Removed from Sharing</string>
     <string name="session_ended_android_message">Your account was deleted on another device or your sign-in expired, so the data on this phone was removed.</string>
-    <string name="session_ended_message">Your account was deleted on another device or your sign-in expired, so the data on this iPhone was removed.</string>
     <string name="session_ended_title">Signed Out</string>
     <string name="settings_about_contact">Contact Support</string>
     <string name="settings_about_contact_body">■ How can we help?\n\n\n■ If something went wrong, tell us what you can\n- When it happened:\n- What happened (e.g., no reminder when I got to the store):\n- What you were doing:\n- If you have screenshots or a screen recording, please attach them to this email\n\n――――――――――\nThe details below help us look into it. Please leave them as they are.\n</string>
@@ -247,13 +242,9 @@
     <string name="settings_account_description">Sign in to keep your places and to-dos in your account.</string>
     <string name="settings_account_not_signed_in">Not signed in</string>
     <string name="settings_account_replace">Replace</string>
-    <string name="settings_account_replace_confirm_message">This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s.</string>
-    <string name="settings_account_replace_confirm_title">Replace data on this iPhone?</string>
     <string name="settings_account_sign_in_failed">Couldn’t sign in. Try again.</string>
     <string name="settings_account_sign_out">Sign Out</string>
-    <string name="settings_account_sign_out_confirm_message">Places and to-dos on this iPhone will be removed. They come back when you sign in again.</string>
     <string name="settings_account_sign_out_confirm_title">Sign out?</string>
-    <string name="settings_account_sign_out_unsynced_message">Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed.</string>
     <string name="settings_account_signed_in">Signed in</string>
     <string name="settings_account_title">Account</string>
     <string name="settings_default_radius_label">Default notification radius</string>
@@ -262,7 +253,6 @@
     <string name="settings_location_always">Always</string>
     <string name="settings_location_android_needs_always">Arrival reminders need “%1$s” so StopBy can notice when you arrive while it is closed.</string>
     <string name="settings_location_denied">Not allowed</string>
-    <string name="settings_location_needs_always">Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed.</string>
     <string name="settings_location_needs_precise">Arrival reminders need precise location to tell when you reach a place.</string>
     <string name="settings_location_not_determined">Not asked yet</string>
     <string name="settings_location_title">Location</string>
@@ -304,7 +294,6 @@
     <string name="sharing_android_shared_header_message">Places and to-dos anyone adds reach everyone’s phone.</string>
     <string name="sharing_benefit_assign_message">Assign a to-do and only that person is reminded when they arrive.</string>
     <string name="sharing_benefit_assign_title">The right person gets reminded</string>
-    <string name="sharing_benefit_lists_message">Places and to-dos anyone adds show up on everyone’s iPhone.</string>
     <string name="sharing_benefit_lists_title">One list for everyone</string>
     <string name="sharing_benefit_plan_message">When the owner has Pro, family members join for free.</string>
     <string name="sharing_benefit_plan_title">One plan covers everyone</string>
@@ -319,7 +308,6 @@
     <string name="sharing_invite_message">Join me on StopBy to share places and to-dos. This link works for 72 hours:</string>
     <string name="sharing_invited_hint">Got an invite link? Sign in to join.</string>
     <string name="sharing_leave">Leave Sharing</string>
-    <string name="sharing_leave_confirm_message">Places and to-dos on this iPhone will be removed, and you’ll start over on your own.</string>
     <string name="sharing_leave_confirm_title">Leave sharing?</string>
     <string name="sharing_member_header_message">Places and to-dos are shared with everyone in this household.</string>
     <string name="sharing_member_header_title">You’re in %1$s’s household</string>
@@ -332,7 +320,6 @@
         <item quantity="one">You can invite %1$d more person.</item>
         <item quantity="other">You can invite %1$d more people.</item>
     </plurals>
-    <string name="sharing_shared_header_message">Places and to-dos anyone adds reach everyone’s iPhone.</string>
     <plurals name="sharing_shared_header_title">
         <item quantity="one">%1$d person sharing</item>
         <item quantity="other">%1$d people sharing</item>

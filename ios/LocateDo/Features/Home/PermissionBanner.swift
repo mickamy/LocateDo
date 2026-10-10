@@ -31,7 +31,7 @@ nonisolated enum PermissionBanner: String {
 
     var message: LocalizedStringResource {
         switch self {
-        case .locationAlways: .homePermissionBannerLocation
+        case .locationAlways: .homePermissionBannerIosLocation
         case .locationDenied: .homePermissionBannerLocationDenied
         case .preciseLocation: .homePermissionBannerPreciseLocation
         case .notifications: .homePermissionBannerNotifications

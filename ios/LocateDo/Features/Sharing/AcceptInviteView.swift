@@ -42,7 +42,7 @@ struct AcceptInviteView: View {
                 }
             } footer: {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(.inviteMessage)
+                    Text(.inviteIosMessage)
                     if let failure {
                         Text(failure)
                             .foregroundStyle(.red)

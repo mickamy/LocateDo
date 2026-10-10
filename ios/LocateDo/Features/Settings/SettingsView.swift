@@ -35,7 +35,7 @@ struct SettingsView: View {
                         Label(.settingsLocationTitle, systemImage: "location")
                     }
                     if locationProvider.authorizationStatus != .authorizedAlways {
-                        Text(.settingsLocationNeedsAlways)
+                        Text(.settingsLocationIosNeedsAlways)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         locationAction

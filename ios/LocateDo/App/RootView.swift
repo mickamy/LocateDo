@@ -67,12 +67,12 @@ struct RootView: View {
                 .alert(Text(.sessionEndedTitle), isPresented: sessionEndedNotice) {
                     Button(.commonOk) {}
                 } message: {
-                    Text(.sessionEndedMessage)
+                    Text(.sessionEndedIosMessage)
                 }
                 .alert(Text(.removedTitle), isPresented: removedNotice) {
                     Button(.commonOk) {}
                 } message: {
-                    Text(.removedMessage)
+                    Text(.removedIosMessage)
                 }
                 .sheet(item: $router.pendingInvite) { invite in
                     NavigationStack {

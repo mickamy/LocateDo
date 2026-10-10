@@ -21,7 +21,7 @@ struct SharingIntroView: View {
                     BenefitRow(
                         systemImage: "list.bullet.rectangle",
                         title: .sharingBenefitListsTitle,
-                        message: .sharingBenefitListsMessage
+                        message: .sharingIosBenefitListsMessage
                     )
                     BenefitRow(
                         systemImage: "location.circle",

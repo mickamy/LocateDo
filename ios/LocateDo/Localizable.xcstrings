@@ -890,7 +890,7 @@
         }
       }
     },
-    "home.permission_banner.location" : {
+    "home.permission_banner.ios_location" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1009,6 +1009,23 @@
         }
       }
     },
+    "invite.ios_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この世帯の人と、場所とやることを共有します。この iPhone の場所とやることは、その世帯にまとめられます。"
+          }
+        }
+      }
+    },
     "invite.join" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1056,23 +1073,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "招待リンク"
-          }
-        }
-      }
-    },
-    "invite.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You’ll share places and to-dos with the people in this household. The places and to-dos on this iPhone are added to it."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この世帯の人と、場所とやることを共有します。この iPhone の場所とやることは、その世帯にまとめられます。"
           }
         }
       }
@@ -1861,6 +1861,23 @@
         }
       }
     },
+    "paywall.ios_renewal_note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscriptions renew automatically until canceled. Cancel anytime in Settings at least 24 hours before the current period ends."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、設定からいつでも解約できます。"
+          }
+        }
+      }
+    },
     "paywall.member_message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1993,23 +2010,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無料プランでは、残っているやることを 15 件まで登録できます。"
-          }
-        }
-      }
-    },
-    "paywall.renewal_note" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Subscriptions renew automatically until canceled. Cancel anytime in Settings at least 24 hours before the current period ends."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解約しない限り、自動で更新されます。現在の期間が終わる 24 時間前までに、設定からいつでも解約できます。"
           }
         }
       }
@@ -3156,7 +3156,7 @@
         }
       }
     },
-    "removed.message" : {
+    "removed.ios_message" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3190,7 +3190,7 @@
         }
       }
     },
-    "session_ended.message" : {
+    "session_ended.ios_message" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3565,6 +3565,74 @@
         }
       }
     },
+    "settings.account.ios_replace_confirm_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このアカウントにはすでに場所とやることがあります。この iPhone の場所とやることはアカウントのデータに置き換わります。"
+          }
+        }
+      }
+    },
+    "settings.account.ios_replace_confirm_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace data on this iPhone?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この iPhone のデータを置き換えますか？"
+          }
+        }
+      }
+    },
+    "settings.account.ios_sign_out_confirm_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos on this iPhone will be removed. They come back when you sign in again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この iPhone の場所とやることは消えます。もう一度サインインすると戻ります。"
+          }
+        }
+      }
+    },
+    "settings.account.ios_sign_out_unsynced_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ同期されていない変更があり、サインアウトすると失われます。この iPhone の場所とやることは消えます。"
+          }
+        }
+      }
+    },
     "settings.account.not_signed_in" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3595,40 +3663,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "置き換える"
-          }
-        }
-      }
-    },
-    "settings.account.replace_confirm_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This account already has places and to-dos. The places and to-dos on this iPhone will be replaced with the account’s."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このアカウントにはすでに場所とやることがあります。この iPhone の場所とやることはアカウントのデータに置き換わります。"
-          }
-        }
-      }
-    },
-    "settings.account.replace_confirm_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Replace data on this iPhone?"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この iPhone のデータを置き換えますか？"
           }
         }
       }
@@ -3667,23 +3701,6 @@
         }
       }
     },
-    "settings.account.sign_out_confirm_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Places and to-dos on this iPhone will be removed. They come back when you sign in again."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この iPhone の場所とやることは消えます。もう一度サインインすると戻ります。"
-          }
-        }
-      }
-    },
     "settings.account.sign_out_confirm_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3697,23 +3714,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サインアウトしますか？"
-          }
-        }
-      }
-    },
-    "settings.account.sign_out_unsynced_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some changes haven’t been synced yet and will be lost. Places and to-dos on this iPhone will be removed."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まだ同期されていない変更があり、サインアウトすると失われます。この iPhone の場所とやることは消えます。"
           }
         }
       }
@@ -3837,7 +3837,7 @@
         }
       }
     },
-    "settings.location.needs_always" : {
+    "settings.location.ios_needs_always" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4500,23 +4500,6 @@
         }
       }
     },
-    "sharing.benefit_lists_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Places and to-dos anyone adds show up on everyone’s iPhone."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "誰かが足した場所とやることが、全員の iPhone にすぐ届きます。"
-          }
-        }
-      }
-    },
     "sharing.benefit_lists_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4738,6 +4721,57 @@
         }
       }
     },
+    "sharing.ios_benefit_lists_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos anyone adds show up on everyone’s iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誰かが足した場所とやることが、全員の iPhone にすぐ届きます。"
+          }
+        }
+      }
+    },
+    "sharing.ios_leave_confirm_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos on this iPhone will be removed, and you’ll start over on your own."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この iPhone の場所とやることは消え、ひとりで使う状態に戻ります。"
+          }
+        }
+      }
+    },
+    "sharing.ios_shared_header_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places and to-dos anyone adds reach everyone’s iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誰かが足した場所とやることが、全員の iPhone に届きます。"
+          }
+        }
+      }
+    },
     "sharing.leave" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4751,23 +4785,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共有から抜ける"
-          }
-        }
-      }
-    },
-    "sharing.leave_confirm_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Places and to-dos on this iPhone will be removed, and you’ll start over on your own."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この iPhone の場所とやることは消え、ひとりで使う状態に戻ります。"
           }
         }
       }
@@ -4939,23 +4956,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "sharing.shared_header_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Places and to-dos anyone adds reach everyone’s iPhone."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "誰かが足した場所とやることが、全員の iPhone に届きます。"
           }
         }
       }

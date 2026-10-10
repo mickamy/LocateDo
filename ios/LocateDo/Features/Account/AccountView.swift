@@ -44,9 +44,9 @@ struct AccountView: View {
             }
         } message: {
             if hasUnsyncedWrites {
-                Text(.settingsAccountSignOutUnsyncedMessage)
+                Text(.settingsAccountIosSignOutUnsyncedMessage)
             } else {
-                Text(.settingsAccountSignOutConfirmMessage)
+                Text(.settingsAccountIosSignOutConfirmMessage)
             }
         }
         .confirmationDialog(

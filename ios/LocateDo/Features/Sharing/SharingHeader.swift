@@ -44,7 +44,7 @@ struct SharingHeader: View {
                 BenefitRow(
                     systemImage: "list.bullet.rectangle",
                     title: .sharingBenefitListsTitle,
-                    message: .sharingBenefitListsMessage
+                    message: .sharingIosBenefitListsMessage
                 )
                 BenefitRow(
                     systemImage: "location.circle",
@@ -110,7 +110,7 @@ struct SharingHeader: View {
         case .ownerAlone:
             .sharingInviteHeaderMessage
         case .ownerSharing:
-            .sharingSharedHeaderMessage
+            .sharingIosSharedHeaderMessage
         case .member:
             .sharingMemberHeaderMessage
         }

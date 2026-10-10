@@ -131,7 +131,7 @@ struct SharingView: View {
                 }
             }
         } message: {
-            Text(.sharingLeaveConfirmMessage)
+            Text(.sharingIosLeaveConfirmMessage)
         }
     }
 
