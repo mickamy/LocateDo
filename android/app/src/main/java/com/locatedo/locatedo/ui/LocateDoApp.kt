@@ -305,6 +305,7 @@ private fun Tabs(
                                 analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
                                 backStack.add(SharingKey)
                             },
+                            onOpenMap = { backStack.showTab(MapKey) },
                         )
                     }
                     entry<MapKey> {

@@ -39,6 +39,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -69,6 +74,7 @@ fun HomeScreen(
     onAddPlace: () -> Unit,
     onOpenPlace: (UUID) -> Unit,
     onOpenSharing: () -> Unit,
+    onOpenMap: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     TrackScreen(AnalyticsScreen.HOME)
@@ -137,7 +143,7 @@ fun HomeScreen(
                         }
                     }
                     item {
-                        MapPreview(uiState)
+                        MapPreview(uiState, onOpenMap = onOpenMap)
                     }
                     if (uiState.openTodoCount > 0) {
                         item {
@@ -178,7 +184,9 @@ fun HomeScreen(
 
 // Where you are at a glance, centered on the nearest place until the location is known.
 @Composable
-private fun MapPreview(uiState: HomeUiState) {
+// A glance at where you are; a tap opens the Map tab, where it can be moved around.
+private fun MapPreview(uiState: HomeUiState, onOpenMap: () -> Unit) {
+    val label = stringResource(R.string.tab_map)
     val nearest = uiState.nearby.firstOrNull()?.entry?.place
     val center = uiState.here?.let { LatLng(it.latitude, it.longitude) }
         ?: nearest?.let { LatLng(it.latitude, it.longitude) }
@@ -191,7 +199,15 @@ private fun MapPreview(uiState: HomeUiState) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clearAndSetSemantics {
+                role = Role.Button
+                contentDescription = label
+                onClick {
+                    onOpenMap()
+                    true
+                }
+            },
         shape = RoundedCornerShape(16.dp),
     ) {
         GoogleMap(
@@ -211,6 +227,9 @@ private fun MapPreview(uiState: HomeUiState) {
                 zoomControlsEnabled = false,
                 zoomGesturesEnabled = false,
             ),
+            onMapClick = { onOpenMap() },
+            onPOIClick = { onOpenMap() },
+            onMyLocationClick = { onOpenMap() },
         )
     }
 }
