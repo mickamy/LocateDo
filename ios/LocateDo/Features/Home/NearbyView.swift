@@ -155,12 +155,22 @@ struct NearbyView: View {
                 }
             }
             Section {
-                Map(initialPosition: .userLocation(fallback: .automatic)) {
-                    UserAnnotation()
+                // A glance at where you are; the Map tab is where it can be moved around.
+                Button {
+                    router.selectedTab = .map
+                } label: {
+                    Map(initialPosition: .userLocation(fallback: .automatic)) {
+                        UserAnnotation()
+                    }
+                    .frame(height: 140)
+                    .allowsHitTesting(false)
+                    // The map ignores touches so it cannot be dragged here; this layer takes the tap instead.
+                    .overlay {
+                        Color.clear.contentShape(Rectangle())
+                    }
                 }
-                .frame(height: 140)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(.tabMap))
                 .listRowInsets(EdgeInsets())
             } footer: {
                 let count = Nearby.openTodoCount(nearbyPlaces)
