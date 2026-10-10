@@ -37,6 +37,7 @@ func TodoFromTodoInput(src *todov1.TodoInput) (model.Todo, error) {
 		ID:         v1,
 		PlaceID:    v3,
 		Title:      src.GetTitle(),
+		Trigger:    TriggerFromTodov1(src.GetTrigger()),
 		AssigneeID: v4,
 	}, nil
 }

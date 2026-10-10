@@ -17,6 +17,7 @@ import (
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
 	syncv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/sync/v1"
 	"github.com/mickamy/LocateDo/internal/gen/locatedo/sync/v1/syncv1connect"
+	todov1 "github.com/mickamy/LocateDo/internal/gen/locatedo/todo/v1"
 	"github.com/mickamy/LocateDo/internal/server"
 	"github.com/mickamy/LocateDo/test/tdb"
 )
@@ -33,6 +34,8 @@ func TestSync_firstSyncThenIncremental(t *testing.T) {
 	categoryID := d.Seeder.BuiltinCategory(t, h.ID, "shopping")
 	placeID := d.Seeder.CategorizedPlace(t, h.ID, categoryID)
 	todoID := d.Seeder.Todo(t, h.ID, placeID)
+	_, err := d.Writer.Exec(t.Context(), "UPDATE todos SET notify_on = 'departure' WHERE id = $1", todoID)
+	require.NoError(t, err)
 
 	// act & assert: the first sync carries one of everything, in version order
 	first, err := client.Pull(t.Context(), authed(member, &syncv1.PullRequest{HouseholdId: h.ID.String()}))
@@ -48,6 +51,7 @@ func TestSync_firstSyncThenIncremental(t *testing.T) {
 	assert.Equal(t, categoryID.String(), changes[3].GetPlace().GetCategoryId())
 	assert.Equal(t, todoID.String(), changes[4].GetTodo().GetId())
 	assert.Nil(t, changes[4].GetTodo().GetCompletedAt())
+	assert.Equal(t, todov1.PlaceEvent_PLACE_EVENT_DEPARTURE, changes[4].GetTodo().GetTrigger().GetEvent())
 
 	// act & assert: a deletion arrives as a tombstone on the next pull
 	_, err = d.Writer.Exec(t.Context(), "DELETE FROM todos WHERE id = $1", todoID)

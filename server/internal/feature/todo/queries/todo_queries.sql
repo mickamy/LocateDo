@@ -1,5 +1,5 @@
 -- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, creator_id, completed_at, updated_at, version
+SELECT id, household_id, place_id, title, notify_on, assignee_id, creator_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2;
@@ -14,11 +14,12 @@ WHERE household_id = $1
 -- not a member resolves to NULL. completed_at and creator_id are left alone on
 -- update.
 -- name: UpsertTodo :execrows
-INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id)
+INSERT INTO todos (id, household_id, place_id, title, notify_on, assignee_id, creator_id)
 SELECT sqlc.arg(id)::uuid,
        sqlc.arg(household_id)::uuid,
        sqlc.arg(place_id)::uuid,
        sqlc.arg(title)::text,
+       sqlc.arg(notify_on)::text,
        (SELECT m.user_id
         FROM memberships m
         WHERE m.user_id = sqlc.narg(assignee_id)::uuid
@@ -31,6 +32,7 @@ WHERE EXISTS (SELECT 1
 ON CONFLICT (id, household_id) DO UPDATE
     SET place_id    = EXCLUDED.place_id,
         title       = EXCLUDED.title,
+        notify_on   = EXCLUDED.notify_on,
         assignee_id = EXCLUDED.assignee_id;
 
 -- name: SetTodoCompletion :exec

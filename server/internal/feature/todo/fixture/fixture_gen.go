@@ -27,6 +27,7 @@ func Todo(setters ...func(m *model.Todo)) model.Todo {
 		HouseholdID: uuid.MustParse(gofakeit.UUID()),
 		PlaceID:     uuid.MustParse(gofakeit.UUID()),
 		Title:       gofakeit.Word(),
+		Trigger:     Trigger(),
 		UpdatedAt:   gofakeit.Date(),
 		Version:     gofakeit.Int64(),
 	}
@@ -34,4 +35,22 @@ func Todo(setters ...func(m *model.Todo)) model.Todo {
 		s(&m)
 	}
 	return m
+}
+
+func Trigger(setters ...func(m *model.Trigger)) model.Trigger {
+	m := model.Trigger{
+		Event: model.PlaceEvent(mustGenerate("{randomstring:[arrival,departure]}")),
+	}
+	for _, s := range setters {
+		s(&m)
+	}
+	return m
+}
+
+func mustGenerate(template string) string {
+	s, err := gofakeit.Generate(template)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }

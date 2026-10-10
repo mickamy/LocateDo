@@ -211,6 +211,7 @@ func (r household) Import(ctx context.Context, householdID, userID uuid.UUID, c 
 			HouseholdID: householdID,
 			PlaceID:     t.Todo.PlaceID,
 			Title:       t.Todo.Title,
+			NotifyOn:    string(t.Todo.Trigger.Event),
 			AssigneeID:  t.Todo.AssigneeID,
 			CreatorID:   &userID,
 			CompletedAt: t.CompletedAt,

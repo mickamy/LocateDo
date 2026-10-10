@@ -101,7 +101,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
 }
 
 const getTodo = `-- name: GetTodo :one
-SELECT id, household_id, place_id, title, assignee_id, creator_id, completed_at, updated_at, version
+SELECT id, household_id, place_id, title, notify_on, assignee_id, creator_id, completed_at, updated_at, version
 FROM todos
 WHERE id = $1
   AND household_id = $2
@@ -120,6 +120,7 @@ func (q *Queries) GetTodo(ctx context.Context, arg GetTodoParams) (Todo, error) 
 		&i.HouseholdID,
 		&i.PlaceID,
 		&i.Title,
+		&i.NotifyOn,
 		&i.AssigneeID,
 		&i.CreatorID,
 		&i.CompletedAt,
@@ -181,16 +182,17 @@ func (q *Queries) SetTodoCompletion(ctx context.Context, arg SetTodoCompletionPa
 }
 
 const upsertTodo = `-- name: UpsertTodo :execrows
-INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id)
+INSERT INTO todos (id, household_id, place_id, title, notify_on, assignee_id, creator_id)
 SELECT $1::uuid,
        $2::uuid,
        $3::uuid,
        $4::text,
+       $5::text,
        (SELECT m.user_id
         FROM memberships m
-        WHERE m.user_id = $5::uuid
+        WHERE m.user_id = $6::uuid
           AND m.household_id = $2::uuid),
-       $6::uuid
+       $7::uuid
 WHERE EXISTS (SELECT 1
               FROM places p
               WHERE p.id = $3::uuid
@@ -198,6 +200,7 @@ WHERE EXISTS (SELECT 1
 ON CONFLICT (id, household_id) DO UPDATE
     SET place_id    = EXCLUDED.place_id,
         title       = EXCLUDED.title,
+        notify_on   = EXCLUDED.notify_on,
         assignee_id = EXCLUDED.assignee_id
 `
 
@@ -206,6 +209,7 @@ type UpsertTodoParams struct {
 	HouseholdID uuid.UUID
 	PlaceID     uuid.UUID
 	Title       string
+	NotifyOn    string
 	AssigneeID  *uuid.UUID
 	CreatorID   *uuid.UUID
 }
@@ -219,6 +223,7 @@ func (q *Queries) UpsertTodo(ctx context.Context, arg UpsertTodoParams) (int64, 
 		arg.HouseholdID,
 		arg.PlaceID,
 		arg.Title,
+		arg.NotifyOn,
 		arg.AssigneeID,
 		arg.CreatorID,
 	)

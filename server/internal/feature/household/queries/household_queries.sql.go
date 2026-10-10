@@ -362,8 +362,8 @@ func (q *Queries) ImportPlace(ctx context.Context, arg ImportPlaceParams) error 
 }
 
 const importTodo = `-- name: ImportTodo :exec
-INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id, completed_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO todos (id, household_id, place_id, title, notify_on, assignee_id, creator_id, completed_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type ImportTodoParams struct {
@@ -371,6 +371,7 @@ type ImportTodoParams struct {
 	HouseholdID uuid.UUID
 	PlaceID     uuid.UUID
 	Title       string
+	NotifyOn    string
 	AssigneeID  *uuid.UUID
 	CreatorID   *uuid.UUID
 	CompletedAt *time.Time
@@ -382,6 +383,7 @@ func (q *Queries) ImportTodo(ctx context.Context, arg ImportTodoParams) error {
 		arg.HouseholdID,
 		arg.PlaceID,
 		arg.Title,
+		arg.NotifyOn,
 		arg.AssigneeID,
 		arg.CreatorID,
 		arg.CompletedAt,

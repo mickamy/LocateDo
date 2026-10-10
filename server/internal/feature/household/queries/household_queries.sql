@@ -122,8 +122,8 @@ INSERT INTO places (id, household_id, name, lat, lng, radius_m, category_id, sor
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: ImportTodo :exec
-INSERT INTO todos (id, household_id, place_id, title, assignee_id, creator_id, completed_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7);
+INSERT INTO todos (id, household_id, place_id, title, notify_on, assignee_id, creator_id, completed_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: ImportCompletion :exec
 INSERT INTO todo_completions (todo_id, completer_id, completed_at)

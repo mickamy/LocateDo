@@ -16,7 +16,10 @@ import (
 	"github.com/mickamy/LocateDo/test/tdb"
 )
 
-var now = time.Date(2026, 10, 4, 12, 0, 0, 0, time.UTC)
+var (
+	now     = time.Date(2026, 10, 4, 12, 0, 0, 0, time.UTC)
+	arrival = model.Trigger{Event: model.PlaceEventArrival}
+)
 
 func TestTodo_Upsert_insertThenUpdateKeepsCompletion(t *testing.T) {
 	t.Parallel()
@@ -28,7 +31,14 @@ func TestTodo_Upsert_insertThenUpdateKeepsCompletion(t *testing.T) {
 	memberID := d.Seeder.Member(t, h.ID)
 	placeID := d.Seeder.Place(t, h.ID)
 	otherPlace := d.Seeder.Place(t, h.ID)
-	td := model.Todo{ID: uuid.NewV7(), HouseholdID: h.ID, PlaceID: placeID, Title: "Milk", AssigneeID: &memberID}
+	td := model.Todo{
+		ID:          uuid.NewV7(),
+		HouseholdID: h.ID,
+		PlaceID:     placeID,
+		Title:       "Milk",
+		Trigger:     model.Trigger{Event: model.PlaceEventArrival},
+		AssigneeID:  &memberID,
+	}
 
 	// act
 	var written bool
@@ -42,6 +52,7 @@ func TestTodo_Upsert_insertThenUpdateKeepsCompletion(t *testing.T) {
 	require.NoError(t, err)
 
 	td.Title = "Oat milk"
+	td.Trigger = model.Trigger{Event: model.PlaceEventDeparture}
 	td.PlaceID = otherPlace
 	td.AssigneeID = nil
 	d.InTx(t, func(tx tx.Tx) {
@@ -54,7 +65,9 @@ func TestTodo_Upsert_insertThenUpdateKeepsCompletion(t *testing.T) {
 	// assert
 	assert.True(t, written)
 	assert.Equal(t, &memberID, inserted.AssigneeID)
+	assert.Equal(t, model.PlaceEventArrival, inserted.Trigger.Event)
 	assert.Equal(t, "Oat milk", updated.Title)
+	assert.Equal(t, model.PlaceEventDeparture, updated.Trigger.Event)
 	assert.Equal(t, otherPlace, updated.PlaceID)
 	assert.Nil(t, updated.AssigneeID)
 	require.NotNil(t, updated.CompletedAt, "an edit never undoes a completion")
@@ -83,7 +96,7 @@ func TestTodo_Upsert_placeNotInHousehold(t *testing.T) {
 			d.InTx(t, func(tx tx.Tx) {
 				var err error
 				written, err = todos.Bind(tx).Upsert(t.Context(), model.Todo{
-					ID: uuid.NewV7(), HouseholdID: h.ID, PlaceID: placeID, Title: "Milk",
+					ID: uuid.NewV7(), HouseholdID: h.ID, PlaceID: placeID, Title: "Milk", Trigger: arrival,
 				})
 				require.NoError(t, err)
 			})
@@ -109,7 +122,7 @@ func TestTodo_Upsert_assigneeOutsideHouseholdBecomesNull(t *testing.T) {
 	// act
 	d.InTx(t, func(tx tx.Tx) {
 		_, err := todos.Bind(tx).Upsert(t.Context(), model.Todo{
-			ID: id, HouseholdID: h.ID, PlaceID: placeID, Title: "Milk", AssigneeID: &stranger,
+			ID: id, HouseholdID: h.ID, PlaceID: placeID, Title: "Milk", Trigger: arrival, AssigneeID: &stranger,
 		})
 		require.NoError(t, err)
 	})
@@ -134,7 +147,7 @@ func TestTodo_Upsert_idInAnotherHousehold(t *testing.T) {
 	// act
 	err := d.Transactor.WithTx(t.Context(), func(tx tx.Tx) error {
 		_, err := todos.Bind(tx).Upsert(t.Context(), model.Todo{
-			ID: taken, HouseholdID: h.ID, PlaceID: placeID, Title: "Milk",
+			ID: taken, HouseholdID: h.ID, PlaceID: placeID, Title: "Milk", Trigger: arrival,
 		})
 		return err
 	})

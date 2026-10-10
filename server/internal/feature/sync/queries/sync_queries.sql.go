@@ -203,6 +203,7 @@ SELECT t.id,
        t.household_id,
        t.place_id,
        t.title,
+       t.notify_on,
        t.assignee_id,
        t.creator_id,
        c.completer_id,
@@ -233,6 +234,7 @@ type ListTodoChangesRow struct {
 	HouseholdID uuid.UUID
 	PlaceID     uuid.UUID
 	Title       string
+	NotifyOn    string
 	AssigneeID  *uuid.UUID
 	CreatorID   *uuid.UUID
 	CompleterID *uuid.UUID
@@ -256,6 +258,7 @@ func (q *Queries) ListTodoChanges(ctx context.Context, arg ListTodoChangesParams
 			&i.HouseholdID,
 			&i.PlaceID,
 			&i.Title,
+			&i.NotifyOn,
 			&i.AssigneeID,
 			&i.CreatorID,
 			&i.CompleterID,

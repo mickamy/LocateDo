@@ -9,6 +9,7 @@ import (
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	model3 "github.com/mickamy/LocateDo/internal/feature/place/model"
 	model5 "github.com/mickamy/LocateDo/internal/feature/sync/model"
+	mapper3 "github.com/mickamy/LocateDo/internal/feature/todo/mapper"
 	model4 "github.com/mickamy/LocateDo/internal/feature/todo/model"
 	categoryv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/category/v1"
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
@@ -100,6 +101,7 @@ func TodoToTodov1(src model4.Todo) *todov1.Todo {
 		Version:     src.Version,
 		CreatorId:   v5,
 		CompleterId: v8,
+		Trigger:     mapper3.TriggerToTodov1(src.Trigger),
 	}
 }
 

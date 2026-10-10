@@ -10,12 +10,17 @@ import (
 
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
 	"github.com/mickamy/LocateDo/internal/feature/household/usecase"
+	tmodel "github.com/mickamy/LocateDo/internal/feature/todo/model"
 	"github.com/mickamy/LocateDo/internal/lib/clock"
 	"github.com/mickamy/LocateDo/test/tdb"
 	"github.com/mickamy/LocateDo/test/tseed"
 )
 
-var now = time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
+var (
+	now       = time.Date(2026, 10, 3, 12, 0, 0, 0, time.UTC)
+	arrival   = tmodel.Trigger{Event: tmodel.PlaceEventArrival}
+	departure = tmodel.Trigger{Event: tmodel.PlaceEventDeparture}
+)
 
 func fixedClock(t *testing.T) context.Context {
 	t.Helper()
@@ -46,8 +51,11 @@ func contents() model.Contents {
 			{ID: placeID, Name: "Supermarket", Lat: 35.0, Lng: 139.0, RadiusM: 100, CategoryID: &categoryID},
 		},
 		Todos: []model.InitialTodo{
-			{Todo: model.ImportTodo{ID: newID(), PlaceID: placeID, Title: "Milk"}},
-			{Todo: model.ImportTodo{ID: newID(), PlaceID: placeID, Title: "Detergent"}, CompletedAt: &completedAt},
+			{Todo: model.ImportTodo{ID: newID(), PlaceID: placeID, Title: "Milk", Trigger: arrival}},
+			{
+				Todo:        model.ImportTodo{ID: newID(), PlaceID: placeID, Title: "Detergent", Trigger: departure},
+				CompletedAt: &completedAt,
+			},
 		},
 	}
 }

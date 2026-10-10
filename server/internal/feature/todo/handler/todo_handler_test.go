@@ -84,6 +84,46 @@ func TestTodo_PutTodo_placeGoneIsANoOp(t *testing.T) {
 	assert.Zero(t, d.Seeder.Count(t, "todos", h.ID))
 }
 
+func TestTodo_PutTodo_trigger(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		trigger *todov1.Trigger
+		want    string
+	}{
+		{name: "omitted", trigger: nil, want: "arrival"},
+		{name: "unspecified", trigger: &todov1.Trigger{}, want: "arrival"},
+		{name: "arrival", trigger: &todov1.Trigger{Event: todov1.PlaceEvent_PLACE_EVENT_ARRIVAL}, want: "arrival"},
+		{name: "departure", trigger: &todov1.Trigger{Event: todov1.PlaceEvent_PLACE_EVENT_DEPARTURE}, want: "departure"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// arrange
+			d := tdb.New(t)
+			client := newClient(t, d)
+			h := d.Seeder.Household(t, hmodel.PlanFree)
+			input := todoInput(d.Seeder.Place(t, h.ID))
+			input.Trigger = tt.trigger
+
+			// act
+			_, err := client.PutTodo(t.Context(), authed(token(t, h.OwnerID), &todov1.PutTodoRequest{
+				HouseholdId: h.ID.String(),
+				Todo:        input,
+			}))
+
+			// assert
+			require.NoError(t, err)
+			var notifyOn string
+			require.NoError(t, d.Writer.QueryRow(t.Context(),
+				"SELECT notify_on FROM todos WHERE id = $1", input.GetId()).Scan(&notifyOn))
+			assert.Equal(t, tt.want, notifyOn)
+		})
+	}
+}
+
 func TestTodo_PutTodo_rejects(t *testing.T) {
 	t.Parallel()
 
@@ -99,6 +139,16 @@ func TestTodo_PutTodo_rejects(t *testing.T) {
 				h := d.Seeder.Household(t, hmodel.PlanFree)
 				input := todoInput(d.Seeder.Place(t, h.ID))
 				input.Title = ""
+				return token(t, h.OwnerID), h.ID, input
+			},
+			want: connect.CodeInvalidArgument,
+		},
+		{
+			name: "undefined place event",
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID, *todov1.TodoInput) {
+				h := d.Seeder.Household(t, hmodel.PlanFree)
+				input := todoInput(d.Seeder.Place(t, h.ID))
+				input.Trigger = &todov1.Trigger{Event: 99}
 				return token(t, h.OwnerID), h.ID, input
 			},
 			want: connect.CodeInvalidArgument,

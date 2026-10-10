@@ -99,6 +99,7 @@ gen-mapper:
 	$(MAPPER) -destination=internal/feature/account/mapper -package=mapper \
 		-types='$(PKG)/feature/account/model.Session->*$(PKG)/gen/locatedo/account/v1.Session'
 	$(MAPPER) -converters=./internal/feature/household/mapper -converters=./internal/feature/category/mapper \
+		-converters=./internal/feature/todo/mapper \
 		-destination=internal/feature/household/mapper -package=mapper \
 		-types='$(PKG)/feature/household/model.Contents<-*$(PKG)/gen/locatedo/household/v1.CreateHouseholdRequest' \
 		-types='$(PKG)/feature/household/model.ImportCategory<-*$(PKG)/gen/locatedo/category/v1.CategoryInput' \
@@ -112,11 +113,12 @@ gen-mapper:
 		-destination=internal/feature/category/mapper -package=mapper \
 		-exclude='$(PKG)/feature/category/model.Category.HouseholdID,$(PKG)/feature/category/model.Category.UpdatedAt,$(PKG)/feature/category/model.Category.Version' \
 		-types='$(PKG)/feature/category/model.Category<-*$(PKG)/gen/locatedo/category/v1.CategoryInput'
-	$(MAPPER) -destination=internal/feature/todo/mapper -package=mapper \
+	$(MAPPER) -converters=./internal/feature/todo/mapper \
+		-destination=internal/feature/todo/mapper -package=mapper \
 		-exclude='$(PKG)/feature/todo/model.Todo.HouseholdID,$(PKG)/feature/todo/model.Todo.CompletedAt,$(PKG)/feature/todo/model.Todo.CreatorID,$(PKG)/feature/todo/model.Todo.CompleterID,$(PKG)/feature/todo/model.Todo.UpdatedAt,$(PKG)/feature/todo/model.Todo.Version' \
 		-types='$(PKG)/feature/todo/model.Todo<-*$(PKG)/gen/locatedo/todo/v1.TodoInput'
 	$(MAPPER) -converters=./internal/feature/household/mapper -converters=./internal/feature/category/mapper \
-		-converters=./internal/feature/sync/mapper \
+		-converters=./internal/feature/sync/mapper -converters=./internal/feature/todo/mapper \
 		-destination=internal/feature/sync/mapper -package=mapper \
 		-types='$(PKG)/feature/household/model.Membership->*$(PKG)/gen/locatedo/household/v1.Membership' \
 		-types='$(PKG)/feature/category/model.Category->*$(PKG)/gen/locatedo/category/v1.Category' \

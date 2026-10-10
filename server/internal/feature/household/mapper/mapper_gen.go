@@ -9,6 +9,7 @@ import (
 
 	"github.com/mickamy/LocateDo/internal/feature/category/mapper"
 	"github.com/mickamy/LocateDo/internal/feature/household/model"
+	mapper2 "github.com/mickamy/LocateDo/internal/feature/todo/mapper"
 	categoryv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/category/v1"
 	householdv1 "github.com/mickamy/LocateDo/internal/gen/locatedo/household/v1"
 	placev1 "github.com/mickamy/LocateDo/internal/gen/locatedo/place/v1"
@@ -157,6 +158,7 @@ func ImportTodoFromTodoInput(src *todov1.TodoInput) (model.ImportTodo, error) {
 		ID:         v1,
 		PlaceID:    v3,
 		Title:      src.GetTitle(),
+		Trigger:    mapper2.TriggerFromTodov1(src.GetTrigger()),
 		AssigneeID: v4,
 	}, nil
 }

@@ -3,6 +3,8 @@ package model
 import (
 	"time"
 	"uuid"
+
+	tmodel "github.com/mickamy/LocateDo/internal/feature/todo/model"
 )
 
 const (
@@ -99,5 +101,6 @@ type ImportTodo struct {
 	ID         uuid.UUID
 	PlaceID    uuid.UUID
 	Title      string
+	Trigger    tmodel.Trigger
 	AssigneeID *uuid.UUID
 }

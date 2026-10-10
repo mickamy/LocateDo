@@ -15,6 +15,7 @@ type Todo struct {
 	HouseholdID uuid.UUID
 	PlaceID     uuid.UUID
 	Title       string
+	NotifyOn    string
 	AssigneeID  *uuid.UUID
 	CreatorID   *uuid.UUID
 	CompletedAt *time.Time

@@ -48,6 +48,10 @@ func TestCreateHousehold_imports(t *testing.T) {
 		householdID, userID).Scan(&created, &completions))
 	assert.Equal(t, 2, created, "the importer created every to-do")
 	assert.Equal(t, 1, completions, "and completed the completed one")
+	var departures int
+	require.NoError(t, d.Writer.QueryRow(t.Context(),
+		"SELECT count(*) FROM todos WHERE household_id = $1 AND notify_on = 'departure'", householdID).Scan(&departures))
+	assert.Equal(t, 1, departures, "each to-do keeps its trigger")
 	var checks int
 	require.NoError(t, d.Writer.QueryRow(t.Context(),
 		"SELECT count(*) FROM outbox_messages WHERE kind = 'sync_entitlement' AND payload->>'user_id' = $1",

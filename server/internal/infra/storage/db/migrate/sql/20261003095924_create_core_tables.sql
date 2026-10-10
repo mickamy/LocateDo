@@ -183,6 +183,7 @@ CREATE TABLE todos
     household_id     uuid        NOT NULL REFERENCES households (id) ON DELETE CASCADE,
     place_id         uuid        NOT NULL,
     title            text        NOT NULL,
+    notify_on        text        NOT NULL DEFAULT 'arrival' CHECK (notify_on IN ('arrival', 'departure')),
     assignee_id      uuid REFERENCES users (id) ON DELETE SET NULL,
     creator_id       uuid REFERENCES users (id) ON DELETE SET NULL,
     completed_at     timestamptz,
