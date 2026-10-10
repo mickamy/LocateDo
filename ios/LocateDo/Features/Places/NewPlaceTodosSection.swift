@@ -5,12 +5,15 @@ struct DraftTodo: Identifiable {
     var title: String
 }
 
-// To-dos typed while adding a place, so the place has something to remind about from the start.
+// To-dos typed while adding a place, under a preview of the arrival notification they will make. "Add To-Do" turns
+// into a field where Return adds the row and moves on to the next. Rows carry no circle, which would look checkable.
 struct NewPlaceTodosSection: View {
+    let placeName: String
     @Binding var todos: [DraftTodo]
     @Binding var draft: String
     let remaining: Int?
     let placeholder: LocalizedStringResource
+    @State private var isTyping = false
     @FocusState private var isDraftFocused: Bool
 
     private var left: Int? {
@@ -31,14 +34,39 @@ struct NewPlaceTodosSection: View {
                 todos.remove(atOffsets: offsets)
             }
             if left != 0 {
-                TextField(text: $draft, prompt: Text(placeholder)) {
-                    Text(.placeEditorTodosLabel)
+                if isTyping {
+                    HStack(spacing: 12) {
+                        TextField(text: $draft, prompt: Text(placeholder)) {
+                            Text(.placeEditorTodosLabel)
+                        }
+                        .focused($isDraftFocused)
+                        .submitLabel(.next)
+                        .onSubmit(addDraft)
+                        .accessibilityIdentifier("placeEditor.todoDraft")
+                        // Return does the same; the button says that the row can be added and another typed.
+                        Button(action: addFromButton) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .accessibilityLabel(Text(.placeDetailAddTodo))
+                    }
+                } else {
+                    Button(.placeDetailAddTodo, systemImage: "plus") {
+                        startTyping()
+                    }
                 }
-                .focused($isDraftFocused)
-                .submitLabel(.next)
-                .onSubmit(addDraft)
-                .accessibilityIdentifier("placeEditor.todoDraft")
             }
+        } header: {
+            VStack(alignment: .leading, spacing: 20) {
+                preview
+                Text(.placeEditorTodosTitle(placeName))
+                    .font(.title3.bold())
+                    .foregroundStyle(.primary)
+            }
+            .textCase(nil)
+            .padding(.bottom, 8)
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(.placeEditorTodosFooter)
@@ -48,17 +76,63 @@ struct NewPlaceTodosSection: View {
             }
         }
         .onAppear {
-            isDraftFocused = left != 0
+            if todos.isEmpty, left != 0 {
+                startTyping()
+            }
         }
     }
 
+    // Follows the typing, with the same wording and cut-off as the real notification.
+    private var preview: some View {
+        let titles = (todos.map(\.title) + [draft])
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        var message = String(localized: .placeEditorPreviewEmpty)
+        if !titles.isEmpty {
+            message = NotificationPolicy.body(todoTitles: titles)
+        }
+        return ArrivalNotificationCard(
+            title: String(localized: .notificationArrivedTitle(placeName)),
+            message: message,
+            isMessageMuted: titles.isEmpty
+        )
+        .padding(.top, 8)
+    }
+
+    // The field appears first, then takes the focus, which a field not yet on screen cannot.
+    private func startTyping() {
+        isTyping = true
+        Task {
+            isDraftFocused = true
+        }
+    }
+
+    // Leaving the field first commits text still being converted by the keyboard (Japanese input), which would
+    // otherwise land in the emptied field after the row is added.
+    private func addFromButton() {
+        isDraftFocused = false
+        Task {
+            try? await Task.sleep(for: .milliseconds(100))
+            addDraft()
+        }
+    }
+
+    // An empty Return closes the field back into "Add To-Do".
     private func addDraft() {
         let title = draft.trimmingCharacters(in: .whitespaces)
         guard !title.isEmpty else {
+            draft = ""
+            isTyping = false
             return
         }
         todos.append(DraftTodo(title: title))
         draft = ""
-        isDraftFocused = left != 0
+        if left == 0 {
+            isTyping = false
+            return
+        }
+        Task {
+            isDraftFocused = true
+        }
     }
 }

@@ -12,13 +12,13 @@ struct PlaceTodosStep: View {
 
     var body: some View {
         Form {
-            Section {
-                Text(.placeEditorTodosTitle(placeName))
-                    .font(.title3.bold())
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-            }
-            NewPlaceTodosSection(todos: $todos, draft: $draft, remaining: remaining, placeholder: placeholder)
+            NewPlaceTodosSection(
+                placeName: placeName,
+                todos: $todos,
+                draft: $draft,
+                remaining: remaining,
+                placeholder: placeholder
+            )
         }
         .navigationTitle(Text(.placeEditorTodosLabel))
         .navigationBarTitleDisplayMode(.inline)
