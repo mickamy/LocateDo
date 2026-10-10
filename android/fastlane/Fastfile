@@ -49,14 +49,34 @@ def tap_text(text)
   end
 end
 
-# The tab bar is drawn last, so its label is the last match: Home's title reads the same as its tab.
-def tap_tab(name, language)
-  label = app_string(name, language)
-  tap_node("tab #{label.inspect}", last: true) { |node| node[/ text="([^"]*)"/, 1] == label }
+# The top bar's back button, not BACK: BACK sometimes left the app, and the next taps landed on the launcher.
+def go_back(language)
+  tap_label("common_back", language)
+end
+
+# Home's row that opens every open to-do.
+def open_all_todos(language)
+  tap_text(app_string("home_all_todos", language))
+end
+
+# Home's small map, which opens the full one.
+def open_map(language)
+  tap_label("tab_map", language)
 end
 
 # Looks a few times, a second apart, for what has only just been asked to appear, like a heads-up notification.
 def tap_node(description, last: false, &matches)
+  x, y = node_center(description, last: last, &matches)
+  adb("shell", "input", "tap", x.to_s, y.to_s)
+end
+
+# Where an element is, found before a recording starts, since reading the screen takes a second or two.
+def label_center(name, language)
+  label = app_string(name, language)
+  node_center("label #{label.inspect}") { |node| node.include?("content-desc=\"#{label}\"") }
+end
+
+def node_center(description, last: false, &matches)
   node = nil
   screen = ""
   5.times do |attempt|
@@ -71,7 +91,7 @@ def tap_node(description, last: false, &matches)
     UI.user_error!("No element with #{description} on screen\n#{texts}")
   end
   x1, y1, x2, y2 = node[/bounds="([^"]+)"/, 1].scan(/\d+/).map(&:to_i)
-  adb("shell", "input", "tap", ((x1 + x2) / 2).to_s, ((y1 + y2) / 2).to_s)
+  [(x1 + x2) / 2, (y1 + y2) / 2]
 end
 
 # Where the emulator stands; the seeded places sit around it (debug ScreenshotSeed).
@@ -188,21 +208,21 @@ platform :android do
   end
 
   # The scenes of the Play promo video, in the order and with the captions of the App Store previews; it closes on the
-  # app's tagline over home.
+  # app's headline over home.
   PROMO_SCENES = {
     "en-US" => [
       ["arrival", "Get reminded at the store"],
       ["place", "Check things off as you shop"],
       ["map", "All your places on one map"],
       ["todos", "Every list in one place"],
-      ["home", "Where you go reminds you\nwhat to do"],
+      ["home", "Never forget\nthe milk again"],
     ],
     "ja-JP" => [
       ["arrival", "お店に着いたら、お知らせ"],
       ["place", "買ったらチェック"],
       ["map", "場所はマップでも"],
       ["todos", "買い物リストをまとめて"],
-      ["home", "行く場所が、\nやることを思い出させる"],
+      ["home", "もう、買い忘れない。"],
     ],
   }.freeze
 
@@ -348,6 +368,8 @@ platform :android do
     begin
       adb("wait-for-device")
       sleep(2) until adb("shell", "getprop", "sys.boot_completed").strip == "1"
+      # The package manager answers a little after boot completes.
+      sleep(2) until (adb("shell", "pm", "path", "android") rescue "").include?("package:")
       yield
     ensure
       adb("emu", "kill") rescue nil
@@ -407,27 +429,32 @@ platform :android do
       tap_text(checked)
       sleep(2.5)
     end
-    tap_label("common_done", language)
+    go_back(language)
     sleep(2)
 
-    tap_tab("tab_map", language)
+    open_map(language)
     sleep(4)
     scene(dir, "map") do
       sleep(0.5)
       recenter_map(language, wait: 2.5)
     end
+    go_back(language)
+    sleep(2)
 
+    # All to-dos opens on Open; All brings back the two just checked off.
+    open_all_todos(language)
+    sleep(2)
     scene(dir, "todos") do
-      sleep(0.5)
-      tap_tab("tab_todos", language)
+      sleep(1.5)
+      tap_text(app_string("todo_filter_all", language))
       sleep(3)
     end
 
-    # The last picture: home with the places listed, held while the tagline shows. The tab switch happens on camera,
+    # The last picture: home with the places listed, held while the headline shows. Going back happens on camera,
     # since screenrecord writes no frames for a screen that never changes, and such a clip drops out of the video.
+    x, y = label_center("common_back", language)
     scene(dir, "home") do
-      sleep(0.5)
-      tap_tab("tab_home", language)
+      adb("shell", "input", "tap", x.to_s, y.to_s)
       sleep(3.5)
     end
   end
@@ -508,16 +535,15 @@ platform :android do
     tap_text(/\A#{Regexp.escape(app_string("todo_completed_section", language))} \(/)
     sleep(1)
     capture(File.join(dir, "03-Place.png"))
-    # The top bar's back button, not BACK: BACK sometimes left the app, and the next taps landed on the launcher.
-    tap_label("common_done", language)
+    go_back(language)
     sleep(2)
 
-    tap_tab("tab_todos", language)
+    open_all_todos(language)
     sleep(4)
     capture(File.join(dir, "06-Todos.png"))
 
     # Back on home, which has read the demo location by now, so distances and the small map are right.
-    tap_tab("tab_home", language)
+    go_back(language)
     sleep(4)
     capture(File.join(dir, "04-Nearby.png"))
 
@@ -530,7 +556,7 @@ platform :android do
     adb("shell", "cmd", "statusbar", "collapse")
     sleep(1)
 
-    tap_tab("tab_map", language)
+    open_map(language)
     sleep(2)
     recenter_map(language)
     capture(File.join(dir, "05-Map.png"))
