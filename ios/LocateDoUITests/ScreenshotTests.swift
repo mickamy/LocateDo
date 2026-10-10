@@ -24,10 +24,13 @@ final class ScreenshotTests: XCTestCase {
 
         let grocery = app.staticTexts[seed.groceryName].firstMatch
         XCTAssertTrue(grocery.waitForExistence(timeout: 10))
+        // The map preview shows where you are in gray until the location settles, then moves there and loads the
+        // map around it.
+        sleep(8)
         snapshot("04-Nearby")
 
         grocery.tap()
-        XCTAssertTrue(app.staticTexts[seed.firstTodo].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.todoRow(seed.firstTodo).waitForExistence(timeout: 5))
         snapshot("03-Place")
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
@@ -37,7 +40,7 @@ final class ScreenshotTests: XCTestCase {
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
         app.buttons["home.allTodos"].tap()
-        XCTAssertTrue(app.staticTexts[seed.firstTodo].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.todoRow(seed.firstTodo).waitForExistence(timeout: 5))
         snapshot("06-Todos")
 
         // Last, the lock screen: each debug action clears what was delivered before, so one notification shows.
@@ -77,19 +80,24 @@ final class ScreenshotTests: XCTestCase {
         let later = app.buttons["onboarding.later"]
         XCTAssertTrue(later.waitForExistence(timeout: 5))
         later.tap()
+        // Its location page is skipped once "Always" is read; should the app not have read it yet, it asks here.
+        let allowLocation = app.buttons["onboarding.allowLocation"]
+        if allowLocation.waitForExistence(timeout: 2) {
+            allowLocation.tap()
+        }
         let banner = app.buttons["home.permissionBanner"]
-        XCTAssertTrue(banner.waitForExistence(timeout: 5))
+        XCTAssertTrue(banner.waitForExistence(timeout: 15))
         banner.tap()
         allowSystemAlert()
+        // The banner stays when notifications end up denied.
+        XCTAssertTrue(banner.waitForNonExistence(timeout: 10))
     }
 
     // The notification alert reads "Don't Allow / Allow". On a freshly erased simulator it can take
     // more than 10 seconds to appear.
     @MainActor
     private func allowSystemAlert() {
-        let alert = springboard.alerts.firstMatch
-        XCTAssertTrue(alert.waitForExistence(timeout: 60))
-        alert.buttons.element(boundBy: 1).tap()
+        tapAllow(in: springboard.alerts.firstMatch)
     }
 }
 
@@ -113,4 +121,21 @@ private struct Seed {
             partnerName = "Alex"
         }
     }
+}
+
+extension XCUIApplication {
+    // A to-do row reads as one button labeled with its title, then any assignee or who checked it off.
+    func todoRow(_ title: String) -> XCUIElement {
+        buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
+    }
+}
+
+// The notification alert, answered by its label: which position "Allow" takes is not the same on every run, and a
+// "Don't Allow" taken for it leaves every later notification unsaved.
+@MainActor
+func tapAllow(in alert: XCUIElement) {
+    XCTAssertTrue(alert.waitForExistence(timeout: 60))
+    let allow = alert.buttons.matching(NSPredicate(format: "label IN %@", ["Allow", "許可"])).firstMatch
+    XCTAssertTrue(allow.waitForExistence(timeout: 5), "No Allow button: \(alert.debugDescription)")
+    allow.tap()
 }

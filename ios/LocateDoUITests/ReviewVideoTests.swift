@@ -22,24 +22,25 @@ final class ReviewVideoTests: XCTestCase {
         print("REVIEW_VIDEO_START \(Date().timeIntervalSince1970)")
         pause(2)
 
+        // Adding a place starts on the map, then names it, picks its category, and writes its to-dos.
         app.buttons["Add a place"].firstMatch.tapWhenReady()
-        let name = app.textFields.firstMatch
-        name.tapWhenReady()
-        name.typeText("Grocery store")
-        app.buttons["Choose on map"].tapWhenReady()
         app.buttons["Use current location"].tapWhenReady()
         pause(1)
         app.buttons["Use this location"].tapWhenReady()
+        pause(1)
+        app.textFields.firstMatch.replaceText(with: "Grocery store")
+        app.buttons["Next"].tapWhenReady()
+        app.staticTexts["Shopping"].firstMatch.tapWhenReady()
+        pause(1)
+        app.buttons["Next"].tapWhenReady()
+        app.textFields["placeEditor.todoDraft"].tapWhenReady()
+        app.textFields["placeEditor.todoDraft"].typeText("Milk")
         pause(1)
         app.buttons["Save"].tapWhenReady()
         pause(2)
 
         app.staticTexts["Grocery store"].firstMatch.tapWhenReady()
-        app.buttons["Add a to-do"].firstMatch.tapWhenReady()
-        let title = app.textFields.firstMatch
-        title.tapWhenReady()
-        title.typeText("Buy milk")
-        app.buttons["Save"].tapWhenReady()
+        XCTAssertTrue(app.todoRow("Milk").waitForExistence(timeout: 5))
         pause(2)
 
         app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
@@ -62,15 +63,19 @@ final class ReviewVideoTests: XCTestCase {
         app.buttons["settings.done"].tapWhenReady()
     }
 
-    // The first keyboard on an erased simulator shows a swipe-typing tip; it is dismissed here, off camera.
+    // The first keyboard on an erased simulator shows a swipe-typing tip; it is dismissed here, off camera, from the
+    // map's search field. Cancel closes the search, then the sheet.
     @MainActor
     private func dismissKeyboardTip(_ app: XCUIApplication) {
         app.buttons["Add a place"].firstMatch.tapWhenReady()
-        app.textFields.firstMatch.tapWhenReady()
+        app.searchFields.firstMatch.tapWhenReady()
         let tip = app.buttons["Continue"]
         XCTAssertTrue(tip.waitForExistence(timeout: 10))
         tip.tap()
-        app.buttons["Cancel"].tapWhenReady()
+        while app.buttons["Cancel"].firstMatch.waitForExistence(timeout: 2) {
+            app.buttons["Cancel"].firstMatch.tap()
+        }
+        XCTAssertTrue(app.buttons["Add a place"].firstMatch.waitForExistence(timeout: 5))
     }
 
     // Leaves time for the viewer to follow each step.
@@ -84,5 +89,14 @@ private extension XCUIElement {
     func tapWhenReady(timeout: TimeInterval = 10) {
         XCTAssertTrue(waitForExistence(timeout: timeout), "\(self) did not appear")
         tap()
+    }
+
+    // The name comes filled in from the address of the pick, so it is cleared before typing.
+    @MainActor
+    func replaceText(with text: String) {
+        tapWhenReady()
+        let current = value as? String ?? ""
+        typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
+        typeText(text)
     }
 }

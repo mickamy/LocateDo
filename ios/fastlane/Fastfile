@@ -42,8 +42,10 @@ def simulator_udid(device)
   match["udid"]
 end
 
-# Builds the Debug app with the store icon and starts an erased simulator with it installed and "Always" granted.
-def prepare_recording_simulator(udid)
+# Builds the Debug app with the store icon and starts an erased simulator with it installed and "Always" granted. With
+# a language other than the simulator's English, the simulator itself switches to it, so the lock screen matches the
+# app.
+def prepare_recording_simulator(udid, language: nil)
   root = File.expand_path("..", __dir__)
   derived_data = UI_TEST_DERIVED_DATA
   sh("xcodebuild", "build-for-testing", "-project", File.join(root, PROJECT), "-scheme", "dev",
@@ -53,6 +55,13 @@ def prepare_recording_simulator(udid)
   sh("xcrun", "simctl", "erase", udid)
   sh("xcrun", "simctl", "boot", udid)
   sh("xcrun", "simctl", "bootstatus", udid, "-b")
+  if language && language != "en-US"
+    locale = language == "ja" ? "ja_JP" : language.tr("-", "_")
+    sh("xcrun", "simctl", "spawn", udid, "defaults", "write", "-g", "AppleLanguages", "-array", language)
+    sh("xcrun", "simctl", "spawn", udid, "defaults", "write", "-g", "AppleLocale", "-string", locale)
+    sh("xcrun", "simctl", "shutdown", udid)
+    boot_simulator(udid)
+  end
   sh("xcrun", "simctl", "status_bar", udid, "override", "--time", "9:41",
      "--batteryState", "charged", "--batteryLevel", "100")
   # Granted up front so the recording shows neither the permission alerts nor the "Always" banner.
@@ -118,11 +127,11 @@ end
 # nothing has to be found in one long recording. The test prints "PREVIEW <scene> start" and waits for
 # <scene>.recording in the signals folder, then prints "PREVIEW <scene> end" and waits for <scene>.stopped.
 # Returns the scenes recorded.
-def record_preview_scenes(udid:, work:, env: {})
+def record_preview_scenes(udid:, work:, language:, env: {})
   FileUtils.rm_rf(work)
   signals = File.join(work, "signals")
   FileUtils.mkdir_p(signals)
-  prepare_recording_simulator(udid)
+  prepare_recording_simulator(udid, language: language)
   results = File.join(work, "results.xcresult")
   recorded = []
   recorder = nil
@@ -547,24 +556,24 @@ platform :ios do
 
   PREVIEW_HOLD = 0.8
 
-  # Captions per scene, in the order the preview tells the story; it closes on the app's tagline over home. Options:
-  # minimum, the least a scene is shown, and how long a scene the test took as a screenshot is shown; caption, extra
-  # arguments for caption.swift, such as --top to keep the caption off the notification at the bottom of the lock
-  # screen.
+  # Captions per scene, in the order the preview tells the story; it closes on the line that leads onboarding, over
+  # home. Options: minimum, the least a scene is shown, and how long a scene the test took as a screenshot is shown;
+  # caption, extra arguments for caption.swift, such as --top to keep the caption off the notification at the bottom
+  # of the lock screen.
   PREVIEW_SCENES = {
     "en-US" => [
       ["arrival", "Get reminded at the store", { minimum: 3.5, caption: "--top" }],
       ["place", "Check things off as you shop"],
       ["map", "All your places on one map"],
       ["todos", "Every list in one place"],
-      ["home", "Where you go reminds you\nwhat to do"],
+      ["home", "Never forget\nthe milk again"],
     ],
     "ja" => [
       ["arrival", "お店に着いたら、お知らせ", { minimum: 3.5, caption: "--top" }],
       ["place", "買ったらチェック"],
       ["map", "場所はマップでも"],
       ["todos", "買い物リストをまとめて"],
-      ["home", "行く場所が、\nやることを思い出させる"],
+      ["home", "もう、買い忘れない。"],
     ],
   }.freeze
 
@@ -576,7 +585,8 @@ platform :ios do
     PREVIEW_SCENES.each do |language, scenes|
       work = File.join(root, "build/app-preview", language)
       recorded = record_preview_scenes(
-        udid: udid, work: work, env: { "TEST_RUNNER_PREVIEW_LANGUAGE" => language.split("-").first }
+        udid: udid, work: work, language: language,
+        env: { "TEST_RUNNER_PREVIEW_LANGUAGE" => language.split("-").first }
       )
       inputs = []
       filters = []

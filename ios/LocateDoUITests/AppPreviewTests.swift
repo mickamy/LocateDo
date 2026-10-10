@@ -18,7 +18,10 @@ final class AppPreviewTests: XCTestCase {
         let seed = PreviewSeed(japanese: japanese)
         XCUIDevice.shared.location = XCUILocation(location: seed.center)
         let app = launchApp(japanese: japanese)
-        allowNotifications(app)
+        allowNotifications(app, allowedLabel: seed.allowedLabel)
+        // The simulator's notification store learns of the grant seconds after the app does; a notification scheduled
+        // before that is refused as unauthorized (UNErrorDomain 2003), so the arrival waits.
+        pause(20)
 
         // The screen recording does not reliably catch the notification landing on the lock screen, so this scene
         // is a screenshot the lane holds. The home button then unlocks a simulator without a passcode, back on the
@@ -37,13 +40,17 @@ final class AppPreviewTests: XCTestCase {
         XCUIDevice.shared.press(.home)
         app.activate()
 
-        XCTAssertTrue(app.buttons[seed.firstTodo].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.todoRow(seed.firstTodo).waitForExistence(timeout: 10))
+        // A tap waits for the app to settle, which can take seconds here; the screen it waits on is what the scene
+        // shows, so the scene adds little waiting of its own and stays within the 30 s a preview may run.
         scene("place") {
+            toggle(app.todoRow(seed.firstTodo))
             pause(1)
-            toggle(app.buttons[seed.firstTodo])
-            pause(2)
-            toggle(app.buttons[seed.secondTodo])
-            pause(2)
+            toggle(app.todoRow(seed.secondTodo))
+            // The second tap lands late, so the scene waits for it to show before holding on the result.
+            waitUntilDone(app.todoRow(seed.secondTodo), doneValue: seed.doneValue)
+            // The recording drops its last second or two when stopped, so the hold is longer than it looks.
+            pause(4)
         }
 
         app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
@@ -51,22 +58,23 @@ final class AppPreviewTests: XCTestCase {
         app.buttons["home.map"].tapWhenReady()
         pause(2)
         scene("map") {
-            pause(4)
+            pause(3)
         }
 
         app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
         app.buttons["home.allTodos"].tapWhenReady()
         pause(1)
+        // All To-Dos opens on Open; All brings back the two just checked off.
         scene("todos") {
             pause(2)
-            app.segmentedControls.buttons[seed.openFilter].tapWhenReady()
+            app.segmentedControls.buttons[seed.allFilter].tapWhenReady()
             pause(3)
         }
 
         app.navigationBars.buttons.element(boundBy: 0).tapWhenReady()
         XCTAssertTrue(grocery.waitForExistence(timeout: 5))
         scene("home") {
-            pause(4)
+            pause(3)
         }
     }
 
@@ -120,6 +128,11 @@ final class AppPreviewTests: XCTestCase {
         }
     }
 
+    private func waitUntilDone(_ row: XCUIElement, doneValue: String) {
+        let done = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", doneValue), object: row)
+        XCTAssertEqual(XCTWaiter.wait(for: [done], timeout: 10), .completed)
+    }
+
     // A to-do row reads as one button; its checkbox sits at the leading edge.
     @MainActor
     private func toggle(_ row: XCUIElement) {
@@ -130,13 +143,12 @@ final class AppPreviewTests: XCTestCase {
     // Off camera, before the arrival. The alert can take more than 10 seconds to appear on a freshly erased
     // simulator.
     @MainActor
-    private func allowNotifications(_ app: XCUIApplication) {
+    private func allowNotifications(_ app: XCUIApplication, allowedLabel: String) {
         app.buttons["home.settings"].tapWhenReady()
         app.buttons["settings.allowNotifications"].tapWhenReady()
-        let alert = springboard.alerts.firstMatch
-        XCTAssertTrue(alert.waitForExistence(timeout: 60))
-        alert.buttons.element(boundBy: 1).tap()
-        XCTAssertTrue(app.buttons["settings.allowNotifications"].waitForNonExistence(timeout: 10))
+        tapAllow(in: springboard.alerts.firstMatch)
+        // Denied would hide the button too, so the status itself is checked.
+        XCTAssertTrue(app.staticTexts[allowedLabel].waitForExistence(timeout: 10))
         app.buttons["settings.done"].tapWhenReady()
     }
 
@@ -150,7 +162,9 @@ private struct PreviewSeed {
     let groceryName: String
     let firstTodo: String
     let secondTodo: String
-    let openFilter: String
+    let allowedLabel: String
+    let doneValue: String
+    let allFilter: String
 
     // Matches ScreenshotSeed in the app.
     init(japanese: Bool) {
@@ -159,13 +173,17 @@ private struct PreviewSeed {
             groceryName = "スーパー"
             firstTodo = "牛乳"
             secondTodo = "卵"
-            openFilter = "未完了"
+            allowedLabel = "許可"
+            doneValue = "完了"
+            allFilter = "すべて"
         } else {
             center = CLLocation(latitude: 37.77627, longitude: -122.41924)
             groceryName = "Grocery store"
             firstTodo = "Milk"
             secondTodo = "Eggs"
-            openFilter = "Open"
+            allowedLabel = "Allowed"
+            doneValue = "Done"
+            allFilter = "All"
         }
     }
 }
