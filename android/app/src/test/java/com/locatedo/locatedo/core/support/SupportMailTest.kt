@@ -17,6 +17,7 @@ class SupportMailTest {
         language = "ja",
         timeZone = "Asia/Tokyo",
         supportId = "1a2b3c",
+        sharesUsageData = true,
         userId = UUID.fromString("0198f2a4-1c3b-7d2e-9f00-0123456789ab"),
         plan = DailyState.PlanState.TRIAL,
         locationAuth = LocationAuth.ALWAYS,
@@ -59,6 +60,15 @@ class SupportMailTest {
         assertTrue(signedOut.text.contains("Location: always, approximate"))
         assertTrue(signedOut.text.contains("Battery saver: on"))
         assertTrue(signedOut.text.contains("Battery usage: restricted"))
+        assertFalse(signedOut.text.contains("Usage data"))
+    }
+
+    @Test
+    fun saysUsageDataIsOffInsteadOfTheSupportId() {
+        val declined = diagnostics.copy(supportId = null, sharesUsageData = false)
+
+        assertFalse(declined.text.contains("Support ID"))
+        assertTrue(declined.text.contains("Usage data: off"))
     }
 
     @Test

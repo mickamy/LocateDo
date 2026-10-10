@@ -1,11 +1,13 @@
 package com.locatedo.locatedo.feature.onboarding
 
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
+import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.SettableClock
+import com.locatedo.locatedo.testing.fakeAnalyticsConsent
 import com.locatedo.locatedo.testing.testPreferences
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +50,7 @@ class OnboardingViewModelTest {
     fun startingMovesFromTheIntroToThePrivacyPage() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
-        val viewModel = OnboardingViewModel(preferences, permissions, analytics, clock)
+        val viewModel = viewModel(preferences, permissions)
         assertEquals(OnboardingStep.INTRO, viewModel.step.value)
 
         viewModel.start()
@@ -61,7 +63,7 @@ class OnboardingViewModelTest {
     fun asksForNotificationsAfterLocationWhenTheyAreStillUndecided() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
-        val viewModel = OnboardingViewModel(preferences, permissions, analytics, clock)
+        val viewModel = viewModel(preferences, permissions)
 
         viewModel.locationRequested()
 
@@ -79,7 +81,7 @@ class OnboardingViewModelTest {
     fun finishesRightAfterLocationWhenNotificationsAreAlreadyDecided() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository(LocationAuth.WHEN_IN_USE, NotificationAuth.AUTHORIZED)
-        val viewModel = OnboardingViewModel(preferences, permissions, analytics, clock)
+        val viewModel = viewModel(preferences, permissions)
 
         viewModel.locationRequested()
 
@@ -91,7 +93,7 @@ class OnboardingViewModelTest {
     fun skippingNotificationsCompletesOnboardingWithoutAsking() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository()
-        val viewModel = OnboardingViewModel(preferences, permissions, analytics, clock)
+        val viewModel = viewModel(preferences, permissions)
         viewModel.locationRequested()
 
         viewModel.skipNotifications()
@@ -104,7 +106,7 @@ class OnboardingViewModelTest {
     fun finishingLogsWhatWasGrantedAndHowLongItTook() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository(LocationAuth.WHEN_IN_USE, NotificationAuth.DENIED)
-        val viewModel = OnboardingViewModel(preferences, permissions, analytics, clock)
+        val viewModel = viewModel(preferences, permissions)
         clock.now = now.plusSeconds(15)
 
         viewModel.locationRequested()
@@ -114,4 +116,40 @@ class OnboardingViewModelTest {
             analytics.values(AnalyticsEvent.ONBOARDING_COMPLETED),
         )
     }
+
+    @Test
+    fun asksAboutUsageDataLastInTheEeaAndTheUk() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        preferences.setAnalyticsConsentRequired(true)
+        val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
+        val viewModel = viewModel(preferences, permissions)
+        viewModel.locationRequested()
+
+        viewModel.notificationsRequested()
+
+        assertEquals(OnboardingStep.ANALYTICS, viewModel.step.value)
+        assertFalse(preferences.data.first().hasCompletedOnboarding)
+
+        viewModel.answerAnalytics(false)
+
+        assertEquals(false, preferences.analyticsConsent.first().answer)
+        assertTrue(preferences.data.first().hasCompletedOnboarding)
+        assertEquals(1, analytics.count(AnalyticsEvent.ONBOARDING_COMPLETED))
+    }
+
+    @Test
+    fun doesNotAskAboutUsageDataElsewhere() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        preferences.setAnalyticsConsentRequired(false)
+        val viewModel = viewModel(preferences, FakePermissionsRepository())
+        viewModel.locationRequested()
+
+        viewModel.skipNotifications()
+
+        assertTrue(preferences.data.first().hasCompletedOnboarding)
+        assertEquals(null, preferences.analyticsConsent.first().answer)
+    }
+
+    private fun viewModel(preferences: AppPreferences, permissions: FakePermissionsRepository) =
+        OnboardingViewModel(preferences, permissions, analytics, fakeAnalyticsConsent(preferences, analytics), clock)
 }

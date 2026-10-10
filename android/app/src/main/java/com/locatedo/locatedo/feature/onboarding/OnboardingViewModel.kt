@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsConsent
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.analyticsKey
@@ -22,6 +23,7 @@ enum class OnboardingStep(val key: String) {
     INTRO("intro"),
     PRIVACY("privacy"),
     NOTIFICATIONS("notifications"),
+    ANALYTICS("analytics"),
 }
 
 @HiltViewModel
@@ -29,6 +31,7 @@ class OnboardingViewModel @Inject constructor(
     private val preferences: AppPreferences,
     private val permissions: PermissionsRepository,
     private val analytics: Analytics,
+    private val analyticsConsent: AnalyticsConsent,
     private val clock: Clock,
 ) : ViewModel() {
     private val _step = MutableStateFlow(OnboardingStep.INTRO)
@@ -66,7 +69,23 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    // Asked last in the EEA and the UK; what was logged before the answer is sent or dropped with it.
+    fun answerAnalytics(isOn: Boolean) {
+        viewModelScope.launch {
+            analyticsConsent.set(isOn, AnalyticsConsent.Source.ONBOARDING)
+            complete()
+        }
+    }
+
     private suspend fun finish() {
+        if (analyticsConsent.state.first().needsAnswer) {
+            _step.value = OnboardingStep.ANALYTICS
+            return
+        }
+        complete()
+    }
+
+    private suspend fun complete() {
         val granted = permissions.observe().first()
         analytics.log(
             AnalyticsEvent.ONBOARDING_COMPLETED,

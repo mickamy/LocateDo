@@ -32,6 +32,7 @@ import androidx.lifecycle.ViewModel
 import com.locatedo.locatedo.BuildConfig
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsConsent
 import com.locatedo.locatedo.core.analytics.DailyState
 import com.locatedo.locatedo.core.auth.Authenticator
 import com.locatedo.locatedo.core.billing.Entitlements
@@ -58,6 +59,7 @@ class ContactSupportViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val displayLanguage: DisplayLanguage,
     private val analytics: Analytics,
+    private val analyticsConsent: AnalyticsConsent,
 ) : ViewModel() {
     suspend fun diagnostics(): SupportDiagnostics {
         val granted = permissions.observe().first()
@@ -68,6 +70,7 @@ class ContactSupportViewModel @Inject constructor(
             language = displayLanguage.current(),
             timeZone = ZoneId.systemDefault().id,
             supportId = analytics.appInstanceId(),
+            sharesUsageData = analyticsConsent.state.first().isSending,
             userId = authenticator.current()?.userId,
             plan = DailyState.plan(entitlements.subscription.value, syncStateRepository.get().plan),
             locationAuth = granted.location,

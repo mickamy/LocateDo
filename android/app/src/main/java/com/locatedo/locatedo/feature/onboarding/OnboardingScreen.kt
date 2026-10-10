@@ -19,16 +19,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,7 +46,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.common.LegalLinks
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import kotlinx.coroutines.delay
 
@@ -102,6 +109,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
                     },
                     onLater = viewModel::skipNotifications,
                 )
+                OnboardingStep.ANALYTICS -> AnalyticsConsentStep(onAnswer = viewModel::answerAnalytics)
             }
         }
     }
@@ -240,6 +248,36 @@ private fun ColumnScope.Notifications(isRequesting: Boolean, onAllow: () -> Unit
     }
     TextButton(onClick = onLater, enabled = !isRequesting) {
         Text(stringResource(R.string.onboarding_later))
+    }
+}
+
+@Composable
+private fun ColumnScope.AnalyticsConsentStep(onAnswer: (Boolean) -> Unit) {
+    val uriHandler = LocalUriHandler.current
+    val locale = LocalConfiguration.current.locales[0]
+    Spacer(Modifier.weight(1f))
+    Hero(Icons.Filled.BarChart)
+    Text(
+        text = stringResource(R.string.onboarding_analytics_title),
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+    )
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Point(Icons.Filled.Person, R.string.onboarding_analytics_message)
+        Point(Icons.Filled.Lock, R.string.onboarding_analytics_not_sent)
+        Point(Icons.Filled.Settings, R.string.onboarding_analytics_settings)
+    }
+    TextButton(onClick = { uriHandler.openUri(LegalLinks.privacyPolicy(locale)) }) {
+        Text(stringResource(R.string.settings_about_privacy_policy))
+    }
+    Spacer(Modifier.weight(1f))
+    // Same size and place, so declining is as easy as agreeing.
+    Button(onClick = { onAnswer(true) }, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.onboarding_analytics_allow))
+    }
+    OutlinedButton(onClick = { onAnswer(false) }, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.onboarding_analytics_deny))
     }
 }
 

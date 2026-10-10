@@ -187,6 +187,7 @@ fun SettingsScreen(
                 onRestore = viewModel::restorePurchases,
             )
             HorizontalDivider()
+            UsageDataSection()
             SectionHeader(stringResource(R.string.settings_about_title))
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_about_version)) },
