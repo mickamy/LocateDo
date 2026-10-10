@@ -64,20 +64,12 @@ public interface TodoInputOrBuilder extends
       getAssigneeIdBytes();
 
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    * @return Whether the trigger field is set.
    */
   boolean hasTrigger();
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    * @return The trigger.
    */
   com.locatedo.todo.v1.Trigger getTrigger();

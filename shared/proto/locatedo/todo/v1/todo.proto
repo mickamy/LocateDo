@@ -22,7 +22,10 @@ enum PlaceEvent {
 
 // When a to-do is brought up. Later conditions, such as repeating, belong here.
 message Trigger {
-  PlaceEvent event = 1 [(buf.validate.field).enum.defined_only = true];
+  PlaceEvent event = 1 [(buf.validate.field).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
 }
 
 message Todo {
@@ -37,7 +40,6 @@ message Todo {
   // Recorded by the server from the caller; unset for to-dos from before it did.
   optional string creator_id = 9;
   optional string completer_id = 10;
-  // Always set.
   Trigger trigger = 11;
 }
 
@@ -49,8 +51,7 @@ message TodoInput {
     max_len: 200
   }];
   optional string assignee_id = 4 [(buf.validate.field).string.uuid = true];
-  // Unset, or an unspecified event, means arrival.
-  Trigger trigger = 5;
+  Trigger trigger = 5 [(buf.validate.field).required = true];
 }
 
 message PutTodoRequest {

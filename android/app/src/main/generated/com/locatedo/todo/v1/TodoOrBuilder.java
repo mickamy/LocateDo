@@ -150,19 +150,11 @@ public interface TodoOrBuilder extends
       getCompleterIdBytes();
 
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    * @return Whether the trigger field is set.
    */
   boolean hasTrigger();
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    * @return The trigger.
    */

@@ -105,11 +105,7 @@ public object TodoInputKt {
     }
 
     /**
-     * ```
-     * Unset, or an unspecified event, means arrival.
-     * ```
-     *
-     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];`
+     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }`
      */
     public var trigger: com.locatedo.todo.v1.Trigger
       @kotlin.jvm.JvmName("getTrigger")
@@ -119,21 +115,13 @@ public object TodoInputKt {
         _builder.trigger = value
       }
     /**
-     * ```
-     * Unset, or an unspecified event, means arrival.
-     * ```
-     *
-     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];`
+     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }`
      */
     public fun clearTrigger() {
       _builder.clearTrigger()
     }
     /**
-     * ```
-     * Unset, or an unspecified event, means arrival.
-     * ```
-     *
-     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];`
+     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }`
      * @return Whether the trigger field is set.
      */
     public fun hasTrigger(): kotlin.Boolean {

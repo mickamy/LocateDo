@@ -220,33 +220,21 @@ public  final class TodoInput extends
   public static final int TRIGGER_FIELD_NUMBER = 5;
   private com.locatedo.todo.v1.Trigger trigger_;
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    */
   @java.lang.Override
   public boolean hasTrigger() {
     return ((bitField0_ & 0x00000002) != 0);
   }
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    */
   @java.lang.Override
   public com.locatedo.todo.v1.Trigger getTrigger() {
     return trigger_ == null ? com.locatedo.todo.v1.Trigger.getDefaultInstance() : trigger_;
   }
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    */
   private void setTrigger(com.locatedo.todo.v1.Trigger value) {
     java.util.Objects.requireNonNull(value);
@@ -254,11 +242,7 @@ public  final class TodoInput extends
     bitField0_ |= 0x00000002;
   }
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    */
   @java.lang.SuppressWarnings("ReferenceEquality")
   private void mergeTrigger(com.locatedo.todo.v1.Trigger value) {
@@ -273,11 +257,7 @@ public  final class TodoInput extends
     bitField0_ |= 0x00000002;
   }
   /**
-   * <pre>
-   * Unset, or an unspecified event, means arrival.
-   * </pre>
-   *
-   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+   * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
    */
   private void clearTrigger() {
     trigger_ = null;
@@ -586,33 +566,21 @@ public  final class TodoInput extends
     }
 
     /**
-     * <pre>
-     * Unset, or an unspecified event, means arrival.
-     * </pre>
-     *
-     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
      */
     @java.lang.Override
     public boolean hasTrigger() {
       return instance.hasTrigger();
     }
     /**
-     * <pre>
-     * Unset, or an unspecified event, means arrival.
-     * </pre>
-     *
-     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
      */
     @java.lang.Override
     public com.locatedo.todo.v1.Trigger getTrigger() {
       return instance.getTrigger();
     }
     /**
-     * <pre>
-     * Unset, or an unspecified event, means arrival.
-     * </pre>
-     *
-     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
      */
     public Builder setTrigger(com.locatedo.todo.v1.Trigger value) {
       copyOnWrite();
@@ -620,11 +588,7 @@ public  final class TodoInput extends
       return this;
       }
     /**
-     * <pre>
-     * Unset, or an unspecified event, means arrival.
-     * </pre>
-     *
-     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
      */
     public Builder setTrigger(
         com.locatedo.todo.v1.Trigger.Builder builderForValue) {
@@ -633,11 +597,7 @@ public  final class TodoInput extends
       return this;
     }
     /**
-     * <pre>
-     * Unset, or an unspecified event, means arrival.
-     * </pre>
-     *
-     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
      */
     public Builder mergeTrigger(com.locatedo.todo.v1.Trigger value) {
       copyOnWrite();
@@ -645,11 +605,7 @@ public  final class TodoInput extends
       return this;
     }
     /**
-     * <pre>
-     * Unset, or an unspecified event, means arrival.
-     * </pre>
-     *
-     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];</code>
+     * <code>.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger", (.buf.validate.field) = { ... }</code>
      */
     public Builder clearTrigger() {  copyOnWrite();
       instance.clearTrigger();

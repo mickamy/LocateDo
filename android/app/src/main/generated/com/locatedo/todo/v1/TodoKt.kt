@@ -253,10 +253,6 @@ public object TodoKt {
     }
 
     /**
-     * ```
-     * Always set.
-     * ```
-     *
      * `.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];`
      */
     public var trigger: com.locatedo.todo.v1.Trigger
@@ -267,20 +263,12 @@ public object TodoKt {
         _builder.trigger = value
       }
     /**
-     * ```
-     * Always set.
-     * ```
-     *
      * `.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];`
      */
     public fun clearTrigger() {
       _builder.clearTrigger()
     }
     /**
-     * ```
-     * Always set.
-     * ```
-     *
      * `.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];`
      * @return Whether the trigger field is set.
      */

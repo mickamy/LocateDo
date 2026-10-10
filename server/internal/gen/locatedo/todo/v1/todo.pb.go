@@ -129,9 +129,8 @@ type Todo struct {
 	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	Version     int64                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
 	// Recorded by the server from the caller; unset for to-dos from before it did.
-	CreatorId   *string `protobuf:"bytes,9,opt,name=creator_id,json=creatorId,proto3,oneof" json:"creator_id,omitempty"`
-	CompleterId *string `protobuf:"bytes,10,opt,name=completer_id,json=completerId,proto3,oneof" json:"completer_id,omitempty"`
-	// Always set.
+	CreatorId     *string  `protobuf:"bytes,9,opt,name=creator_id,json=creatorId,proto3,oneof" json:"creator_id,omitempty"`
+	CompleterId   *string  `protobuf:"bytes,10,opt,name=completer_id,json=completerId,proto3,oneof" json:"completer_id,omitempty"`
 	Trigger       *Trigger `protobuf:"bytes,11,opt,name=trigger,proto3" json:"trigger,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -245,13 +244,12 @@ func (x *Todo) GetTrigger() *Trigger {
 }
 
 type TodoInput struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	PlaceId    string                 `protobuf:"bytes,2,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
-	Title      string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	AssigneeId *string                `protobuf:"bytes,4,opt,name=assignee_id,json=assigneeId,proto3,oneof" json:"assignee_id,omitempty"`
-	// Unset, or an unspecified event, means arrival.
-	Trigger       *Trigger `protobuf:"bytes,5,opt,name=trigger,proto3" json:"trigger,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	PlaceId       string                 `protobuf:"bytes,2,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	AssigneeId    *string                `protobuf:"bytes,4,opt,name=assignee_id,json=assigneeId,proto3,oneof" json:"assignee_id,omitempty"`
+	Trigger       *Trigger               `protobuf:"bytes,5,opt,name=trigger,proto3" json:"trigger,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -582,9 +580,10 @@ var File_locatedo_todo_v1_todo_proto protoreflect.FileDescriptor
 
 const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\n" +
-	"\x1blocatedo/todo/v1/todo.proto\x12\x10locatedo.todo.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"G\n" +
-	"\aTrigger\x12<\n" +
-	"\x05event\x18\x01 \x01(\x0e2\x1c.locatedo.todo.v1.PlaceEventB\b\xbaH\x05\x82\x01\x02\x10\x01R\x05event\"\xeb\x03\n" +
+	"\x1blocatedo/todo/v1/todo.proto\x12\x10locatedo.todo.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"I\n" +
+	"\aTrigger\x12>\n" +
+	"\x05event\x18\x01 \x01(\x0e2\x1c.locatedo.todo.v1.PlaceEventB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x05event\"\xeb\x03\n" +
 	"\x04Todo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fhousehold_id\x18\x02 \x01(\tR\vhouseholdId\x12\x19\n" +
@@ -604,15 +603,15 @@ const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\f_assignee_idB\x0f\n" +
 	"\r_completed_atB\r\n" +
 	"\v_creator_idB\x0f\n" +
-	"\r_completer_id\"\xe1\x01\n" +
+	"\r_completer_id\"\xe9\x01\n" +
 	"\tTodoInput\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12#\n" +
 	"\bplace_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\aplaceId\x12 \n" +
 	"\x05title\x18\x03 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xc8\x01R\x05title\x12.\n" +
 	"\vassignee_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\n" +
-	"assigneeId\x88\x01\x01\x123\n" +
-	"\atrigger\x18\x05 \x01(\v2\x19.locatedo.todo.v1.TriggerR\atriggerB\x0e\n" +
+	"assigneeId\x88\x01\x01\x12;\n" +
+	"\atrigger\x18\x05 \x01(\v2\x19.locatedo.todo.v1.TriggerB\x06\xbaH\x03\xc8\x01\x01R\atriggerB\x0e\n" +
 	"\f_assignee_id\"v\n" +
 	"\x0ePutTodoRequest\x12+\n" +
 	"\fhousehold_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vhouseholdId\x127\n" +

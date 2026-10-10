@@ -524,10 +524,6 @@ public  final class Todo extends
   public static final int TRIGGER_FIELD_NUMBER = 11;
   private com.locatedo.todo.v1.Trigger trigger_;
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    */
   @java.lang.Override
@@ -535,10 +531,6 @@ public  final class Todo extends
     return ((bitField0_ & 0x00000020) != 0);
   }
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    */
   @java.lang.Override
@@ -546,10 +538,6 @@ public  final class Todo extends
     return trigger_ == null ? com.locatedo.todo.v1.Trigger.getDefaultInstance() : trigger_;
   }
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    */
   private void setTrigger(com.locatedo.todo.v1.Trigger value) {
@@ -558,10 +546,6 @@ public  final class Todo extends
     bitField0_ |= 0x00000020;
   }
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    */
   @java.lang.SuppressWarnings("ReferenceEquality")
@@ -577,10 +561,6 @@ public  final class Todo extends
     bitField0_ |= 0x00000020;
   }
   /**
-   * <pre>
-   * Always set.
-   * </pre>
-   *
    * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
    */
   private void clearTrigger() {
@@ -1199,10 +1179,6 @@ public  final class Todo extends
     }
 
     /**
-     * <pre>
-     * Always set.
-     * </pre>
-     *
      * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
      */
     @java.lang.Override
@@ -1210,10 +1186,6 @@ public  final class Todo extends
       return instance.hasTrigger();
     }
     /**
-     * <pre>
-     * Always set.
-     * </pre>
-     *
      * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
      */
     @java.lang.Override
@@ -1221,10 +1193,6 @@ public  final class Todo extends
       return instance.getTrigger();
     }
     /**
-     * <pre>
-     * Always set.
-     * </pre>
-     *
      * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
      */
     public Builder setTrigger(com.locatedo.todo.v1.Trigger value) {
@@ -1233,10 +1201,6 @@ public  final class Todo extends
       return this;
       }
     /**
-     * <pre>
-     * Always set.
-     * </pre>
-     *
      * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
      */
     public Builder setTrigger(
@@ -1246,10 +1210,6 @@ public  final class Todo extends
       return this;
     }
     /**
-     * <pre>
-     * Always set.
-     * </pre>
-     *
      * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
      */
     public Builder mergeTrigger(com.locatedo.todo.v1.Trigger value) {
@@ -1258,10 +1218,6 @@ public  final class Todo extends
       return this;
     }
     /**
-     * <pre>
-     * Always set.
-     * </pre>
-     *
      * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
      */
     public Builder clearTrigger() {  copyOnWrite();

@@ -133,7 +133,6 @@ nonisolated struct Locatedo_Todo_V1_Todo: Sendable {
   /// Clears the value of `completerID`. Subsequent reads from it will return its default value.
   mutating func clearCompleterID() {self._completerID = nil}
 
-  /// Always set.
   var trigger: Locatedo_Todo_V1_Trigger {
     get {_trigger ?? Locatedo_Todo_V1_Trigger()}
     set {_trigger = newValue}
@@ -175,7 +174,6 @@ nonisolated struct Locatedo_Todo_V1_TodoInput: Sendable {
   /// Clears the value of `assigneeID`. Subsequent reads from it will return its default value.
   mutating func clearAssigneeID() {self._assigneeID = nil}
 
-  /// Unset, or an unspecified event, means arrival.
   var trigger: Locatedo_Todo_V1_Trigger {
     get {_trigger ?? Locatedo_Todo_V1_Trigger()}
     set {_trigger = newValue}
