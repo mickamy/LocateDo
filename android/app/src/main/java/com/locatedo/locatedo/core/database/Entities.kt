@@ -39,7 +39,9 @@ data class PlaceEntity(
     val radiusMeters: Double,
     val categoryId: String?,
     val sortOrder: Int,
-    val lastNotifiedAt: Long?,
+    val lastArrivalNotifiedAt: Long? = null,
+    val lastDepartureNotifiedAt: Long? = null,
+    val enteredAt: Long? = null,
     val createdAt: Long,
     val updatedAt: Long,
 )

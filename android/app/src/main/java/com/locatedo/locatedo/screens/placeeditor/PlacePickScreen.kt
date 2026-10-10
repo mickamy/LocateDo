@@ -54,6 +54,7 @@ import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.places.PlaceDuplicateChoice
 import com.locatedo.locatedo.navigation.LocalNavigator
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 
 private const val PICK_ZOOM = 16f
 
@@ -62,7 +63,7 @@ private const val PICK_ZOOM = 16f
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacePickScreen(viewModel: PlaceEditorViewModel, onOpenSearch: () -> Unit) {
-    TrackScreen(AnalyticsScreen.PLACE_PICKER)
+    TrackScreen(AnalyticsScreen.PLACE_PICKER, opening = viewModel.uiState.value.draft.entry?.parameters.orEmpty())
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val preview = uiState.pickPreview

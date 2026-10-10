@@ -86,7 +86,7 @@ class ChangeApplierTest {
 
     @Test
     fun updatesExistingRowsAndKeepsLocalOnlyFields() = runTest {
-        val store = place("Store").copy(lastNotifiedAt = created)
+        val store = place("Store").copy(lastArrivalNotifiedAt = created, enteredAt = created)
         val milk = todo("Milk", store.id)
         database.placeDao().upsert(store.asEntity())
         database.todoDao().upsert(milk.asEntity())
@@ -98,7 +98,8 @@ class ChangeApplierTest {
 
         val place = checkNotNull(database.placeDao().get(store.id.toString()))
         assertEquals("Supermarket", place.name)
-        assertEquals(created.toEpochMilli(), place.lastNotifiedAt)
+        assertEquals(created.toEpochMilli(), place.lastArrivalNotifiedAt)
+        assertEquals(created.toEpochMilli(), place.enteredAt)
         assertEquals(fixedNow.toEpochMilli(), place.createdAt)
         val todo = checkNotNull(database.todoDao().get(milk.id.toString()))
         assertEquals("Oat milk", todo.title)

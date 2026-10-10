@@ -13,10 +13,12 @@ import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.ScreenTracker
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
 import com.locatedo.locatedo.core.auth.AppleSignInRequests
 import com.locatedo.locatedo.core.common.PlaceSelectionRequests
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.notifications.CampaignHandler
 import com.locatedo.locatedo.core.notifications.CampaignNotification
 import com.locatedo.locatedo.core.notifications.CompletionHandler
@@ -24,6 +26,7 @@ import com.locatedo.locatedo.core.sharing.InviteLink
 import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.app.LocateDoApp
 import com.locatedo.locatedo.ui.analytics.LocalAnalytics
+import com.locatedo.locatedo.ui.analytics.LocalScreenTracker
 import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import com.locatedo.locatedo.ui.theme.LocateDoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +43,8 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var analytics: Analytics
 
     @Inject lateinit var writeAnalytics: WriteAnalytics
+
+    @Inject lateinit var screenTracker: ScreenTracker
 
     @Inject lateinit var appStatus: AppStatusStore
 
@@ -59,7 +64,11 @@ class MainActivity : ComponentActivity() {
         openCompletion(intent)
         setContent {
             val status by appStatus.state.collectAsStateWithLifecycle()
-            CompositionLocalProvider(LocalAnalytics provides analytics, LocalAppStatus provides status) {
+            CompositionLocalProvider(
+                LocalAnalytics provides analytics,
+                LocalScreenTracker provides screenTracker,
+                LocalAppStatus provides status,
+            ) {
                 LocateDoTheme {
                     LocateDoApp()
                 }
@@ -123,29 +132,33 @@ class MainActivity : ComponentActivity() {
         inviteRequests.request(token)
     }
 
-    // An arrival notification carries its place; the extras are cleared so a recreated activity does not reopen it.
+    // A reminder carries its place; the extras are cleared so a recreated activity does not reopen it.
     private fun openRequestedPlace(intent: Intent?) {
         val raw = intent?.getStringExtra(EXTRA_PLACE_ID) ?: return
         val notifiedAt = intent.getLongExtra(EXTRA_NOTIFIED_AT, -1).takeIf { it >= 0 }?.let(Instant::ofEpochMilli)
+        val placeEvent = PlaceEvent.fromKey(intent.getStringExtra(EXTRA_PLACE_EVENT).orEmpty())
         intent.removeExtra(EXTRA_PLACE_ID)
         intent.removeExtra(EXTRA_NOTIFIED_AT)
+        intent.removeExtra(EXTRA_PLACE_EVENT)
         val placeId = runCatching { UUID.fromString(raw) }.getOrNull() ?: return
-        writeAnalytics.arrivalOpened(placeId, notifiedAt)
+        writeAnalytics.reminderOpened(placeId, placeEvent, notifiedAt)
         selectionRequests.request(placeId)
     }
 
     companion object {
         private const val EXTRA_PLACE_ID = "placeId"
         private const val EXTRA_NOTIFIED_AT = "notifiedAt"
+        private const val EXTRA_PLACE_EVENT = "placeEvent"
         private const val EXTRA_CAMPAIGN_ID = "campaignId"
         private const val EXTRA_CAMPAIGN_URL = "campaignUrl"
         private const val EXTRA_SENT_AT = "sentAt"
         private const val EXTRA_COMPLETION_COUNT = "completionCount"
         private const val TAG = "LocateDo"
 
-        fun placeIntent(context: Context, placeId: UUID, notifiedAt: Instant): Intent =
+        fun placeIntent(context: Context, placeId: UUID, placeEvent: PlaceEvent, notifiedAt: Instant): Intent =
             Intent(context, MainActivity::class.java)
                 .putExtra(EXTRA_PLACE_ID, placeId.toString())
+                .putExtra(EXTRA_PLACE_EVENT, placeEvent.key)
                 .putExtra(EXTRA_NOTIFIED_AT, notifiedAt.toEpochMilli())
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
 

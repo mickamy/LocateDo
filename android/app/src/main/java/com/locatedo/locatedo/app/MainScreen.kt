@@ -34,6 +34,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.logic.ReminderSetupNeed
 import com.locatedo.locatedo.navigation.AcceptInviteKey
 import com.locatedo.locatedo.navigation.AccountKey
@@ -79,6 +80,8 @@ import com.locatedo.locatedo.screens.todos.AllTodosScreen
 import com.locatedo.locatedo.screens.todos.TodoEditorEvent
 import com.locatedo.locatedo.screens.todos.TodoEditorSheet
 import com.locatedo.locatedo.screens.todos.TodoEditorViewModel
+import com.locatedo.locatedo.ui.analytics.LocalPresentationLevel
+import com.locatedo.locatedo.ui.analytics.LocalScreenTracker
 import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 import java.util.UUID
 import kotlinx.coroutines.flow.collectLatest
@@ -87,7 +90,8 @@ import kotlinx.coroutines.flow.collectLatest
 // sheets and dialogs, and the requests that arrive from outside.
 @Composable
 fun MainScreen(appViewModel: AppViewModel) {
-    val navigator = rememberNavigator()
+    val screenTracker = LocalScreenTracker.current
+    val navigator = rememberNavigator(onOverlayClosed = { screenTracker.closed(level = 1) })
     val activity = LocalActivity.current as ComponentActivity
     // Adding or editing a place spans several screens, and the to-do sheet steps aside while one is added from it,
     // so both drafts live with the activity.
@@ -97,13 +101,13 @@ fun MainScreen(appViewModel: AppViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val resources = LocalResources.current
 
-    fun addTodo(placeId: UUID?) {
-        todoEditor.start(placeId)
-        navigator.present(Overlay.TodoEditor)
+    fun addTodo(placeId: UUID?, entry: ScreenEntry) {
+        todoEditor.start(placeId, entry)
+        navigator.present(Overlay.TodoEditor(entry))
     }
 
-    fun addPlace(isForTodo: Boolean) {
-        placeEditor.start(placeId = null, isForTodo = isForTodo)
+    fun addPlace(entry: ScreenEntry) {
+        placeEditor.start(placeId = null, isForTodo = entry == ScreenEntry.TODO_EDITOR, entry = entry)
         navigator.push(PlacePickKey)
     }
 
@@ -122,7 +126,7 @@ fun MainScreen(appViewModel: AppViewModel) {
         todoEditor.events.collect { event ->
             navigator.dismissOverlay()
             if (event is TodoEditorEvent.Saved && event.landOn != null) {
-                navigator.push(PlaceKey(event.landOn.toString()))
+                navigator.push(PlaceKey(event.landOn.toString(), ScreenEntry.NEW_PLACE))
             }
         }
     }
@@ -148,13 +152,13 @@ fun MainScreen(appViewModel: AppViewModel) {
             floatingActionButton = {
                 if (navigator.visibleOverlay == null) {
                     Box(modifier = Modifier.navigationBarsPadding()) {
-                        AddButton(top = navigator.top, onAddTodo = ::addTodo, onAddPlace = { addPlace(isForTodo = false) })
+                        AddButton(top = navigator.top, onAddTodo = ::addTodo, onAddPlace = { addPlace(ScreenEntry.HOME_MENU) })
                     }
                 }
             },
         ) { padding ->
             Column(modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
-                if (appState.isSignedIn && navigator.top in setOf(HomeKey, MapKey, AllTodosKey)) {
+                if (appState.isSignedIn && (navigator.top == HomeKey || navigator.top == MapKey || navigator.top is AllTodosKey)) {
                     MaintenanceBanner(status = LocalAppStatus.current, onDismiss = appViewModel::dismissMaintenanceBanner)
                 }
                 NavDisplay(
@@ -166,12 +170,14 @@ fun MainScreen(appViewModel: AppViewModel) {
                         rememberViewModelStoreNavEntryDecorator(),
                     ),
                     entryProvider = entryProvider {
-                        entry<HomeKey> { HomeScreen(onAddPlace = { addPlace(isForTodo = false) }) }
+                        entry<HomeKey> { HomeScreen(onAddPlace = { addPlace(ScreenEntry.HOME_EMPTY) }) }
                         entry<MapKey> { MapScreen() }
-                        entry<AllTodosKey> { AllTodosScreen() }
+                        entry<AllTodosKey> { key ->
+                            AllTodosScreen(entry = key.entry, onAddTodo = { addTodo(null, ScreenEntry.ALL_TODOS_EMPTY) })
+                        }
                         entry<PlaceKey> { key ->
                             val placeId = UUID.fromString(key.placeId)
-                            PlaceScreen(placeId = placeId, onEdit = { editPlace(placeId) })
+                            PlaceScreen(placeId = placeId, entry = key.entry, rank = key.rank, onEdit = { editPlace(placeId) })
                         }
                         entry<SettingsKey> { SettingsScreen() }
                         entry<CategoriesKey> { CategoriesScreen() }
@@ -212,7 +218,7 @@ fun MainScreen(appViewModel: AppViewModel) {
                 )
             }
         }
-        Overlays(navigator, appViewModel, todoEditor, onNewPlaceForTodo = { addPlace(isForTodo = true) })
+        Overlays(navigator, appViewModel, todoEditor, onNewPlaceForTodo = { addPlace(ScreenEntry.TODO_EDITOR) })
     }
 }
 
@@ -234,7 +240,7 @@ private fun handlePlaceEditor(
             if (draft.isForTodo) {
                 todoEditor.placePicked(event.placeId)
             } else {
-                navigator.push(PlaceKey(event.placeId.toString()))
+                navigator.push(PlaceKey(event.placeId.toString(), ScreenEntry.DUPLICATE_PROMPT))
             }
         }
         is PlaceEditorEvent.Saved -> {
@@ -311,9 +317,23 @@ private fun Overlays(
     todoEditor: TodoEditorViewModel,
     onNewPlaceForTodo: () -> Unit,
 ) {
+    CompositionLocalProvider(LocalPresentationLevel provides 1) {
+        OverlayContent(navigator.visibleOverlay, navigator, appViewModel, todoEditor, onNewPlaceForTodo)
+    }
+}
+
+@Composable
+private fun OverlayContent(
+    overlay: Overlay?,
+    navigator: Navigator,
+    appViewModel: AppViewModel,
+    todoEditor: TodoEditorViewModel,
+    onNewPlaceForTodo: () -> Unit,
+) {
     val permissions by appViewModel.currentPermissions.collectAsStateWithLifecycle()
-    when (val overlay = navigator.visibleOverlay) {
-        Overlay.TodoEditor -> TodoEditorSheet(
+    when (overlay) {
+        is Overlay.TodoEditor -> TodoEditorSheet(
+            overlay = overlay,
             viewModel = todoEditor,
             onDismiss = navigator::dismissOverlay,
             onNewPlace = onNewPlaceForTodo,

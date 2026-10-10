@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.core.data
 
 import androidx.room.withTransaction
+import com.locatedo.locatedo.core.analytics.TodoAddOrigin
 import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.auth.Authenticator
@@ -23,7 +24,7 @@ interface TodoRepository {
     fun observeAll(): Flow<List<Todo>>
 
     // Returns the limit that stopped the write on a free plan, or null when it went through.
-    suspend fun add(todo: Todo, via: TodoAddVia = TodoAddVia.TODO_EDITOR): FreeLimit?
+    suspend fun add(todo: Todo, via: TodoAddVia = TodoAddVia.TODO_EDITOR, origin: TodoAddOrigin? = null): FreeLimit?
 
     // How many more open to-dos the free plan allows, or null when there is no limit (Pro).
     suspend fun remainingOpen(): Int?
@@ -56,7 +57,7 @@ class RoomTodoRepository @Inject constructor(
     override fun observeAll(): Flow<List<Todo>> =
         todoDao.observeAll().map { todos -> todos.map(TodoEntity::asModel) }
 
-    override suspend fun add(todo: Todo, via: TodoAddVia): FreeLimit? {
+    override suspend fun add(todo: Todo, via: TodoAddVia, origin: TodoAddOrigin?): FreeLimit? {
         val limit = database.withTransaction {
             if (openLimitReached()) {
                 return@withTransaction FreeLimit.OPEN_TODOS
@@ -69,7 +70,7 @@ class RoomTodoRepository @Inject constructor(
             analytics.limitReached(limit)
             return limit
         }
-        analytics.todoAdded(todo, todoDao.countOpen(), todoDao.countOpen(todo.placeId.toString()), via)
+        analytics.todoAdded(todo, todoDao.countOpen(), todoDao.countOpen(todo.placeId.toString()), via, origin)
         reportCounts()
         return null
     }
@@ -82,10 +83,15 @@ class RoomTodoRepository @Inject constructor(
     }
 
     override suspend fun update(todo: Todo) {
-        database.withTransaction {
+        val before = database.withTransaction {
+            val before = todoDao.get(todo.id.toString())
             val updated = todo.copy(updatedAt = clock.instant())
             todoDao.upsert(updated.asEntity())
             queue.enqueue(Write.put(updated))
+            before
+        }
+        if (before != null && before.placeEvent != todo.placeEvent.key) {
+            analytics.todoTriggerChanged(todo.placeEvent)
         }
     }
 

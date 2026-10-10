@@ -7,6 +7,7 @@ import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteQueue
@@ -340,10 +341,12 @@ class RoomTodoRepositoryTest {
         val milk = todo("Milk", store.id)
         repository.add(milk)
 
-        writeAnalytics.arrivalOpened(store.id, notifiedAt = fixedNow.minusSeconds(10))
+        writeAnalytics.reminderOpened(store.id, PlaceEvent.ARRIVAL, notifiedAt = fixedNow.minusSeconds(10))
         repository.setCompleted(milk.id, completed = true)
 
-        assertEquals(10L, analytics.values(AnalyticsEvent.ARRIVAL_OPENED)["latency_s"])
+        assertEquals(10L, analytics.values(AnalyticsEvent.REMINDER_OPENED)["latency_s"])
+        assertEquals("arrival", analytics.values(AnalyticsEvent.REMINDER_OPENED)["place_event"])
+        assertEquals("arrival", analytics.values(AnalyticsEvent.TODO_COMPLETED)["place_event"])
         assertEquals("notification", analytics.values(AnalyticsEvent.TODO_COMPLETED)["via"])
     }
 

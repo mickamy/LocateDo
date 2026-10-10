@@ -3,6 +3,7 @@ package com.locatedo.locatedo.core.notifications
 import com.locatedo.locatedo.core.data.fixedNow
 import com.locatedo.locatedo.core.data.place
 import com.locatedo.locatedo.core.data.todo
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.testing.FakeArrivalNotifier
@@ -32,7 +33,7 @@ class ArrivalCheckOffTest {
     fun checksOffAndQuietlyShowsWhatIsLeftThenSends() = runTest {
         linkPlacesToTodos(milk, bread, eggs)
 
-        checkOff.checkOff(store.id, listOf(bread.id), listOf(milk.id, bread.id, eggs.id))
+        checkOff.checkOff(store.id, PlaceEvent.ARRIVAL, listOf(bread.id), listOf(milk.id, bread.id, eggs.id))
 
         assertTrue(todos.state.value.first { it.id == bread.id }.isCompleted)
         assertEquals(listOf(store to listOf("Milk", "Eggs")), notifier.silent)
@@ -44,7 +45,7 @@ class ArrivalCheckOffTest {
     fun whatFamilyCheckedOffMeanwhileIsLeftOut() = runTest {
         linkPlacesToTodos(milk, bread.copy(completedAt = fixedNow), eggs)
 
-        checkOff.checkOff(store.id, listOf(milk.id), listOf(milk.id, bread.id, eggs.id))
+        checkOff.checkOff(store.id, PlaceEvent.ARRIVAL, listOf(milk.id), listOf(milk.id, bread.id, eggs.id))
 
         assertEquals(listOf(store to listOf("Eggs")), notifier.silent)
     }
@@ -53,7 +54,7 @@ class ArrivalCheckOffTest {
     fun theNotificationGoesAwayWhenNothingIsLeft() = runTest {
         linkPlacesToTodos(milk)
 
-        checkOff.checkOff(store.id, listOf(milk.id), listOf(milk.id))
+        checkOff.checkOff(store.id, PlaceEvent.ARRIVAL, listOf(milk.id), listOf(milk.id))
 
         assertEquals(listOf(store.id), notifier.cancelled)
         assertTrue(notifier.silent.isEmpty())
@@ -63,7 +64,7 @@ class ArrivalCheckOffTest {
     fun checkingOffAllLeavesNothingToShow() = runTest {
         linkPlacesToTodos(milk, bread, eggs)
 
-        checkOff.checkOff(store.id, listOf(milk.id, bread.id, eggs.id), listOf(milk.id, bread.id, eggs.id))
+        checkOff.checkOff(store.id, PlaceEvent.ARRIVAL, listOf(milk.id, bread.id, eggs.id), listOf(milk.id, bread.id, eggs.id))
 
         assertTrue(todos.state.value.all { it.isCompleted })
         assertEquals(listOf(store.id), notifier.cancelled)

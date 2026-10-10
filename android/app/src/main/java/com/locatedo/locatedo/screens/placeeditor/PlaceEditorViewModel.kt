@@ -7,6 +7,8 @@ import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.analytics.EditorMode
+import com.locatedo.locatedo.core.analytics.ScreenEntry
+import com.locatedo.locatedo.core.analytics.ScreenTracker
 import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.paywallTrigger
@@ -64,6 +66,8 @@ data class PlaceDraft(
     // Opened from the to-do sheet: it stops at the category and hands the place back, since the to-do being written
     // is the one for it.
     val isForTodo: Boolean = false,
+    // Where adding a new place started; null when editing.
+    val entry: ScreenEntry? = null,
 ) {
     val isEditing: Boolean
         get() = placeId != null
@@ -151,6 +155,7 @@ class PlaceEditorViewModel @Inject constructor(
     private val preferences: AppPreferences,
     private val paywallRequests: PaywallRequests,
     private val analytics: Analytics,
+    private val screenTracker: ScreenTracker,
     private val clock: Clock,
 ) : ViewModel() {
     private val draft = MutableStateFlow(PlaceDraft())
@@ -201,13 +206,13 @@ class PlaceEditorViewModel @Inject constructor(
     }
 
     // A fresh draft: empty for a new place, or the stored place when editing.
-    fun start(placeId: UUID?, isForTodo: Boolean = false) {
+    fun start(placeId: UUID?, isForTodo: Boolean = false, entry: ScreenEntry? = null) {
         query.value = ""
         predictions.value = emptyList()
         previewJob?.cancel()
         pickPreview.value = PickPreview()
         duplicate.value = null
-        draft.value = PlaceDraft(placeId = placeId, isForTodo = isForTodo)
+        draft.value = PlaceDraft(placeId = placeId, isForTodo = isForTodo, entry = entry)
         viewModelScope.launch {
             if (placeId == null) {
                 remainingOpenTodos.value = todos.remainingOpen()
@@ -228,16 +233,23 @@ class PlaceEditorViewModel @Inject constructor(
     // The details screen reports itself here because the draft, not the screen, knows whether this is an edit.
     fun detailsShown() {
         if (draft.value.isEditing) {
-            analytics.logScreen(AnalyticsScreen.PLACE_EDITOR, mapOf(AnalyticsParameter.MODE to EditorMode.EDIT.key))
+            screenTracker.appeared(
+                AnalyticsScreen.PLACE_EDITOR,
+                mapOf(AnalyticsParameter.MODE to EditorMode.EDIT.key),
+                opening = emptyMap(),
+                level = 0,
+            )
             return
         }
         stepShown(NewPlaceStep.DETAILS)
     }
 
     fun stepShown(step: NewPlaceStep) {
-        analytics.logScreen(
+        screenTracker.appeared(
             AnalyticsScreen.PLACE_EDITOR,
             mapOf(AnalyticsParameter.MODE to EditorMode.NEW.key, AnalyticsParameter.STEP to step.key),
+            opening = emptyMap(),
+            level = 0,
         )
     }
 
@@ -386,7 +398,13 @@ class PlaceEditorViewModel @Inject constructor(
             // To-dos typed with the place follow it, as many as the free limit leaves room for.
             var titles = current.todoTitles
             todos.remainingOpen()?.let { titles = titles.take(it) }
-            val limit = places.add(place, source = current.source, todoCount = titles.size, suggestedCategory = current.suggestion)
+            val limit = places.add(
+                place,
+                source = current.source,
+                todoCount = titles.size,
+                suggestedCategory = current.suggestion,
+                entry = current.entry,
+            )
             if (limit != null) {
                 paywallRequests.request(limit.paywallTrigger)
                 return@launch

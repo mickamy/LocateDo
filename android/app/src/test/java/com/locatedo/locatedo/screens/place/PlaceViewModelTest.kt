@@ -9,6 +9,7 @@ import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
@@ -136,12 +137,12 @@ class PlaceViewModelTest {
     }
 
     @Test
-    fun aDebugArrivalIsHandedOnWithItsDelay() = runTest(dispatcher) {
+    fun aDebugReminderIsHandedOnWithItsKindAndDelay() = runTest(dispatcher) {
         val viewModel = viewModel(store.id)
 
-        viewModel.simulateArrival(Duration.ofSeconds(10))
+        viewModel.simulate(PlaceEvent.DEPARTURE, Duration.ofSeconds(10))
 
-        assertEquals(listOf(store.id to Duration.ofSeconds(10)), arrivals.arrivals)
+        assertEquals(listOf(Triple(store.id, PlaceEvent.DEPARTURE, Duration.ofSeconds(10))), arrivals.simulated)
     }
 
     private fun TestScope.viewModel(placeId: UUID): PlaceViewModel {

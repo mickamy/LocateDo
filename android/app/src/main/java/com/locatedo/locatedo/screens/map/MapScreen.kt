@@ -36,6 +36,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.location.LocationRepository
@@ -47,6 +48,7 @@ import com.locatedo.locatedo.navigation.PlaceKey
 import com.locatedo.locatedo.screens.components.BackTopBar
 import com.locatedo.locatedo.screens.components.CategoryMarker
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
@@ -93,7 +95,7 @@ class MapViewModel @Inject constructor(
 // Every place as a category marker; a marker opens the place. Finding yourself is the map's own button.
 @Composable
 fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
-    TrackScreen(AnalyticsScreen.MAP)
+    TrackScreen(AnalyticsScreen.MAP, opening = ScreenEntry.HOME.parameters)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }
@@ -141,7 +143,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                         title = place.name,
                         anchor = Offset(0.5f, 0.5f),
                         onClick = {
-                            navigator.push(PlaceKey(place.id.toString()))
+                            navigator.push(PlaceKey(place.id.toString(), ScreenEntry.MAP_PIN))
                             true
                         },
                     ) {

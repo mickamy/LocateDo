@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.notifications
 
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.sync.SyncEngine
 import java.util.UUID
 import javax.inject.Inject
@@ -9,7 +10,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
-// To-dos checked off from an arrival notification's button, one or all of them. The notification then shows only
+// To-dos checked off from a reminder's button, one or all of them. The notification then shows only
 // what is still open of what it listed, without sounding again, and goes away once nothing is left.
 @Singleton
 class ArrivalCheckOff @Inject constructor(
@@ -18,16 +19,16 @@ class ArrivalCheckOff @Inject constructor(
     private val notifier: ArrivalNotifier,
     private val syncEngine: SyncEngine,
 ) {
-    suspend fun checkOff(placeId: UUID, todoIds: List<UUID>, notifiedIds: List<UUID>) {
+    suspend fun checkOff(placeId: UUID, event: PlaceEvent, todoIds: List<UUID>, notifiedIds: List<UUID>) {
         for (id in todoIds) {
             todoRepository.checkOff(id)
         }
         val entry = placeRepository.observeWithTodos(placeId).first()
         val remaining = notifiedIds.mapNotNull { id -> entry?.openTodos?.firstOrNull { it.id == id } }
         if (entry == null || remaining.isEmpty()) {
-            notifier.cancelArrival(placeId)
+            notifier.cancel(placeId, event)
         } else {
-            notifier.notifyArrival(entry.place, remaining, silent = true)
+            notifier.notify(event, entry.place, remaining, silent = true)
         }
         // The receiver has a few seconds; what is not sent by then stays queued for the next sync.
         withTimeoutOrNull(SEND_TIMEOUT_MILLIS) { syncEngine.drain() }

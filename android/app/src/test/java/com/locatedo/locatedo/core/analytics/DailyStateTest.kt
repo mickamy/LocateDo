@@ -8,6 +8,7 @@ import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.MemberRole
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.model.Todo
@@ -26,7 +27,7 @@ class DailyStateTest {
         val grocery = place("Grocery")
         val pharmacy = place("Pharmacy")
         val places = listOf(
-            PlaceWithTodos(grocery, listOf(todo("Milk", grocery), todo("Eggs", grocery))),
+            PlaceWithTodos(grocery, listOf(todo("Milk", grocery), todo("Eggs", grocery).copy(placeEvent = PlaceEvent.DEPARTURE))),
             PlaceWithTodos(
                 pharmacy,
                 listOf(
@@ -50,6 +51,7 @@ class DailyStateTest {
             DailyState.Counts(
                 places = 2,
                 openTodos = 2,
+                openDepartureTodos = 1,
                 completedTodosLast7Days = 1,
                 placesWithOpenTodos = 1,
                 customCategories = 1,
@@ -113,6 +115,7 @@ class DailyStateTest {
 
         assertEquals(3L, values["place_count"])
         assertEquals(14L, values["open_todo_count"])
+        assertEquals(4L, values["open_departure_todos"])
         assertEquals(5L, values["completed_todo_count_7d"])
         assertEquals(12L, values["days_since_install"])
         assertEquals(1L, values["precise_location"])
@@ -135,6 +138,7 @@ class DailyStateTest {
         counts = DailyState.Counts(
             places = 3,
             openTodos = 14,
+            openDepartureTodos = 4,
             completedTodosLast7Days = 5,
             placesWithOpenTodos = 2,
             customCategories = 0,

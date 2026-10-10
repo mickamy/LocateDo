@@ -1,9 +1,11 @@
 package com.locatedo.locatedo.core.geofence
 
+import com.locatedo.locatedo.core.common.Geo
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.location.LocationRepository
+import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import javax.inject.Inject
@@ -48,8 +50,9 @@ class GeofenceSync @Inject constructor(
     suspend fun sync() {
         mutex.withLock {
             val registered = GeofenceRecord.decode(preferences.registeredGeofences.first())
+            val here = locationRepository.lastCoordinate()
             val desired = if (permissions.observe().first().location == LocationAuth.ALWAYS) {
-                GeofencePlan.regions(placeRepository.observeAll().first(), locationRepository.lastCoordinate())
+                GeofencePlan.regions(placeRepository.observeAll().first(), here)
             } else {
                 emptyList()
             }
@@ -60,9 +63,23 @@ class GeofenceSync @Inject constructor(
             }
             if (changes.add.isNotEmpty() && registrar.add(changes.add)) {
                 current = current + changes.add.associateBy { it.requestId }
+                forgetEntriesOutside(changes.add, here)
             }
             if (current != registered) {
                 preferences.setRegisteredGeofences(GeofenceRecord.encode(current.values))
+            }
+        }
+    }
+
+    // A fence registered while outside reports nothing, so a time it was entered from before would make a later stay
+    // look long enough for a departure.
+    private suspend fun forgetEntriesOutside(regions: List<GeofenceRegion>, here: Coordinate?) {
+        if (here == null) {
+            return
+        }
+        for (region in regions) {
+            if (Geo.distanceMeters(here, Coordinate(region.latitude, region.longitude)) > region.radiusMeters) {
+                placeRepository.setEnteredAt(region.id, null)
             }
         }
     }

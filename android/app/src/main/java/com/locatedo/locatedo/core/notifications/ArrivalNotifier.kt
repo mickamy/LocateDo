@@ -12,6 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.locatedo.locatedo.MainActivity
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Todo
 import dagger.Binds
 import dagger.Module
@@ -27,8 +28,8 @@ interface ArrivalNotifier {
     fun prepare()
     fun canNotify(): Boolean
     // A silent post replaces what is shown without sounding again, as after a check-off.
-    fun notifyArrival(place: Place, todos: List<Todo>, silent: Boolean = false)
-    fun cancelArrival(placeId: UUID)
+    fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean = false)
+    fun cancel(placeId: UUID, event: PlaceEvent)
 }
 
 @Singleton
@@ -53,14 +54,16 @@ class AndroidArrivalNotifier @Inject constructor(
         return manager.getNotificationChannelCompat(CHANNEL_ID)?.importance != NotificationManagerCompat.IMPORTANCE_NONE
     }
 
-    // One notification per place, replaced on the next arrival; tapping it opens the place on the home map, and each
-    // of the first to-dos gets a button that checks it off without opening the app.
-    override fun notifyArrival(place: Place, todos: List<Todo>, silent: Boolean) {
+    // One notification per place and kind, replaced by the next one of that kind; tapping it opens the place, and each
+    // of the first to-dos gets a button that checks it off without opening the app. A departure is labeled so, since
+    // the title is the place name alone either way.
+    override fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean) {
+        val id = notificationId(place.id, event)
         val text = arrivalNotificationText(context.resources, todos.map { it.title })
         val contentIntent = PendingIntent.getActivity(
             context,
-            place.id.hashCode(),
-            MainActivity.placeIntent(context, place.id, notifiedAt = clock.instant()),
+            id,
+            MainActivity.placeIntent(context, place.id, event, notifiedAt = clock.instant()),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -74,28 +77,38 @@ class AndroidArrivalNotifier @Inject constructor(
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .setSilent(silent)
+        if (event == PlaceEvent.DEPARTURE) {
+            builder.setSubText(context.getString(R.string.notification_departure_label))
+        }
         // Android shows three actions at most; from three to-dos on, the last one checks off all of them.
         var buttons = todos
         if (todos.size >= CHECK_OFF_ALL_FROM) {
             buttons = todos.take(CHECK_OFF_ALL_FROM - 1)
         }
         for (todo in buttons) {
-            builder.addAction(0, "✓ ${todo.title}", checkOffIntent(place, listOf(todo), todos, todo.id.hashCode()))
+            builder.addAction(0, "✓ ${todo.title}", checkOffIntent(event, place, listOf(todo), todos, todo.id.hashCode()))
         }
         if (todos.size >= CHECK_OFF_ALL_FROM) {
             val label = context.resources.getQuantityString(R.plurals.notification_android_check_off_all, todos.size, todos.size)
-            builder.addAction(0, label, checkOffIntent(place, todos, todos, place.id.hashCode()))
+            builder.addAction(0, label, checkOffIntent(event, place, todos, todos, id))
         }
         try {
-            manager.notify(place.id.hashCode(), builder.build())
+            manager.notify(id, builder.build())
         } catch (e: SecurityException) {
             Log.w(TAG, "Could not post the arrival notification", e)
         }
     }
 
-    private fun checkOffIntent(place: Place, checkingOff: List<Todo>, notified: List<Todo>, requestCode: Int): PendingIntent {
+    private fun checkOffIntent(
+        event: PlaceEvent,
+        place: Place,
+        checkingOff: List<Todo>,
+        notified: List<Todo>,
+        requestCode: Int,
+    ): PendingIntent {
         val intent = Intent(context, ArrivalActionReceiver::class.java)
             .putExtra(ArrivalActionReceiver.EXTRA_PLACE_ID, place.id.toString())
+            .putExtra(ArrivalActionReceiver.EXTRA_PLACE_EVENT, event.key)
             .putExtra(ArrivalActionReceiver.EXTRA_TODO_IDS, checkingOff.map { it.id.toString() }.toTypedArray())
             .putExtra(ArrivalActionReceiver.EXTRA_NOTIFIED_IDS, notified.map { it.id.toString() }.toTypedArray())
         return PendingIntent.getBroadcast(
@@ -106,9 +119,11 @@ class AndroidArrivalNotifier @Inject constructor(
         )
     }
 
-    override fun cancelArrival(placeId: UUID) {
-        manager.cancel(placeId.hashCode())
+    override fun cancel(placeId: UUID, event: PlaceEvent) {
+        manager.cancel(notificationId(placeId, event))
     }
+
+    private fun notificationId(placeId: UUID, event: PlaceEvent): Int = "$placeId:${event.key}".hashCode()
 
     companion object {
         const val CHANNEL_ID = "arrivals"

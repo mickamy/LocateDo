@@ -11,10 +11,18 @@ data class Place(
     val radiusMeters: Double = DEFAULT_RADIUS_METERS,
     val categoryId: UUID? = null,
     val sortOrder: Int = 0,
-    val lastNotifiedAt: Instant? = null,
+    val lastArrivalNotifiedAt: Instant? = null,
+    val lastDepartureNotifiedAt: Instant? = null,
+    // When the device last went inside, kept on the device to tell a departure from passing by.
+    val enteredAt: Instant? = null,
     val createdAt: Instant,
     val updatedAt: Instant = createdAt,
 ) {
+    fun lastNotifiedAt(event: PlaceEvent): Instant? = when (event) {
+        PlaceEvent.ARRIVAL -> lastArrivalNotifiedAt
+        PlaceEvent.DEPARTURE -> lastDepartureNotifiedAt
+    }
+
     companion object {
         const val DEFAULT_RADIUS_METERS = 100.0
         val RADIUS_RANGE = 50.0..500.0

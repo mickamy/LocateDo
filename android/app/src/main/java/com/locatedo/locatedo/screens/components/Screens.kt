@@ -50,16 +50,12 @@ fun activityTodoEditor(): TodoEditorViewModel =
     hiltViewModel(viewModelStoreOwner = LocalActivity.current as ComponentActivity)
 
 @Composable
-fun rememberTodoEditing(): (UUID?, Boolean) -> Unit {
+fun rememberTodoEditing(): (UUID) -> Unit {
     val navigator = LocalNavigator.current
     val editor = activityTodoEditor()
-    return { id, isEditing ->
-        if (isEditing && id != null) {
-            editor.startEditing(id)
-        } else {
-            editor.start(id)
-        }
-        navigator.present(Overlay.TodoEditor)
+    return { id ->
+        editor.startEditing(id)
+        navigator.present(Overlay.TodoEditor(entry = null))
     }
 }
 

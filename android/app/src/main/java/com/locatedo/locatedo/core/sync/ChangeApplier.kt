@@ -112,7 +112,7 @@ class ChangeApplier @Inject constructor(
         return id
     }
 
-    // lastNotifiedAt and createdAt are the device's own; a new row dates from its id.
+    // When the device was notified and went inside, and createdAt, are the device's own; a new row dates from its id.
     private suspend fun upsert(proto: Place, categoryIds: Set<String>): String? {
         val id = uuid(proto.id, "place") ?: return null
         val existing = placeDao.get(id)
@@ -127,7 +127,9 @@ class ChangeApplier @Inject constructor(
                 radiusMeters = proto.radiusM.toDouble(),
                 categoryId = categoryId?.takeIf { it in categoryIds },
                 sortOrder = proto.sortOrder,
-                lastNotifiedAt = existing?.lastNotifiedAt,
+                lastArrivalNotifiedAt = existing?.lastArrivalNotifiedAt,
+                lastDepartureNotifiedAt = existing?.lastDepartureNotifiedAt,
+                enteredAt = existing?.enteredAt,
                 createdAt = existing?.createdAt ?: createdAt(id, updatedAt),
                 updatedAt = updatedAt,
             ),

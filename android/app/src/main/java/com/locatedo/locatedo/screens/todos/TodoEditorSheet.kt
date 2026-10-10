@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -39,19 +41,36 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.EditorMode
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.navigation.Overlay
 import com.locatedo.locatedo.screens.components.AssigneeChoice
 import com.locatedo.locatedo.screens.components.assigneeChoices
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 import java.util.UUID
 
 // Google Maps' "save to list" sheet: one field, the place (or a new one), who it is for when shared, and save.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodoEditorSheet(viewModel: TodoEditorViewModel, onDismiss: () -> Unit, onNewPlace: () -> Unit) {
+fun TodoEditorSheet(
+    overlay: Overlay.TodoEditor,
+    viewModel: TodoEditorViewModel,
+    onDismiss: () -> Unit,
+    onNewPlace: () -> Unit,
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val draft = uiState.draft
-    TrackScreen(AnalyticsScreen.TODO_EDITOR, mapOf(AnalyticsParameter.MODE to if (draft.isEditing) "edit" else "add"))
+    var mode = EditorMode.NEW
+    if (draft.isEditing) {
+        mode = EditorMode.EDIT
+    }
+    TrackScreen(
+        AnalyticsScreen.TODO_EDITOR,
+        mapOf(AnalyticsParameter.MODE to mode.key),
+        opening = overlay.entry?.parameters.orEmpty(),
+        openedBy = overlay,
+    )
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -83,6 +102,10 @@ fun TodoEditorSheet(viewModel: TodoEditorViewModel, onDismiss: () -> Unit, onNew
             val assignees = assigneeChoices(uiState.members)
             if (assignees.isNotEmpty()) {
                 AssigneePicker(choices = assignees, selectedId = draft.assigneeId, onSelect = viewModel::setAssignee)
+            }
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.todo_editor_remind_on_leave), modifier = Modifier.weight(1f))
+                Switch(checked = draft.remindsOnLeave, onCheckedChange = viewModel::setRemindsOnLeave)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 if (draft.isEditing) {

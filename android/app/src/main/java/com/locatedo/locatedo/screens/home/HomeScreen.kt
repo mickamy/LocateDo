@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
@@ -59,6 +60,7 @@ import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.NearbyPlace
@@ -78,6 +80,7 @@ import com.locatedo.locatedo.screens.components.Refreshable
 import com.locatedo.locatedo.screens.components.rememberPreciseLocationRequest
 import com.locatedo.locatedo.ui.analytics.LocalAnalytics
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 
 private const val PREVIEW_ZOOM = 14f
 private const val PREVIEW_TODOS = 2
@@ -139,12 +142,16 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
                             item { PermissionBannerCard(banner = banner, onClick = { bannerTapped(banner) }) }
                         }
                         item { MapPreview(uiState, onClick = { navigator.push(MapKey) }) }
-                        item { AllTodosRow(count = uiState.openTodoCount, onClick = { navigator.push(AllTodosKey) }) }
-                        items(uiState.nearby, key = { it.entry.place.id }) { nearby ->
+                        item {
+                            AllTodosRow(count = uiState.openTodoCount, onClick = { navigator.push(AllTodosKey(ScreenEntry.HOME)) })
+                        }
+                        itemsIndexed(uiState.nearby, key = { _, nearby -> nearby.entry.place.id }) { index, nearby ->
                             NearbyRow(
                                 nearby = nearby,
                                 category = uiState.categories[nearby.entry.place.categoryId],
-                                onClick = { navigator.push(PlaceKey(nearby.entry.place.id.toString())) },
+                                onClick = {
+                                    navigator.push(PlaceKey(nearby.entry.place.id.toString(), ScreenEntry.HOME_LIST, rank = index + 1))
+                                },
                             )
                         }
                     }

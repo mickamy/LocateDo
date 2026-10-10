@@ -35,8 +35,14 @@ interface PlaceDao {
     @Query("DELETE FROM places WHERE id = :id")
     suspend fun delete(id: String)
 
-    @Query("UPDATE places SET lastNotifiedAt = :at WHERE id = :id")
-    suspend fun setLastNotifiedAt(id: String, at: Long?)
+    @Query("UPDATE places SET lastArrivalNotifiedAt = :at WHERE id = :id")
+    suspend fun setLastArrivalNotifiedAt(id: String, at: Long?)
+
+    @Query("UPDATE places SET lastDepartureNotifiedAt = :at WHERE id = :id")
+    suspend fun setLastDepartureNotifiedAt(id: String, at: Long?)
+
+    @Query("UPDATE places SET enteredAt = :at WHERE id = :id")
+    suspend fun setEnteredAt(id: String, at: Long?)
 
     @Query("DELETE FROM places")
     suspend fun deleteAll()

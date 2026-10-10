@@ -22,6 +22,7 @@ import com.locatedo.locatedo.core.database.TodoEntity
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.notifications.ArrivalNotifier
 import com.locatedo.locatedo.core.notifications.CompletionNotice
@@ -87,7 +88,6 @@ class ScreenshotReceiver : BroadcastReceiver() {
                         radiusMeters = RADIUS_METERS,
                         categoryId = categories.firstOrNull { it.builtin == entry.builtin.key }?.id,
                         sortOrder = index,
-                        lastNotifiedAt = null,
                         createdAt = now,
                         updatedAt = now,
                     ),
@@ -154,7 +154,7 @@ class ScreenshotReceiver : BroadcastReceiver() {
             Todo(id = todoId(place.id, index), title = title, placeId = place.id, createdAt = place.createdAt)
         }
         graph.arrivalNotifier().prepare()
-        graph.arrivalNotifier().notifyArrival(place, todos)
+        graph.arrivalNotifier().notify(PlaceEvent.ARRIVAL, place, todos)
     }
 
     // Geofences follow the fused provider, which an emulator's `geo fix` does not reach while no app asks for GPS.

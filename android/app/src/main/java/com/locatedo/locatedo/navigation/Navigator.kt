@@ -11,12 +11,15 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.logic.ReminderSetupRequest
 import java.util.UUID
 
 // What sits over a screen: a bottom sheet or a dialog. Only one at a time.
 sealed interface Overlay {
-    data object TodoEditor : Overlay
+    // Not a data object: each one presented is its own instance, which tells a sheet opened again from one coming
+    // back after stepping aside. entry is null when editing.
+    class TodoEditor(val entry: ScreenEntry?) : Overlay
 
     // Explains background location before the system page; the answer goes to whoever asked, for its analytics.
     data class AlwaysLocation(val onAnswer: (AlwaysPromptAnswer) -> Unit) : Overlay
@@ -38,7 +41,7 @@ sealed interface Overlay {
 // on: pushing another screen hides it with its state kept, coming back shows it again, and leaving that screen for
 // good drops it. So a screen pushed from anywhere (a notification, a link, the paywall) never fights a sheet.
 @Stable
-class Navigator(val backStack: NavBackStack<NavKey>) {
+class Navigator(val backStack: NavBackStack<NavKey>, private val onOverlayClosed: () -> Unit = {}) {
     private var current by mutableStateOf<Pair<Overlay, NavKey>?>(null)
 
     val overlay: Overlay?
@@ -65,14 +68,19 @@ class Navigator(val backStack: NavBackStack<NavKey>) {
         current = overlay to (backStack.lastOrNull() ?: HomeKey)
     }
 
+    // Closed by the user; the screen under it is the current one again.
     fun dismissOverlay() {
+        if (current == null) {
+            return
+        }
         current = null
+        onOverlayClosed()
     }
 
     // A place opened from outside sits over Home, as if it had been opened from there.
-    fun showPlace(placeId: UUID) = replaceAboveHome(PlaceKey(placeId.toString()))
+    fun showPlace(placeId: UUID) = replaceAboveHome(PlaceKey(placeId.toString(), ScreenEntry.NOTIFICATION))
 
-    fun showAllTodos() = replaceAboveHome(AllTodosKey)
+    fun showAllTodos() = replaceAboveHome(AllTodosKey(ScreenEntry.COMPLETION_NOTICE))
 
     // Back out of adding or editing a place, to the screen it started from.
     fun leavePlaceEditor() {
@@ -100,7 +108,7 @@ class Navigator(val backStack: NavBackStack<NavKey>) {
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("No navigator") }
 
 @Composable
-fun rememberNavigator(): Navigator {
+fun rememberNavigator(onOverlayClosed: () -> Unit): Navigator {
     val backStack = rememberNavBackStack(HomeKey)
-    return remember(backStack) { Navigator(backStack) }
+    return remember(backStack) { Navigator(backStack, onOverlayClosed) }
 }

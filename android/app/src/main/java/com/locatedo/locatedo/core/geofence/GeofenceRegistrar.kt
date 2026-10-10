@@ -22,7 +22,8 @@ interface GeofenceRegistrar {
     suspend fun remove(requestIds: List<String>): Boolean
 }
 
-// Play services evaluates the fences; a dwell of two minutes filters out driving past, as the spec asks.
+// Play services evaluates the fences; a dwell of two minutes filters out driving past, as the spec asks. Going in and
+// out are reported too, for when the device went inside and for departures.
 @Singleton
 class PlayGeofenceRegistrar @Inject constructor(@param:ApplicationContext private val context: Context) : GeofenceRegistrar {
     private val client = LocationServices.getGeofencingClient(context)
@@ -38,7 +39,7 @@ class PlayGeofenceRegistrar @Inject constructor(@param:ApplicationContext privat
 
     override suspend fun add(regions: List<GeofenceRegion>): Boolean {
         val request = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL or GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofences(regions.map { it.asGeofence() })
             .build()
         return try {
@@ -65,7 +66,9 @@ class PlayGeofenceRegistrar @Inject constructor(@param:ApplicationContext privat
         .setRequestId(requestId)
         .setCircularRegion(latitude, longitude, radiusMeters.toFloat())
         .setExpirationDuration(Geofence.NEVER_EXPIRE)
-        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+        .setTransitionTypes(
+            Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT,
+        )
         .setLoiteringDelay(LOITERING_DELAY_MILLIS)
         .build()
 

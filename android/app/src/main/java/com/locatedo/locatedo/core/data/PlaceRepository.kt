@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.core.data
 
 import androidx.room.withTransaction
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.database.PlaceAndTodos
@@ -9,6 +10,7 @@ import com.locatedo.locatedo.core.database.PlaceEntity
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.sync.Write
@@ -34,11 +36,13 @@ interface PlaceRepository {
         source: PlaceSource? = null,
         todoCount: Int = 0,
         suggestedCategory: BuiltinCategory? = null,
+        entry: ScreenEntry? = null,
     ): FreeLimit?
     suspend fun update(place: Place)
     suspend fun delete(id: UUID)
-    // Null forgets the last notification, as the debug arrival does.
-    suspend fun markNotified(id: UUID, at: Instant?)
+    // Null forgets the last notification of that kind, as the debug arrival and departure do.
+    suspend fun markNotified(id: UUID, event: PlaceEvent, at: Instant?)
+    suspend fun setEnteredAt(id: UUID, at: Instant?)
 }
 
 @Singleton
@@ -65,6 +69,7 @@ class RoomPlaceRepository @Inject constructor(
         source: PlaceSource?,
         todoCount: Int,
         suggestedCategory: BuiltinCategory?,
+        entry: ScreenEntry?,
     ): FreeLimit? {
         val limit = database.withTransaction {
             if (!proStatus.isPro() && placeDao.count() >= FreeLimit.PLACES.max) {
@@ -79,7 +84,7 @@ class RoomPlaceRepository @Inject constructor(
             return limit
         }
         val category = place.categoryId?.let { database.categoryDao().get(it.toString())?.asModel() }
-        analytics.placeAdded(place, category, placeDao.count(), source, todoCount, suggestedCategory)
+        analytics.placeAdded(place, category, placeDao.count(), source, todoCount, suggestedCategory, entry)
         reportCounts()
         return null
     }
@@ -105,8 +110,15 @@ class RoomPlaceRepository @Inject constructor(
         reportCounts()
     }
 
-    override suspend fun markNotified(id: UUID, at: Instant?) {
-        placeDao.setLastNotifiedAt(id.toString(), at?.toEpochMilli())
+    override suspend fun markNotified(id: UUID, event: PlaceEvent, at: Instant?) {
+        when (event) {
+            PlaceEvent.ARRIVAL -> placeDao.setLastArrivalNotifiedAt(id.toString(), at?.toEpochMilli())
+            PlaceEvent.DEPARTURE -> placeDao.setLastDepartureNotifiedAt(id.toString(), at?.toEpochMilli())
+        }
+    }
+
+    override suspend fun setEnteredAt(id: UUID, at: Instant?) {
+        placeDao.setEnteredAt(id.toString(), at?.toEpochMilli())
     }
 
     private suspend fun reportCounts() {

@@ -32,6 +32,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
@@ -43,18 +44,19 @@ import com.locatedo.locatedo.screens.components.DeleteCompletedButton
 import com.locatedo.locatedo.screens.components.Refreshable
 import com.locatedo.locatedo.screens.components.rememberTodoEditing
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 import java.util.UUID
 
 @Composable
-fun AllTodosScreen(viewModel: AllTodosViewModel = hiltViewModel()) {
-    TrackScreen(AnalyticsScreen.TODOS)
+fun AllTodosScreen(entry: ScreenEntry, onAddTodo: () -> Unit, viewModel: AllTodosViewModel = hiltViewModel()) {
+    TrackScreen(AnalyticsScreen.TODOS, opening = entry.parameters)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val openEditor = rememberTodoEditing()
     val handler = object : TodoRowHandler {
         override fun toggle(todo: Todo) = viewModel.toggle(todo)
 
-        override fun edit(todo: Todo) = openEditor(todo.id, true)
+        override fun edit(todo: Todo) = openEditor(todo.id)
 
         override fun delete(todo: Todo, via: TodoDeletionVia) = viewModel.delete(todo, via)
 
@@ -71,13 +73,13 @@ fun AllTodosScreen(viewModel: AllTodosViewModel = hiltViewModel()) {
                         title = R.string.todo_list_empty_title,
                         message = R.string.todo_list_empty_message,
                         action = R.string.todo_editor_title,
-                        onAction = { openEditor(null, false) },
+                        onAction = onAddTodo,
                     )
                     uiState.groups.isEmpty() -> EmptyState(title = R.string.todo_list_filter_empty)
                     else -> LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = AddButtonClearance)) {
                         for (group in uiState.groups) {
                             item(key = "place-${group.place.id}") {
-                                PlaceHeader(group, onClick = { navigator.push(PlaceKey(group.place.id.toString())) })
+                                PlaceHeader(group, onClick = { navigator.push(PlaceKey(group.place.id.toString(), ScreenEntry.ALL_TODOS)) })
                             }
                             items(group.todos, key = { it.id }) { todo ->
                                 TodoRow(todo = todo, members = uiState.members, handler = handler)

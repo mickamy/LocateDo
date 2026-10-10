@@ -3,9 +3,13 @@ package com.locatedo.locatedo.screens.todos
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -28,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -40,6 +45,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.screens.components.AssigneeChoice
@@ -84,11 +90,23 @@ fun TodoRow(todo: Todo, members: List<Membership>, handler: TodoRowHandler) {
         Box(modifier = Modifier.background(ListItemDefaults.containerColor)) {
             ListItem(
                 headlineContent = {
-                    Text(
-                        text = todo.title,
-                        textDecoration = if (todo.isCompleted) TextDecoration.LineThrough else null,
-                        color = if (todo.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                    )
+                    // A to-do for leaving is marked, not listed apart, so a place keeps one list.
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = todo.title,
+                            modifier = Modifier.weight(1f, fill = false),
+                            textDecoration = if (todo.isCompleted) TextDecoration.LineThrough else null,
+                            color = if (todo.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (todo.placeEvent == PlaceEvent.DEPARTURE) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.DirectionsWalk,
+                                contentDescription = stringResource(R.string.todo_editor_remind_on_leave),
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 },
                 modifier = Modifier
                     .combinedClickable(

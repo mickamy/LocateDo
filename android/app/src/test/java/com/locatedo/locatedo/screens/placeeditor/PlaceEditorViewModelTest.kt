@@ -2,6 +2,7 @@ package com.locatedo.locatedo.screens.placeeditor
 
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.ScreenTracker
 import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
@@ -569,6 +570,7 @@ class PlaceEditorViewModelTest {
             preferences = preferences,
             paywallRequests = paywalls,
             analytics = analytics,
+            screenTracker = ScreenTracker(analytics),
             clock = clock,
         )
         backgroundScope.launch { viewModel.uiState.collect {} }

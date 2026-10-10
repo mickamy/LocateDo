@@ -12,13 +12,16 @@ enum class ArrivalSuppression(val key: String) {
     ASSIGNED_TO_OTHERS("assigned_to_others"),
     RECENTLY_NOTIFIED("recently_notified"),
     NOTIFICATIONS_OFF("notifications_off"),
+
+    // Left within five minutes of going in; decided by PlacePresence, not by suppression().
+    SHORT_STAY("short_stay"),
 }
 
 object NotificationPolicy {
     val COOLDOWN: Duration = Duration.ofMinutes(30)
     const val MAX_TITLES = 3
 
-    // Why an arrival goes unannounced, checked in this order; null means notify.
+    // Why a reminder goes unannounced, checked in this order; null means notify.
     fun suppression(
         openTodoCount: Int,
         notifiableTodoCount: Int,

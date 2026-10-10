@@ -7,6 +7,7 @@ import com.locatedo.locatedo.core.database.LocateDoDatabase
 import com.locatedo.locatedo.core.datastore.AppPreferences
 import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.FreeLimit
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.sync.Write
 import com.locatedo.locatedo.core.sync.WriteKind
@@ -122,9 +123,9 @@ class RoomPlaceRepositoryTest {
         val store = place("Store")
         repository.add(store)
 
-        repository.markNotified(store.id, fixedNow)
+        repository.markNotified(store.id, PlaceEvent.DEPARTURE, fixedNow)
 
-        assertEquals(fixedNow, repository.observeAll().first().single().lastNotifiedAt)
+        assertEquals(fixedNow, repository.observeAll().first().single().lastDepartureNotifiedAt)
     }
 
     @Test
@@ -171,7 +172,7 @@ class RoomPlaceRepositoryTest {
         val store = place("Store")
         repository.add(store)
 
-        repository.markNotified(store.id, fixedNow)
+        repository.markNotified(store.id, PlaceEvent.DEPARTURE, fixedNow)
 
         assertEquals(listOf(WriteKind.PUT_PLACE), database.queuedWrites().map { it.kind })
     }

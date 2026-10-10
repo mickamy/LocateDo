@@ -27,7 +27,9 @@ internal fun PlaceEntity.asModel() = Place(
     radiusMeters = radiusMeters,
     categoryId = categoryId?.let(UUID::fromString),
     sortOrder = sortOrder,
-    lastNotifiedAt = lastNotifiedAt?.let(Instant::ofEpochMilli),
+    lastArrivalNotifiedAt = lastArrivalNotifiedAt?.let(Instant::ofEpochMilli),
+    lastDepartureNotifiedAt = lastDepartureNotifiedAt?.let(Instant::ofEpochMilli),
+    enteredAt = enteredAt?.let(Instant::ofEpochMilli),
     createdAt = Instant.ofEpochMilli(createdAt),
     updatedAt = Instant.ofEpochMilli(updatedAt),
 )
@@ -40,7 +42,9 @@ internal fun Place.asEntity() = PlaceEntity(
     radiusMeters = radiusMeters,
     categoryId = categoryId?.toString(),
     sortOrder = sortOrder,
-    lastNotifiedAt = lastNotifiedAt?.toEpochMilli(),
+    lastArrivalNotifiedAt = lastArrivalNotifiedAt?.toEpochMilli(),
+    lastDepartureNotifiedAt = lastDepartureNotifiedAt?.toEpochMilli(),
+    enteredAt = enteredAt?.toEpochMilli(),
     createdAt = createdAt.toEpochMilli(),
     updatedAt = updatedAt.toEpochMilli(),
 )

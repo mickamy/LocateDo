@@ -4,6 +4,7 @@ import com.locatedo.locatedo.core.billing.Entitlements
 import com.locatedo.locatedo.core.billing.ProSubscription
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Membership
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Plan
 import com.locatedo.locatedo.core.permissions.LocationAuth
@@ -47,6 +48,7 @@ data class DailyState(
     data class Counts(
         val places: Int = 0,
         val openTodos: Int = 0,
+        val openDepartureTodos: Int = 0,
         val completedTodosLast7Days: Int = 0,
         val placesWithOpenTodos: Int = 0,
         val customCategories: Int = 0,
@@ -57,6 +59,7 @@ data class DailyState(
         get() = mapOf(
             AnalyticsParameter.PLACE_COUNT to counts.places,
             AnalyticsParameter.OPEN_TODO_COUNT to counts.openTodos,
+            AnalyticsParameter.OPEN_DEPARTURE_TODOS to counts.openDepartureTodos,
             AnalyticsParameter.COMPLETED_TODO_COUNT_7D to counts.completedTodosLast7Days,
             AnalyticsParameter.PLACES_WITH_OPEN_TODOS to counts.placesWithOpenTodos,
             AnalyticsParameter.CUSTOM_CATEGORY_COUNT to counts.customCategories,
@@ -118,9 +121,11 @@ data class DailyState(
         ): Counts {
             val weekAgo = now.minus(Duration.ofDays(7))
             val todos = places.flatMap { it.todos }
+            val openTodos = todos.filter { !it.isCompleted }
             return Counts(
                 places = places.size,
-                openTodos = todos.count { !it.isCompleted },
+                openTodos = openTodos.size,
+                openDepartureTodos = openTodos.count { it.placeEvent == PlaceEvent.DEPARTURE },
                 completedTodosLast7Days = todos.count { todo -> todo.completedAt?.isAfter(weekAgo) == true },
                 placesWithOpenTodos = places.count { it.openTodos.isNotEmpty() },
                 customCategories = categories.count { it.builtin == null },

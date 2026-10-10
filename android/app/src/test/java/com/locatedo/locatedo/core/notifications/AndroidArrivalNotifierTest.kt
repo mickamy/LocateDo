@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import androidx.test.core.app.ApplicationProvider
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Todo
 import java.time.Clock
 import java.time.Instant
@@ -31,8 +32,8 @@ class AndroidArrivalNotifierTest {
         val notifier = AndroidArrivalNotifier(application, clock)
         notifier.prepare()
 
-        notifier.notifyArrival(store, todos("Milk", "Bread", "Eggs", "Butter"))
-        notifier.notifyArrival(store, todos("Milk"))
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos("Milk", "Bread", "Eggs", "Butter"))
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos("Milk"))
 
         val manager = shadowOf(application.getSystemService(NotificationManager::class.java))
         assertEquals(listOf(AndroidArrivalNotifier.CHANNEL_ID), manager.notificationChannels.map { (it as android.app.NotificationChannel).id })
@@ -46,7 +47,7 @@ class AndroidArrivalNotifierTest {
         val notifier = AndroidArrivalNotifier(application, clock)
         notifier.prepare()
 
-        notifier.notifyArrival(store, todos("Milk"))
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos("Milk"))
 
         val manager = shadowOf(application.getSystemService(NotificationManager::class.java))
         val intent = shadowOf(manager.allNotifications.single().contentIntent).savedIntent
@@ -60,7 +61,7 @@ class AndroidArrivalNotifierTest {
         notifier.prepare()
         val todos = todos("Milk", "Bread")
 
-        notifier.notifyArrival(store, todos)
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos)
 
         val actions = postedActions()
         assertEquals(listOf("✓ Milk", "✓ Bread"), actions.map { it.title.toString() })
@@ -77,7 +78,7 @@ class AndroidArrivalNotifierTest {
         notifier.prepare()
         val todos = todos("Milk", "Bread", "Eggs", "Butter")
 
-        notifier.notifyArrival(store, todos)
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos)
 
         val actions = postedActions()
         assertEquals(listOf("✓ Milk", "✓ Bread", "Mark all 4 as done"), actions.map { it.title.toString() })
@@ -89,12 +90,29 @@ class AndroidArrivalNotifierTest {
     fun cancellingRemovesThePlacesNotification() {
         val notifier = AndroidArrivalNotifier(application, clock)
         notifier.prepare()
-        notifier.notifyArrival(store, todos("Milk"))
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos("Milk"))
 
-        notifier.cancelArrival(store.id)
+        notifier.cancel(store.id, PlaceEvent.ARRIVAL)
 
         val manager = shadowOf(application.getSystemService(NotificationManager::class.java))
         assertTrue(manager.allNotifications.isEmpty())
+    }
+
+    @Test
+    fun aDepartureIsLabeledAndKeptApartFromTheArrival() {
+        val notifier = AndroidArrivalNotifier(application, clock)
+        notifier.prepare()
+
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos("Milk"))
+        notifier.notify(PlaceEvent.DEPARTURE, store, todos("Umbrella"))
+
+        val manager = shadowOf(application.getSystemService(NotificationManager::class.java))
+        val posted = manager.allNotifications
+        assertEquals(2, posted.size)
+        val departure = posted.single { it.extras.getCharSequence(Notification.EXTRA_SUB_TEXT) != null }
+        assertEquals("Leaving", departure.extras.getCharSequence(Notification.EXTRA_SUB_TEXT).toString())
+        assertEquals("Store", departure.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("departure", shadowOf(departure.contentIntent).savedIntent.getStringExtra("placeEvent"))
     }
 
     @Test
@@ -102,7 +120,7 @@ class AndroidArrivalNotifierTest {
         val notifier = AndroidArrivalNotifier(application, clock)
         notifier.prepare()
 
-        notifier.notifyArrival(store, todos("Milk", "Bread", "Eggs", "Butter", "Jam"))
+        notifier.notify(PlaceEvent.ARRIVAL, store, todos("Milk", "Bread", "Eggs", "Butter", "Jam"))
 
         val manager = shadowOf(application.getSystemService(NotificationManager::class.java))
         val text = manager.allNotifications.single().extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString()

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.analytics.AlwaysPromptAnswer
 import com.locatedo.locatedo.core.analytics.AlwaysPromptTracker
 import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.PermissionAction
 import com.locatedo.locatedo.core.analytics.PermissionKind
 import com.locatedo.locatedo.core.analytics.logPermissionAction
@@ -24,6 +25,7 @@ import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.push.CompletionNotices
 import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.logic.ProDetail
+import com.locatedo.locatedo.logic.ReminderSetupNeed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -164,7 +166,7 @@ class SettingsViewModel @Inject constructor(
     // Counted as a request: the sheet is how this screen asks for "all the time".
     fun explainAlwaysLocation() {
         analytics.logPermissionAction(PermissionKind.LOCATION, PermissionAction.REQUEST)
-        alwaysPrompt.shown()
+        alwaysPrompt.shown(mapOf(AnalyticsParameter.MISSING to ReminderSetupNeed.LOCATION_ALWAYS.key))
         _isExplainingAlwaysLocation.value = true
     }
 

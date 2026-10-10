@@ -5,6 +5,7 @@ import com.locatedo.locatedo.core.model.BuiltinCategory
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
@@ -36,6 +37,7 @@ class WriteAnalytics @Inject constructor(
         source: PlaceSource?,
         todoCount: Int,
         suggestedCategory: BuiltinCategory?,
+        entry: ScreenEntry?,
     ) {
         val parameters = mutableMapOf<AnalyticsParameter, Any>(
             AnalyticsParameter.PLACE_COUNT to placeCount,
@@ -47,6 +49,9 @@ class WriteAnalytics @Inject constructor(
         )
         if (source != null) {
             parameters[AnalyticsParameter.SOURCE] = source.key
+        }
+        if (entry != null) {
+            parameters[AnalyticsParameter.ENTRY] = entry.key
         }
         analytics.log(AnalyticsEvent.PLACE_ADDED, parameters)
     }
@@ -63,17 +68,25 @@ class WriteAnalytics @Inject constructor(
         )
     }
 
-    suspend fun todoAdded(todo: Todo, openTodoCount: Int, placeOpenTodos: Int, via: TodoAddVia) {
-        analytics.log(
-            AnalyticsEvent.TODO_ADDED,
-            mapOf(
-                AnalyticsParameter.VIA to via.key,
-                AnalyticsParameter.OPEN_TODO_COUNT to openTodoCount,
-                AnalyticsParameter.PLACE_OPEN_TODOS to placeOpenTodos,
-                AnalyticsParameter.ASSIGNED to (todo.assigneeId != null),
-                AnalyticsParameter.DAYS_SINCE_INSTALL to daysSinceInstall(),
-            ),
+    suspend fun todoAdded(todo: Todo, openTodoCount: Int, placeOpenTodos: Int, via: TodoAddVia, origin: TodoAddOrigin?) {
+        val parameters = mutableMapOf<AnalyticsParameter, Any>(
+            AnalyticsParameter.VIA to via.key,
+            AnalyticsParameter.PLACE_EVENT to todo.placeEvent.key,
+            AnalyticsParameter.OPEN_TODO_COUNT to openTodoCount,
+            AnalyticsParameter.PLACE_OPEN_TODOS to placeOpenTodos,
+            AnalyticsParameter.ASSIGNED to (todo.assigneeId != null),
+            AnalyticsParameter.DAYS_SINCE_INSTALL to daysSinceInstall(),
         )
+        if (origin != null) {
+            parameters[AnalyticsParameter.ENTRY] = origin.entry.key
+            parameters[AnalyticsParameter.PLACE_PRESET] = origin.placePreset.key
+            parameters[AnalyticsParameter.PLACE_CHANGED] = origin.placeChanged
+        }
+        analytics.log(AnalyticsEvent.TODO_ADDED, parameters)
+    }
+
+    fun todoTriggerChanged(placeEvent: PlaceEvent) {
+        analytics.log(AnalyticsEvent.TODO_TRIGGER_CHANGED, mapOf(AnalyticsParameter.PLACE_EVENT to placeEvent.key))
     }
 
     // A check-off from a notification button says so; otherwise a recent arrival tap decides.
@@ -84,14 +97,15 @@ class WriteAnalytics @Inject constructor(
             via = CompletionVia.ACTION
         }
         val ageHours = Duration.between(todo.createdAt, now).toHours().coerceAtLeast(0)
-        analytics.log(
-            AnalyticsEvent.TODO_COMPLETED,
-            mapOf(
-                AnalyticsParameter.VIA to via.key,
-                AnalyticsParameter.AGE_HOURS to ageHours,
-                AnalyticsParameter.OPEN_TODO_COUNT to openTodoCount,
-            ),
+        val parameters = mutableMapOf<AnalyticsParameter, Any>(
+            AnalyticsParameter.VIA to via.key,
+            AnalyticsParameter.AGE_HOURS to ageHours,
+            AnalyticsParameter.OPEN_TODO_COUNT to openTodoCount,
         )
+        if (via.isFromReminder) {
+            parameters[AnalyticsParameter.PLACE_EVENT] = todo.placeEvent.key
+        }
+        analytics.log(AnalyticsEvent.TODO_COMPLETED, parameters)
     }
 
     fun todoDeleted(via: TodoDeletionVia, count: Int) {
@@ -120,15 +134,18 @@ class WriteAnalytics @Inject constructor(
         analytics.setUserProperty(AnalyticsUserProperty.OPEN_TODO_COUNT, DailyState.capped(openTodoCount, DailyState.OPEN_TODO_COUNT_CAP))
     }
 
-    // Opened from an arrival notification; notifiedAt is null when the intent came from somewhere else.
-    fun arrivalOpened(placeId: UUID, notifiedAt: Instant?) {
+    // Opened from a reminder; notifiedAt is null when the intent came from somewhere else.
+    fun reminderOpened(placeId: UUID, placeEvent: PlaceEvent, notifiedAt: Instant?) {
         val now = clock.instant()
         lastArrivalOpen = ArrivalOpen(placeId, now)
         if (notifiedAt == null) {
             return
         }
         val latency = Duration.between(notifiedAt, now).seconds.coerceAtLeast(0)
-        analytics.log(AnalyticsEvent.ARRIVAL_OPENED, mapOf(AnalyticsParameter.LATENCY_S to latency))
+        analytics.log(
+            AnalyticsEvent.REMINDER_OPENED,
+            mapOf(AnalyticsParameter.LATENCY_S to latency, AnalyticsParameter.PLACE_EVENT to placeEvent.key),
+        )
     }
 
     private suspend fun daysSinceInstall(): Int =

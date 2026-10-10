@@ -2,15 +2,22 @@ package com.locatedo.locatedo.screens.todos
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.locatedo.locatedo.core.analytics.PlacePreset
+import com.locatedo.locatedo.core.analytics.ScreenEntry
+import com.locatedo.locatedo.core.analytics.TodoAddOrigin
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.paywallTrigger
+import com.locatedo.locatedo.core.common.Geo
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.data.MembershipRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.data.TodoRepository
 import com.locatedo.locatedo.core.data.TodoUndo
+import com.locatedo.locatedo.core.location.LocationRepository
+import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +42,7 @@ data class TodoDraft(
     val isEditing: Boolean = false,
     // A place made from the picker here; saving a to-do at it lands on that place.
     val newPlaceId: UUID? = null,
+    val remindsOnLeave: Boolean = false,
 ) {
     val canSave: Boolean
         get() = title.isNotBlank() && placeId != null
@@ -62,10 +70,15 @@ class TodoEditorViewModel @Inject constructor(
     memberships: MembershipRepository,
     private val paywallRequests: PaywallRequests,
     private val undo: TodoUndo,
+    private val location: LocationRepository,
     private val clock: Clock,
 ) : ViewModel() {
+    // Where a new to-do was started and the place it started with, for the analytics.
+    private data class Preset(val entry: ScreenEntry, val kind: PlacePreset, val placeId: UUID?)
+
     private val draft = MutableStateFlow(TodoDraft())
     private var editing: Todo? = null
+    private var preset: Preset? = null
     private val _events = MutableSharedFlow<TodoEditorEvent>()
 
     val events: SharedFlow<TodoEditorEvent> = _events
@@ -74,28 +87,55 @@ class TodoEditorViewModel @Inject constructor(
         TodoEditorUiState(draft = draft, places = places, members = members)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, TodoEditorUiState())
 
-    // A new to-do starts at the place given, or else the first one.
-    fun start(placeId: UUID?) {
+    // A new to-do starts at the place given; from Home's plus menu at the nearest one, as far as the last known
+    // location tells; or else at the first one.
+    fun start(placeId: UUID?, entry: ScreenEntry) {
         editing = null
         draft.value = TodoDraft(placeId = placeId)
         if (placeId != null) {
+            preset = Preset(entry, PlacePreset.PLACE, placeId)
             return
         }
+        preset = Preset(entry, PlacePreset.NONE, null)
         viewModelScope.launch {
-            val first = uiState.first { it.places.isNotEmpty() || it.draft.placeId != null }.places.firstOrNull()
-            if (first != null) {
-                draft.update { if (it.placeId == null) it.copy(placeId = first.id) else it }
+            val places = uiState.first { it.places.isNotEmpty() || it.draft.placeId != null }.places
+            val (chosen, kind) = choose(places, entry) ?: return@launch
+            if (draft.value.placeId != null) {
+                return@launch
+            }
+            draft.update { it.copy(placeId = chosen.id) }
+            preset = Preset(entry, kind, chosen.id)
+        }
+    }
+
+    private suspend fun choose(places: List<Place>, entry: ScreenEntry): Pair<Place, PlacePreset>? {
+        if (places.isEmpty()) {
+            return null
+        }
+        if (entry == ScreenEntry.HOME_MENU) {
+            val here = location.lastCoordinate()
+            if (here != null) {
+                val nearest = places.minBy { Geo.distanceMeters(here, Coordinate(it.latitude, it.longitude)) }
+                return nearest to PlacePreset.NEAREST
             }
         }
+        return places.first() to PlacePreset.FIRST
     }
 
     fun startEditing(todoId: UUID) {
         editing = null
+        preset = null
         draft.value = TodoDraft(isEditing = true)
         viewModelScope.launch {
             val todo = todos.observeAll().first().firstOrNull { it.id == todoId } ?: return@launch
             editing = todo
-            draft.value = TodoDraft(title = todo.title, placeId = todo.placeId, assigneeId = todo.assigneeId, isEditing = true)
+            draft.value = TodoDraft(
+                title = todo.title,
+                placeId = todo.placeId,
+                assigneeId = todo.assigneeId,
+                isEditing = true,
+                remindsOnLeave = todo.placeEvent == PlaceEvent.DEPARTURE,
+            )
         }
     }
 
@@ -104,6 +144,8 @@ class TodoEditorViewModel @Inject constructor(
     fun setPlace(placeId: UUID) = draft.update { it.copy(placeId = placeId) }
 
     fun setAssignee(userId: UUID?) = draft.update { it.copy(assigneeId = userId) }
+
+    fun setRemindsOnLeave(remindsOnLeave: Boolean) = draft.update { it.copy(remindsOnLeave = remindsOnLeave) }
 
     // Back from adding a place from the picker: it becomes the to-do's place.
     fun placeAdded(placeId: UUID) = draft.update { it.copy(placeId = placeId, newPlaceId = placeId) }
@@ -118,9 +160,20 @@ class TodoEditorViewModel @Inject constructor(
             return
         }
         val edited = editing
+        var placeEvent = PlaceEvent.ARRIVAL
+        if (current.remindsOnLeave) {
+            placeEvent = PlaceEvent.DEPARTURE
+        }
         viewModelScope.launch {
             if (edited != null) {
-                todos.update(edited.copy(title = current.title.trim(), placeId = placeId, assigneeId = current.assigneeId))
+                todos.update(
+                    edited.copy(
+                        title = current.title.trim(),
+                        placeId = placeId,
+                        assigneeId = current.assigneeId,
+                        placeEvent = placeEvent,
+                    ),
+                )
                 _events.emit(TodoEditorEvent.Saved(landOn = null))
                 return@launch
             }
@@ -130,15 +183,21 @@ class TodoEditorViewModel @Inject constructor(
                 title = current.title.trim(),
                 placeId = placeId,
                 assigneeId = current.assigneeId,
+                placeEvent = placeEvent,
                 createdAt = now,
             )
-            val limit = todos.add(todo)
+            val limit = todos.add(todo, origin = origin(placeId))
             if (limit != null) {
                 paywallRequests.request(limit.paywallTrigger)
                 return@launch
             }
             _events.emit(TodoEditorEvent.Saved(landOn = current.newPlaceId?.takeIf { it == placeId }))
         }
+    }
+
+    private fun origin(placeId: UUID): TodoAddOrigin? {
+        val preset = preset ?: return null
+        return TodoAddOrigin(preset.entry, preset.kind, placeChanged = placeId != preset.placeId)
     }
 
     fun delete() {

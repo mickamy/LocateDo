@@ -17,8 +17,11 @@ class GeofenceReceiver : BroadcastReceiver() {
             Log.w(TAG, "Geofence event failed with code ${event.errorCode}")
             return
         }
-        if (event.geofenceTransition != Geofence.GEOFENCE_TRANSITION_DWELL) {
-            return
+        val transition = when (event.geofenceTransition) {
+            Geofence.GEOFENCE_TRANSITION_ENTER -> GeofenceTransition.ENTER
+            Geofence.GEOFENCE_TRANSITION_DWELL -> GeofenceTransition.DWELL
+            Geofence.GEOFENCE_TRANSITION_EXIT -> GeofenceTransition.EXIT
+            else -> return
         }
         val placeIds = event.triggeringGeofences.orEmpty().mapNotNull { fence ->
             runCatching { UUID.fromString(fence.requestId) }.getOrNull()
@@ -31,12 +34,15 @@ class GeofenceReceiver : BroadcastReceiver() {
         val result = goAsync()
         graph.applicationScope().launch {
             try {
-                graph.arrivalHandler().arrived(placeIds, here)
+                graph.arrivalHandler().handle(transition, placeIds, here)
             } finally {
                 result.finish()
             }
-            // The user is about to open the list; fetch what the other members changed first.
-            graph.syncEngine().sync()
+            // Going in only starts the clock; after an arrival or a departure the user is about to open the list, so
+            // fetch what the other members changed first.
+            if (transition != GeofenceTransition.ENTER) {
+                graph.syncEngine().sync()
+            }
         }
     }
 

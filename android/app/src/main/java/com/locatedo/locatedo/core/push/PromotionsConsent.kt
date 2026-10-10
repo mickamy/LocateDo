@@ -30,7 +30,7 @@ class PromotionsConsent @Inject constructor(
     @param:ApplicationScope private val scope: CoroutineScope,
 ) {
     enum class Source(val key: String) {
-        FIRST_ARRIVAL("first_arrival"),
+        FIRST_REMINDER("first_reminder"),
         SETTINGS("settings"),
     }
 
@@ -114,7 +114,7 @@ class PromotionsConsent @Inject constructor(
         if (answer != Answer.ACCEPTED) {
             return null
         }
-        return set(true, Source.FIRST_ARRIVAL)
+        return set(true, Source.FIRST_REMINDER)
     }
 
     companion object {

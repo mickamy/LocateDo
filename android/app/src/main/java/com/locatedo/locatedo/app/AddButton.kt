@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.navigation.AllTodosKey
 import com.locatedo.locatedo.navigation.HomeKey
 import com.locatedo.locatedo.navigation.PlaceKey
@@ -36,11 +37,11 @@ import java.util.UUID
 // Changes with the screen: on Home a plus that opens "add a to-do" and "add a place" above it (Material's FAB menu),
 // on a place or the list of to-dos a button that adds a to-do, and nothing elsewhere.
 @Composable
-fun AddButton(top: NavKey?, onAddTodo: (UUID?) -> Unit, onAddPlace: () -> Unit) {
+fun AddButton(top: NavKey?, onAddTodo: (UUID?, ScreenEntry) -> Unit, onAddPlace: () -> Unit) {
     when (top) {
-        HomeKey -> HomeMenu(onAddTodo = { onAddTodo(null) }, onAddPlace = onAddPlace)
-        is PlaceKey -> AddTodoButton(onClick = { onAddTodo(UUID.fromString(top.placeId)) })
-        AllTodosKey -> AddTodoButton(onClick = { onAddTodo(null) })
+        HomeKey -> HomeMenu(onAddTodo = { onAddTodo(null, ScreenEntry.HOME_MENU) }, onAddPlace = onAddPlace)
+        is PlaceKey -> AddTodoButton(onClick = { onAddTodo(UUID.fromString(top.placeId), ScreenEntry.PLACE) })
+        is AllTodosKey -> AddTodoButton(onClick = { onAddTodo(null, ScreenEntry.ALL_TODOS) })
         else -> Unit
     }
 }

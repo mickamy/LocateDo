@@ -15,6 +15,7 @@ import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.notifications.ArrivalSimulator
 import com.locatedo.locatedo.core.sync.SyncEngine
 import com.locatedo.locatedo.screens.todos.TodoActions
@@ -136,7 +137,7 @@ class PlaceViewModel @AssistedInject constructor(
         viewModelScope.launch { places.delete(placeId) }
     }
 
-    fun simulateArrival(after: Duration) = arrivalSimulator.arrive(placeId, after)
+    fun simulate(event: PlaceEvent, after: Duration) = arrivalSimulator.simulate(placeId, event, after)
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

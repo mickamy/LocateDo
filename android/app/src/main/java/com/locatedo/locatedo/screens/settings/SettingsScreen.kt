@@ -59,6 +59,7 @@ import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.analytics.PermissionAction
 import com.locatedo.locatedo.core.analytics.PermissionKind
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.billing.PlanKind
 import com.locatedo.locatedo.core.common.LegalLinks
 import com.locatedo.locatedo.core.common.SystemSettings
@@ -75,6 +76,7 @@ import com.locatedo.locatedo.screens.components.RadiusSlider
 import com.locatedo.locatedo.screens.components.rememberPreciseLocationRequest
 import com.locatedo.locatedo.ui.analytics.LocalAnalytics
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -87,7 +89,7 @@ import java.util.Locale
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    TrackScreen(AnalyticsScreen.SETTINGS)
+    TrackScreen(AnalyticsScreen.SETTINGS, opening = ScreenEntry.HOME.parameters)
     val navigator = LocalNavigator.current
     val analytics = LocalAnalytics.current
     val onOpenAccount = { navigator.push(AccountKey) }

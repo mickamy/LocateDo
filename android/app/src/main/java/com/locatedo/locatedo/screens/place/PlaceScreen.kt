@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
@@ -54,11 +55,14 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.BuildConfig
 import com.locatedo.locatedo.R
+import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.common.CategoryStyle
 import com.locatedo.locatedo.core.common.DistanceFormatting
 import com.locatedo.locatedo.core.common.categoryName
 import com.locatedo.locatedo.core.common.zoomForRadius
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
 import com.locatedo.locatedo.navigation.LocalNavigator
@@ -72,6 +76,7 @@ import com.locatedo.locatedo.screens.components.rememberTodoEditing
 import com.locatedo.locatedo.screens.todos.TodoRow
 import com.locatedo.locatedo.screens.todos.TodoRowHandler
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import com.locatedo.locatedo.ui.analytics.parameters
 import java.time.Duration
 import java.util.UUID
 
@@ -79,13 +84,19 @@ import java.util.UUID
 @Composable
 fun PlaceScreen(
     placeId: UUID,
+    entry: ScreenEntry,
+    rank: Int?,
     onEdit: () -> Unit,
     viewModel: PlaceViewModel = hiltViewModel<PlaceViewModel, PlaceViewModel.Factory>(
         key = placeId.toString(),
         creationCallback = { factory -> factory.create(placeId) },
     ),
 ) {
-    TrackScreen(AnalyticsScreen.PLACE_DETAIL)
+    var opening = entry.parameters
+    if (rank != null) {
+        opening = opening + (AnalyticsParameter.RANK to rank)
+    }
+    TrackScreen(AnalyticsScreen.PLACE_DETAIL, opening = opening)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val info = uiState.info
     val navigator = LocalNavigator.current
@@ -96,7 +107,7 @@ fun PlaceScreen(
     val handler = object : TodoRowHandler {
         override fun toggle(todo: Todo) = viewModel.toggle(todo)
 
-        override fun edit(todo: Todo) = openEditor(todo.id, true)
+        override fun edit(todo: Todo) = openEditor(todo.id)
 
         override fun delete(todo: Todo, via: TodoDeletionVia) = viewModel.delete(todo, via)
 
@@ -118,7 +129,7 @@ fun PlaceScreen(
                     onDelete = {
                         navigator.present(Overlay.Confirmation(deleteTitle, deleteMessage, deleteLabel, viewModel::deletePlace))
                     },
-                    onSimulateArrival = viewModel::simulateArrival,
+                    onSimulate = viewModel::simulate,
                 )
             }
         },
@@ -269,7 +280,7 @@ private fun CompletedHeader(count: Int, isShared: Boolean, isExpanded: Boolean, 
 
 // Deleting is rare and cannot be undone, so it sits behind the menu with editing.
 @Composable
-private fun PlaceMenu(onEdit: () -> Unit, onDelete: () -> Unit, onSimulateArrival: (Duration) -> Unit) {
+private fun PlaceMenu(onEdit: () -> Unit, onDelete: () -> Unit, onSimulate: (PlaceEvent, Duration) -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { isExpanded = true }) {
@@ -292,13 +303,13 @@ private fun PlaceMenu(onEdit: () -> Unit, onDelete: () -> Unit, onSimulateArriva
                 },
                 leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
             )
-            // Debug and staging builds: an arrival now, or in 10 seconds to lock the screen first.
+            // Debug and staging builds: an arrival now, or in 10 seconds to lock the screen first, and a departure.
             if (BuildConfig.DEBUG_TOOLS) {
                 DropdownMenuItem(
                     text = { Text("Simulate arrival (debug)") },
                     onClick = {
                         isExpanded = false
-                        onSimulateArrival(Duration.ZERO)
+                        onSimulate(PlaceEvent.ARRIVAL, Duration.ZERO)
                     },
                     leadingIcon = { Icon(Icons.Filled.MyLocation, contentDescription = null) },
                 )
@@ -306,9 +317,17 @@ private fun PlaceMenu(onEdit: () -> Unit, onDelete: () -> Unit, onSimulateArriva
                     text = { Text("Simulate arrival in 10 s (debug)") },
                     onClick = {
                         isExpanded = false
-                        onSimulateArrival(Duration.ofSeconds(10))
+                        onSimulate(PlaceEvent.ARRIVAL, Duration.ofSeconds(10))
                     },
                     leadingIcon = { Icon(Icons.Filled.Timer, contentDescription = null) },
+                )
+                DropdownMenuItem(
+                    text = { Text("Simulate departure (debug)") },
+                    onClick = {
+                        isExpanded = false
+                        onSimulate(PlaceEvent.DEPARTURE, Duration.ZERO)
+                    },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = null) },
                 )
             }
         }

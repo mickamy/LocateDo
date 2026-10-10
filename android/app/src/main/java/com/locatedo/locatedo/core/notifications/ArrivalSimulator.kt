@@ -2,6 +2,7 @@ package com.locatedo.locatedo.core.notifications
 
 import com.locatedo.locatedo.core.common.di.ApplicationScope
 import com.locatedo.locatedo.core.data.PlaceRepository
+import com.locatedo.locatedo.core.model.PlaceEvent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,9 +15,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Debug and staging only: arrives at a place as if its geofence fired, through the same rules.
+// Debug and staging only: arrives at or leaves a place as if its geofence fired, through the same rules. A simulated
+// departure skips the five-minute stay.
 interface ArrivalSimulator {
-    fun arrive(placeId: UUID, after: Duration)
+    fun simulate(placeId: UUID, event: PlaceEvent, after: Duration)
 }
 
 // Runs on the application scope, so a delayed arrival still comes after leaving the app or locking the screen.
@@ -26,11 +28,11 @@ class DefaultArrivalSimulator @Inject constructor(
     private val arrivalHandler: ArrivalHandler,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) : ArrivalSimulator {
-    override fun arrive(placeId: UUID, after: Duration) {
+    override fun simulate(placeId: UUID, event: PlaceEvent, after: Duration) {
         scope.launch {
             delay(after.toMillis())
-            placeRepository.markNotified(placeId, null)
-            arrivalHandler.arrived(listOf(placeId), near = null)
+            placeRepository.markNotified(placeId, event, null)
+            arrivalHandler.remind(listOf(placeId), event, near = null)
         }
     }
 }

@@ -6,7 +6,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.locatedo.locatedo.core.account.AccountManager
+import com.locatedo.locatedo.core.analytics.Analytics
 import com.locatedo.locatedo.core.analytics.AnalyticsConsent
+import com.locatedo.locatedo.core.analytics.AnalyticsUserProperty
 import com.locatedo.locatedo.core.analytics.DailyStateReporter
 import com.locatedo.locatedo.core.analytics.WriteAnalytics
 import com.locatedo.locatedo.core.appstatus.AppStatusStore
@@ -67,6 +69,8 @@ class LocateDoApplication : Application() {
 
     @Inject lateinit var analyticsConsent: AnalyticsConsent
 
+    @Inject lateinit var analytics: Analytics
+
     @Inject lateinit var writeAnalytics: WriteAnalytics
 
     @Inject lateinit var promotionsConsent: PromotionsConsent
@@ -88,6 +92,8 @@ class LocateDoApplication : Application() {
             preferences.recordFirstLaunch(clock.instant())
             categories.ensureBuiltins()
         }
+        // The exported app version is only the version name, so builds of the same version look alike.
+        analytics.setUserProperty(AnalyticsUserProperty.APP_BUILD, BuildConfig.VERSION_CODE.toString())
         applicationScope.launch {
             analyticsConsent.start()
         }

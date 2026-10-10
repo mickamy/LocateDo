@@ -18,6 +18,7 @@ import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.sync.SyncEngine
 import com.locatedo.locatedo.logic.PermissionBanner
+import com.locatedo.locatedo.logic.ReminderSetupNeed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.util.UUID
@@ -102,7 +103,7 @@ class HomeViewModel @Inject constructor(
     fun permissionBannerTapped(banner: PermissionBanner) {
         analytics.log(AnalyticsEvent.PERMISSION_BANNER_TAPPED, mapOf(AnalyticsParameter.KIND to banner.key))
         if (banner == PermissionBanner.LOCATION_ALWAYS) {
-            alwaysPrompt.shown()
+            alwaysPrompt.shown(mapOf(AnalyticsParameter.MISSING to ReminderSetupNeed.LOCATION_ALWAYS.key))
         }
     }
 

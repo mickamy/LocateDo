@@ -1,6 +1,7 @@
 package com.locatedo.locatedo.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import kotlinx.serialization.Serializable
 
@@ -11,11 +12,12 @@ data object HomeKey : NavKey
 @Serializable
 data object MapKey : NavKey
 
+// Where a screen was opened from rides on its key, for the analytics.
 @Serializable
-data object AllTodosKey : NavKey
+data class AllTodosKey(val entry: ScreenEntry) : NavKey
 
 @Serializable
-data class PlaceKey(val placeId: String) : NavKey
+data class PlaceKey(val placeId: String, val entry: ScreenEntry, val rank: Int? = null) : NavKey
 
 @Serializable
 data object SettingsKey : NavKey

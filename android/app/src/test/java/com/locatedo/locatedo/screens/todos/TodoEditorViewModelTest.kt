@@ -1,14 +1,20 @@
 package com.locatedo.locatedo.screens.todos
 
+import com.locatedo.locatedo.core.analytics.PlacePreset
+import com.locatedo.locatedo.core.analytics.ScreenEntry
+import com.locatedo.locatedo.core.analytics.TodoAddOrigin
 import com.locatedo.locatedo.core.billing.PaywallRequests
 import com.locatedo.locatedo.core.billing.PaywallTrigger
 import com.locatedo.locatedo.core.common.uuidV7
 import com.locatedo.locatedo.core.data.TodoUndo
+import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.model.TodoDeletionVia
+import com.locatedo.locatedo.testing.FakeLocationRepository
 import com.locatedo.locatedo.testing.FakeMembershipRepository
 import com.locatedo.locatedo.testing.FakePlaceRepository
 import com.locatedo.locatedo.testing.FakeTodoRepository
@@ -39,6 +45,7 @@ class TodoEditorViewModelTest {
     private val places = FakePlaceRepository()
     private val paywalls = PaywallRequests()
     private val undo = TodoUndo()
+    private val location = FakeLocationRepository()
     private val store = Place(id = uuidV7(now), name = "Store", latitude = 35.0, longitude = 139.0, createdAt = now)
 
     @Before
@@ -56,7 +63,7 @@ class TodoEditorViewModelTest {
     fun savesATodoForThePlaceItStartedAt() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
-        viewModel.start(store.id)
+        viewModel.start(store.id, ScreenEntry.PLACE)
         viewModel.setTitle("  Milk ")
 
         viewModel.save()
@@ -71,7 +78,7 @@ class TodoEditorViewModelTest {
     @Test
     fun withoutAPlaceItStartsAtTheFirstOne() = runTest(dispatcher) {
         val viewModel = viewModel()
-        viewModel.start(placeId = null)
+        viewModel.start(placeId = null, entry = ScreenEntry.ALL_TODOS)
 
         assertEquals(listOf(store), viewModel.uiState.value.places)
         assertEquals(store.id, viewModel.uiState.value.draft.placeId)
@@ -81,11 +88,58 @@ class TodoEditorViewModelTest {
     }
 
     @Test
+    fun theOriginSaysWhereTheEditorStartedAndWhetherThePlaceWasKept() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(store.id, ScreenEntry.PLACE)
+        viewModel.setTitle("Milk")
+
+        viewModel.save()
+
+        assertEquals(TodoAddOrigin(ScreenEntry.PLACE, PlacePreset.PLACE, placeChanged = false), todos.origins.single())
+    }
+
+    @Test
+    fun homesPlusMenuStartsAtTheNearestPlace() = runTest(dispatcher) {
+        val far = Place(id = uuidV7(now), name = "Far", latitude = 36.0, longitude = 140.0, createdAt = now)
+        places.state.value = listOf(PlaceWithTodos(far, emptyList()), PlaceWithTodos(store, emptyList()))
+        location.coordinate = Coordinate(35.0, 139.0)
+        val viewModel = viewModel()
+        viewModel.start(placeId = null, entry = ScreenEntry.HOME_MENU)
+        assertEquals(store.id, viewModel.uiState.value.draft.placeId)
+        viewModel.setTitle("Milk")
+        viewModel.setPlace(far.id)
+
+        viewModel.save()
+
+        assertEquals(TodoAddOrigin(ScreenEntry.HOME_MENU, PlacePreset.NEAREST, placeChanged = true), todos.origins.single())
+    }
+
+    @Test
+    fun withoutALocationHomesPlusMenuStartsAtTheFirstPlace() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null, entry = ScreenEntry.HOME_MENU)
+
+        assertEquals(store.id, viewModel.uiState.value.draft.placeId)
+    }
+
+    @Test
+    fun remindingOnLeavingSavesADepartureTodo() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(store.id, ScreenEntry.PLACE)
+        viewModel.setTitle("Umbrella")
+        viewModel.setRemindsOnLeave(true)
+
+        viewModel.save()
+
+        assertEquals(PlaceEvent.DEPARTURE, todos.added.single().placeEvent)
+    }
+
+    @Test
     fun aToDoSavedAtAPlaceJustMadeForItLandsThere() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
         val added = uuidV7(now)
-        viewModel.start(store.id)
+        viewModel.start(store.id, ScreenEntry.PLACE)
         viewModel.setTitle("Milk")
 
         viewModel.placeAdded(added)
@@ -99,7 +153,7 @@ class TodoEditorViewModelTest {
     fun aPlaceJustMadeButNotChosenDoesNotLand() = runTest(dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
-        viewModel.start(store.id)
+        viewModel.start(store.id, ScreenEntry.PLACE)
         viewModel.setTitle("Milk")
 
         viewModel.placeAdded(uuidV7(now))
@@ -113,7 +167,7 @@ class TodoEditorViewModelTest {
     fun anAssigneeIsSavedWithTheTodo() = runTest(dispatcher) {
         val viewModel = viewModel()
         val assignee = UUID.randomUUID()
-        viewModel.start(store.id)
+        viewModel.start(store.id, ScreenEntry.PLACE)
         viewModel.setTitle("Milk")
         viewModel.setAssignee(assignee)
 
@@ -127,7 +181,7 @@ class TodoEditorViewModelTest {
         val viewModel = viewModel()
         val events = events(viewModel)
         todos.limit = FreeLimit.OPEN_TODOS
-        viewModel.start(store.id)
+        viewModel.start(store.id, ScreenEntry.PLACE)
         viewModel.setTitle("Milk")
 
         viewModel.save()
@@ -177,7 +231,15 @@ class TodoEditorViewModelTest {
     }
 
     private fun TestScope.viewModel(): TodoEditorViewModel {
-        val viewModel = TodoEditorViewModel(todos, places, FakeMembershipRepository(), paywalls, undo, Clock.fixed(now, ZoneOffset.UTC))
+        val viewModel = TodoEditorViewModel(
+            todos,
+            places,
+            FakeMembershipRepository(),
+            paywalls,
+            undo,
+            location,
+            Clock.fixed(now, ZoneOffset.UTC),
+        )
         backgroundScope.launch { viewModel.uiState.collect {} }
         return viewModel
     }

@@ -1,6 +1,8 @@
 package com.locatedo.locatedo.testing
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.locatedo.locatedo.core.analytics.ScreenEntry
+import com.locatedo.locatedo.core.analytics.TodoAddOrigin
 import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.MembershipRepository
@@ -19,6 +21,7 @@ import com.locatedo.locatedo.core.model.Coordinate
 import com.locatedo.locatedo.core.model.FreeLimit
 import com.locatedo.locatedo.core.model.Membership
 import com.locatedo.locatedo.core.model.Place
+import com.locatedo.locatedo.core.model.PlaceEvent
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.model.SyncState
@@ -56,6 +59,7 @@ class FakePlaceRepository : PlaceRepository {
     val sources = mutableListOf<PlaceSource?>()
     val todoCounts = mutableListOf<Int>()
     val suggestions = mutableListOf<BuiltinCategory?>()
+    val entries = mutableListOf<ScreenEntry?>()
     val updated = mutableListOf<Place>()
     var limit: FreeLimit? = null
 
@@ -71,12 +75,14 @@ class FakePlaceRepository : PlaceRepository {
         source: PlaceSource?,
         todoCount: Int,
         suggestedCategory: BuiltinCategory?,
+        entry: ScreenEntry?,
     ): FreeLimit? {
         limit?.let { return it }
         added += place
         sources += source
         todoCounts += todoCount
         suggestions += suggestedCategory
+        entries += entry
         state.value = state.value + PlaceWithTodos(place, emptyList())
         return null
     }
@@ -90,8 +96,20 @@ class FakePlaceRepository : PlaceRepository {
         state.value = state.value.filter { it.place.id != id }
     }
 
-    override suspend fun markNotified(id: UUID, at: Instant?) {
-        state.value = state.value.map { if (it.place.id == id) it.copy(place = it.place.copy(lastNotifiedAt = at)) else it }
+    override suspend fun markNotified(id: UUID, event: PlaceEvent, at: Instant?) {
+        state.value = state.value.map { entry ->
+            if (entry.place.id != id) {
+                entry
+            } else if (event == PlaceEvent.ARRIVAL) {
+                entry.copy(place = entry.place.copy(lastArrivalNotifiedAt = at))
+            } else {
+                entry.copy(place = entry.place.copy(lastDepartureNotifiedAt = at))
+            }
+        }
+    }
+
+    override suspend fun setEnteredAt(id: UUID, at: Instant?) {
+        state.value = state.value.map { if (it.place.id == id) it.copy(place = it.place.copy(enteredAt = at)) else it }
     }
 }
 
@@ -124,8 +142,11 @@ class FakeArrivalNotifier : ArrivalNotifier {
 
     override fun canNotify(): Boolean = allowed
 
-    override fun notifyArrival(place: Place, todos: List<Todo>, silent: Boolean) {
+    val events = mutableListOf<PlaceEvent>()
+
+    override fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean) {
         val shown = place to todos.map { it.title }
+        events += event
         if (silent) {
             this.silent += shown
         } else {
@@ -133,7 +154,7 @@ class FakeArrivalNotifier : ArrivalNotifier {
         }
     }
 
-    override fun cancelArrival(placeId: UUID) {
+    override fun cancel(placeId: UUID, event: PlaceEvent) {
         cancelled += placeId
     }
 }
@@ -149,10 +170,10 @@ class FakeCampaignNotifier : CampaignNotifier {
 }
 
 class FakeArrivalSimulator : ArrivalSimulator {
-    val arrivals = mutableListOf<Pair<UUID, Duration>>()
+    val simulated = mutableListOf<Triple<UUID, PlaceEvent, Duration>>()
 
-    override fun arrive(placeId: UUID, after: Duration) {
-        arrivals += placeId to after
+    override fun simulate(placeId: UUID, event: PlaceEvent, after: Duration) {
+        simulated += Triple(placeId, event, after)
     }
 }
 
@@ -246,15 +267,17 @@ class FakeTodoRepository : TodoRepository {
     val deletedVia = mutableListOf<TodoDeletionVia>()
     val restored = mutableListOf<Todo>()
     val addedVia = mutableListOf<TodoAddVia>()
+    val origins = mutableListOf<TodoAddOrigin?>()
     var limit: FreeLimit? = null
     var remaining: Int? = null
 
     override fun observeAll(): Flow<List<Todo>> = state
 
-    override suspend fun add(todo: Todo, via: TodoAddVia): FreeLimit? {
+    override suspend fun add(todo: Todo, via: TodoAddVia, origin: TodoAddOrigin?): FreeLimit? {
         limit?.let { return it }
         added += todo
         addedVia += via
+        origins += origin
         state.value = state.value + todo
         return null
     }
