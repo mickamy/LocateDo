@@ -21,6 +21,8 @@ FROM (
     promotions_consent = 1 AS promotions_consent,
     -- Android only.
     battery_optimization_exempt = 1 AS battery_optimization_exempt,
+    -- iOS only, from 2026-10-10: a paired Apple Watch has the Watch app.
+    watch_app_installed = 1 AS watch_app_installed,
     language,
     ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, event_date ORDER BY event_time DESC) AS rank
   FROM `__PROJECT__.__DATASET__.events`

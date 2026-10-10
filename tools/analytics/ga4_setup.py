@@ -22,7 +22,7 @@ USER_DIMENSIONS = [
 ]
 EVENT_DIMENSIONS = [
     "source", "category", "via", "kind", "trigger", "from", "to", "notification_auth", "mode", "step", "reason", "result",
-    "household_plan", "campaign_id", "action",
+    "household_plan", "campaign_id", "action", "missing",
 ]
 METRICS = {
     "place_count": "STANDARD",
@@ -38,6 +38,7 @@ METRICS = {
     "assigned": "STANDARD",
     "signed_in": "STANDARD",
     "precise_location": "STANDARD",
+    "watch_app_installed": "STANDARD",
     "promotions_consent": "STANDARD",
     "count": "STANDARD",
     "radius_m": "METERS",
