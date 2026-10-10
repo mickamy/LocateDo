@@ -26,8 +26,15 @@ nonisolated enum ConsentRegion {
         return true
     }
 
-    static func currentStorefront() async -> String? {
-        await Storefront.current?.countryCode
+    static let overrideArgument = "-consentStorefront"
+
+    static func currentStorefront(arguments: [String] = ProcessInfo.processInfo.arguments) async -> String? {
+        #if DEBUG
+        if let index = arguments.firstIndex(of: overrideArgument), index + 1 < arguments.count {
+            return arguments[index + 1]
+        }
+        #endif
+        return await Storefront.current?.countryCode
     }
 
     static var currentRegion: String? {

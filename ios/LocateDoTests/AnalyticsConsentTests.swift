@@ -27,6 +27,12 @@ struct ConsentRegionTests {
     @Test func treatsAnUnknownRegionAsInScope() {
         #expect(ConsentRegion.requiresConsent(storefront: nil, region: nil))
     }
+
+    @Test func takesTheStorefrontFromTheLaunchArguments() async {
+        let storefront = await ConsentRegion.currentStorefront(arguments: ["LocateDo", "-consentStorefront", "GBR"])
+
+        #expect(storefront == "GBR")
+    }
 }
 
 struct AnalyticsConsentTests {
