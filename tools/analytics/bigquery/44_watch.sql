@@ -1,8 +1,8 @@
--- Apple Watch use by month (iOS only, from 2026-10-09).
+-- Apple Watch use by month (iOS only).
 -- ios_users: iOS users with a daily_state that month; watch_users: those whose paired Watch had the Watch app on at
--- least one day of it (daily_state carries watch_app_installed from 2026-10-10).
--- watch_completing_users / *_completions: to-dos checked off from the Watch app (via watch) or from the arrival
--- notification on the Watch (via watch_action), as iPhone reports them.
+-- least one day of it.
+-- watch_completing_users / *_completions: to-dos checked off from the Watch app (via watch) or from the reminder on the
+-- Watch (via watch_action), as iPhone reports them.
 WITH owners AS (
   SELECT
     DATE_TRUNC(event_date, MONTH) AS month,

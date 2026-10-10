@@ -91,6 +91,7 @@
       <div class="segmented" id="tabs">
         <button data-value="daily" aria-pressed="true">毎日</button>
         <button data-value="kpi" aria-pressed="false">KPI</button>
+        <button data-value="home" aria-pressed="false">ホーム</button>
       </div>
       <div class="segmented" id="platforms">
         <button data-value="ALL" aria-pressed="true">すべて</button>
@@ -110,7 +111,7 @@
     <div class="grid">
       <div class="card"><h2>利用者（アプリを開いた人）</h2><div class="chart"><canvas id="chart-active"></canvas></div></div>
       <div class="card"><h2>登録</h2><div class="chart"><canvas id="chart-setup"></canvas></div></div>
-      <div class="card"><h2>到着通知</h2><div class="chart"><canvas id="chart-reminders"></canvas></div></div>
+      <div class="card"><h2>場所の通知</h2><div class="chart"><canvas id="chart-reminders"></canvas></div></div>
       <div class="card"><h2>課金</h2><div class="chart"><canvas id="chart-billing"></canvas></div></div>
     </div>
     <div class="card table-wrap"><h2>明細</h2><table id="daily-table"></table></div>
@@ -125,7 +126,17 @@
       <div class="card"><h2>有料ユーザーと月のアクティブ</h2><div class="chart"><canvas id="chart-paid"></canvas></div></div>
     </div>
     <div class="card table-wrap"><h2>明細</h2><table id="kpi-table"></table></div>
-    <p class="note">継続率は開始から 14 日たった人、転換率はお試しが終わった人（同期が止まった人を除く）だけで数える。緑の線が目標、赤の線が見直しの基準。</p>
+    <p class="note">継続率は開始から 14 日たった人、転換率はお試しが終わった人だけで数える。緑の線が目標、赤の線が見直しの基準。</p>
+  </section>
+
+  <section id="home" hidden>
+    <div class="grid">
+      <div class="card"><h2>どこから開いたか</h2><div class="chart"><canvas id="chart-home-opens"></canvas></div></div>
+      <div class="card"><h2>追加の入口と保存</h2><div class="chart"><canvas id="chart-home-adding"></canvas></div></div>
+      <div class="card"><h2>ホームの一覧の何番目を開いたか</h2><div class="chart"><canvas id="chart-home-rank"></canvas></div></div>
+    </div>
+    <div class="card table-wrap"><h2>追加の入口</h2><table id="home-table"></table></div>
+    <p class="note" id="home-note"></p>
   </section>
 </main>
 
@@ -306,7 +317,7 @@ function renderDaily() {
   const cards = [
     ["新しいインストール", "new_users"],
     ["やることの追加", "todos_added"],
-    ["到着通知", "reminders"],
+    ["場所の通知", "reminders"],
     ["購入", "purchases"],
   ];
   document.getElementById("daily-cards").innerHTML = cards.map(([label, key]) => {
@@ -369,8 +380,8 @@ function kpi(rows) {
     retention: ratio(sum(rows, "notified_week_2_users"), sum(rows, "cohort_users")),
     activeUsers: sum(rows, "monthly_active_users"),
     shareRate: ratio(sum(rows, "share_tappers"), sum(rows, "monthly_active_users")),
-    trialsEnded: sum(rows, "trials_ended_unaffected"),
-    conversion: ratio(sum(rows, "trials_converted_unaffected"), sum(rows, "trials_ended_unaffected")),
+    trialsEnded: sum(rows, "trials_ended"),
+    conversion: ratio(sum(rows, "trials_converted"), sum(rows, "trials_ended")),
     paidUsers: sum(rows, "paid_users"),
   };
 }
@@ -443,6 +454,101 @@ function renderKpi() {
   renderTable("kpi-table", header, rows);
 }
 
+const SCREEN_LABELS = {
+  place_detail: "場所", todos: "すべてのやること", map: "地図", settings: "設定",
+  todo_editor: "やることを追加", place_picker: "場所を追加",
+};
+const ENTRY_LABELS = {
+  home: "ホーム", home_list: "ホームの一覧", home_menu: "＋メニュー", home_empty: "ホーム（場所なし）",
+  map_pin: "地図のピン", place: "場所の画面", all_todos: "すべてのやること", all_todos_empty: "すべてのやること（空）",
+  todo_editor: "やることの画面", notification: "通知", completion_notice: "「買ったよ」の通知",
+  duplicate_prompt: "重複の確認", new_place: "作ったばかりの場所", permission_banner: "許可の案内",
+};
+const KIND_LABELS = { todo: "やること", place: "場所" };
+
+function homeRows(view, month, platforms) {
+  return DATA[view].filter((row) => row.month === month && platforms.includes(row.platform));
+}
+
+// Rows summed over the selected platforms, keyed by the given columns.
+function grouped(rows, keys, columns) {
+  const groups = new Map();
+  for (const row of rows) {
+    const id = keys.map((key) => row[key]).join("|");
+    if (!groups.has(id)) {
+      const group = {};
+      for (const key of keys) group[key] = row[key];
+      for (const column of columns) group[column] = 0;
+      groups.set(id, group);
+    }
+    const group = groups.get(id);
+    for (const column of columns) group[column] += row[column] || 0;
+  }
+  return [...groups.values()];
+}
+
+function renderHome() {
+  const platforms = selectedPlatforms();
+  const months = [...new Set(DATA.home_navigation.map((row) => row.month))].sort();
+  const month = months[months.length - 1];
+  const label = (row) => `${SCREEN_LABELS[row.screen] || row.screen} ← ${ENTRY_LABELS[row.entry] || row.entry}`;
+
+  const opens = grouped(homeRows("home_navigation", month, platforms), ["screen", "entry"], ["opens", "users"])
+    .filter((row) => !["todo_editor", "place_picker"].includes(row.screen))
+    .sort((a, b) => b.opens - a.opens);
+  draw("chart-home-opens", {
+    type: "bar",
+    data: {
+      labels: opens.map(label),
+      datasets: [
+        { label: "開いた回数", data: opens.map((row) => row.opens), backgroundColor: token("--series-1") },
+        { label: "開いた人", data: opens.map((row) => row.users), backgroundColor: token("--series-2") },
+      ],
+    },
+    options: { indexAxis: "y", scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+
+  const adding = grouped(homeRows("adding_by_entry", month, platforms), ["kind", "entry"], ["opens", "saved"])
+    .sort((a, b) => b.opens - a.opens);
+  draw("chart-home-adding", groupedBars(
+    adding.map((row) => `${KIND_LABELS[row.kind]} ← ${ENTRY_LABELS[row.entry] || row.entry}`),
+    [
+      { label: "開いた", data: adding.map((row) => row.opens) },
+      { label: "保存した", data: adding.map((row) => row.saved) },
+    ],
+  ));
+
+  const ranks = grouped(homeRows("home_list_rank", month, platforms), ["list_rank"], ["opens"])
+    .sort((a, b) => a.list_rank - b.list_rank);
+  draw("chart-home-rank", groupedBars(
+    ranks.map((row) => (row.list_rank >= 10 ? "10+" : String(row.list_rank))),
+    [{ label: "開いた回数", data: ranks.map((row) => row.opens) }],
+  ));
+
+  const header = ["月", "追加", "入口", "開いた", "保存した", "保存率", "最初の場所のまま"];
+  const rows = [];
+  for (const rowMonth of months.slice().reverse()) {
+    const entries = grouped(
+      homeRows("adding_by_entry", rowMonth, platforms),
+      ["kind", "entry"],
+      ["opens", "saved", "saved_with_preset", "kept_preset"],
+    ).sort((a, b) => a.kind.localeCompare(b.kind) || b.opens - a.opens);
+    for (const row of entries) {
+      rows.push([
+        rowMonth.slice(0, 7), KIND_LABELS[row.kind], ENTRY_LABELS[row.entry] || row.entry, number(row.opens),
+        number(row.saved), percent(ratio(row.saved, row.opens)), percent(ratio(row.kept_preset, row.saved_with_preset)),
+      ]);
+    }
+  }
+  renderTable("home-table", header, rows);
+  let note = "データなし。";
+  if (month) {
+    note = `グラフは ${month.slice(0, 7)} の分。開いた回数は画面を最初に開いたときだけ数え、戻ってきたときは数えない。` +
+      "「最初の場所のまま」は、やることの画面に最初から入っていた場所（＋メニューでは最寄り）のまま保存した割合。";
+  }
+  document.getElementById("home-note").textContent = note;
+}
+
 function renderTable(id, header, rows) {
   const head = "<tr>" + header.map((cell) => `<th>${cell}</th>`).join("") + "</tr>";
   let body = rows.map((row) => "<tr>" + row.map((cell) => `<td>${cell}</td>`).join("") + "</tr>").join("");
@@ -455,11 +561,14 @@ function renderTable(id, header, rows) {
 function render() {
   document.getElementById("daily").hidden = state.tab !== "daily";
   document.getElementById("kpi").hidden = state.tab !== "kpi";
+  document.getElementById("home").hidden = state.tab !== "home";
   document.getElementById("ranges").hidden = state.tab !== "daily";
   if (state.tab === "daily") {
     renderDaily();
-  } else {
+  } else if (state.tab === "kpi") {
     renderKpi();
+  } else {
+    renderHome();
   }
 }
 

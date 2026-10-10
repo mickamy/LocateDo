@@ -61,4 +61,8 @@ def call(token, method, url, body=None):
         "Content-Type": "application/json",
     })
     with urllib.request.urlopen(request) as response:
-        return json.load(response)
+        payload = response.read()
+    # A DELETE answers with an empty body.
+    if not payload:
+        return None
+    return json.loads(payload)

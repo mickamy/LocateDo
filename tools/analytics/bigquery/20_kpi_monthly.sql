@@ -1,10 +1,10 @@
 -- The four KPIs from business-spec, one row per month and platform. RevenueCat's rc_* events take the platform the
 -- user's app reported (users.platform).
--- Retention: users who started in the month and got an arrival reminder 7-13 days later (cohorts at least 14 days old).
+-- Retention: users who started in the month and got a reminder, on arrival or on leaving, 7-13 days later (cohorts at
+--   least 14 days old). The arrival_ / departure_ columns count each kind on its own; a user can be in both.
 -- Share taps: users who tapped share / users who opened the app in the month.
 -- Trial conversion: trials started in the month that later converted (rc_* events come from RevenueCat), counting only
 --   trials started at least 8 days ago so the 7-day trial has ended.
---   The _unaffected columns leave out users whose sync was held back by a stale server plan (see sync_blocked_weekly).
 -- Paid users: users whose latest subscription event by the end of the month is not an expiration.
 WITH months AS (
   SELECT month, platform
@@ -20,7 +20,9 @@ retention AS (
     DATE_TRUNC(first_date, MONTH) AS month,
     platform,
     COUNT(*) AS cohort_users,
-    COUNTIF(notified_week_2) AS notified_week_2_users
+    COUNTIF(notified_week_2) AS notified_week_2_users,
+    COUNTIF(notified_arrival_week_2) AS notified_arrival_week_2_users,
+    COUNTIF(notified_departure_week_2) AS notified_departure_week_2_users
   FROM `__PROJECT__.__DATASET__.users`
   WHERE days_since_first >= 14
   GROUP BY month, platform
@@ -66,10 +68,7 @@ conversion AS (
     u.platform,
     COUNT(*) AS trials_started,
     COUNTIF(t.ended) AS trials_ended,
-    COUNTIF(t.ended AND c.user_pseudo_id IS NOT NULL) AS trials_converted,
-    COUNTIF(t.ended AND NOT COALESCE(u.blocked_by_plan, FALSE)) AS trials_ended_unaffected,
-    COUNTIF(t.ended AND c.user_pseudo_id IS NOT NULL AND NOT COALESCE(u.blocked_by_plan, FALSE))
-      AS trials_converted_unaffected
+    COUNTIF(t.ended AND c.user_pseudo_id IS NOT NULL) AS trials_converted
   FROM trials AS t
   LEFT JOIN converted AS c USING (user_pseudo_id)
   LEFT JOIN `__PROJECT__.__DATASET__.users` AS u USING (user_pseudo_id)
@@ -109,6 +108,8 @@ SELECT
   r.cohort_users,
   r.notified_week_2_users,
   SAFE_DIVIDE(r.notified_week_2_users, r.cohort_users) AS retention_week_2,
+  r.notified_arrival_week_2_users,
+  r.notified_departure_week_2_users,
   s.monthly_active_users,
   s.share_tappers,
   SAFE_DIVIDE(s.share_tappers, s.monthly_active_users) AS share_tap_rate,
@@ -116,9 +117,6 @@ SELECT
   c.trials_ended,
   c.trials_converted,
   SAFE_DIVIDE(c.trials_converted, c.trials_ended) AS trial_conversion_rate,
-  c.trials_ended_unaffected,
-  c.trials_converted_unaffected,
-  SAFE_DIVIDE(c.trials_converted_unaffected, c.trials_ended_unaffected) AS trial_conversion_rate_unaffected,
   COALESCE(p.paid_users, 0) AS paid_users,
   SAFE_DIVIDE(
     COALESCE(p.paid_users, 0) - LAG(COALESCE(p.paid_users, 0)) OVER (PARTITION BY m.platform ORDER BY m.month),

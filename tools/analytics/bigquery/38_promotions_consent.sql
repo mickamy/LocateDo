@@ -1,11 +1,11 @@
--- Who gets asked for promotional-push consent after their first arrival notification and how they answer,
+-- Who gets asked for promotional-push consent after their first reminder (on arrival or on leaving) and how they answer,
 -- by the ISO week (Monday start) users started and platform.
 WITH per_user AS (
   SELECT
     u.user_pseudo_id,
     u.first_date,
     u.platform,
-    MIN(IF(e.event_name = 'arrival_notified', e.event_date, NULL)) AS first_arrival_date,
+    MIN(IF(e.event_name = 'reminder_notified', e.event_date, NULL)) AS first_reminder_date,
     LOGICAL_OR(e.event_name = 'promotions_prompt_shown') AS prompted,
     MAX(IF(e.event_name = 'promotions_prompt_answered', e.result, NULL)) AS answer,
     LOGICAL_OR(
@@ -25,10 +25,10 @@ SELECT
   DATE_TRUNC(first_date, WEEK(MONDAY)) AS cohort_week,
   platform,
   COUNT(*) AS users,
-  COUNTIF(first_arrival_date IS NOT NULL) AS reached_first_arrival,
-  SAFE_DIVIDE(COUNTIF(first_arrival_date IS NOT NULL), COUNT(*)) AS first_arrival_rate,
-  APPROX_QUANTILES(DATE_DIFF(first_arrival_date, first_date, DAY), 2 IGNORE NULLS)[SAFE_OFFSET(1)]
-    AS median_days_to_first_arrival,
+  COUNTIF(first_reminder_date IS NOT NULL) AS reached_first_reminder,
+  SAFE_DIVIDE(COUNTIF(first_reminder_date IS NOT NULL), COUNT(*)) AS first_reminder_rate,
+  APPROX_QUANTILES(DATE_DIFF(first_reminder_date, first_date, DAY), 2 IGNORE NULLS)[SAFE_OFFSET(1)]
+    AS median_days_to_first_reminder,
   COUNTIF(prompted) AS prompted,
   COUNTIF(answer = 'accepted') AS accepted,
   COUNTIF(answer = 'declined') AS declined,

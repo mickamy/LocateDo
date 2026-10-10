@@ -1,4 +1,4 @@
--- How to-dos get edited and deleted, by month and platform (from 2026-10-10).
+-- How to-dos get edited and deleted, by month and platform.
 -- edit_opens / add_opens: the to-do editor opened to edit an existing to-do or to add one.
 -- *_deletions: delete actions by where they came from; deleted_todos counts the to-dos they took, since one
 -- completed_bulk deletion takes all of a place's or the To-Do tab's completed to-dos.

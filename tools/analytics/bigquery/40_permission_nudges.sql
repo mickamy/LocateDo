@@ -1,8 +1,7 @@
 -- Whether the Home banner, the Settings buttons, and the reminder setup sheet get permissions fixed, by month and
 -- platform.
 -- The sheet asks for whatever was missing when it was shown (`missing`), so it counts once per permission it asked for.
--- `missing` lists them with commas (`notifications`, `location_always`, `precise_location`); before 2026-10-10 it was
--- `notifications`, `location_always`, or `both`, and events from before it asked for notifications have none (location).
+-- `missing` lists them with commas (`notifications`, `location_always`, `precise_location`).
 -- A nudge counts as fixed when, within 24 hours, location reaches "Always", notifications become allowed, or a
 -- daily_state reports precise location; daily_state comes about once a day, so precise fixes may be undercounted.
 -- users_without_always: users whose daily_state that month showed places but no "Always", the banner's audience.
@@ -28,8 +27,6 @@ WITH nudges AS (
             ELSE 'notifications'
           END
         ]
-        WHEN missing IS NULL THEN ['location']
-        WHEN missing = 'both' THEN ['location', 'notifications']
         ELSE ARRAY(SELECT IF(need = 'location_always', 'location', need) FROM UNNEST(SPLIT(missing, ',')) AS need)
       END
     ) AS permission

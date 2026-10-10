@@ -1,4 +1,5 @@
 -- One row per user: when they started and what they did in their first days and weeks.
+-- notified_week_2 counts reminders of either kind, on arrival or on leaving.
 -- first_open marks a new install; users who installed before the export started fall back to their first exported day.
 WITH firsts AS (
   SELECT
@@ -16,7 +17,15 @@ SELECT
   COUNTIF(e.event_name = 'place_added' AND DATE_DIFF(e.event_date, f.first_date, DAY) < 3) AS places_added_first_3_days,
   COUNTIF(e.event_name = 'todo_added' AND DATE_DIFF(e.event_date, f.first_date, DAY) < 3) AS todos_added_first_3_days,
   LOGICAL_OR(e.foreground AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13) AS active_week_2,
-  LOGICAL_OR(e.event_name = 'arrival_notified' AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13) AS notified_week_2,
+  LOGICAL_OR(e.event_name = 'reminder_notified' AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13) AS notified_week_2,
+  LOGICAL_OR(
+    e.event_name = 'reminder_notified' AND e.place_event = 'arrival'
+    AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13
+  ) AS notified_arrival_week_2,
+  LOGICAL_OR(
+    e.event_name = 'reminder_notified' AND e.place_event = 'departure'
+    AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 7 AND 13
+  ) AS notified_departure_week_2,
   LOGICAL_OR(e.foreground AND DATE_DIFF(e.event_date, f.first_date, DAY) BETWEEN 30 AND 36) AS active_day_30,
   -- Location access as of the last daily_state in the first 7 days; NULL when the app was not opened then.
   ARRAY_AGG(
@@ -37,8 +46,6 @@ SELECT
     e.event_name = 'rc_trial_started_event' AND e.event_time <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 8 DAY)
   ) AS trial_ended,
   LOGICAL_OR(e.event_name = 'rc_trial_converted_event') AS converted_trial,
-  -- Paid on the device while the server still said free, so writes and invites stalled (app versions that send the event only).
-  LOGICAL_OR(e.event_name = 'sync_blocked_by_plan') AS blocked_by_plan,
   LOGICAL_OR(e.event_name = 'promotions_consent_changed' AND e.auth_to = 'on') AS promotions_consent_ever,
   DATE_DIFF(CURRENT_DATE(), f.first_date, DAY) AS days_since_first
 FROM firsts AS f

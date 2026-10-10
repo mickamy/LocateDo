@@ -1,4 +1,4 @@
--- Whether users without precise location get fewer arrival reminders and stay less, split by location access in their
+-- Whether users without precise location get fewer reminders and stay less, split by location access in their
 -- first week. Without precise location the default 100 m radius rarely fires.
 SELECT
   platform,

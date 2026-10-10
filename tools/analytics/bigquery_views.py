@@ -21,6 +21,8 @@ DATASET = "locatedo_views"
 LOCATION = "asia-northeast1"
 API = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT}"
 SCOPE = "https://www.googleapis.com/auth/bigquery"
+# Views whose SQL file was renamed or removed; they are dropped so they do not linger with old event names.
+RETIRED_VIEWS = ["arrival_usefulness", "arrival_by_category", "arrivals", "sync_blocked_weekly"]
 
 
 def ensure_dataset(token):
@@ -52,6 +54,15 @@ def apply_view(token, name, query):
         print(f"  updated view {name}")
 
 
+def drop_view(token, name):
+    try:
+        call(token, "DELETE", f"{API}/datasets/{DATASET}/tables/{name}")
+        print(f"  dropped view {name}")
+    except urllib.error.HTTPError as error:
+        if error.code != 404:
+            raise
+
+
 def main():
     key_path = sys.argv[1] if len(sys.argv) > 1 else default_key_path()
     token, email = access_token(key_path, SCOPE)
@@ -71,6 +82,13 @@ def main():
         except urllib.error.HTTPError as error:
             failures += 1
             print(f"  FAIL  view {name}: {error.code} {error.read().decode()}")
+
+    for name in RETIRED_VIEWS:
+        try:
+            drop_view(token, name)
+        except urllib.error.HTTPError as error:
+            failures += 1
+            print(f"  FAIL  drop view {name}: {error.code} {error.read().decode()}")
 
     print(f"Done with {failures} failure(s)")
     return 1 if failures else 0

@@ -1,4 +1,4 @@
--- Adding a place, by month and platform (from 2026-10-10, when it became map, details, category, to-dos).
+-- Adding a place, by month and platform: the map, details, category, and to-dos.
 -- *_views: how far new places get; map_views also counts moving a saved place's pin, the others are new places only.
 -- with_todos_rate: places added together with at least one to-do. guessed / guess_kept: a category was guessed from the
 -- picked store, and the place was saved with that category.

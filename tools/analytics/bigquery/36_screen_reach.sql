@@ -1,4 +1,5 @@
 -- Share of users active in the last 30 days who opened each screen at least once, per platform.
+-- views also counts coming back to a screen and uncovering it by closing a sheet; home_navigation counts opens.
 WITH recent AS (
   SELECT *
   FROM `__PROJECT__.__DATASET__.events`

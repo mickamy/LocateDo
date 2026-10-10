@@ -1,7 +1,7 @@
 -- What happened each day, per platform. User counts are distinct per day, so summing them over days counts a user
 -- once for each day they came back.
 -- RevenueCat's rc_* events take the platform the user's app reported (users.platform).
--- todos_completed_from_reminders: checked off after opening the reminder or from its checklist (see arrival_usefulness).
+-- todos_completed_from_reminders: checked off after opening the reminder or from its checklist (see reminder_usefulness).
 SELECT
   e.event_date,
   COALESCE(u.platform, e.platform) AS platform,
@@ -13,8 +13,9 @@ SELECT
   COUNTIF(
     event_name = 'todo_completed' AND via IN ('notification', 'action', 'watch_action')
   ) AS todos_completed_from_reminders,
-  COUNTIF(event_name = 'arrival_notified') AS reminders,
-  COUNTIF(event_name = 'arrival_opened') AS reminders_opened,
+  COUNTIF(event_name = 'reminder_notified') AS reminders,
+  COUNTIF(event_name = 'reminder_notified' AND place_event = 'departure') AS departure_reminders,
+  COUNTIF(event_name = 'reminder_opened') AS reminders_opened,
   COUNTIF(event_name = 'paywall_shown') AS paywalls_shown,
   COUNTIF(event_name = 'paywall_purchased') AS purchases,
   COUNTIF(event_name = 'rc_trial_started_event') AS trials_started

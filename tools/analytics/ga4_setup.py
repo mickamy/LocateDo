@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Register LocateDo's GA4 custom definitions and set 14-month data retention.
 
-Usage: python3 tools/analytics/ga4_setup.py [property_id] [service_account_key.json]
+Usage: python3 tools/analytics/ga4_setup.py [--archive-unused] [--property ID] [service_account_key.json]
 
-The service account needs the Editor role on the GA4 property, and the Google Analytics Admin API
-must be enabled in the key's Google Cloud project. Safe to rerun: existing definitions are skipped.
+The definitions come from ga4_definitions.json, generated from shared/analytics/catalog.yaml. The service account
+needs the Editor role on the GA4 property, and the Google Analytics Admin API must be enabled in the key's Google
+Cloud project. Safe to rerun: existing definitions are skipped. --archive-unused also archives definitions the catalog
+no longer has, which GA4 cannot undo.
 """
 
+import argparse
+import json
+import os
 import sys
 import urllib.error
 
@@ -16,37 +21,7 @@ PROPERTY_ID = "483038986"
 API = "https://analyticsadmin.googleapis.com/v1beta"
 SCOPE = "https://www.googleapis.com/auth/analytics.edit"
 
-USER_DIMENSIONS = [
-    "plan", "location_auth", "household_members", "place_count", "open_todo_count", "signed_in", "app_build",
-    "promotions_consent",
-]
-EVENT_DIMENSIONS = [
-    "source", "category", "via", "kind", "trigger", "from", "to", "notification_auth", "mode", "step", "reason", "result",
-    "household_plan", "campaign_id", "action", "missing", "suggested_category", "choice",
-]
-METRICS = {
-    "place_count": "STANDARD",
-    "open_todo_count": "STANDARD",
-    "completed_todo_count_7d": "STANDARD",
-    "places_with_open_todos": "STANDARD",
-    "custom_category_count": "STANDARD",
-    "household_members": "STANDARD",
-    "days_since_install": "STANDARD",
-    "open_todos": "STANDARD",
-    "place_open_todos": "STANDARD",
-    "age_days": "STANDARD",
-    "assigned": "STANDARD",
-    "signed_in": "STANDARD",
-    "precise_location": "STANDARD",
-    "watch_app_installed": "STANDARD",
-    "promotions_consent": "STANDARD",
-    "count": "STANDARD",
-    "todo_count": "STANDARD",
-    "radius_m": "METERS",
-    "age_hours": "HOURS",
-    "duration_s": "SECONDS",
-    "latency_s": "SECONDS",
-}
+DEFINITIONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ga4_definitions.json")
 
 
 def list_all(token, path, field):
@@ -62,10 +37,30 @@ def list_all(token, path, field):
             return items
 
 
+def archive_unused(token, dimensions, metrics, wanted_dimensions, wanted_metrics):
+    failures = 0
+    stale = [(d["name"], f"dimension {d['scope'].lower():5} {d['parameterName']}") for d in dimensions
+             if (d["parameterName"], d["scope"]) not in wanted_dimensions]
+    stale += [(m["name"], f"metric {m['parameterName']}") for m in metrics if m["parameterName"] not in wanted_metrics]
+    for name, label in stale:
+        try:
+            call(token, "POST", f"{API}/{name}:archive", {})
+            print(f"  archived {label}")
+        except urllib.error.HTTPError as error:
+            failures += 1
+            print(f"  FAIL  archive {label}: {error.code} {error.read().decode()}")
+    return failures
+
+
 def main():
-    property_id = sys.argv[1] if len(sys.argv) > 1 else PROPERTY_ID
-    key_path = sys.argv[2] if len(sys.argv) > 2 else default_key_path()
-    token, email = access_token(key_path, SCOPE)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--property", default=PROPERTY_ID)
+    parser.add_argument("--archive-unused", action="store_true")
+    parser.add_argument("key", nargs="?")
+    args = parser.parse_args()
+    definitions = json.load(open(DEFINITIONS))
+    property_id = args.property
+    token, email = access_token(args.key or default_key_path(), SCOPE)
     prop = f"properties/{property_id}"
     print(f"Using {email} on {prop}")
 
@@ -81,8 +76,8 @@ def main():
     existing_dimensions = {(d["parameterName"], d["scope"]) for d in dimensions}
     existing_metrics = {m["parameterName"] for m in metrics}
 
-    wanted = [(name, "USER", f"User {name}") for name in USER_DIMENSIONS]
-    wanted += [(name, "EVENT", name) for name in EVENT_DIMENSIONS]
+    wanted = [(name, "USER", f"User {name}") for name in definitions["user_dimensions"]]
+    wanted += [(name, "EVENT", name) for name in definitions["event_dimensions"]]
     for name, scope, display in wanted:
         if (name, scope) in existing_dimensions:
             print(f"  skip  dimension {scope.lower():5} {name}")
@@ -96,7 +91,8 @@ def main():
             failures += 1
             print(f"  FAIL  dimension {scope.lower():5} {name}: {error.code} {error.read().decode()}")
 
-    for name, unit in METRICS.items():
+    for metric in definitions["metrics"]:
+        name, unit = metric["name"], metric["unit"]
         if name in existing_metrics:
             print(f"  skip  metric {name}")
             continue
@@ -108,6 +104,13 @@ def main():
         except urllib.error.HTTPError as error:
             failures += 1
             print(f"  FAIL  metric {name}: {error.code} {error.read().decode()}")
+
+    if args.archive_unused:
+        failures += archive_unused(
+            token, dimensions, metrics,
+            {(name, scope) for name, scope, _ in wanted},
+            {metric["name"] for metric in definitions["metrics"]},
+        )
 
     try:
         call(token, "PATCH", f"{API}/{prop}/dataRetentionSettings?updateMask=eventDataRetention", {

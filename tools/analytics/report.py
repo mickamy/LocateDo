@@ -17,7 +17,7 @@ DATASET = "locatedo_views"
 LOCATION = "asia-northeast1"
 API = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT}"
 SCOPE = "https://www.googleapis.com/auth/bigquery"
-VIEWS = ["daily_overview", "kpi_monthly"]
+VIEWS = ["daily_overview", "kpi_monthly", "home_navigation", "adding_by_entry", "home_list_rank"]
 OUTPUT = os.path.join("tmp", "analytics", "report.html")
 TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report_template.html")
 

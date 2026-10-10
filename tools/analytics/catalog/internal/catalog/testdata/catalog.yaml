@@ -1,0 +1,35 @@
+events:
+  - name: place_added
+    doc: A new place was saved.
+  - name: todo_added
+parameters:
+  - name: campaign_id
+    type: string
+    ga4: dimension
+  - name: completed_todo_count_7d
+    type: int
+    ga4: metric
+  - name: from
+    type: string
+    ga4: dimension
+    column: auth_from
+  - name: has_url
+    type: int
+  - name: radius_m
+    type: int
+    ga4: metric
+    unit: METERS
+  - name: value
+    type: number
+    sent_by: revenuecat
+  - name: watch_app_installed
+    type: int
+    platforms: [ios]
+user_properties:
+  - name: plan
+screens:
+  - name: home
+  - name: place_search
+    platforms: [android]
+entries:
+  - name: home_list
