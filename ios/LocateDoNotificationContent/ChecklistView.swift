@@ -4,6 +4,7 @@ import SwiftUI
 @Observable
 final class ChecklistSelection {
     var placeName = ""
+    var label = ""
     var systemImage = CategoryAppearance.systemImage(forIcon: nil)
     var tint = CategoryAppearance.tint(forColor: nil)
     var items: [ArrivalChecklist.Item] = []
@@ -42,8 +43,15 @@ struct ChecklistView: View {
                 .frame(width: 32, height: 32)
                 .background(selection.tint, in: RoundedRectangle(cornerRadius: 8))
                 .accessibilityHidden(true)
-            Text(selection.placeName)
-                .font(.headline)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(selection.placeName)
+                    .font(.headline)
+                if !selection.label.isEmpty {
+                    Text(selection.label)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)

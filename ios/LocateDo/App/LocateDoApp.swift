@@ -128,7 +128,7 @@ struct LocateDoApp: App {
         notifier.onCampaignLink = { url in
             UIApplication.shared.open(url)
         }
-        geofence.onArrival = { [sync] in
+        geofence.onRegionEvent = { [sync] in
             await sync.sync()
         }
         geofence.onNotified = { [promotionsConsent] in

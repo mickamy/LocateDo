@@ -113,7 +113,7 @@ struct PlaceDetailView: View {
                         Task {
                             await notifier.requestAuthorization()
                             UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-                            await notifier.notifyArrival(at: place, todos: place.openTodos, after: 10)
+                            await notifier.notify(.arrival, at: place, todos: place.openTodos(for: .arrival), after: 10)
                         }
                     } label: {
                         Label {

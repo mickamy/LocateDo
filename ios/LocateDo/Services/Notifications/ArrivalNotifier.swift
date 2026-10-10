@@ -15,6 +15,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
     private let center = UNUserNotificationCenter.current()
     private let logger = Logger(subsystem: "com.locatedo.LocateDo", category: "notifications")
     private nonisolated static let placeIDKey = "placeID"
+    private nonisolated static let placeEventKey = "placeEvent"
 
     init(router: AppRouter) {
         self.router = router
@@ -43,7 +44,7 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         await refreshAuthorizationStatus()
     }
 
-    func notifyArrival(at place: Place, todos: [Todo], after delay: TimeInterval? = nil) async {
+    func notify(_ event: PlaceEvent, at place: Place, todos: [Todo], after delay: TimeInterval? = nil) async {
         let checklist = ArrivalChecklist(
             items: todos.map { ArrivalChecklist.Item(id: $0.id, title: $0.title) },
             categoryIcon: place.category?.icon,
@@ -52,6 +53,9 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         let content = UNMutableNotificationContent()
         // Titles never wrap on the Lock Screen, so the place name alone keeps long names whole.
         content.title = place.name
+        if event == .departure {
+            content.subtitle = String(localized: .notificationDepartureLabel)
+        }
         // Actions only show on press and hold, so every arrival notification says so.
         content.body = NotificationPolicy.body(todoTitles: todos.map(\.title))
             + "\n" + String(localized: .notificationPressAndHoldHint)
@@ -61,21 +65,23 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
         content.categoryIdentifier = ArrivalChecklist.category
         var userInfo = checklist.userInfo
         userInfo[Self.placeIDKey] = place.id.uuidString
+        userInfo[Self.placeEventKey] = event.rawValue
         content.userInfo = userInfo
         var trigger: UNNotificationTrigger?
         if let delay {
             trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
         }
         let request = UNNotificationRequest(
-            identifier: "arrival-\(place.id.uuidString)",
+            identifier: "\(event.rawValue)-\(place.id.uuidString)",
             content: content,
             trigger: trigger
         )
         do {
             try await center.add(request)
         } catch {
-            logger.error("Could not schedule the arrival notification: \(error, privacy: .public)")
-            CrashReporting.record(error, site: "notifications.arrival")
+            let kind = event.rawValue
+            logger.error("Could not schedule the \(kind, privacy: .public) notification: \(error, privacy: .public)")
+            CrashReporting.record(error, site: "notifications.\(event.rawValue)")
         }
     }
 

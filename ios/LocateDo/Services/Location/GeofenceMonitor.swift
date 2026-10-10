@@ -14,7 +14,7 @@ final class GeofenceMonitor {
     private var eventLoop: Task<Void, Never>?
     private var authorizationWatch: Task<Void, Never>?
     private var awaitingFirstReport: Set<String> = []
-    @ObservationIgnored var onArrival: () async -> Void = {}
+    @ObservationIgnored var onRegionEvent: () async -> Void = {}
     @ObservationIgnored var onNotified: () -> Void = {}
     @ObservationIgnored var currentUserID: () -> UUID? = { nil }
 
@@ -150,21 +150,23 @@ final class GeofenceMonitor {
         try? container.mainContext.save()
         switch outcome.event {
         case .arrival:
-            await arrived(at: place)
-            await onArrival()
+            await remind(.arrival, at: place)
+            await onRegionEvent()
         case .departure(let stay):
             logger.notice("Left \(place.name, privacy: .public) after \(Int(stay / 60)) min")
+            await remind(.departure, at: place)
+            await onRegionEvent()
         case .shortStay(let stay):
             logger.notice("Left \(place.name, privacy: .public) after only \(Int(stay)) s")
         case nil:
-            logger.notice("First report for \(place.name, privacy: .public); not notifying")
+            logger.notice("Nothing to remind at \(place.name, privacy: .public)")
         }
     }
 
     #if DEBUG || STAGING
     func simulateArrival(at place: Place) async {
-        place.lastNotifiedAt = nil
-        await arrived(at: place)
+        place.lastArrivalNotifiedAt = nil
+        await remind(.arrival, at: place)
     }
     #endif
 
@@ -174,39 +176,43 @@ final class GeofenceMonitor {
         return try? container.mainContext.fetch(descriptor).first
     }
 
-    private func arrived(at place: Place) async {
-        let context = container.mainContext
-        let openTodos = NotificationPolicy.notifiableTodos(place.openTodos, for: currentUserID())
+    private func remind(_ event: PlaceEvent, at place: Place) async {
+        let openTodos = place.openTodos(for: event)
+        let todos = NotificationPolicy.notifiableTodos(openTodos, for: currentUserID())
         let now = Date()
         await notifier.refreshAuthorizationStatus()
         let suppression = NotificationPolicy.suppression(
-            openTodoCount: place.openTodos.count,
-            notifiableTodoCount: openTodos.count,
-            lastNotifiedAt: place.lastNotifiedAt,
+            openTodoCount: openTodos.count,
+            notifiableTodoCount: todos.count,
+            lastNotifiedAt: place.lastNotifiedAt(for: event),
             notificationsAllowed: DailyState.NotificationAuth(notifier.authorizationStatus) == .authorized,
             now: now
         )
         if let suppression {
-            Analytics.log(.arrivalSuppressed, parameters: [
-                .reason: suppression.rawValue,
-                .openTodos: place.openTodos.count,
+            if event == .arrival {
+                Analytics.log(.arrivalSuppressed, parameters: [
+                    .reason: suppression.rawValue,
+                    .openTodos: openTodos.count,
+                    .category: place.analyticsCategory,
+                    .radiusM: Int(place.radiusMeters)
+                ])
+            }
+            let skipped = "\(event.rawValue) for \(place.name): \(suppression.rawValue)"
+            logger.notice("Skipped \(skipped, privacy: .public)")
+            return
+        }
+        await notifier.notify(event, at: place, todos: todos)
+        place.setLastNotifiedAt(now, for: event)
+        try? container.mainContext.save()
+        onNotified()
+        if event == .arrival {
+            Analytics.log(.arrivalNotified, parameters: [
+                .openTodos: todos.count,
                 .category: place.analyticsCategory,
                 .radiusM: Int(place.radiusMeters)
             ])
-            let reason = suppression.rawValue
-            logger.notice("Skipped notification for \(place.name, privacy: .public): \(reason, privacy: .public)")
-            return
         }
-        await notifier.notifyArrival(at: place, todos: openTodos)
-        place.lastNotifiedAt = now
-        try? context.save()
-        onNotified()
-        Analytics.log(.arrivalNotified, parameters: [
-            .openTodos: openTodos.count,
-            .category: place.analyticsCategory,
-            .radiusM: Int(place.radiusMeters)
-        ])
-        logger.notice("Notified arrival at \(place.name, privacy: .public)")
+        logger.notice("Notified \(event.rawValue, privacy: .public) at \(place.name, privacy: .public)")
     }
 
     private static func diagnostics(_ event: CLMonitor.Event) -> String {

@@ -14,7 +14,8 @@ final class Place {
     var radiusMeters: Double
     var category: PlaceCategory?
     var sortOrder: Int
-    var lastNotifiedAt: Date?
+    var lastArrivalNotifiedAt: Date?
+    var lastDepartureNotifiedAt: Date?
     var enteredAt: Date?
     var createdAt: Date
     var updatedAt: Date
@@ -53,5 +54,23 @@ final class Place {
 
     var completedTodos: [Todo] {
         todos.completedNewestFirst
+    }
+
+    func openTodos(for event: PlaceEvent) -> [Todo] {
+        openTodos.filter { $0.placeEvent == event }
+    }
+
+    func lastNotifiedAt(for event: PlaceEvent) -> Date? {
+        switch event {
+        case .arrival: lastArrivalNotifiedAt
+        case .departure: lastDepartureNotifiedAt
+        }
+    }
+
+    func setLastNotifiedAt(_ date: Date?, for event: PlaceEvent) {
+        switch event {
+        case .arrival: lastArrivalNotifiedAt = date
+        case .departure: lastDepartureNotifiedAt = date
+        }
     }
 }

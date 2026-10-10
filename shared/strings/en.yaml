@@ -312,6 +312,7 @@ notification:
     plural:
       one: "+{count:int} more"
       other: "+{count:int} more"
+  departure_label: "Leaving"
   press_and_hold_hint: "Press and hold to check things off"
   check_off_checked: "Mark checked as done"
   android_check_off_all:

@@ -305,6 +305,7 @@ notification:
   more:
     plural:
       other: "他 {count} 件"
+  departure_label: "出るとき"
   press_and_hold_hint: "長押しで、そのまま完了できます"
   check_off_checked: "チェックしたものを完了にする"
   android_check_off_all:

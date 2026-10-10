@@ -93,6 +93,7 @@
     <string name="notification_channel_arrivals">Arrival reminders</string>
     <string name="notification_channel_household">Household updates</string>
     <string name="notification_channel_promotions">News and offers</string>
+    <string name="notification_departure_label">Leaving</string>
     <plurals name="notification_more">
         <item quantity="one">+%1$d more</item>
         <item quantity="other">+%1$d more</item>

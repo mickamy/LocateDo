@@ -87,6 +87,7 @@
     <string name="notification_channel_arrivals">到着のお知らせ</string>
     <string name="notification_channel_household">家族の更新</string>
     <string name="notification_channel_promotions">新機能・キャンペーンのお知らせ</string>
+    <string name="notification_departure_label">出るとき</string>
     <plurals name="notification_more">
         <item quantity="other">他 %1$d 件</item>
     </plurals>

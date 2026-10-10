@@ -31,6 +31,21 @@ struct ModelTests {
         #expect(places.first?.openTodos.map(\.title) == ["Milk"])
     }
 
+    @Test func arrivalsAndDeparturesKeepTheirOwnTodosAndLastNotice() {
+        let place = Place(name: "Home", latitude: 35.0, longitude: 139.0)
+        let laundry = Todo(title: "Laundry", place: place)
+        let umbrella = Todo(title: "Umbrella", place: place, placeEvent: .departure)
+        place.todos = [laundry, umbrella]
+        let now = Date(timeIntervalSince1970: 1_000)
+
+        place.setLastNotifiedAt(now, for: .departure)
+
+        #expect(place.openTodos(for: .arrival).map(\.title) == ["Laundry"])
+        #expect(place.openTodos(for: .departure).map(\.title) == ["Umbrella"])
+        #expect(place.lastNotifiedAt(for: .arrival) == nil)
+        #expect(place.lastNotifiedAt(for: .departure) == now)
+    }
+
     @Test func completingTodoRemovesItFromOpenTodos() throws {
         let context = try makeContext()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)

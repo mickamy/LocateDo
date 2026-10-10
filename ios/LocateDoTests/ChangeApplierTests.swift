@@ -41,7 +41,8 @@ struct ChangeApplierTests {
     @Test func updatesExistingRowsAndKeepsLocalOnlyFields() throws {
         let context = try makeContext()
         let place = Place(name: "Store", latitude: 35.0, longitude: 139.0)
-        place.lastNotifiedAt = Self.created
+        place.lastArrivalNotifiedAt = Self.created
+        place.lastDepartureNotifiedAt = Self.updated
         place.enteredAt = Self.created
         let todo = Todo(title: "Milk", place: place)
         context.insert(place)
@@ -56,7 +57,8 @@ struct ChangeApplierTests {
         _ = try ChangeApplier.apply([.place(renamed), .todo(completed)], reset: false, to: context)
 
         #expect(place.name == "Supermarket")
-        #expect(place.lastNotifiedAt == Self.created)
+        #expect(place.lastArrivalNotifiedAt == Self.created)
+        #expect(place.lastDepartureNotifiedAt == Self.updated)
         #expect(place.enteredAt == Self.created)
         #expect(todo.title == "Oat milk")
         #expect(todo.completedAt == Self.updated)

@@ -39,6 +39,7 @@ final class NotificationViewController: UIViewController, UNNotificationContentE
         // A checklist left open earlier for the same place must not carry over.
         keep([])
         selection.placeName = content.title
+        selection.label = content.subtitle
         guard let checklist = ArrivalChecklist(userInfo: content.userInfo) else {
             return
         }
