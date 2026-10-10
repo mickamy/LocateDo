@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct AnalyticsConsentStep: View {
+    let onAnswered: () -> Void
+
     @Environment(AnalyticsConsent.self) private var analyticsConsent
 
     var body: some View {
@@ -12,7 +14,7 @@ struct AnalyticsConsentStep: View {
             .font(.title2.bold())
             .multilineTextAlignment(.center)
         VStack(alignment: .leading, spacing: 16) {
-            point(.onboardingAnalyticsMessage, systemImage: "chart.line.uptrend.xyaxis")
+            point(.onboardingAnalyticsMessage, systemImage: "person")
             point(.onboardingAnalyticsNotSent, systemImage: "lock")
             point(.onboardingAnalyticsSettings, systemImage: "gearshape")
         }
@@ -21,11 +23,12 @@ struct AnalyticsConsentStep: View {
         }
         .font(.footnote)
         Spacer()
-        // Equal weight, so declining is as easy as agreeing.
         VStack(spacing: 12) {
             answerButton(.onboardingAnalyticsAllow, isOn: true)
+                .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("onboarding.analyticsAllow")
             answerButton(.onboardingAnalyticsDeny, isOn: false)
+                .buttonStyle(.bordered)
                 .accessibilityIdentifier("onboarding.analyticsDeny")
         }
     }
@@ -44,11 +47,11 @@ struct AnalyticsConsentStep: View {
     private func answerButton(_ title: LocalizedStringResource, isOn: Bool) -> some View {
         Button {
             analyticsConsent.set(isOn, source: .onboarding)
+            onAnswered()
         } label: {
             Text(title)
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
         .controlSize(.large)
     }
 }

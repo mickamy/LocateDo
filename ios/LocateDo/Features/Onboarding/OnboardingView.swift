@@ -17,6 +17,7 @@ struct OnboardingView: View {
         case intro
         case privacy
         case notifications
+        case analytics
     }
 
     @Environment(AppPreferences.self) private var preferences
@@ -32,30 +33,21 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            if analyticsConsent.needsAnswer {
-                AnalyticsConsentStep()
-            } else {
-                switch step {
-                case .intro:
-                    intro
-                case .privacy:
-                    privacy
-                case .notifications:
-                    notifications
-                }
+            switch step {
+            case .intro:
+                intro
+            case .privacy:
+                privacy
+            case .notifications:
+                notifications
+            case .analytics:
+                AnalyticsConsentStep(onAnswered: complete)
             }
         }
         .padding(32)
         .animation(.default, value: step)
-        .animation(.default, value: analyticsConsent.needsAnswer)
         .onChange(of: step, initial: true) {
             Analytics.logScreen(.onboarding, parameters: [.step: step.rawValue])
-        }
-        // The intro's screen view was dropped while nothing was being sent.
-        .onChange(of: analyticsConsent.needsAnswer) {
-            if !analyticsConsent.needsAnswer {
-                Analytics.logScreen(.onboarding, parameters: [.step: step.rawValue])
-            }
         }
         .onChange(of: locationProvider.authorizationStatus) {
             if step == .privacy, isRequesting, locationProvider.authorizationStatus != .notDetermined {
@@ -231,6 +223,15 @@ struct OnboardingView: View {
     }
 
     private func finish() {
+        isRequesting = false
+        if analyticsConsent.needsAnswer {
+            step = .analytics
+        } else {
+            complete()
+        }
+    }
+
+    private func complete() {
         Analytics.log(.onboardingCompleted, parameters: [
             .locationAuth: DailyState.LocationAuth(locationProvider.authorizationStatus).rawValue,
             .notificationAuth: DailyState.NotificationAuth(notifier.authorizationStatus).rawValue,
