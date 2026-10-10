@@ -25,8 +25,12 @@ enum class PermissionBanner(val key: String) {
             if (permissions.needsPreciseLocation) {
                 return PRECISE_LOCATION
             }
+            // Not yet asked is left to the reminder setup, until "all the time" shows reminders are wanted.
             val notifications = permissions.notifications
             if (notifications == NotificationAuth.DENIED) {
+                return NOTIFICATIONS
+            }
+            if (notifications == NotificationAuth.NOT_DETERMINED && location == LocationAuth.ALWAYS) {
                 return NOTIFICATIONS
             }
             return null

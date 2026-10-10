@@ -15,6 +15,7 @@ import com.locatedo.locatedo.core.data.PlaceRepository
 import com.locatedo.locatedo.core.location.LocationRepository
 import com.locatedo.locatedo.core.model.Category
 import com.locatedo.locatedo.core.model.Coordinate
+import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import com.locatedo.locatedo.core.sync.SyncEngine
 import com.locatedo.locatedo.logic.PermissionBanner
@@ -37,6 +38,7 @@ data class HomeUiState(
     val here: Coordinate? = null,
     val permissionBanner: PermissionBanner? = null,
     val hasRequestedPreciseLocation: Boolean = false,
+    val canAskForNotifications: Boolean = false,
     val isSignedIn: Boolean = false,
     val isRefreshing: Boolean = false,
 ) {
@@ -76,6 +78,7 @@ class HomeViewModel @Inject constructor(
             here = here,
             permissionBanner = PermissionBanner.of(granted, entries.isNotEmpty()),
             hasRequestedPreciseLocation = granted.hasRequestedPreciseLocation,
+            canAskForNotifications = granted.notifications == NotificationAuth.NOT_DETERMINED,
             isSignedIn = isSignedIn,
             isRefreshing = refreshing,
         )
@@ -110,6 +113,13 @@ class HomeViewModel @Inject constructor(
     fun alwaysLocationAnswered(answer: AlwaysPromptAnswer) {
         alwaysPrompt.answered(answer)
         permissions.refresh()
+    }
+
+    fun notificationsRequested() {
+        viewModelScope.launch {
+            permissions.markNotificationsRequested()
+            permissions.refresh()
+        }
     }
 
     fun preciseLocationRequested() {

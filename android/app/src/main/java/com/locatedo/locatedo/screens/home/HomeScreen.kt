@@ -1,5 +1,9 @@
 package com.locatedo.locatedo.screens.home
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -98,6 +102,9 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
         hasRequested = uiState.hasRequestedPreciseLocation,
         onRequested = viewModel::preciseLocationRequested,
     )
+    val requestNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        viewModel.notificationsRequested()
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.resumed()
     }
@@ -108,7 +115,13 @@ fun HomeScreen(onAddPlace: () -> Unit, viewModel: HomeViewModel = hiltViewModel(
             PermissionBanner.LOCATION_ALWAYS -> navigator.present(Overlay.AlwaysLocation(viewModel::alwaysLocationAnswered))
             PermissionBanner.LOCATION_DENIED -> SystemSettings.openAppDetails(context)
             PermissionBanner.PRECISE_LOCATION -> requestPreciseLocation()
-            PermissionBanner.NOTIFICATIONS -> SystemSettings.openNotifications(context)
+            PermissionBanner.NOTIFICATIONS -> {
+                if (uiState.canAskForNotifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    SystemSettings.openNotifications(context)
+                }
+            }
         }
     }
 

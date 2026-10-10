@@ -63,6 +63,15 @@ class PermissionBannerTest {
     }
 
     @Test
+    fun notificationsNotYetAskedShowOnceLocationIsAllTheTime() {
+        assertEquals(
+            PermissionBanner.NOTIFICATIONS,
+            PermissionBanner.of(Permissions(LocationAuth.ALWAYS, NotificationAuth.NOT_DETERMINED), hasPlaces = true),
+        )
+        assertNull(PermissionBanner.of(Permissions(LocationAuth.WHEN_IN_USE, NotificationAuth.NOT_DETERMINED), hasPlaces = false))
+    }
+
+    @Test
     fun keysMatchIos() {
         assertEquals(
             listOf("location_always", "location_denied", "precise_location", "notifications"),
