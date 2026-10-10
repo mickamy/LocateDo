@@ -15,6 +15,9 @@ enum class ArrivalSuppression(val key: String) {
 
     // Left within five minutes of going in; decided by PlacePresence, not by suppression().
     SHORT_STAY("short_stay"),
+
+    // The system refused a notification the policy let through.
+    SCHEDULE_FAILED("schedule_failed"),
 }
 
 object NotificationPolicy {

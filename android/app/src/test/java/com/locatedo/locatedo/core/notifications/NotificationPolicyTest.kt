@@ -47,7 +47,7 @@ class NotificationPolicyTest {
     @Test
     fun keysMatchIos() {
         assertEquals(
-            listOf("no_open_todos", "assigned_to_others", "recently_notified", "notifications_off"),
+            listOf("no_open_todos", "assigned_to_others", "recently_notified", "notifications_off", "short_stay", "schedule_failed"),
             ArrivalSuppression.entries.map { it.key },
         )
     }

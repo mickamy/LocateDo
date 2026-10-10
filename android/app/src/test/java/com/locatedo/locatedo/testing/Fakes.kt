@@ -137,6 +137,7 @@ class FakeArrivalNotifier : ArrivalNotifier {
     val silent = mutableListOf<Pair<Place, List<String>>>()
     val cancelled = mutableListOf<UUID>()
     var allowed = true
+    var refuses = false
 
     override fun prepare() = Unit
 
@@ -144,7 +145,10 @@ class FakeArrivalNotifier : ArrivalNotifier {
 
     val events = mutableListOf<PlaceEvent>()
 
-    override fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean) {
+    override fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean): Boolean {
+        if (refuses) {
+            return false
+        }
         val shown = place to todos.map { it.title }
         events += event
         if (silent) {
@@ -152,6 +156,7 @@ class FakeArrivalNotifier : ArrivalNotifier {
         } else {
             notified += shown
         }
+        return true
     }
 
     override fun cancel(placeId: UUID, event: PlaceEvent) {

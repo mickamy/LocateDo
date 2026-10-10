@@ -27,8 +27,8 @@ import javax.inject.Singleton
 interface ArrivalNotifier {
     fun prepare()
     fun canNotify(): Boolean
-    // A silent post replaces what is shown without sounding again, as after a check-off.
-    fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean = false)
+    // A silent post replaces what is shown without sounding again, as after a check-off. False when the system refused it.
+    fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean = false): Boolean
     fun cancel(placeId: UUID, event: PlaceEvent)
 }
 
@@ -57,7 +57,7 @@ class AndroidArrivalNotifier @Inject constructor(
     // One notification per place and kind, replaced by the next one of that kind; tapping it opens the place, and each
     // of the first to-dos gets a button that checks it off without opening the app. A departure is labeled so, since
     // the title is the place name alone either way.
-    override fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean) {
+    override fun notify(event: PlaceEvent, place: Place, todos: List<Todo>, silent: Boolean): Boolean {
         val id = notificationId(place.id, event)
         val text = arrivalNotificationText(context.resources, todos.map { it.title })
         val contentIntent = PendingIntent.getActivity(
@@ -96,7 +96,9 @@ class AndroidArrivalNotifier @Inject constructor(
             manager.notify(id, builder.build())
         } catch (e: SecurityException) {
             Log.w(TAG, "Could not post the arrival notification", e)
+            return false
         }
+        return true
     }
 
     private fun checkOffIntent(

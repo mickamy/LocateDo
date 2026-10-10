@@ -167,6 +167,20 @@ class ArrivalHandlerTest {
     }
 
     @Test
+    fun aNotificationTheSystemRefusesIsNotCountedAsNotified() = runTest {
+        notifier.refuses = true
+        places.state.value = listOf(PlaceWithTodos(store, listOf(todo("Milk", store))))
+
+        handler.handle(GeofenceTransition.DWELL, listOf(store.id), near = here)
+
+        assertEquals(0, analytics.count(AnalyticsEvent.REMINDER_NOTIFIED))
+        assertEquals("schedule_failed", analytics.values(AnalyticsEvent.REMINDER_SUPPRESSED)["reason"])
+        assertEquals(1L, analytics.values(AnalyticsEvent.REMINDER_SUPPRESSED)["open_todos"])
+        assertNull(places.state.value.single().place.lastArrivalNotifiedAt)
+        assertFalse(preferences.promotions.first().hasReceivedArrivalNotification)
+    }
+
+    @Test
     fun overlappingReasonsReportOnlyTheFirst() = runTest {
         notifier.allowed = false
         places.state.value = listOf(

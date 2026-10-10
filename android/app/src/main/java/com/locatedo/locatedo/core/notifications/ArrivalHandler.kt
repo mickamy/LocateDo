@@ -93,7 +93,17 @@ class ArrivalHandler @Inject constructor(
             )
             return false
         }
-        notifier.notify(event, entry.place, todos)
+        // A refused notification is not delivered, so it neither starts the cooldown nor counts as a reminder.
+        if (!notifier.notify(event, entry.place, todos)) {
+            analytics.log(
+                AnalyticsEvent.REMINDER_SUPPRESSED,
+                parameters(entry, event) + mapOf(
+                    AnalyticsParameter.REASON to ArrivalSuppression.SCHEDULE_FAILED.key,
+                    AnalyticsParameter.OPEN_TODOS to openTodos.size,
+                ),
+            )
+            return false
+        }
         placeRepository.markNotified(entry.place.id, event, now)
         preferences.setReceivedArrivalNotification()
         analytics.log(
