@@ -2,7 +2,7 @@ import CoreLocation
 import Observation
 
 @Observable
-final class LocationProvider {
+final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var location: CLLocation?
     private(set) var authorizationStatus: CLAuthorizationStatus
     private(set) var hasPreciseLocation: Bool
@@ -10,9 +10,12 @@ final class LocationProvider {
     private let manager = CLLocationManager()
     private var updates: Task<Void, Never>?
 
-    init() {
-        authorizationStatus = manager.authorizationStatus
-        hasPreciseLocation = manager.accuracyAuthorization == .fullAccuracy
+    override init() {
+        authorizationStatus = .notDetermined
+        hasPreciseLocation = false
+        super.init()
+        manager.delegate = self
+        refreshAuthorizationStatus()
     }
 
     func start() {
@@ -53,5 +56,12 @@ final class LocationProvider {
     func stop() {
         updates?.cancel()
         updates = nil
+    }
+
+    // A change made in Settings shows here once the app is back, which reading the status on return can miss.
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            self.refreshAuthorizationStatus()
+        }
     }
 }

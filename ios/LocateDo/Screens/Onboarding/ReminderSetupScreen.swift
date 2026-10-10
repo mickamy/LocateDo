@@ -55,7 +55,10 @@ struct ReminderSetupScreen: View {
             VStack(spacing: 12) {
                 notificationsRow
                 locationRow
-                if missing.contains(.preciseLocation) {
+                if missing.contains(.preciseLocation) || ReminderSetup.needsPrecise(
+                    location: locationProvider.authorizationStatus,
+                    precise: locationProvider.hasPreciseLocation
+                ) {
                     preciseLocationRow
                 }
             }
@@ -170,7 +173,8 @@ struct ReminderSetupScreen: View {
     ) -> some View {
         HStack {
             Label(title, systemImage: systemImage)
-            Spacer()
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
             if let done {
                 Label(done, systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
