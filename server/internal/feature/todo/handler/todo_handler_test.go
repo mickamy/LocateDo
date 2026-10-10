@@ -92,8 +92,6 @@ func TestTodo_PutTodo_trigger(t *testing.T) {
 		trigger *todov1.Trigger
 		want    string
 	}{
-		{name: "omitted", trigger: nil, want: "arrival"},
-		{name: "unspecified", trigger: &todov1.Trigger{}, want: "arrival"},
 		{name: "arrival", trigger: &todov1.Trigger{Event: todov1.PlaceEvent_PLACE_EVENT_ARRIVAL}, want: "arrival"},
 		{name: "departure", trigger: &todov1.Trigger{Event: todov1.PlaceEvent_PLACE_EVENT_DEPARTURE}, want: "departure"},
 	}
@@ -139,6 +137,26 @@ func TestTodo_PutTodo_rejects(t *testing.T) {
 				h := d.Seeder.Household(t, hmodel.PlanFree)
 				input := todoInput(d.Seeder.Place(t, h.ID))
 				input.Title = ""
+				return token(t, h.OwnerID), h.ID, input
+			},
+			want: connect.CodeInvalidArgument,
+		},
+		{
+			name: "no trigger",
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID, *todov1.TodoInput) {
+				h := d.Seeder.Household(t, hmodel.PlanFree)
+				input := todoInput(d.Seeder.Place(t, h.ID))
+				input.Trigger = nil
+				return token(t, h.OwnerID), h.ID, input
+			},
+			want: connect.CodeInvalidArgument,
+		},
+		{
+			name: "unspecified place event",
+			arrange: func(t *testing.T, d tdb.DB) (string, uuid.UUID, *todov1.TodoInput) {
+				h := d.Seeder.Household(t, hmodel.PlanFree)
+				input := todoInput(d.Seeder.Place(t, h.ID))
+				input.Trigger = &todov1.Trigger{}
 				return token(t, h.OwnerID), h.ID, input
 			},
 			want: connect.CodeInvalidArgument,
@@ -252,5 +270,6 @@ func todoInput(placeID uuid.UUID) *todov1.TodoInput {
 		Id:      uuid.NewV7().String(),
 		PlaceId: placeID.String(),
 		Title:   "Milk",
+		Trigger: &todov1.Trigger{Event: todov1.PlaceEvent_PLACE_EVENT_ARRIVAL},
 	}
 }

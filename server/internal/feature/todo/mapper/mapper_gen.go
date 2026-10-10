@@ -23,21 +23,25 @@ func TodoFromTodoInput(src *todov1.TodoInput) (model.Todo, error) {
 	if err2 != nil {
 		return model.Todo{}, fmt.Errorf("map model.Todo.PlaceID: %w", err2)
 	}
-	var v4 *uuid.UUID
-	if v5 := src.AssigneeId; v5 != nil {
-		var v6 uuid.UUID
-		v8, err7 := uuid.Parse(*v5)
-		if err7 != nil {
-			return model.Todo{}, fmt.Errorf("map model.Todo.AssigneeID: %w", err7)
+	v5, err4 := TriggerFromTodov1(src.GetTrigger())
+	if err4 != nil {
+		return model.Todo{}, fmt.Errorf("map model.Todo.Trigger: %w", err4)
+	}
+	var v6 *uuid.UUID
+	if v7 := src.AssigneeId; v7 != nil {
+		var v8 uuid.UUID
+		v10, err9 := uuid.Parse(*v7)
+		if err9 != nil {
+			return model.Todo{}, fmt.Errorf("map model.Todo.AssigneeID: %w", err9)
 		}
-		v6 = v8
-		v4 = &v6
+		v8 = v10
+		v6 = &v8
 	}
 	return model.Todo{
 		ID:         v1,
 		PlaceID:    v3,
 		Title:      src.GetTitle(),
-		Trigger:    TriggerFromTodov1(src.GetTrigger()),
-		AssigneeID: v4,
+		Trigger:    v5,
+		AssigneeID: v6,
 	}, nil
 }

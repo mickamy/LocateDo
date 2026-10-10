@@ -105,6 +105,26 @@ func TestHousehold_CreateHousehold_unknownCategory(t *testing.T) {
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 }
 
+func TestHousehold_CreateHousehold_todoWithoutTrigger(t *testing.T) {
+	t.Parallel()
+
+	// arrange
+	d := tdb.New(t)
+	client := newClient(t, d)
+	td := todo("Milk")
+	td.Trigger = nil
+
+	// act
+	_, err := client.CreateHousehold(t.Context(), authed(user(t, d), &householdv1.CreateHouseholdRequest{
+		Id:     uuid.NewV7().String(),
+		Places: []*placev1.PlaceInput{place()},
+		Todos:  []*householdv1.InitialTodo{{Todo: td}},
+	}))
+
+	// assert
+	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
+}
+
 func TestHousehold_requiresToken(t *testing.T) {
 	t.Parallel()
 
@@ -203,5 +223,10 @@ func place() *placev1.PlaceInput {
 }
 
 func todo(title string) *todov1.TodoInput {
-	return &todov1.TodoInput{Id: uuid.NewV7().String(), PlaceId: placeID, Title: title}
+	return &todov1.TodoInput{
+		Id:      uuid.NewV7().String(),
+		PlaceId: placeID,
+		Title:   title,
+		Trigger: &todov1.Trigger{Event: todov1.PlaceEvent_PLACE_EVENT_ARRIVAL},
+	}
 }
