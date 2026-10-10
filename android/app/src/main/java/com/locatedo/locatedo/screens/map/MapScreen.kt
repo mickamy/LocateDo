@@ -35,7 +35,6 @@ import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
-import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.data.CategoryRepository
 import com.locatedo.locatedo.core.data.PlaceRepository
@@ -94,7 +93,7 @@ class MapViewModel @Inject constructor(
 // Every place as a category marker; a marker opens the place. Finding yourself is the map's own button.
 @Composable
 fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
-    TrackScreen(AnalyticsScreen.MAP, mapOf(AnalyticsParameter.SOURCE to "home_preview"))
+    TrackScreen(AnalyticsScreen.MAP)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     var hasLocationPermission by remember { mutableStateOf(viewModel.hasLocationPermission()) }

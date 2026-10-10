@@ -30,7 +30,7 @@ struct MapScreen: View {
                 self.selectedPlace = nil
             }
         }
-        .trackScreen(.map, parameters: [.source: "home_preview"])
+        .trackScreen(.map)
         .navigationTitle(Text(.tabMap))
         .maintenanceBanner()
         .navigationBarTitleDisplayMode(.inline)

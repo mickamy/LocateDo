@@ -3,7 +3,6 @@
 -- with_todos_rate: places added together with at least one to-do. guessed / guess_kept: a category was guessed from the
 -- picked store, and the place was saved with that category.
 -- duplicate_*: the pin landed within 50 m of a saved place, and what was chosen.
--- map_tab_*: Map tab views by where they came from.
 WITH adding AS (
   SELECT
     DATE_TRUNC(event_date, MONTH) AS month,
@@ -12,14 +11,13 @@ WITH adding AS (
     screen,
     mode,
     step,
-    source,
     category,
     suggested_category,
     todo_count,
     choice
   FROM `__PROJECT__.__DATASET__.events`
   WHERE event_name IN ('place_added', 'place_duplicate_prompted')
-    OR (event_name = 'screen_view' AND screen IN ('place_picker', 'place_editor', 'map'))
+    OR (event_name = 'screen_view' AND screen IN ('place_picker', 'place_editor'))
 )
 SELECT
   month,
@@ -44,8 +42,6 @@ SELECT
   COUNTIF(event_name = 'place_duplicate_prompted') AS duplicate_prompts,
   COUNTIF(event_name = 'place_duplicate_prompted' AND choice = 'open') AS duplicate_opened,
   COUNTIF(event_name = 'place_duplicate_prompted' AND choice = 'add') AS duplicate_added,
-  COUNTIF(event_name = 'place_duplicate_prompted' AND choice = 'cancel') AS duplicate_canceled,
-  COUNTIF(event_name = 'screen_view' AND screen = 'map' AND source = 'tab') AS map_tab_from_tab_bar,
-  COUNTIF(event_name = 'screen_view' AND screen = 'map' AND source = 'home_preview') AS map_tab_from_home_preview
+  COUNTIF(event_name = 'place_duplicate_prompted' AND choice = 'cancel') AS duplicate_canceled
 FROM adding
 GROUP BY month, platform
