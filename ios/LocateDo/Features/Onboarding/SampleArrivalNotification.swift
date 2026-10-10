@@ -7,7 +7,7 @@ struct SampleArrivalNotification: View {
 
     var body: some View {
         ArrivalNotificationCard(
-            title: String(localized: .notificationArrivedTitle(String(localized: .onboardingSamplePlace))),
+            title: String(localized: .onboardingSamplePlace),
             message: String(localized: .onboardingSampleTodos)
         )
         .offset(y: isShown ? 0 : -24)

@@ -98,7 +98,7 @@ struct NewPlaceTodosSection: View {
             message = NotificationPolicy.body(todoTitles: titles)
         }
         return ArrivalNotificationCard(
-            title: String(localized: .notificationArrivedTitle(placeName)),
+            title: placeName,
             message: message,
             isMessageMuted: titles.isEmpty
         )

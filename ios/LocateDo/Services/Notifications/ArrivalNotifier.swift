@@ -50,7 +50,8 @@ final class ArrivalNotifier: NSObject, UNUserNotificationCenterDelegate {
             categoryColor: place.category?.color
         )
         let content = UNMutableNotificationContent()
-        content.title = String(localized: .notificationArrivedTitle(place.name))
+        // Titles never wrap on the Lock Screen, so the place name alone keeps long names whole.
+        content.title = place.name
         // Actions only show on press and hold, so every arrival notification says so.
         content.body = NotificationPolicy.body(todoTitles: todos.map(\.title))
             + "\n" + String(localized: .notificationPressAndHoldHint)

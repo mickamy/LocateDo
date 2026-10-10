@@ -38,7 +38,7 @@ enum WatchScreenshotSeed {
             categoryIcon: place.icon,
             categoryColor: place.color
         )
-        return (String(localized: .notificationArrivedTitle(place.name)), checklist)
+        return (place.name, checklist)
     }
 
     private struct Entry {
