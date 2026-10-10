@@ -13,6 +13,18 @@ service TodoService {
   rpc DeleteTodo(DeleteTodoRequest) returns (DeleteTodoResponse);
 }
 
+// The moment at a place a to-do is brought up.
+enum PlaceEvent {
+  PLACE_EVENT_UNSPECIFIED = 0;
+  PLACE_EVENT_ARRIVAL = 1;
+  PLACE_EVENT_DEPARTURE = 2;
+}
+
+// When a to-do is brought up. Later conditions, such as repeating, belong here.
+message Trigger {
+  PlaceEvent event = 1 [(buf.validate.field).enum.defined_only = true];
+}
+
 message Todo {
   string id = 1;
   string household_id = 2;
@@ -25,6 +37,8 @@ message Todo {
   // Recorded by the server from the caller; unset for to-dos from before it did.
   optional string creator_id = 9;
   optional string completer_id = 10;
+  // Always set.
+  Trigger trigger = 11;
 }
 
 message TodoInput {
@@ -35,6 +49,8 @@ message TodoInput {
     max_len: 200
   }];
   optional string assignee_id = 4 [(buf.validate.field).string.uuid = true];
+  // Unset, or an unspecified event, means arrival.
+  Trigger trigger = 5;
 }
 
 message PutTodoRequest {

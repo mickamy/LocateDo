@@ -103,8 +103,50 @@ public object TodoInputKt {
     public fun hasAssigneeId(): kotlin.Boolean {
       return _builder.hasAssigneeId()
     }
+
+    /**
+     * ```
+     * Unset, or an unspecified event, means arrival.
+     * ```
+     *
+     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];`
+     */
+    public var trigger: com.locatedo.todo.v1.Trigger
+      @kotlin.jvm.JvmName("getTrigger")
+        get() = _builder.trigger
+      @kotlin.jvm.JvmName("setTrigger")
+        set(value) {
+        _builder.trigger = value
+      }
+    /**
+     * ```
+     * Unset, or an unspecified event, means arrival.
+     * ```
+     *
+     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];`
+     */
+    public fun clearTrigger() {
+      _builder.clearTrigger()
+    }
+    /**
+     * ```
+     * Unset, or an unspecified event, means arrival.
+     * ```
+     *
+     * `.locatedo.todo.v1.Trigger trigger = 5 [json_name = "trigger"];`
+     * @return Whether the trigger field is set.
+     */
+    public fun hasTrigger(): kotlin.Boolean {
+      return _builder.hasTrigger()
+    }
+
+    public val TodoInputKt.Dsl.triggerOrNull: com.locatedo.todo.v1.Trigger?
+      get() = _builder.triggerOrNull
   }
 }
 public inline fun com.locatedo.todo.v1.TodoInput.copy(block: `com.locatedo.todo.v1`.TodoInputKt.Dsl.() -> kotlin.Unit): com.locatedo.todo.v1.TodoInput =
   `com.locatedo.todo.v1`.TodoInputKt.Dsl._create(this.toBuilder()).apply { block() }._build()
+
+public val com.locatedo.todo.v1.TodoInputOrBuilder.triggerOrNull: com.locatedo.todo.v1.Trigger?
+  get() = if (hasTrigger()) getTrigger() else null
 

@@ -521,6 +521,73 @@ public  final class Todo extends
     bitField0_ |= 0x00000010;
   }
 
+  public static final int TRIGGER_FIELD_NUMBER = 11;
+  private com.locatedo.todo.v1.Trigger trigger_;
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   */
+  @java.lang.Override
+  public boolean hasTrigger() {
+    return ((bitField0_ & 0x00000020) != 0);
+  }
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   */
+  @java.lang.Override
+  public com.locatedo.todo.v1.Trigger getTrigger() {
+    return trigger_ == null ? com.locatedo.todo.v1.Trigger.getDefaultInstance() : trigger_;
+  }
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   */
+  private void setTrigger(com.locatedo.todo.v1.Trigger value) {
+    java.util.Objects.requireNonNull(value);
+    trigger_ = value;
+    bitField0_ |= 0x00000020;
+  }
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   */
+  @java.lang.SuppressWarnings("ReferenceEquality")
+  private void mergeTrigger(com.locatedo.todo.v1.Trigger value) {
+    java.util.Objects.requireNonNull(value);
+    if (trigger_ != null &&
+        trigger_ != com.locatedo.todo.v1.Trigger.getDefaultInstance()) {
+      trigger_ =
+        com.locatedo.todo.v1.Trigger.newBuilder(trigger_).mergeFrom(value).buildPartial();
+    } else {
+      trigger_ = value;
+    }
+    bitField0_ |= 0x00000020;
+  }
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   */
+  private void clearTrigger() {
+    trigger_ = null;
+    bitField0_ = (bitField0_ & ~0x00000020);
+  }
+
   public static com.locatedo.todo.v1.Todo parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1131,6 +1198,77 @@ public  final class Todo extends
       return this;
     }
 
+    /**
+     * <pre>
+     * Always set.
+     * </pre>
+     *
+     * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+     */
+    @java.lang.Override
+    public boolean hasTrigger() {
+      return instance.hasTrigger();
+    }
+    /**
+     * <pre>
+     * Always set.
+     * </pre>
+     *
+     * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+     */
+    @java.lang.Override
+    public com.locatedo.todo.v1.Trigger getTrigger() {
+      return instance.getTrigger();
+    }
+    /**
+     * <pre>
+     * Always set.
+     * </pre>
+     *
+     * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+     */
+    public Builder setTrigger(com.locatedo.todo.v1.Trigger value) {
+      copyOnWrite();
+      instance.setTrigger(value);
+      return this;
+      }
+    /**
+     * <pre>
+     * Always set.
+     * </pre>
+     *
+     * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+     */
+    public Builder setTrigger(
+        com.locatedo.todo.v1.Trigger.Builder builderForValue) {
+      copyOnWrite();
+      instance.setTrigger(builderForValue.build());
+      return this;
+    }
+    /**
+     * <pre>
+     * Always set.
+     * </pre>
+     *
+     * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+     */
+    public Builder mergeTrigger(com.locatedo.todo.v1.Trigger value) {
+      copyOnWrite();
+      instance.mergeTrigger(value);
+      return this;
+    }
+    /**
+     * <pre>
+     * Always set.
+     * </pre>
+     *
+     * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+     */
+    public Builder clearTrigger() {  copyOnWrite();
+      instance.clearTrigger();
+      return this;
+    }
+
     // @@protoc_insertion_point(builder_scope:locatedo.todo.v1.Todo)
   }
   @java.lang.Override
@@ -1158,11 +1296,12 @@ public  final class Todo extends
             "version_",
             "creatorId_",
             "completerId_",
+            "trigger_",
           };
           java.lang.String info =
-              "\u0000\n\u0000\u0001\u0001\n\n\u0000\u0000\u0000\u0001\u0208\u0002\u0208\u0003\u0208" +
-              "\u0004\u0208\u0005\u1208\u0000\u0006\u1009\u0001\u0007\u1009\u0002\b\u0002\t\u1208" +
-              "\u0003\n\u1208\u0004";
+              "\u0000\u000b\u0000\u0001\u0001\u000b\u000b\u0000\u0000\u0000\u0001\u0208\u0002\u0208" +
+              "\u0003\u0208\u0004\u0208\u0005\u1208\u0000\u0006\u1009\u0001\u0007\u1009\u0002\b" +
+              "\u0002\t\u1208\u0003\n\u1208\u0004\u000b\u1009\u0005";
           return newMessageInfo(DEFAULT_INSTANCE, info, objects);
       }
       case GET_DEFAULT_INSTANCE: {

@@ -20,6 +20,58 @@ fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobu
   typealias Version = _2
 }
 
+/// The moment at a place a to-do is brought up.
+nonisolated enum Locatedo_Todo_V1_PlaceEvent: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+  case unspecified // = 0
+  case arrival // = 1
+  case departure // = 2
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .unspecified
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unspecified
+    case 1: self = .arrival
+    case 2: self = .departure
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .unspecified: return 0
+    case .arrival: return 1
+    case .departure: return 2
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [Locatedo_Todo_V1_PlaceEvent] = [
+    .unspecified,
+    .arrival,
+    .departure,
+  ]
+
+}
+
+/// When a to-do is brought up. Later conditions, such as repeating, belong here.
+nonisolated struct Locatedo_Todo_V1_Trigger: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var event: Locatedo_Todo_V1_PlaceEvent = .unspecified
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 nonisolated struct Locatedo_Todo_V1_Todo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -81,6 +133,16 @@ nonisolated struct Locatedo_Todo_V1_Todo: Sendable {
   /// Clears the value of `completerID`. Subsequent reads from it will return its default value.
   mutating func clearCompleterID() {self._completerID = nil}
 
+  /// Always set.
+  var trigger: Locatedo_Todo_V1_Trigger {
+    get {_trigger ?? Locatedo_Todo_V1_Trigger()}
+    set {_trigger = newValue}
+  }
+  /// Returns true if `trigger` has been explicitly set.
+  var hasTrigger: Bool {self._trigger != nil}
+  /// Clears the value of `trigger`. Subsequent reads from it will return its default value.
+  mutating func clearTrigger() {self._trigger = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -90,6 +152,7 @@ nonisolated struct Locatedo_Todo_V1_Todo: Sendable {
   fileprivate var _updatedAt: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
   fileprivate var _creatorID: String? = nil
   fileprivate var _completerID: String? = nil
+  fileprivate var _trigger: Locatedo_Todo_V1_Trigger? = nil
 }
 
 nonisolated struct Locatedo_Todo_V1_TodoInput: Sendable {
@@ -112,11 +175,22 @@ nonisolated struct Locatedo_Todo_V1_TodoInput: Sendable {
   /// Clears the value of `assigneeID`. Subsequent reads from it will return its default value.
   mutating func clearAssigneeID() {self._assigneeID = nil}
 
+  /// Unset, or an unspecified event, means arrival.
+  var trigger: Locatedo_Todo_V1_Trigger {
+    get {_trigger ?? Locatedo_Todo_V1_Trigger()}
+    set {_trigger = newValue}
+  }
+  /// Returns true if `trigger` has been explicitly set.
+  var hasTrigger: Bool {self._trigger != nil}
+  /// Clears the value of `trigger`. Subsequent reads from it will return its default value.
+  mutating func clearTrigger() {self._trigger = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _assigneeID: String? = nil
+  fileprivate var _trigger: Locatedo_Todo_V1_Trigger? = nil
 }
 
 nonisolated struct Locatedo_Todo_V1_PutTodoRequest: Sendable {
@@ -212,9 +286,43 @@ nonisolated struct Locatedo_Todo_V1_DeleteTodoResponse: Sendable {
 
 fileprivate nonisolated let _protobuf_package = "locatedo.todo.v1"
 
+nonisolated extension Locatedo_Todo_V1_PlaceEvent: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PLACE_EVENT_UNSPECIFIED\0\u{1}PLACE_EVENT_ARRIVAL\0\u{1}PLACE_EVENT_DEPARTURE\0")
+}
+
+nonisolated extension Locatedo_Todo_V1_Trigger: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Trigger"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}event\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.event) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.event != .unspecified {
+      try visitor.visitSingularEnumField(value: self.event, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Locatedo_Todo_V1_Trigger, rhs: Locatedo_Todo_V1_Trigger) -> Bool {
+    if lhs.event != rhs.event {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Todo"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}household_id\0\u{3}place_id\0\u{1}title\0\u{3}assignee_id\0\u{3}completed_at\0\u{3}updated_at\0\u{1}version\0\u{3}creator_id\0\u{3}completer_id\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}household_id\0\u{3}place_id\0\u{1}title\0\u{3}assignee_id\0\u{3}completed_at\0\u{3}updated_at\0\u{1}version\0\u{3}creator_id\0\u{3}completer_id\0\u{1}trigger\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -232,6 +340,7 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
       case 8: try { try decoder.decodeSingularInt64Field(value: &self.version) }()
       case 9: try { try decoder.decodeSingularStringField(value: &self._creatorID) }()
       case 10: try { try decoder.decodeSingularStringField(value: &self._completerID) }()
+      case 11: try { try decoder.decodeSingularMessageField(value: &self._trigger) }()
       default: break
       }
     }
@@ -272,6 +381,9 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
     try { if let v = self._completerID {
       try visitor.visitSingularStringField(value: v, fieldNumber: 10)
     } }()
+    try { if let v = self._trigger {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -286,6 +398,7 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
     if lhs.version != rhs.version {return false}
     if lhs._creatorID != rhs._creatorID {return false}
     if lhs._completerID != rhs._completerID {return false}
+    if lhs._trigger != rhs._trigger {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -293,7 +406,7 @@ nonisolated extension Locatedo_Todo_V1_Todo: SwiftProtobuf.Message, SwiftProtobu
 
 nonisolated extension Locatedo_Todo_V1_TodoInput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TodoInput"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}place_id\0\u{1}title\0\u{3}assignee_id\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}place_id\0\u{1}title\0\u{3}assignee_id\0\u{1}trigger\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -305,6 +418,7 @@ nonisolated extension Locatedo_Todo_V1_TodoInput: SwiftProtobuf.Message, SwiftPr
       case 2: try { try decoder.decodeSingularStringField(value: &self.placeID) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self.title) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self._assigneeID) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._trigger) }()
       default: break
       }
     }
@@ -327,6 +441,9 @@ nonisolated extension Locatedo_Todo_V1_TodoInput: SwiftProtobuf.Message, SwiftPr
     try { if let v = self._assigneeID {
       try visitor.visitSingularStringField(value: v, fieldNumber: 4)
     } }()
+    try { if let v = self._trigger {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -335,6 +452,7 @@ nonisolated extension Locatedo_Todo_V1_TodoInput: SwiftProtobuf.Message, SwiftPr
     if lhs.placeID != rhs.placeID {return false}
     if lhs.title != rhs.title {return false}
     if lhs._assigneeID != rhs._assigneeID {return false}
+    if lhs._trigger != rhs._trigger {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

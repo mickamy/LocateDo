@@ -148,4 +148,23 @@ public interface TodoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getCompleterIdBytes();
+
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   * @return Whether the trigger field is set.
+   */
+  boolean hasTrigger();
+  /**
+   * <pre>
+   * Always set.
+   * </pre>
+   *
+   * <code>.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];</code>
+   * @return The trigger.
+   */
+  com.locatedo.todo.v1.Trigger getTrigger();
 }

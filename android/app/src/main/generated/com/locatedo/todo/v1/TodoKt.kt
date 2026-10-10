@@ -251,6 +251,45 @@ public object TodoKt {
     public fun hasCompleterId(): kotlin.Boolean {
       return _builder.hasCompleterId()
     }
+
+    /**
+     * ```
+     * Always set.
+     * ```
+     *
+     * `.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];`
+     */
+    public var trigger: com.locatedo.todo.v1.Trigger
+      @kotlin.jvm.JvmName("getTrigger")
+        get() = _builder.trigger
+      @kotlin.jvm.JvmName("setTrigger")
+        set(value) {
+        _builder.trigger = value
+      }
+    /**
+     * ```
+     * Always set.
+     * ```
+     *
+     * `.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];`
+     */
+    public fun clearTrigger() {
+      _builder.clearTrigger()
+    }
+    /**
+     * ```
+     * Always set.
+     * ```
+     *
+     * `.locatedo.todo.v1.Trigger trigger = 11 [json_name = "trigger"];`
+     * @return Whether the trigger field is set.
+     */
+    public fun hasTrigger(): kotlin.Boolean {
+      return _builder.hasTrigger()
+    }
+
+    public val TodoKt.Dsl.triggerOrNull: com.locatedo.todo.v1.Trigger?
+      get() = _builder.triggerOrNull
   }
 }
 public inline fun com.locatedo.todo.v1.Todo.copy(block: `com.locatedo.todo.v1`.TodoKt.Dsl.() -> kotlin.Unit): com.locatedo.todo.v1.Todo =
@@ -261,4 +300,7 @@ public val com.locatedo.todo.v1.TodoOrBuilder.completedAtOrNull: com.google.prot
 
 public val com.locatedo.todo.v1.TodoOrBuilder.updatedAtOrNull: com.google.protobuf.Timestamp?
   get() = if (hasUpdatedAt()) getUpdatedAt() else null
+
+public val com.locatedo.todo.v1.TodoOrBuilder.triggerOrNull: com.locatedo.todo.v1.Trigger?
+  get() = if (hasTrigger()) getTrigger() else null
 

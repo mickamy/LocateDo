@@ -23,6 +23,101 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// The moment at a place a to-do is brought up.
+type PlaceEvent int32
+
+const (
+	PlaceEvent_PLACE_EVENT_UNSPECIFIED PlaceEvent = 0
+	PlaceEvent_PLACE_EVENT_ARRIVAL     PlaceEvent = 1
+	PlaceEvent_PLACE_EVENT_DEPARTURE   PlaceEvent = 2
+)
+
+// Enum value maps for PlaceEvent.
+var (
+	PlaceEvent_name = map[int32]string{
+		0: "PLACE_EVENT_UNSPECIFIED",
+		1: "PLACE_EVENT_ARRIVAL",
+		2: "PLACE_EVENT_DEPARTURE",
+	}
+	PlaceEvent_value = map[string]int32{
+		"PLACE_EVENT_UNSPECIFIED": 0,
+		"PLACE_EVENT_ARRIVAL":     1,
+		"PLACE_EVENT_DEPARTURE":   2,
+	}
+)
+
+func (x PlaceEvent) Enum() *PlaceEvent {
+	p := new(PlaceEvent)
+	*p = x
+	return p
+}
+
+func (x PlaceEvent) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlaceEvent) Descriptor() protoreflect.EnumDescriptor {
+	return file_locatedo_todo_v1_todo_proto_enumTypes[0].Descriptor()
+}
+
+func (PlaceEvent) Type() protoreflect.EnumType {
+	return &file_locatedo_todo_v1_todo_proto_enumTypes[0]
+}
+
+func (x PlaceEvent) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlaceEvent.Descriptor instead.
+func (PlaceEvent) EnumDescriptor() ([]byte, []int) {
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{0}
+}
+
+// When a to-do is brought up. Later conditions, such as repeating, belong here.
+type Trigger struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Event         PlaceEvent             `protobuf:"varint,1,opt,name=event,proto3,enum=locatedo.todo.v1.PlaceEvent" json:"event,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Trigger) Reset() {
+	*x = Trigger{}
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Trigger) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Trigger) ProtoMessage() {}
+
+func (x *Trigger) ProtoReflect() protoreflect.Message {
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Trigger.ProtoReflect.Descriptor instead.
+func (*Trigger) Descriptor() ([]byte, []int) {
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Trigger) GetEvent() PlaceEvent {
+	if x != nil {
+		return x.Event
+	}
+	return PlaceEvent_PLACE_EVENT_UNSPECIFIED
+}
+
 type Todo struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -34,15 +129,17 @@ type Todo struct {
 	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	Version     int64                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
 	// Recorded by the server from the caller; unset for to-dos from before it did.
-	CreatorId     *string `protobuf:"bytes,9,opt,name=creator_id,json=creatorId,proto3,oneof" json:"creator_id,omitempty"`
-	CompleterId   *string `protobuf:"bytes,10,opt,name=completer_id,json=completerId,proto3,oneof" json:"completer_id,omitempty"`
+	CreatorId   *string `protobuf:"bytes,9,opt,name=creator_id,json=creatorId,proto3,oneof" json:"creator_id,omitempty"`
+	CompleterId *string `protobuf:"bytes,10,opt,name=completer_id,json=completerId,proto3,oneof" json:"completer_id,omitempty"`
+	// Always set.
+	Trigger       *Trigger `protobuf:"bytes,11,opt,name=trigger,proto3" json:"trigger,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Todo) Reset() {
 	*x = Todo{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[0]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -54,7 +151,7 @@ func (x *Todo) String() string {
 func (*Todo) ProtoMessage() {}
 
 func (x *Todo) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[0]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -67,7 +164,7 @@ func (x *Todo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Todo.ProtoReflect.Descriptor instead.
 func (*Todo) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{0}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Todo) GetId() string {
@@ -140,19 +237,28 @@ func (x *Todo) GetCompleterId() string {
 	return ""
 }
 
+func (x *Todo) GetTrigger() *Trigger {
+	if x != nil {
+		return x.Trigger
+	}
+	return nil
+}
+
 type TodoInput struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	PlaceId       string                 `protobuf:"bytes,2,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	AssigneeId    *string                `protobuf:"bytes,4,opt,name=assignee_id,json=assigneeId,proto3,oneof" json:"assignee_id,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	PlaceId    string                 `protobuf:"bytes,2,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"`
+	Title      string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	AssigneeId *string                `protobuf:"bytes,4,opt,name=assignee_id,json=assigneeId,proto3,oneof" json:"assignee_id,omitempty"`
+	// Unset, or an unspecified event, means arrival.
+	Trigger       *Trigger `protobuf:"bytes,5,opt,name=trigger,proto3" json:"trigger,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TodoInput) Reset() {
 	*x = TodoInput{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[1]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -164,7 +270,7 @@ func (x *TodoInput) String() string {
 func (*TodoInput) ProtoMessage() {}
 
 func (x *TodoInput) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[1]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -177,7 +283,7 @@ func (x *TodoInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TodoInput.ProtoReflect.Descriptor instead.
 func (*TodoInput) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{1}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *TodoInput) GetId() string {
@@ -208,6 +314,13 @@ func (x *TodoInput) GetAssigneeId() string {
 	return ""
 }
 
+func (x *TodoInput) GetTrigger() *Trigger {
+	if x != nil {
+		return x.Trigger
+	}
+	return nil
+}
+
 type PutTodoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	HouseholdId   string                 `protobuf:"bytes,1,opt,name=household_id,json=householdId,proto3" json:"household_id,omitempty"`
@@ -218,7 +331,7 @@ type PutTodoRequest struct {
 
 func (x *PutTodoRequest) Reset() {
 	*x = PutTodoRequest{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[2]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -230,7 +343,7 @@ func (x *PutTodoRequest) String() string {
 func (*PutTodoRequest) ProtoMessage() {}
 
 func (x *PutTodoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[2]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -243,7 +356,7 @@ func (x *PutTodoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutTodoRequest.ProtoReflect.Descriptor instead.
 func (*PutTodoRequest) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{2}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PutTodoRequest) GetHouseholdId() string {
@@ -268,7 +381,7 @@ type PutTodoResponse struct {
 
 func (x *PutTodoResponse) Reset() {
 	*x = PutTodoResponse{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[3]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -280,7 +393,7 @@ func (x *PutTodoResponse) String() string {
 func (*PutTodoResponse) ProtoMessage() {}
 
 func (x *PutTodoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[3]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -293,7 +406,7 @@ func (x *PutTodoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutTodoResponse.ProtoReflect.Descriptor instead.
 func (*PutTodoResponse) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{3}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{4}
 }
 
 type SetTodoCompletionRequest struct {
@@ -307,7 +420,7 @@ type SetTodoCompletionRequest struct {
 
 func (x *SetTodoCompletionRequest) Reset() {
 	*x = SetTodoCompletionRequest{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[4]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -319,7 +432,7 @@ func (x *SetTodoCompletionRequest) String() string {
 func (*SetTodoCompletionRequest) ProtoMessage() {}
 
 func (x *SetTodoCompletionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[4]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -332,7 +445,7 @@ func (x *SetTodoCompletionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTodoCompletionRequest.ProtoReflect.Descriptor instead.
 func (*SetTodoCompletionRequest) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{4}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SetTodoCompletionRequest) GetId() string {
@@ -357,7 +470,7 @@ type SetTodoCompletionResponse struct {
 
 func (x *SetTodoCompletionResponse) Reset() {
 	*x = SetTodoCompletionResponse{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[5]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -369,7 +482,7 @@ func (x *SetTodoCompletionResponse) String() string {
 func (*SetTodoCompletionResponse) ProtoMessage() {}
 
 func (x *SetTodoCompletionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[5]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -382,7 +495,7 @@ func (x *SetTodoCompletionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTodoCompletionResponse.ProtoReflect.Descriptor instead.
 func (*SetTodoCompletionResponse) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{5}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{6}
 }
 
 type DeleteTodoRequest struct {
@@ -394,7 +507,7 @@ type DeleteTodoRequest struct {
 
 func (x *DeleteTodoRequest) Reset() {
 	*x = DeleteTodoRequest{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[6]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -406,7 +519,7 @@ func (x *DeleteTodoRequest) String() string {
 func (*DeleteTodoRequest) ProtoMessage() {}
 
 func (x *DeleteTodoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[6]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -419,7 +532,7 @@ func (x *DeleteTodoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTodoRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTodoRequest) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{6}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteTodoRequest) GetId() string {
@@ -437,7 +550,7 @@ type DeleteTodoResponse struct {
 
 func (x *DeleteTodoResponse) Reset() {
 	*x = DeleteTodoResponse{}
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[7]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -449,7 +562,7 @@ func (x *DeleteTodoResponse) String() string {
 func (*DeleteTodoResponse) ProtoMessage() {}
 
 func (x *DeleteTodoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[7]
+	mi := &file_locatedo_todo_v1_todo_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -462,14 +575,16 @@ func (x *DeleteTodoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTodoResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTodoResponse) Descriptor() ([]byte, []int) {
-	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{7}
+	return file_locatedo_todo_v1_todo_proto_rawDescGZIP(), []int{8}
 }
 
 var File_locatedo_todo_v1_todo_proto protoreflect.FileDescriptor
 
 const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\n" +
-	"\x1blocatedo/todo/v1/todo.proto\x12\x10locatedo.todo.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb6\x03\n" +
+	"\x1blocatedo/todo/v1/todo.proto\x12\x10locatedo.todo.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"G\n" +
+	"\aTrigger\x12<\n" +
+	"\x05event\x18\x01 \x01(\x0e2\x1c.locatedo.todo.v1.PlaceEventB\b\xbaH\x05\x82\x01\x02\x10\x01R\x05event\"\xeb\x03\n" +
 	"\x04Todo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fhousehold_id\x18\x02 \x01(\tR\vhouseholdId\x12\x19\n" +
@@ -484,18 +599,20 @@ const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\n" +
 	"creator_id\x18\t \x01(\tH\x02R\tcreatorId\x88\x01\x01\x12&\n" +
 	"\fcompleter_id\x18\n" +
-	" \x01(\tH\x03R\vcompleterId\x88\x01\x01B\x0e\n" +
+	" \x01(\tH\x03R\vcompleterId\x88\x01\x01\x123\n" +
+	"\atrigger\x18\v \x01(\v2\x19.locatedo.todo.v1.TriggerR\atriggerB\x0e\n" +
 	"\f_assignee_idB\x0f\n" +
 	"\r_completed_atB\r\n" +
 	"\v_creator_idB\x0f\n" +
-	"\r_completer_id\"\xac\x01\n" +
+	"\r_completer_id\"\xe1\x01\n" +
 	"\tTodoInput\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12#\n" +
 	"\bplace_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\aplaceId\x12 \n" +
 	"\x05title\x18\x03 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xc8\x01R\x05title\x12.\n" +
 	"\vassignee_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\n" +
-	"assigneeId\x88\x01\x01B\x0e\n" +
+	"assigneeId\x88\x01\x01\x123\n" +
+	"\atrigger\x18\x05 \x01(\v2\x19.locatedo.todo.v1.TriggerR\atriggerB\x0e\n" +
 	"\f_assignee_id\"v\n" +
 	"\x0ePutTodoRequest\x12+\n" +
 	"\fhousehold_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vhouseholdId\x127\n" +
@@ -508,7 +625,12 @@ const file_locatedo_todo_v1_todo_proto_rawDesc = "" +
 	"\x19SetTodoCompletionResponse\"-\n" +
 	"\x11DeleteTodoRequest\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\"\x14\n" +
-	"\x12DeleteTodoResponse2\xa4\x02\n" +
+	"\x12DeleteTodoResponse*]\n" +
+	"\n" +
+	"PlaceEvent\x12\x1b\n" +
+	"\x17PLACE_EVENT_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13PLACE_EVENT_ARRIVAL\x10\x01\x12\x19\n" +
+	"\x15PLACE_EVENT_DEPARTURE\x10\x022\xa4\x02\n" +
 	"\vTodoService\x12N\n" +
 	"\aPutTodo\x12 .locatedo.todo.v1.PutTodoRequest\x1a!.locatedo.todo.v1.PutTodoResponse\x12l\n" +
 	"\x11SetTodoCompletion\x12*.locatedo.todo.v1.SetTodoCompletionRequest\x1a+.locatedo.todo.v1.SetTodoCompletionResponse\x12W\n" +
@@ -528,34 +650,40 @@ func file_locatedo_todo_v1_todo_proto_rawDescGZIP() []byte {
 	return file_locatedo_todo_v1_todo_proto_rawDescData
 }
 
-var file_locatedo_todo_v1_todo_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_locatedo_todo_v1_todo_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_locatedo_todo_v1_todo_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_locatedo_todo_v1_todo_proto_goTypes = []any{
-	(*Todo)(nil),                      // 0: locatedo.todo.v1.Todo
-	(*TodoInput)(nil),                 // 1: locatedo.todo.v1.TodoInput
-	(*PutTodoRequest)(nil),            // 2: locatedo.todo.v1.PutTodoRequest
-	(*PutTodoResponse)(nil),           // 3: locatedo.todo.v1.PutTodoResponse
-	(*SetTodoCompletionRequest)(nil),  // 4: locatedo.todo.v1.SetTodoCompletionRequest
-	(*SetTodoCompletionResponse)(nil), // 5: locatedo.todo.v1.SetTodoCompletionResponse
-	(*DeleteTodoRequest)(nil),         // 6: locatedo.todo.v1.DeleteTodoRequest
-	(*DeleteTodoResponse)(nil),        // 7: locatedo.todo.v1.DeleteTodoResponse
-	(*timestamppb.Timestamp)(nil),     // 8: google.protobuf.Timestamp
+	(PlaceEvent)(0),                   // 0: locatedo.todo.v1.PlaceEvent
+	(*Trigger)(nil),                   // 1: locatedo.todo.v1.Trigger
+	(*Todo)(nil),                      // 2: locatedo.todo.v1.Todo
+	(*TodoInput)(nil),                 // 3: locatedo.todo.v1.TodoInput
+	(*PutTodoRequest)(nil),            // 4: locatedo.todo.v1.PutTodoRequest
+	(*PutTodoResponse)(nil),           // 5: locatedo.todo.v1.PutTodoResponse
+	(*SetTodoCompletionRequest)(nil),  // 6: locatedo.todo.v1.SetTodoCompletionRequest
+	(*SetTodoCompletionResponse)(nil), // 7: locatedo.todo.v1.SetTodoCompletionResponse
+	(*DeleteTodoRequest)(nil),         // 8: locatedo.todo.v1.DeleteTodoRequest
+	(*DeleteTodoResponse)(nil),        // 9: locatedo.todo.v1.DeleteTodoResponse
+	(*timestamppb.Timestamp)(nil),     // 10: google.protobuf.Timestamp
 }
 var file_locatedo_todo_v1_todo_proto_depIdxs = []int32{
-	8, // 0: locatedo.todo.v1.Todo.completed_at:type_name -> google.protobuf.Timestamp
-	8, // 1: locatedo.todo.v1.Todo.updated_at:type_name -> google.protobuf.Timestamp
-	1, // 2: locatedo.todo.v1.PutTodoRequest.todo:type_name -> locatedo.todo.v1.TodoInput
-	8, // 3: locatedo.todo.v1.SetTodoCompletionRequest.completed_at:type_name -> google.protobuf.Timestamp
-	2, // 4: locatedo.todo.v1.TodoService.PutTodo:input_type -> locatedo.todo.v1.PutTodoRequest
-	4, // 5: locatedo.todo.v1.TodoService.SetTodoCompletion:input_type -> locatedo.todo.v1.SetTodoCompletionRequest
-	6, // 6: locatedo.todo.v1.TodoService.DeleteTodo:input_type -> locatedo.todo.v1.DeleteTodoRequest
-	3, // 7: locatedo.todo.v1.TodoService.PutTodo:output_type -> locatedo.todo.v1.PutTodoResponse
-	5, // 8: locatedo.todo.v1.TodoService.SetTodoCompletion:output_type -> locatedo.todo.v1.SetTodoCompletionResponse
-	7, // 9: locatedo.todo.v1.TodoService.DeleteTodo:output_type -> locatedo.todo.v1.DeleteTodoResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0,  // 0: locatedo.todo.v1.Trigger.event:type_name -> locatedo.todo.v1.PlaceEvent
+	10, // 1: locatedo.todo.v1.Todo.completed_at:type_name -> google.protobuf.Timestamp
+	10, // 2: locatedo.todo.v1.Todo.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 3: locatedo.todo.v1.Todo.trigger:type_name -> locatedo.todo.v1.Trigger
+	1,  // 4: locatedo.todo.v1.TodoInput.trigger:type_name -> locatedo.todo.v1.Trigger
+	3,  // 5: locatedo.todo.v1.PutTodoRequest.todo:type_name -> locatedo.todo.v1.TodoInput
+	10, // 6: locatedo.todo.v1.SetTodoCompletionRequest.completed_at:type_name -> google.protobuf.Timestamp
+	4,  // 7: locatedo.todo.v1.TodoService.PutTodo:input_type -> locatedo.todo.v1.PutTodoRequest
+	6,  // 8: locatedo.todo.v1.TodoService.SetTodoCompletion:input_type -> locatedo.todo.v1.SetTodoCompletionRequest
+	8,  // 9: locatedo.todo.v1.TodoService.DeleteTodo:input_type -> locatedo.todo.v1.DeleteTodoRequest
+	5,  // 10: locatedo.todo.v1.TodoService.PutTodo:output_type -> locatedo.todo.v1.PutTodoResponse
+	7,  // 11: locatedo.todo.v1.TodoService.SetTodoCompletion:output_type -> locatedo.todo.v1.SetTodoCompletionResponse
+	9,  // 12: locatedo.todo.v1.TodoService.DeleteTodo:output_type -> locatedo.todo.v1.DeleteTodoResponse
+	10, // [10:13] is the sub-list for method output_type
+	7,  // [7:10] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_locatedo_todo_v1_todo_proto_init() }
@@ -563,21 +691,22 @@ func file_locatedo_todo_v1_todo_proto_init() {
 	if File_locatedo_todo_v1_todo_proto != nil {
 		return
 	}
-	file_locatedo_todo_v1_todo_proto_msgTypes[0].OneofWrappers = []any{}
 	file_locatedo_todo_v1_todo_proto_msgTypes[1].OneofWrappers = []any{}
-	file_locatedo_todo_v1_todo_proto_msgTypes[4].OneofWrappers = []any{}
+	file_locatedo_todo_v1_todo_proto_msgTypes[2].OneofWrappers = []any{}
+	file_locatedo_todo_v1_todo_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_locatedo_todo_v1_todo_proto_rawDesc), len(file_locatedo_todo_v1_todo_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   8,
+			NumEnums:      1,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_locatedo_todo_v1_todo_proto_goTypes,
 		DependencyIndexes: file_locatedo_todo_v1_todo_proto_depIdxs,
+		EnumInfos:         file_locatedo_todo_v1_todo_proto_enumTypes,
 		MessageInfos:      file_locatedo_todo_v1_todo_proto_msgTypes,
 	}.Build()
 	File_locatedo_todo_v1_todo_proto = out.File
