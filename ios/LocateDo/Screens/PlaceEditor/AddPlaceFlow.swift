@@ -159,7 +159,7 @@ struct AddPlaceFlow: View {
             navigator.present(.paywall(limit.trigger))
             return
         }
-        navigator.didAddPlace = true
+        navigator.addedPlaceName = place.name
         request.forTodo?(place)
         dismiss()
         Task {

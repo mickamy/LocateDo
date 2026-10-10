@@ -103,6 +103,7 @@ promotions_prompt:
 reminder_setup:
   title: "着いたらお知らせするには"
   description: "アプリを閉じている間も到着をお知らせするため、次の設定が必要です。"
+  place_description: "{name}に着いたとき、アプリを閉じていてもお知らせするため、次の設定が必要です。"
   notifications: "通知"
   location: "位置情報を「常に許可」"
   precise_location: "正確な位置情報"
@@ -408,6 +409,10 @@ first_place:
   ideas_title: "よく書かれるもの"
   permissions: "近くのお店を探すために、位置情報の許可をお願いします。"
   later_permissions: "近くの場所と、そこまでの距離を表示するために、位置情報の許可をお願いします。"
+  done_title: "{name}を登録しました"
+  done_ready: "準備ができました。着いたらお知らせします。"
+  done_almost: "あと少し。着いたときにお知らせできるよう、通知と位置情報を設定します。"
+  done_continue: "設定へ進む"
   grocery:
     name: "スーパー"
     todos_title: "スーパーで買うものは？"

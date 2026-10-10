@@ -105,6 +105,7 @@ promotions_prompt:
 reminder_setup:
   title: "To be reminded when you arrive"
   description: "StopBy needs these settings to remind you when you arrive, even with the app closed."
+  place_description: "To remind you at {name} even with the app closed, StopBy needs these settings."
   notifications: "Notifications"
   location: "Location set to “Always”"
   precise_location: "Precise location"
@@ -417,6 +418,10 @@ first_place:
   ideas_title: "Ideas"
   permissions: "StopBy asks for your location to find stores near you."
   later_permissions: "StopBy asks for your location to show the places near you and the distance to them."
+  done_title: "{name} is saved"
+  done_ready: "You're all set. StopBy reminds you when you arrive."
+  done_almost: "One more step: allow notifications and location so StopBy can remind you when you arrive."
+  done_continue: "Continue"
   grocery:
     name: "Grocery store"
     todos_title: "What do you need at the grocery store?"

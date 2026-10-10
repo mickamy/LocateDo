@@ -938,6 +938,74 @@
         }
       }
     },
+    "first_place.done_almost" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One more step: allow notifications and location so StopBy can remind you when you arrive."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "あと少し。着いたときにお知らせできるよう、通知と位置情報を設定します。"
+          }
+        }
+      }
+    },
+    "first_place.done_continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定へ進む"
+          }
+        }
+      }
+    },
+    "first_place.done_ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're all set. StopBy reminds you when you arrive."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "準備ができました。着いたらお知らせします。"
+          }
+        }
+      }
+    },
+    "first_place.done_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is saved"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@を登録しました"
+          }
+        }
+      }
+    },
     "first_place.drugstore.idea_1" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3714,23 +3782,6 @@
         }
       }
     },
-    "reminder_setup.description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "StopBy needs these settings to remind you when you arrive, even with the app closed."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリを閉じている間も到着をお知らせするため、次の設定が必要です。"
-          }
-        }
-      }
-    },
     "reminder_setup.later" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3795,6 +3846,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "通知"
+          }
+        }
+      }
+    },
+    "reminder_setup.place_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To remind you at %@ even with the app closed, StopBy needs these settings."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@に着いたとき、アプリを閉じていてもお知らせするため、次の設定が必要です。"
           }
         }
       }

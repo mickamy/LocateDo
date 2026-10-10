@@ -12,8 +12,8 @@ final class Navigator {
     // A notification names a place by id; the screens resolve it once the place is there, which a pull may still bring.
     var pendingPlaceID: UUID?
     @ObservationIgnored private var waiting: [Sheet] = []
-    // Set when a new place is saved, so the reminder setup it may need is offered once the sheets close.
-    @ObservationIgnored var didAddPlace = false
+    // Set when a new place is saved, so the reminder setup it may need is offered, naming it, once the sheets close.
+    @ObservationIgnored var addedPlaceName: String?
 
     var isPresenting: Bool {
         !sheets.isEmpty || confirmation != nil

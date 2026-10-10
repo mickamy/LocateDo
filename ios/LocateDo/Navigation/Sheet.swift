@@ -59,4 +59,5 @@ struct ReminderSetupRequest: Identifiable {
     let id = UUID()
     let shownCount: Int
     let missing: [ReminderSetup.Need]
+    let placeName: String
 }

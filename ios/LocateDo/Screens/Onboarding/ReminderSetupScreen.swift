@@ -15,6 +15,7 @@ struct ReminderSetupScreen: View {
 
     let shownCount: Int
     let missing: [ReminderSetup.Need]
+    let placeName: String
 
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
@@ -48,7 +49,7 @@ struct ReminderSetupScreen: View {
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(.reminderSetupDescription)
+            Text(.reminderSetupPlaceDescription(placeName))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

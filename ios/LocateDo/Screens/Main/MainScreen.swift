@@ -40,7 +40,7 @@ struct MainScreen: View {
             locationProvider.start()
             await notifier.refreshAuthorizationStatus()
             // The place saved in onboarding gets its reminder setup over Home.
-            if navigator.didAddPlace, !navigator.isPresenting {
+            if navigator.addedPlaceName != nil, !navigator.isPresenting {
                 sheetsClosed()
             }
         }
@@ -87,10 +87,10 @@ struct MainScreen: View {
     }
 
     private func reminderSetupRequest() async -> ReminderSetupRequest? {
-        guard navigator.didAddPlace else {
+        guard let placeName = navigator.addedPlaceName else {
             return nil
         }
-        navigator.didAddPlace = false
+        navigator.addedPlaceName = nil
         await notifier.refreshAuthorizationStatus()
         let permissions = ReminderSetup.Permissions(
             location: locationProvider.authorizationStatus,
@@ -106,7 +106,11 @@ struct MainScreen: View {
         }
         preferences.reminderSetupShownAt = now
         preferences.reminderSetupShownCount += 1
-        return ReminderSetupRequest(shownCount: preferences.reminderSetupShownCount, missing: missing)
+        return ReminderSetupRequest(
+            shownCount: preferences.reminderSetupShownCount,
+            missing: missing,
+            placeName: placeName
+        )
     }
 
     private func becameActive() async {

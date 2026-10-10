@@ -245,3 +245,15 @@ onboarding.returning_sign_in_message:
   platforms: [ios]
 onboarding.subheadline:
   platforms: [ios]
+reminder_setup.place_description:
+  platforms: [ios]
+first_place.done_title:
+  platforms: [ios]
+first_place.done_ready:
+  platforms: [ios]
+first_place.done_almost:
+  platforms: [ios]
+first_place.done_continue:
+  platforms: [ios]
+reminder_setup.description:
+  platforms: [android]

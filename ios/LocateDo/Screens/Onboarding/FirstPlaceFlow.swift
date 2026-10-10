@@ -12,6 +12,7 @@ struct FirstPlaceFlow: View {
         case todos(FirstStore)
         case privacy(FirstStore?)
         case store(FirstStore)
+        case done(placeName: String, kind: StoreKind)
     }
 
     let onFinish: (StoreKind?) -> Void
@@ -21,6 +22,7 @@ struct FirstPlaceFlow: View {
     @Environment(Navigator.self) private var navigator
     @Environment(AppPreferences.self) private var preferences
     @Environment(LocationProvider.self) private var locationProvider
+    @Environment(ArrivalNotifier.self) private var notifier
     @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
     @State private var todosStore: FirstStore?
     @State private var todos: [DraftTodo] = []
@@ -48,6 +50,15 @@ struct FirstPlaceFlow: View {
 
     private var needsLocation: Bool {
         locationProvider.authorizationStatus == .notDetermined
+    }
+
+    private var needsSetup: Bool {
+        let permissions = ReminderSetup.Permissions(
+            location: locationProvider.authorizationStatus,
+            preciseLocation: locationProvider.hasPreciseLocation,
+            notifications: notifier.authorizationStatus
+        )
+        return !ReminderSetup.missing(permissions).isEmpty
     }
 
     @ViewBuilder
@@ -88,6 +99,10 @@ struct FirstPlaceFlow: View {
                 showsCancel: false
             ) { pick in
                 save(pick, store: store)
+            }
+        case .done(let placeName, let kind):
+            FirstPlaceDoneStep(placeName: placeName, needsSetup: needsSetup) {
+                onFinish(kind)
             }
         }
     }
@@ -130,10 +145,11 @@ struct FirstPlaceFlow: View {
             suggestedCategory: pick.suggestion,
             entry: .onboarding
         )
-        navigator.didAddPlace = true
+        navigator.addedPlaceName = place.name
         Task {
             await geofence.sync()
         }
-        onFinish(store.kind)
+        // Replaces the steps, so going back cannot save the place twice.
+        path = [.done(placeName: place.name, kind: store.kind)]
     }
 }

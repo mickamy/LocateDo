@@ -40,7 +40,7 @@ struct SheetContent: View {
                     }
             }
         case .reminderSetup(let request):
-            ReminderSetupScreen(shownCount: request.shownCount, missing: request.missing)
+            ReminderSetupScreen(shownCount: request.shownCount, missing: request.missing, placeName: request.placeName)
         case .promotions:
             PromotionsConsentScreen()
         }
