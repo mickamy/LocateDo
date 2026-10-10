@@ -11,6 +11,11 @@ on:
       - "ios/LocateDo/Generated/**"
       - "android/app/src/main/generated/**"
       - "android/app/src/main/res/values*/strings.xml"
+      - "tools/analytics/catalog/**"
+      - "tools/analytics/ga4_definitions.json"
+      - "tools/analytics/bigquery/00_events.sql"
+      - "ios/LocateDo/Services/Analytics/AnalyticsCatalog.swift"
+      - "android/app/src/main/java/com/locatedo/locatedo/core/analytics/AnalyticsCatalog.kt"
       - ".github/workflows/shared-ci.yml"
   push:
     branches: [main, dev]
@@ -23,6 +28,11 @@ on:
       - "ios/LocateDo/Generated/**"
       - "android/app/src/main/generated/**"
       - "android/app/src/main/res/values*/strings.xml"
+      - "tools/analytics/catalog/**"
+      - "tools/analytics/ga4_definitions.json"
+      - "tools/analytics/bigquery/00_events.sql"
+      - "ios/LocateDo/Services/Analytics/AnalyticsCatalog.swift"
+      - "android/app/src/main/java/com/locatedo/locatedo/core/analytics/AnalyticsCatalog.kt"
       - ".github/workflows/shared-ci.yml"
   workflow_dispatch:
 
@@ -79,3 +89,23 @@ jobs:
       - run: make -C tools/l10n test
       - run: make -C tools/l10n lint
       - run: make -C tools/l10n check
+
+  analytics:
+    name: analytics catalog check
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          install_args: golangci-lint
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tools/analytics/catalog/go.mod
+          cache-dependency-path: tools/analytics/catalog/go.sum
+      - run: make -C tools/analytics/catalog test
+      - run: make -C tools/analytics/catalog lint
+      - run: make -C tools/analytics/catalog check

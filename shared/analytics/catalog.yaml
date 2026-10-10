@@ -1,0 +1,297 @@
+# Every analytics name the apps send. `make -C tools/analytics/catalog generate` writes the Swift and Kotlin enums,
+# the GA4 custom definitions, and the BigQuery events view from it; shared-ci checks they are current.
+# Lists are sorted by name. A parameter or name limited to one app says so in `platforms`.
+#
+# parameters:
+#   type: string | int | number (number reads the double, float, or int value)
+#   ga4: dimension | metric, registered as an event-scoped custom definition; leave it out to keep the parameter in
+#     BigQuery only. A metric takes a `unit` (STANDARD by default).
+#   column: the events view column, when the parameter name cannot be one
+#   sent_by: revenuecat for parameters only RevenueCat's Firebase integration sends
+
+events:
+  - name: always_prompt_answered
+    doc: The sheet asking for "Always" location, notifications, or precise location closed.
+  - name: analytics_consent_granted
+    doc: The user agreed to send usage data (EEA and UK only; a refusal cannot be sent).
+  - name: campaign_opened
+    doc: A promotional push was tapped.
+  - name: completion_notice_opened
+    doc: The "bought it" notice about to-dos someone else completed was tapped.
+  - name: completion_notices_changed
+    doc: The "bought it" notice switch in Settings changed.
+  - name: daily_state
+    doc: Counts, permissions, and plan, on the first foreground of each local day.
+  - name: invite_accepted
+    doc: The user joined another household from an invite.
+  - name: limit_reached
+    doc: A free limit stopped a write; the paywall shows next.
+  - name: location_auth_changed
+    doc: Location access differed from the last foreground.
+  - name: notification_auth_changed
+    doc: Notification permission differed from the last foreground.
+  - name: onboarding_completed
+    doc: Onboarding finished.
+  - name: paywall_dismissed
+    doc: The paywall closed without a purchase.
+  - name: paywall_purchased
+    doc: A purchase on the paywall went through.
+  - name: paywall_shown
+    doc: The paywall appeared.
+  - name: permission_action_tapped
+    doc: A button in Settings asked for a permission or opened the system settings.
+  - name: permission_banner_tapped
+    doc: Home's banner about a missing permission was tapped.
+  - name: place_added
+    doc: A new place was saved.
+  - name: place_deleted
+    doc: A place was deleted.
+  - name: place_duplicate_prompted
+    doc: A new place's pin landed within 50 m of a saved one, and the user answered.
+  - name: promotions_consent_changed
+    doc: Consent to promotional pushes changed.
+  - name: promotions_prompt_answered
+    doc: The promotional-push consent sheet closed.
+  - name: promotions_prompt_shown
+    doc: The promotional-push consent sheet appeared (once per device).
+  - name: purchase_canceled
+    doc: The user backed out of the store's purchase sheet.
+  - name: purchase_failed
+    doc: A purchase failed.
+  - name: purchase_started
+    doc: The store's purchase sheet was asked for.
+  - name: reminder_notified
+    doc: A reminder on arrival or on leaving was shown.
+  - name: reminder_opened
+    doc: A reminder was tapped.
+  - name: reminder_suppressed
+    doc: An arrival or departure was noticed but not announced.
+  - name: restore_completed
+    doc: Restoring purchases finished.
+  - name: share_tapped
+    doc: A button leading to sharing the household was tapped.
+  - name: todo_added
+    doc: A new to-do was saved.
+  - name: todo_completed
+    doc: A to-do was checked off.
+  - name: todo_delete_undone
+    doc: Deleted to-dos came back from Undo.
+  - name: todo_deleted
+    doc: To-dos were deleted.
+  - name: todo_trigger_changed
+    doc: Editing a to-do switched it between reminding on arrival and on leaving.
+
+parameters:
+  - name: action
+    type: string
+    ga4: dimension
+  - name: age_days
+    type: int
+    ga4: metric
+  - name: age_hours
+    type: int
+    ga4: metric
+    unit: HOURS
+  - name: assigned
+    type: int
+    ga4: metric
+  - name: battery_optimization_exempt
+    type: int
+    platforms: [android]
+  - name: campaign_id
+    type: string
+    ga4: dimension
+  - name: category
+    type: string
+    ga4: dimension
+  - name: choice
+    type: string
+    ga4: dimension
+  - name: completed_todo_count_7d
+    type: int
+    ga4: metric
+  - name: count
+    type: int
+    ga4: metric
+  - name: currency
+    type: string
+    sent_by: revenuecat
+  - name: custom_category_count
+    type: int
+    ga4: metric
+  - name: days_since_install
+    type: int
+    ga4: metric
+  - name: duration_s
+    type: int
+    ga4: metric
+    unit: SECONDS
+  - name: entry
+    type: string
+    ga4: dimension
+  - name: from
+    type: string
+    ga4: dimension
+    column: auth_from
+  - name: has_url
+    type: int
+  - name: household_members
+    type: int
+    ga4: metric
+  - name: kind
+    type: string
+    ga4: dimension
+  - name: latency_s
+    type: int
+    ga4: metric
+    unit: SECONDS
+  - name: location_auth
+    type: string
+  - name: missing
+    type: string
+    ga4: dimension
+  - name: mode
+    type: string
+    ga4: dimension
+  - name: notification_auth
+    type: string
+    ga4: dimension
+  - name: open_departure_todos
+    type: int
+    ga4: metric
+  - name: open_todo_count
+    type: int
+    ga4: metric
+  - name: open_todos
+    type: int
+    ga4: metric
+  - name: place_changed
+    type: int
+    ga4: metric
+  - name: place_count
+    type: int
+    ga4: metric
+  - name: place_event
+    type: string
+    ga4: dimension
+  - name: place_open_todos
+    type: int
+    ga4: metric
+  - name: place_preset
+    type: string
+    ga4: dimension
+  - name: places_with_open_todos
+    type: int
+    ga4: metric
+  - name: plan
+    type: string
+  - name: precise_location
+    type: int
+    ga4: metric
+  - name: product_id
+    type: string
+    sent_by: revenuecat
+  - name: promotions_consent
+    type: int
+    ga4: metric
+  - name: radius_m
+    type: int
+    ga4: metric
+    unit: METERS
+  - name: rank
+    type: int
+    ga4: metric
+  - name: reason
+    type: string
+    ga4: dimension
+  - name: result
+    type: string
+    ga4: dimension
+  - name: shown_count
+    type: int
+  - name: signed_in
+    type: int
+    ga4: metric
+  - name: source
+    type: string
+    ga4: dimension
+  - name: stay_min
+    type: int
+    ga4: metric
+    unit: MINUTES
+  - name: step
+    type: string
+    ga4: dimension
+  - name: suggested_category
+    type: string
+    ga4: dimension
+  - name: to
+    type: string
+    ga4: dimension
+    column: auth_to
+  - name: todo_count
+    type: int
+    ga4: metric
+  - name: trigger
+    type: string
+    ga4: dimension
+    column: paywall_trigger
+  - name: value
+    type: number
+    sent_by: revenuecat
+  - name: via
+    type: string
+    ga4: dimension
+  - name: watch_app_installed
+    type: int
+    ga4: metric
+    platforms: [ios]
+
+user_properties:
+  - name: app_build
+  - name: household_members
+  - name: location_auth
+  - name: open_todo_count
+  - name: place_count
+  - name: plan
+  - name: promotions_consent
+  - name: signed_in
+
+screens:
+  - name: accept_invite
+  - name: account
+  - name: account_benefits
+  - name: always_location_prompt
+  - name: categories
+  - name: category_editor
+  - name: home
+  - name: map
+  - name: onboarding
+  - name: paywall
+  - name: place_detail
+  - name: place_editor
+  - name: place_picker
+  - name: place_search
+    platforms: [android]
+  - name: settings
+  - name: sharing
+  - name: sharing_intro
+  - name: todo_editor
+  - name: todos
+  - name: update_required
+
+entries:
+  - name: all_todos
+  - name: all_todos_empty
+  - name: completion_notice
+  - name: duplicate_prompt
+  - name: home
+  - name: home_empty
+  - name: home_list
+  - name: home_menu
+  - name: map_pin
+  - name: new_place
+  - name: notification
+  - name: permission_banner
+  - name: place
+  - name: todo_editor
