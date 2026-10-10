@@ -20,6 +20,7 @@ struct OnboardingView: View {
     }
 
     @Environment(AppPreferences.self) private var preferences
+    @Environment(AnalyticsConsent.self) private var analyticsConsent
     @Environment(LocationProvider.self) private var locationProvider
     @Environment(ArrivalNotifier.self) private var notifier
     @State private var step: Step = .intro
@@ -31,19 +32,30 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            switch step {
-            case .intro:
-                intro
-            case .privacy:
-                privacy
-            case .notifications:
-                notifications
+            if analyticsConsent.needsAnswer {
+                AnalyticsConsentStep()
+            } else {
+                switch step {
+                case .intro:
+                    intro
+                case .privacy:
+                    privacy
+                case .notifications:
+                    notifications
+                }
             }
         }
         .padding(32)
         .animation(.default, value: step)
+        .animation(.default, value: analyticsConsent.needsAnswer)
         .onChange(of: step, initial: true) {
             Analytics.logScreen(.onboarding, parameters: [.step: step.rawValue])
+        }
+        // The intro's screen view was dropped while nothing was being sent.
+        .onChange(of: analyticsConsent.needsAnswer) {
+            if !analyticsConsent.needsAnswer {
+                Analytics.logScreen(.onboarding, parameters: [.step: step.rawValue])
+            }
         }
         .onChange(of: locationProvider.authorizationStatus) {
             if step == .privacy, isRequesting, locationProvider.authorizationStatus != .notDetermined {

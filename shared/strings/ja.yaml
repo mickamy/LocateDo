@@ -80,6 +80,12 @@ onboarding:
   notifications_description: "やることが残っている場所に着くと、通知でお知らせします。"
   allow_notifications: "通知を許可"
   later: "あとで"
+  analytics_title: "ちかメモの改善に協力しますか？"
+  analytics_message: "使った機能、通知が届いたかどうか、クラッシュの情報を送り、直すところや良くするところを探すのに使います。"
+  analytics_not_sent: "場所、やること、現在地は送りません。"
+  analytics_settings: "設定からいつでも変えられます。"
+  analytics_allow: "送信する"
+  analytics_deny: "送信しない"
 promotions_prompt:
   title: "ちかメモからのお知らせを受け取りますか？"
   message: "新機能やアップデート、キャンペーンをときどきお知らせします。設定からいつでも止められます。"

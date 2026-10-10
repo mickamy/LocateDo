@@ -101,6 +101,12 @@
     </plurals>
     <string name="onboarding_allow_location">Allow Location</string>
     <string name="onboarding_allow_notifications">Allow notifications</string>
+    <string name="onboarding_analytics_allow">Share</string>
+    <string name="onboarding_analytics_deny">Don’t Share</string>
+    <string name="onboarding_analytics_message">StopBy can send which features you use, whether reminders arrive, and crash reports, so we can see what to fix and improve.</string>
+    <string name="onboarding_analytics_not_sent">Your places, to-dos, and location are never included.</string>
+    <string name="onboarding_analytics_settings">You can change this anytime in Settings.</string>
+    <string name="onboarding_analytics_title">Help improve StopBy?</string>
     <string name="onboarding_description">Add the places you visit and the things to do there. StopBy reminds you when you arrive.</string>
     <string name="onboarding_feature_arrival_message">Even with the app closed</string>
     <string name="onboarding_feature_arrival_title">Reminded when you arrive</string>

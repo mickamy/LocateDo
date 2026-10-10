@@ -82,6 +82,12 @@ onboarding:
   notifications_description: "StopBy sends a notification when you arrive at a place that still has open to-dos."
   allow_notifications: "Allow notifications"
   later: "Not now"
+  analytics_title: "Help improve StopBy?"
+  analytics_message: "StopBy can send which features you use, whether reminders arrive, and crash reports, so we can see what to fix and improve."
+  analytics_not_sent: "Your places, to-dos, and location are never included."
+  analytics_settings: "You can change this anytime in Settings."
+  analytics_allow: "Share"
+  analytics_deny: "Don’t Share"
 promotions_prompt:
   title: "Want news from StopBy?"
   message: "We’ll occasionally let you know about new features, updates, and offers. You can turn this off anytime in Settings."
