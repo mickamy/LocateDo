@@ -22,7 +22,6 @@ struct PlaceDetailView: View {
     @Query private var todos: [Todo]
     @State private var address: Address = .loading
     @State private var isEditing = false
-    @State private var isAddingTodo = false
     @State private var isConfirmingDelete = false
     private let checkOffTip = CheckOffTip()
 
@@ -59,9 +58,6 @@ struct PlaceDetailView: View {
                 }
                 .onDelete { offsets in
                     delete(todos.open, at: offsets)
-                }
-                Button(.placeDetailAddTodo, systemImage: "plus") {
-                    isAddingTodo = true
                 }
             } header: {
                 Text(.placeDetailTodosLabel)
@@ -167,9 +163,6 @@ struct PlaceDetailView: View {
         }
         .sheet(isPresented: $isEditing) {
             PlaceEditorView(place: place)
-        }
-        .sheet(isPresented: $isAddingTodo) {
-            TodoEditorView(place: place)
         }
         .task(id: "\(place.latitude),\(place.longitude)") {
             address = .loading

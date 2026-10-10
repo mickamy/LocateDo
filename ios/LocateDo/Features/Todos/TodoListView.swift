@@ -9,6 +9,7 @@ struct TodoListView: View {
     @Query(sort: \Todo.createdAt) private var todos: [Todo]
     @State private var filter: TodoFilter = .all
     @State private var isAddingTodo = false
+    @State private var path: [Place] = []
 
     private var groups: [TodoGroup] {
         TodoGrouping.groups(todos, filter: filter)
@@ -19,7 +20,7 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if places.isEmpty {
                     noPlaces
@@ -35,22 +36,16 @@ struct TodoListView: View {
             .trackScreen(.todos)
             .navigationTitle(Text(.tabTodos))
             .maintenanceBanner()
-            .toolbar {
-                if !places.isEmpty {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            isAddingTodo = true
-                        } label: {
-                            Label(.todoEditorTitle, systemImage: "plus")
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $isAddingTodo) {
-                TodoEditorView()
-            }
             .navigationDestination(for: Place.self) { place in
                 PlaceDetailView(place: place)
+            }
+        }
+        .floatingAddButton(.todoEditorTitle) {
+            isAddingTodo = true
+        }
+        .sheet(isPresented: $isAddingTodo) {
+            TodoEditorView(place: path.last) { added in
+                path.append(added)
             }
         }
     }

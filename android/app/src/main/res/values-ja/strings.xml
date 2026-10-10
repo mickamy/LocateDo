@@ -332,6 +332,7 @@
     <string name="todo_delete_completed_shared_message">共有している家族の画面からも消えます。</string>
     <string name="todo_deleted">「%1$s」を削除しました</string>
     <string name="todo_editor_edit_title">やることを編集</string>
+    <string name="todo_editor_new_place">新しい場所…</string>
     <string name="todo_editor_place_label">場所</string>
     <string name="todo_editor_remind_on_leave">離れるときに通知</string>
     <string name="todo_editor_title">やることを追加</string>

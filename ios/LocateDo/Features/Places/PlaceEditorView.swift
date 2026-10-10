@@ -20,7 +20,8 @@ struct PlaceEditorView: View {
     @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
 
     let place: Place?
-    var onSave: (() -> Void)?
+    let asksForTodos: Bool
+    var onSave: ((Place) -> Void)?
     @State private var name: String
     @State private var coordinate: CLLocationCoordinate2D?
     @State private var source: PlaceSource?
@@ -36,8 +37,14 @@ struct PlaceEditorView: View {
     @State private var pickedName: String?
     @State private var duplicate: Place?
 
-    init(place: Place? = nil, defaultRadiusMeters: Double = Place.defaultRadiusMeters, onSave: (() -> Void)? = nil) {
+    init(
+        place: Place? = nil,
+        defaultRadiusMeters: Double = Place.defaultRadiusMeters,
+        asksForTodos: Bool = true,
+        onSave: ((Place) -> Void)? = nil
+    ) {
         self.place = place
+        self.asksForTodos = asksForTodos
         self.onSave = onSave
         _name = State(initialValue: place?.name ?? "")
         _coordinate = State(initialValue: place?.coordinate)
@@ -68,7 +75,12 @@ struct PlaceEditorView: View {
             Button(.placeDuplicateOpen) {
                 answerDuplicate(.open)
                 dismiss()
-                router.open(placeID: existing.id)
+                // From the to-do screen, the saved place is picked for the to-do instead of opened.
+                if asksForTodos {
+                    router.open(placeID: existing.id)
+                } else {
+                    onSave?(existing)
+                }
             }
             Button(.placeDuplicateAdd) {
                 answerDuplicate(.add)
@@ -211,8 +223,9 @@ struct PlaceEditorView: View {
             PlaceCategoryStep(
                 category: $category,
                 isSuggested: suggestion != nil && !hasChosenCategory,
+                isLastStep: !asksForTodos,
                 onChoose: { hasChosenCategory = true },
-                onNext: { path.append(.todos) }
+                onNext: nextAfterCategory
             )
         case .todos:
             PlaceTodosStep(
@@ -225,12 +238,15 @@ struct PlaceEditorView: View {
             )
         }
     }
+}
 
+extension PlaceEditorView {
     private func save() {
         guard let coordinate else {
             return
         }
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let saved: Place
         if let place {
             place.name = trimmedName
             place.latitude = coordinate.latitude
@@ -238,28 +254,28 @@ struct PlaceEditorView: View {
             place.radiusMeters = radiusMeters
             place.category = category
             writes.update(place)
+            saved = place
         } else {
-            let limit = writes.add(Place(
+            saved = Place(
                 name: trimmedName,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
                 radiusMeters: radiusMeters,
                 category: category ?? categories.first { $0.builtin == .other }
-            ), source: source, todoTitles: todoTitles, suggestedCategory: suggestion)
+            )
+            let limit = writes.add(saved, source: source, todoTitles: todoTitles, suggestedCategory: suggestion)
             if let limit {
                 paywall = limit.trigger
                 return
             }
         }
-        onSave?()
+        onSave?(saved)
         dismiss()
         Task {
             await geofence.sync()
         }
     }
-}
 
-extension PlaceEditorView {
     // A pick on a place already saved asks first: its to-dos most likely belong there.
     private func continueAfterPick(at coordinate: CLLocationCoordinate2D) {
         if let existing = PlaceDuplicate.nearest(to: coordinate, among: savedPlaces) {
@@ -281,6 +297,14 @@ extension PlaceEditorView {
 
     private func answerDuplicate(_ choice: PlaceDuplicateChoice) {
         Analytics.log(.placeDuplicatePrompted, parameters: [.choice: choice.rawValue])
+    }
+
+    private func nextAfterCategory() {
+        if asksForTodos {
+            path.append(.todos)
+        } else {
+            save()
+        }
     }
 
     private func chooseOnMap() {

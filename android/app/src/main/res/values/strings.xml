@@ -349,6 +349,7 @@
     <!-- Shown briefly at the bottom after a to-do is deleted, next to the Undo button. -->
     <string name="todo_deleted">Deleted “%1$s”</string>
     <string name="todo_editor_edit_title">Edit To-Do</string>
+    <string name="todo_editor_new_place">New Place…</string>
     <string name="todo_editor_place_label">Place</string>
     <string name="todo_editor_remind_on_leave">Remind me when I leave</string>
     <string name="todo_editor_title">Add a to-do</string>

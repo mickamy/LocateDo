@@ -11,7 +11,16 @@ struct NearbyView: View {
     @State private var isAddingPlace = false
     @State private var didSavePlace = false
     @State private var reminderSetup: ReminderSetupRequest?
-    @State private var path = NavigationPath()
+    @State private var path: [Place] = []
+    @State private var isAddingTodo = false
+
+    // Home itself adds places; a place opened from it adds to-dos.
+    private var floatingButtonTitle: LocalizedStringResource {
+        if path.isEmpty {
+            return .homeAddPlace
+        }
+        return .todoEditorTitle
+    }
 
     private var nearbyPlaces: [NearbyPlace] {
         Nearby.places(places, from: locationProvider.location)
@@ -39,14 +48,14 @@ struct NearbyView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        isAddingPlace = true
+                        isAddingTodo = true
                     } label: {
-                        Label(.homeAddPlace, systemImage: "plus")
+                        Label(.todoEditorTitle, systemImage: "text.badge.plus")
                     }
                 }
             }
             .sheet(isPresented: $isAddingPlace, onDismiss: offerReminderSetupIfNeeded) {
-                PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters) {
+                PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters) { _ in
                     didSavePlace = true
                 }
             }
@@ -68,6 +77,18 @@ struct NearbyView: View {
             }
             .onChange(of: router.isAddPlaceRequested, initial: true) {
                 openRequestedAddPlace()
+            }
+        }
+        .floatingAddButton(floatingButtonTitle) {
+            if path.isEmpty {
+                isAddingPlace = true
+            } else {
+                isAddingTodo = true
+            }
+        }
+        .sheet(isPresented: $isAddingTodo) {
+            TodoEditorView(place: path.last ?? nearbyPlaces.first?.place) { added in
+                path.append(added)
             }
         }
     }
@@ -111,7 +132,7 @@ struct NearbyView: View {
             return
         }
         router.pendingPlaceID = nil
-        path = NavigationPath([place])
+        path = [place]
     }
 
     private var emptyState: some View {

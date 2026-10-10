@@ -2,7 +2,13 @@ import SwiftData
 import SwiftUI
 
 struct TodoEditorView: View {
+    private enum PlaceChoice: Hashable {
+        case existing(Place)
+        case new
+    }
+
     @Environment(LocalWrites.self) private var writes
+    @Environment(AppPreferences.self) private var preferences
     @Environment(TodoUndo.self) private var undo
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Place.sortOrder) private var places: [Place]
@@ -12,14 +18,19 @@ struct TodoEditorView: View {
     @State private var place: Place?
     @State private var assigneeID: UUID?
     @State private var remindsOnLeave = false
+    @State private var isAddingPlace = false
+    @State private var placeIDsBeforeAdding: Set<UUID> = []
+    @State private var addedPlace: Place?
     @FocusState private var isTitleFocused: Bool
     @State private var paywall: PaywallTrigger?
     @State private var deletesOnDisappear = false
     private let editing: Todo?
+    private var onAddedAtNewPlace: (Place) -> Void = { _ in }
 
-    init(place: Place? = nil) {
+    init(place: Place? = nil, onAddedAtNewPlace: @escaping (Place) -> Void = { _ in }) {
         editing = nil
         _place = State(initialValue: place)
+        self.onAddedAtNewPlace = onAddedAtNewPlace
     }
 
     init(editing todo: Todo) {
@@ -35,6 +46,22 @@ struct TodoEditorView: View {
             return .departure
         }
         return .arrival
+    }
+
+    private var placeChoice: Binding<PlaceChoice?> {
+        Binding {
+            place.map(PlaceChoice.existing)
+        } set: { choice in
+            switch choice {
+            case .existing(let picked):
+                place = picked
+            case .new:
+                placeIDsBeforeAdding = Set(places.map(\.id))
+                isAddingPlace = true
+            case nil:
+                break
+            }
+        }
     }
 
     private var canSave: Bool {
@@ -53,11 +80,14 @@ struct TodoEditorView: View {
                     .onSubmit(saveIfPossible)
                 }
                 Section {
-                    Picker(selection: $place) {
+                    Picker(selection: placeChoice) {
                         ForEach(places) { candidate in
                             Text(candidate.name)
-                                .tag(Optional(candidate))
+                                .tag(Optional(PlaceChoice.existing(candidate)))
                         }
+                        Divider()
+                        Label(.todoEditorNewPlace, systemImage: "plus")
+                            .tag(Optional(PlaceChoice.new))
                     } label: {
                         Text(.todoEditorPlaceLabel)
                     }
@@ -83,6 +113,14 @@ struct TodoEditorView: View {
             .navigationTitle(Text(editing == nil ? .todoEditorTitle : .todoEditorEditTitle))
             .sheet(item: $paywall) { trigger in
                 PaywallView(trigger: trigger)
+            }
+            .sheet(isPresented: $isAddingPlace) {
+                PlaceEditorView(defaultRadiusMeters: preferences.defaultRadiusMeters, asksForTodos: false) { picked in
+                    place = picked
+                    if !placeIDsBeforeAdding.contains(picked.id) {
+                        addedPlace = picked
+                    }
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -138,6 +176,9 @@ struct TodoEditorView: View {
             return
         }
         dismiss()
+        if let addedPlace, addedPlace.id == place.id {
+            onAddedAtNewPlace(addedPlace)
+        }
     }
 
     private func delete() {

@@ -7,9 +7,11 @@ struct MapTabView: View {
     @Query(sort: \Place.sortOrder) private var places: [Place]
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var selectedPlace: Place?
+    @State private var path: [Place] = []
+    @State private var isAddingTodo = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Map(position: $position, selection: $selectedPlace) {
                 UserAnnotation()
                 ForEach(places) { place in
@@ -33,8 +35,22 @@ struct MapTabView: View {
             .navigationTitle(Text(.tabMap))
             .maintenanceBanner()
             .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(item: $selectedPlace) { place in
+            .onChange(of: selectedPlace) {
+                if let selectedPlace {
+                    path.append(selectedPlace)
+                    self.selectedPlace = nil
+                }
+            }
+            .navigationDestination(for: Place.self) { place in
                 PlaceDetailView(place: place)
+            }
+        }
+        .floatingAddButton(.todoEditorTitle, isShown: !path.isEmpty) {
+            isAddingTodo = true
+        }
+        .sheet(isPresented: $isAddingTodo) {
+            TodoEditorView(place: path.last) { added in
+                path.append(added)
             }
         }
     }

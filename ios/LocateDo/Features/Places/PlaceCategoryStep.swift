@@ -6,6 +6,7 @@ struct PlaceCategoryStep: View {
     @Query(sort: \PlaceCategory.sortOrder) private var categories: [PlaceCategory]
     @Binding var category: PlaceCategory?
     let isSuggested: Bool
+    let isLastStep: Bool
     let onChoose: () -> Void
     let onNext: () -> Void
 
@@ -37,7 +38,11 @@ struct PlaceCategoryStep: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(.placeEditorNext, action: onNext)
+                if isLastStep {
+                    Button(.commonSave, action: onNext)
+                } else {
+                    Button(.placeEditorNext, action: onNext)
+                }
             }
         }
         .trackScreen(.placeEditor, parameters: [.mode: EditorMode.new.rawValue, .step: "category"])

@@ -5339,6 +5339,23 @@
         }
       }
     },
+    "todo.editor.new_place" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Place…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい場所…"
+          }
+        }
+      }
+    },
     "todo.editor.place_label" : {
       "extractionState" : "manual",
       "localizations" : {
