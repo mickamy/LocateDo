@@ -22,11 +22,7 @@ nonisolated enum PlacePresence {
     static func next(_ report: Report, enteredAt: Date?, isFirstReport: Bool, now: Date) -> Outcome {
         switch report {
         case .inside:
-            var outcome = Outcome(enteredAt: enteredAt ?? now)
-            if !isFirstReport {
-                outcome.event = .arrival
-            }
-            return outcome
+            return Outcome(enteredAt: enteredAt ?? now, event: .arrival)
         case .outside:
             var outcome = Outcome()
             if isFirstReport {

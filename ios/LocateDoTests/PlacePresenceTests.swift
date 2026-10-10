@@ -34,15 +34,15 @@ struct PlacePresenceTests {
         #expect(outcome == PlacePresence.Outcome())
     }
 
-    @Test func theFirstReportInsideStartsCountingWithoutArriving() {
+    @Test func theFirstReportInsideArrivesAndStartsCounting() {
         let outcome = PlacePresence.next(.inside, enteredAt: nil, isFirstReport: true, now: Self.now)
-        #expect(outcome == PlacePresence.Outcome(enteredAt: Self.now, event: nil))
+        #expect(outcome == PlacePresence.Outcome(enteredAt: Self.now, event: .arrival))
     }
 
     @Test func theFirstReportInsideKeepsARecordedTime() {
         let entered = Self.now.addingTimeInterval(-3_600)
         let outcome = PlacePresence.next(.inside, enteredAt: entered, isFirstReport: true, now: Self.now)
-        #expect(outcome == PlacePresence.Outcome(enteredAt: entered, event: nil))
+        #expect(outcome == PlacePresence.Outcome(enteredAt: entered, event: .arrival))
     }
 
     @Test func theFirstReportOutsideClearsTheTimeWithoutDeparting() {
