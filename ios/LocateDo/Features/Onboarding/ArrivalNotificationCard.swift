@@ -1,6 +1,7 @@
 import SwiftUI
 
-// Looks like the arrival notification on the Lock Screen, for showing what one will say.
+// Looks like the arrival notification on the Lock Screen, for showing what one will say. The whole place name is
+// shown, wrapping when long.
 struct ArrivalNotificationCard: View {
     let title: String
     let message: String
@@ -14,9 +15,11 @@ struct ArrivalNotificationCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 9))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                HStack {
+                HStack(alignment: .firstTextBaseline) {
                     Text(title)
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     Text(.onboardingSampleTime)
                         .font(.caption)
@@ -25,6 +28,7 @@ struct ArrivalNotificationCard: View {
                 Text(message)
                     .font(.subheadline)
                     .foregroundStyle(isMessageMuted ? .secondary : .primary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(14)
