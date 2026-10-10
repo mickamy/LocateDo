@@ -74,7 +74,7 @@ fun PlaceEditorScreen(
             when (event) {
                 // A new place is saved from its last screen, which handles it.
                 is PlaceEditorEvent.Saved -> if (!event.isNew) onSaved(false)
-                PlaceEditorEvent.PredictionFetched, PlaceEditorEvent.LocationChosen -> Unit
+                PlaceEditorEvent.PredictionFetched, PlaceEditorEvent.LocationChosen, is PlaceEditorEvent.OpenSavedPlace -> Unit
             }
         }
     }

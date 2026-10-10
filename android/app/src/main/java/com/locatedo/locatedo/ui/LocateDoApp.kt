@@ -380,6 +380,10 @@ private fun Tabs(
                         PlacePickScreen(
                             viewModel = placeEditor,
                             onOpenSearch = { backStack.add(PlaceSearchKey) },
+                            onOpenSavedPlace = { placeId ->
+                                backStack.leaveFlow()
+                                backStack.add(PlaceDetailKey(placeId.toString()))
+                            },
                             onLocationChosen = {
                                 if (placeEditor.uiState.value.draft.isEditing) {
                                     backStack.removeLastOrNull()

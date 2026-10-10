@@ -1,5 +1,6 @@
 package com.locatedo.locatedo.feature.place
 
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.billing.PaywallRequests
@@ -15,6 +16,7 @@ import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.PlaceWithTodos
 import com.locatedo.locatedo.core.places.PlaceCandidate
+import com.locatedo.locatedo.core.places.PlaceDuplicateChoice
 import com.locatedo.locatedo.core.places.PlacePrediction
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakeCategoryRepository
@@ -152,6 +154,57 @@ class PlaceEditorViewModelTest {
         viewModel.confirmPick()
 
         assertEquals(PlaceSource.CURRENT_LOCATION, viewModel.uiState.value.draft.source)
+    }
+
+    @Test
+    fun aPinOnASavedPlaceAsksBeforeGoingOn() = runTest(dispatcher) {
+        val saved = Place(id = uuidV7(now), name = "Store", latitude = store.latitude, longitude = store.longitude, createdAt = now)
+        places.state.value = listOf(PlaceWithTodos(saved, emptyList()))
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        viewModel.start(placeId = null)
+        viewModel.previewPick(Coordinate(store.latitude + 0.0001, store.longitude))
+
+        viewModel.confirmPick()
+
+        assertEquals(saved, viewModel.uiState.value.duplicate)
+        assertTrue(events.none { it is PlaceEditorEvent.LocationChosen })
+
+        viewModel.answerDuplicate(PlaceDuplicateChoice.OPEN)
+
+        assertEquals(PlaceEditorEvent.OpenSavedPlace(saved.id), events.last())
+        assertNull(viewModel.uiState.value.duplicate)
+        assertEquals(mapOf("choice" to "open"), analytics.values(AnalyticsEvent.PLACE_DUPLICATE_PROMPTED))
+    }
+
+    @Test
+    fun addingAnotherPlaceAtASavedOneGoesOn() = runTest(dispatcher) {
+        val saved = Place(id = uuidV7(now), name = "Store", latitude = store.latitude, longitude = store.longitude, createdAt = now)
+        places.state.value = listOf(PlaceWithTodos(saved, emptyList()))
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        viewModel.start(placeId = null)
+        viewModel.previewPick(store)
+        viewModel.confirmPick()
+
+        viewModel.answerDuplicate(PlaceDuplicateChoice.ADD)
+
+        assertEquals(PlaceEditorEvent.LocationChosen, events.last())
+    }
+
+    @Test
+    fun movingASavedPlaceNeverAsks() = runTest(dispatcher) {
+        val saved = Place(id = uuidV7(now), name = "Store", latitude = store.latitude, longitude = store.longitude, createdAt = now)
+        places.state.value = listOf(PlaceWithTodos(saved, emptyList()))
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        viewModel.start(saved.id)
+        viewModel.previewPick(store)
+
+        viewModel.confirmPick()
+
+        assertNull(viewModel.uiState.value.duplicate)
+        assertEquals(PlaceEditorEvent.LocationChosen, events.last())
     }
 
     @Test

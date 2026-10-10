@@ -3,6 +3,7 @@ package com.locatedo.locatedo.feature.place
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.locatedo.locatedo.core.analytics.Analytics
+import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.analytics.EditorMode
@@ -24,6 +25,8 @@ import com.locatedo.locatedo.core.model.Place
 import com.locatedo.locatedo.core.model.PlaceSource
 import com.locatedo.locatedo.core.model.Todo
 import com.locatedo.locatedo.core.places.CategoryGuess
+import com.locatedo.locatedo.core.places.PlaceDuplicate
+import com.locatedo.locatedo.core.places.PlaceDuplicateChoice
 import com.locatedo.locatedo.core.places.PlacePrediction
 import com.locatedo.locatedo.core.places.PlacesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -87,6 +90,8 @@ data class PlaceEditorUiState(
     val isSearching: Boolean = false,
     val pickPreview: PickPreview = PickPreview(),
     val remainingOpenTodos: Int? = null,
+    // A saved place within reach of the confirmed pin, asked about before going on.
+    val duplicate: Place? = null,
 ) {
     // Free-plan room left after the rows already typed; null on Pro.
     val todosLeft: Int?
@@ -97,6 +102,7 @@ sealed interface PlaceEditorEvent {
     data object PredictionFetched : PlaceEditorEvent
     data object LocationChosen : PlaceEditorEvent
     data class Saved(val isNew: Boolean) : PlaceEditorEvent
+    data class OpenSavedPlace(val placeId: UUID) : PlaceEditorEvent
 }
 
 // The screens of adding a new place after the location; an existing place is edited in the details form alone.
@@ -127,6 +133,7 @@ class PlaceEditorViewModel @Inject constructor(
     private val isSearching = MutableStateFlow(false)
     private val pickPreview = MutableStateFlow(PickPreview())
     private val remainingOpenTodos = MutableStateFlow<Int?>(null)
+    private val duplicate = MutableStateFlow<Place?>(null)
     private val _events = MutableSharedFlow<PlaceEditorEvent>()
     private var previewJob: Job? = null
 
@@ -140,6 +147,7 @@ class PlaceEditorViewModel @Inject constructor(
         isSearching,
         pickPreview,
         remainingOpenTodos,
+        duplicate,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         PlaceEditorUiState(
@@ -150,6 +158,7 @@ class PlaceEditorViewModel @Inject constructor(
             isSearching = values[4] as Boolean,
             pickPreview = values[5] as PickPreview,
             remainingOpenTodos = values[6] as Int?,
+            duplicate = values[7] as Place?,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), PlaceEditorUiState())
 
@@ -299,11 +308,33 @@ class PlaceEditorViewModel @Inject constructor(
         }
     }
 
+    // A new pin on a place already saved asks first: its to-dos most likely belong there.
     fun confirmPick() {
         val preview = pickPreview.value
         val coordinate = preview.coordinate ?: return
         viewModelScope.launch {
             choose(coordinate, preview.name, preview.address, preview.source, preview.suggestion)
+            if (!draft.value.isEditing) {
+                val existing = PlaceDuplicate.nearest(coordinate, placeRepository.observeAll().first())
+                if (existing != null) {
+                    duplicate.value = existing
+                    return@launch
+                }
+            }
+            _events.emit(PlaceEditorEvent.LocationChosen)
+        }
+    }
+
+    fun answerDuplicate(choice: PlaceDuplicateChoice) {
+        val existing = duplicate.value ?: return
+        duplicate.value = null
+        analytics.log(AnalyticsEvent.PLACE_DUPLICATE_PROMPTED, mapOf(AnalyticsParameter.CHOICE to choice.key))
+        viewModelScope.launch {
+            when (choice) {
+                PlaceDuplicateChoice.OPEN -> _events.emit(PlaceEditorEvent.OpenSavedPlace(existing.id))
+                PlaceDuplicateChoice.ADD -> _events.emit(PlaceEditorEvent.LocationChosen)
+                PlaceDuplicateChoice.CANCEL -> Unit
+            }
         }
     }
 
@@ -398,7 +429,6 @@ class PlaceEditorViewModel @Inject constructor(
         }
         query.value = ""
         predictions.value = emptyList()
-        _events.emit(PlaceEditorEvent.LocationChosen)
     }
 
     private companion object {

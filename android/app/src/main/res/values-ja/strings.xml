@@ -153,6 +153,10 @@
     <string name="place_detail_distance">現在地から %1$s</string>
     <string name="place_detail_no_todos">やることはまだありません</string>
     <string name="place_detail_todos_label">この場所でやること</string>
+    <string name="place_duplicate_add">別の場所として追加</string>
+    <string name="place_duplicate_message">やることは、登録済みの場所に追加できます。</string>
+    <string name="place_duplicate_open">登録済みの場所を開く</string>
+    <string name="place_duplicate_title">%1$sはもう登録されています</string>
     <string name="place_editor_category_label">カテゴリ</string>
     <string name="place_editor_category_suggested">選んだ場所の種類から選んでいます。変えても大丈夫です。</string>
     <string name="place_editor_category_title">カテゴリを選ぶ</string>

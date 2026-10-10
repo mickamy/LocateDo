@@ -160,6 +160,10 @@
     <string name="place_detail_distance">%1$s away</string>
     <string name="place_detail_no_todos">No to-dos yet</string>
     <string name="place_detail_todos_label">To-dos at this place</string>
+    <string name="place_duplicate_add">Add as Another Place</string>
+    <string name="place_duplicate_message">You can add to-dos to the saved place.</string>
+    <string name="place_duplicate_open">Open Saved Place</string>
+    <string name="place_duplicate_title">%1$s is already saved</string>
     <string name="place_editor_category_label">Category</string>
     <string name="place_editor_category_suggested">Picked from the kind of place. Change it if you like.</string>
     <string name="place_editor_category_title">Choose a category</string>

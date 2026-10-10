@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +30,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,7 +51,9 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
 import com.locatedo.locatedo.core.model.Coordinate
+import com.locatedo.locatedo.core.places.PlaceDuplicateChoice
 import com.locatedo.locatedo.ui.analytics.TrackScreen
+import java.util.UUID
 
 private const val PICK_ZOOM = 16f
 
@@ -61,6 +65,7 @@ fun PlacePickScreen(
     viewModel: PlaceEditorViewModel,
     onOpenSearch: () -> Unit,
     onLocationChosen: () -> Unit,
+    onOpenSavedPlace: (UUID) -> Unit,
     onBack: () -> Unit,
 ) {
     TrackScreen(AnalyticsScreen.PLACE_PICKER)
@@ -95,10 +100,16 @@ fun PlacePickScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
-            if (event is PlaceEditorEvent.LocationChosen) {
-                onLocationChosen()
+            when (event) {
+                PlaceEditorEvent.LocationChosen -> onLocationChosen()
+                is PlaceEditorEvent.OpenSavedPlace -> onOpenSavedPlace(event.placeId)
+                else -> Unit
             }
         }
+    }
+
+    uiState.duplicate?.let { existing ->
+        DuplicateDialog(name = existing.name, onAnswer = viewModel::answerDuplicate)
     }
 
     Scaffold(
@@ -162,6 +173,31 @@ fun PlacePickScreen(
             }
         }
     }
+}
+
+// Cancel, add anyway, then the suggested way out on the right, as Material dialogs order them.
+@Composable
+private fun DuplicateDialog(name: String, onAnswer: (PlaceDuplicateChoice) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onAnswer(PlaceDuplicateChoice.CANCEL) },
+        title = { Text(stringResource(R.string.place_duplicate_title, name)) },
+        text = { Text(stringResource(R.string.place_duplicate_message)) },
+        confirmButton = {
+            TextButton(onClick = { onAnswer(PlaceDuplicateChoice.OPEN) }) {
+                Text(stringResource(R.string.place_duplicate_open))
+            }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = { onAnswer(PlaceDuplicateChoice.CANCEL) }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+                TextButton(onClick = { onAnswer(PlaceDuplicateChoice.ADD) }) {
+                    Text(stringResource(R.string.place_duplicate_add))
+                }
+            }
+        },
+    )
 }
 
 // Looks like a search field and opens the full-screen search, as Google Maps does.
