@@ -26,7 +26,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -205,6 +208,8 @@ private fun Tabs(
     val backStack = rememberNavBackStack(HomeKey)
     val current = backStack.lastOrNull()
     val currentTab = backStack.lastOrNull { it in tabKeys }
+    // Where the Map tab was opened from, for its screen view: the tab bar, or Home's map preview.
+    var mapSource by rememberSaveable { mutableStateOf(MAP_SOURCE_TAB) }
     // The add / edit flow spans three screens, so its draft lives in a ViewModel scoped to the activity.
     val activity = LocalActivity.current as ComponentActivity
     val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
@@ -268,6 +273,7 @@ private fun Tabs(
                             selected = currentTab == tab.key,
                             onClick = {
                                 if (current != tab.key) {
+                                    mapSource = MAP_SOURCE_TAB
                                     backStack.showTab(tab.key)
                                 }
                             },
@@ -305,7 +311,10 @@ private fun Tabs(
                                 analytics.log(AnalyticsEvent.SHARE_TAPPED, mapOf(AnalyticsParameter.SOURCE to "home"))
                                 backStack.add(SharingKey)
                             },
-                            onOpenMap = { backStack.showTab(MapKey) },
+                            onOpenMap = {
+                                mapSource = MAP_SOURCE_HOME_PREVIEW
+                                backStack.showTab(MapKey)
+                            },
                         )
                     }
                     entry<MapKey> {
@@ -315,6 +324,7 @@ private fun Tabs(
                                 backStack.add(PlacePickKey)
                             },
                             onOpenPlace = { placeId -> backStack.add(PlaceDetailKey(placeId.toString())) },
+                            source = mapSource,
                         )
                     }
                     entry<TodosKey> {
@@ -457,3 +467,6 @@ private fun NavBackStack<NavKey>.leaveFlow() {
         removeLastOrNull()
     }
 }
+
+private const val MAP_SOURCE_TAB = "tab"
+private const val MAP_SOURCE_HOME_PREVIEW = "home_preview"
