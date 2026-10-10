@@ -22,11 +22,15 @@ import com.locatedo.locatedo.ui.appstatus.LocalAppStatus
 fun LocateDoApp(viewModel: AppViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val appStatus = LocalAppStatus.current
+    val pendingInvite by viewModel.pendingInvite.collectAsStateWithLifecycle()
 
     when {
         uiState.isLoading -> Box(modifier = Modifier.fillMaxSize())
         appStatus.requiresUpdate -> UpdateRequiredScreen()
-        !uiState.hasCompletedOnboarding -> OnboardingScreen()
+        !uiState.hasCompletedOnboarding -> OnboardingScreen(
+            pendingInvite = pendingInvite,
+            onFinished = { result -> viewModel.onboardingFinished(result.choice, result.placeName) },
+        )
         else -> MainScreen(viewModel)
     }
     uiState.notice?.let { notice ->

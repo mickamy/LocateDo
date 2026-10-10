@@ -270,6 +270,14 @@ class PlaceEditorViewModel @Inject constructor(
         draft.update { it.copy(todos = it.todos + title, todoDraft = "") }
     }
 
+    // An idea tapped in onboarding, counted against the free limit like a typed row.
+    fun addTodo(title: String) {
+        if (uiState.value.todosLeft == 0) {
+            return
+        }
+        draft.update { it.copy(todos = it.todos + title) }
+    }
+
     fun setTodo(index: Int, title: String) = draft.update { current ->
         current.copy(todos = current.todos.mapIndexed { i, old -> if (i == index) title else old })
     }
@@ -361,6 +369,15 @@ class PlaceEditorViewModel @Inject constructor(
                 PlaceDuplicateChoice.CANCEL -> Unit
             }
         }
+    }
+
+    // Onboarding's first place: the kind of store names it when the pick has no name, and decides its category.
+    fun saveFirstPlace(defaultName: String, category: BuiltinCategory) {
+        val categoryId = uiState.value.categories.firstOrNull { it.builtin == category }?.id
+        draft.update { current ->
+            current.copy(name = current.name.ifBlank { defaultName }, categoryId = categoryId ?: current.categoryId)
+        }
+        save()
     }
 
     fun save() {

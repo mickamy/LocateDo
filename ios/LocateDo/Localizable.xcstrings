@@ -2200,23 +2200,6 @@
         }
       }
     },
-    "onboarding.description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add the places you visit and the things to do there. StopBy reminds you when you arrive."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "よく行く場所と、そこでやることを登録しておくと、着いたときにお知らせします。"
-          }
-        }
-      }
-    },
     "onboarding.headline" : {
       "extractionState" : "manual",
       "localizations" : {

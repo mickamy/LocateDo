@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -59,12 +60,12 @@ import com.locatedo.locatedo.ui.analytics.parameters
 private const val PICK_ZOOM = 16f
 
 // Where the place is: tap the map or a store on it, search, or use where you are, then confirm the pin. Editing a
-// place opens it to move the pin.
+// place opens it to move the pin. Onboarding opens it under the question of which store, in place of the kinds.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlacePickScreen(viewModel: PlaceEditorViewModel, onOpenSearch: () -> Unit) {
-    TrackScreen(AnalyticsScreen.PLACE_PICKER, opening = viewModel.uiState.value.draft.entry?.parameters.orEmpty())
+fun PlacePickScreen(viewModel: PlaceEditorViewModel, onOpenSearch: () -> Unit, heading: String? = null) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TrackScreen(AnalyticsScreen.PLACE_PICKER, opening = uiState.draft.entry?.parameters.orEmpty())
     val navigator = LocalNavigator.current
     val preview = uiState.pickPreview
     val initial = preview.coordinate ?: uiState.draft.coordinate
@@ -117,34 +118,32 @@ fun PlacePickScreen(viewModel: PlaceEditorViewModel, onOpenSearch: () -> Unit) {
                 cameraPositionState = cameraPositionState,
                 uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false),
                 onMapClick = { latLng -> viewModel.previewPick(Coordinate(latLng.latitude, latLng.longitude)) },
+                // A label in two scripts comes as two lines, the map's language first.
                 onPOIClick = { poi ->
-                    viewModel.previewPick(Coordinate(poi.latLng.latitude, poi.latLng.longitude), name = poi.name, placeId = poi.placeId)
+                    val name = poi.name.lineSequence().first().trim()
+                    viewModel.previewPick(Coordinate(poi.latLng.latitude, poi.latLng.longitude), name = name, placeId = poi.placeId)
                 },
             ) {
                 preview.coordinate?.let { coordinate ->
                     Marker(state = rememberUpdatedMarkerState(position = coordinate.toLatLng()))
                 }
             }
-            // The kinds of store people add most; each opens the search with that word.
-            LazyRow(
-                modifier = Modifier.align(Alignment.TopStart),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(nearbyKinds) { kind ->
-                    SuggestionChip(
-                        onClick = {
-                            viewModel.setQuery(kind)
-                            onOpenSearch()
-                        },
-                        label = { Text(kind) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                    )
-                }
+            if (heading != null) {
+                PickHeading(heading = heading, modifier = Modifier.align(Alignment.TopCenter))
+            } else {
+                NearbyKinds(
+                    kinds = nearbyKinds,
+                    onPick = { kind ->
+                        viewModel.setQuery(kind)
+                        onOpenSearch()
+                    },
+                    modifier = Modifier.align(Alignment.TopStart),
+                )
             }
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -156,6 +155,44 @@ fun PlacePickScreen(viewModel: PlaceEditorViewModel, onOpenSearch: () -> Unit) {
                     PickCard(preview = preview, onConfirm = viewModel::confirmPick)
                 }
             }
+        }
+    }
+}
+
+// The kinds of store people add most; each opens the search with that word.
+@Composable
+private fun NearbyKinds(kinds: List<String>, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
+    LazyRow(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(kinds) { kind ->
+            SuggestionChip(
+                onClick = { onPick(kind) },
+                label = { Text(kind) },
+                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        }
+    }
+}
+
+// Places has no search for the stores of a kind nearby that does not bill per request, so the stores the map shows
+// are the list to pick from.
+@Composable
+private fun PickHeading(heading: String, modifier: Modifier = Modifier) {
+    ElevatedCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(text = heading, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = stringResource(R.string.first_place_android_store_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

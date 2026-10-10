@@ -2,6 +2,7 @@ package com.locatedo.locatedo.screens.placeeditor
 
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
+import com.locatedo.locatedo.core.analytics.ScreenEntry
 import com.locatedo.locatedo.core.analytics.ScreenTracker
 import com.locatedo.locatedo.core.analytics.TodoAddVia
 import com.locatedo.locatedo.core.billing.PaywallRequests
@@ -431,6 +432,49 @@ class PlaceEditorViewModelTest {
 
         assertEquals(listOf("Milk"), todos.added.map { it.title })
         assertEquals(listOf(1), places.todoCounts)
+    }
+
+    @Test
+    fun ideasAreAddedAsTodosUntilTheFreeLimit() = runTest(dispatcher) {
+        todos.remaining = 2
+        val viewModel = viewModel()
+        viewModel.start(placeId = null)
+
+        viewModel.addTodo("Milk")
+        viewModel.addTodo("Eggs")
+        viewModel.addTodo("Bread")
+
+        assertEquals(listOf("Milk", "Eggs"), viewModel.uiState.value.draft.todos)
+    }
+
+    @Test
+    fun theFirstPlaceIsFiledByItsKindAndNamedByThePick() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        val events = events(viewModel)
+        viewModel.start(placeId = null, entry = ScreenEntry.ONBOARDING)
+        viewModel.addTodo("Milk")
+        viewModel.selectPrediction(search.predictions.single())
+        viewModel.confirmPick()
+
+        viewModel.saveFirstPlace(defaultName = "Grocery store", category = BuiltinCategory.SHOPPING)
+
+        val saved = places.added.single()
+        assertEquals("Supermarket", saved.name)
+        assertEquals(shopping.id, saved.categoryId)
+        assertEquals(listOf("Milk"), todos.added.map { it.title })
+        assertEquals(PlaceEditorEvent.Saved(placeId = saved.id, isNew = true), events.last())
+    }
+
+    @Test
+    fun aFirstPlacePickedWithoutANameTakesTheKindOfStore() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.start(placeId = null, entry = ScreenEntry.ONBOARDING)
+        viewModel.previewPick(store)
+        viewModel.confirmPick()
+
+        viewModel.saveFirstPlace(defaultName = "Grocery store", category = BuiltinCategory.SHOPPING)
+
+        assertEquals("Grocery store", places.added.single().name)
     }
 
     @Test

@@ -293,7 +293,6 @@ entries:
   - name: new_place
   - name: notification
   - name: onboarding
-    platforms: [ios]
   - name: permission_banner
   - name: place
   - name: todo_editor

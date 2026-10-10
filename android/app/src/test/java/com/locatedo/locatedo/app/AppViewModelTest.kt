@@ -14,6 +14,7 @@ import com.locatedo.locatedo.core.push.PromotionsConsent
 import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.logic.ReminderSetupNeed
 import com.locatedo.locatedo.logic.ReminderSetupRequest
+import com.locatedo.locatedo.screens.onboarding.OnboardingChoice
 import com.locatedo.locatedo.testing.FakeAnalytics
 import com.locatedo.locatedo.testing.FakePermissionsRepository
 import com.locatedo.locatedo.testing.FakeSyncEngine
@@ -85,10 +86,10 @@ class AppViewModelTest {
         val viewModel = viewModel(preferences, permissions = permissions)
         subscribe(viewModel)
 
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
 
         assertEquals(
-            ReminderSetupRequest(listOf(ReminderSetupNeed.NOTIFICATIONS, ReminderSetupNeed.LOCATION_ALWAYS), shownCount = 1),
+            ReminderSetupRequest(listOf(ReminderSetupNeed.NOTIFICATIONS, ReminderSetupNeed.LOCATION_ALWAYS), shownCount = 1, placeName = "Grocery"),
             viewModel.reminderSetup.first { it != null },
         )
         val stored = preferences.data.first()
@@ -101,15 +102,15 @@ class AppViewModelTest {
         val preferences = testPreferences(folder.root, backgroundScope)
         val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
         subscribe(viewModel)
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
         viewModel.closeReminderSetup(AlwaysPromptAnswer.LATER)
 
         clock.now = clock.now.plus(Duration.ofDays(6))
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
         assertNull(viewModel.reminderSetup.value)
 
         clock.now = clock.now.plus(Duration.ofDays(1))
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
         assertEquals(2, viewModel.reminderSetup.first { it != null }?.shownCount)
     }
 
@@ -118,11 +119,11 @@ class AppViewModelTest {
         val preferences = testPreferences(folder.root, backgroundScope)
         val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
         subscribe(viewModel)
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
 
         viewModel.closeReminderSetup(AlwaysPromptAnswer.NEVER)
         clock.now = clock.now.plus(Duration.ofDays(30))
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
 
         assertTrue(preferences.data.first().reminderSetupNever)
         assertNull(viewModel.reminderSetup.value)
@@ -135,7 +136,7 @@ class AppViewModelTest {
         val permissions = FakePermissionsRepository(location = LocationAuth.ALWAYS, notifications = NotificationAuth.NOT_DETERMINED)
         val viewModel = viewModel(preferences, permissions = permissions)
         subscribe(viewModel)
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
         viewModel.reminderSetup.first { it != null }
         clock.now = clock.now.plusSeconds(3)
 
@@ -155,7 +156,7 @@ class AppViewModelTest {
         val permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE, notifications = NotificationAuth.AUTHORIZED)
         val viewModel = viewModel(preferences, permissions = permissions)
         subscribe(viewModel)
-        viewModel.placeAdded()
+        viewModel.placeAdded("Grocery")
         viewModel.reminderSetup.first { it != null }
 
         permissions.state.value = Permissions(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED)
@@ -177,11 +178,52 @@ class AppViewModelTest {
             val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(case.location, case.notifications))
             subscribe(viewModel)
 
-            viewModel.placeAdded()
+            viewModel.placeAdded("Grocery")
 
             assertNull(case.toString(), preferences.data.first().reminderSetupShownAt)
             assertNull(case.toString(), viewModel.reminderSetup.value)
         }
+    }
+
+    @Test
+    fun theFirstPlaceFromOnboardingGetsItsReminderSetupOnceHomeShows() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = viewModel(preferences, permissions = FakePermissionsRepository(location = LocationAuth.WHEN_IN_USE))
+        subscribe(viewModel)
+
+        viewModel.onboardingFinished(OnboardingChoice.ADD_PLACE, placeName = "Corner Market")
+
+        assertEquals("Corner Market", viewModel.reminderSetup.first { it != null }?.placeName)
+        assertTrue(viewModel.uiState.first { it.hasCompletedOnboarding }.hasCompletedOnboarding)
+        assertNull(viewModel.afterOnboarding.value)
+    }
+
+    @Test
+    fun anInviteChosenInOnboardingOpensTheInviteUnlessALinkAlreadyBroughtOne() = runTest(dispatcher) {
+        val viewModel = viewModel(testPreferences(folder.newFolder("chosen"), backgroundScope))
+        viewModel.onboardingFinished(OnboardingChoice.INVITE, placeName = null)
+        assertEquals(AfterOnboarding.INVITE, viewModel.afterOnboarding.first { it != null })
+        viewModel.afterOnboardingConsumed()
+        assertNull(viewModel.afterOnboarding.value)
+
+        val invites = InviteRequests()
+        invites.request("invite-token-0123456789")
+        val linked = viewModel(testPreferences(folder.newFolder("linked"), backgroundScope), invites = invites)
+        linked.onboardingFinished(OnboardingChoice.INVITE, placeName = null)
+        assertNull(linked.afterOnboarding.value)
+        assertEquals("invite-token-0123456789", linked.pendingInvite.value)
+    }
+
+    @Test
+    fun signingInFromOnboardingOpensTheAccount() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = viewModel(preferences)
+
+        viewModel.onboardingFinished(OnboardingChoice.SIGN_IN, placeName = null)
+
+        assertEquals(AfterOnboarding.ACCOUNT, viewModel.afterOnboarding.first { it != null })
+        assertTrue(preferences.data.first().hasCompletedOnboarding)
+        assertNull(viewModel.reminderSetup.value)
     }
 
     @Test

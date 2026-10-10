@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.locatedo.locatedo.core.model.Coordinate
 import dagger.Binds
 import dagger.Module
@@ -15,6 +16,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 
 interface LocationRepository {
     fun hasForegroundPermission(): Boolean
@@ -35,8 +37,11 @@ class FusedLocationRepository @Inject constructor(@param:ApplicationContext priv
         if (!hasForegroundPermission()) {
             return null
         }
+        // Nothing has asked for a fix yet right after location is first allowed, so one is taken then.
         val location = try {
-            client.lastLocation.await()
+            client.lastLocation.await() ?: withTimeoutOrNull(CURRENT_FIX_TIMEOUT_MILLIS) {
+                client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null).await()
+            }
         } catch (e: SecurityException) {
             null
         } catch (e: ApiException) {
@@ -47,6 +52,10 @@ class FusedLocationRepository @Inject constructor(@param:ApplicationContext priv
 
     private fun granted(permission: String): Boolean =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+
+    private companion object {
+        const val CURRENT_FIX_TIMEOUT_MILLIS = 5_000L
+    }
 }
 
 @Module

@@ -137,6 +137,7 @@ enum class ScreenEntry(val key: String) {
     MAP_PIN("map_pin"),
     NEW_PLACE("new_place"),
     NOTIFICATION("notification"),
+    ONBOARDING("onboarding"),
     PERMISSION_BANNER("permission_banner"),
     PLACE("place"),
     TODO_EDITOR("todo_editor"),

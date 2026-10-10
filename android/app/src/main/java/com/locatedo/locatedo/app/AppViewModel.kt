@@ -26,6 +26,7 @@ import com.locatedo.locatedo.core.sharing.InviteRequests
 import com.locatedo.locatedo.core.sync.SyncEngine
 import com.locatedo.locatedo.logic.ReminderSetup
 import com.locatedo.locatedo.logic.ReminderSetupRequest
+import com.locatedo.locatedo.screens.onboarding.OnboardingChoice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.Duration
@@ -46,6 +47,12 @@ import kotlinx.coroutines.launch
 enum class AppNotice {
     REMOVED,
     SESSION_ENDED,
+}
+
+// What opens over Home once onboarding is gone.
+enum class AfterOnboarding {
+    INVITE,
+    ACCOUNT,
 }
 
 data class AppUiState(
@@ -77,6 +84,7 @@ class AppViewModel @Inject constructor(
     private val alwaysPrompt = AlwaysPromptTracker(analytics, clock)
     private val _reminderSetup = MutableStateFlow<ReminderSetupRequest?>(null)
     private val _isAskingPromotions = MutableStateFlow(false)
+    private val _afterOnboarding = MutableStateFlow<AfterOnboarding?>(null)
     private var promotionsAskedAt: Instant? = null
     // Whether a sheet or dialog is up, which the news prompt does not interrupt.
     private var isPresenting = false
@@ -85,6 +93,7 @@ class AppViewModel @Inject constructor(
     val pendingInvite: StateFlow<String?> = inviteRequests.pending
     val pendingPaywall: StateFlow<PaywallTrigger?> = paywallRequests.pending
     val pendingTodos: StateFlow<Boolean> = todosRequests.pending
+    val afterOnboarding: StateFlow<AfterOnboarding?> = _afterOnboarding
     val reminderSetup: StateFlow<ReminderSetupRequest?> = _reminderSetup
     val isAskingPromotions: StateFlow<Boolean> = _isAskingPromotions
 
@@ -127,7 +136,7 @@ class AppViewModel @Inject constructor(
     }
 
     // After a new place is saved, from wherever: what reminders still need, at most once a week.
-    fun placeAdded() {
+    fun placeAdded(placeName: String) {
         viewModelScope.launch {
             permissions.refresh()
             val stored = preferences.data.first()
@@ -147,8 +156,28 @@ class AppViewModel @Inject constructor(
                     AnalyticsParameter.SHOWN_COUNT to shownCount,
                 ),
             )
-            _reminderSetup.value = ReminderSetupRequest(missing, shownCount)
+            _reminderSetup.value = ReminderSetupRequest(missing, shownCount, placeName)
         }
+    }
+
+    // What was chosen is set up before Home shows: the place saved gets its reminder setup, and an invite from a link
+    // is already waiting there.
+    fun onboardingFinished(choice: OnboardingChoice, placeName: String?) {
+        viewModelScope.launch {
+            when (choice) {
+                OnboardingChoice.INVITE -> if (pendingInvite.value == null) _afterOnboarding.value = AfterOnboarding.INVITE
+                OnboardingChoice.SIGN_IN -> _afterOnboarding.value = AfterOnboarding.ACCOUNT
+                OnboardingChoice.ADD_PLACE, OnboardingChoice.LATER -> Unit
+            }
+            if (placeName != null) {
+                placeAdded(placeName)
+            }
+            preferences.setCompletedOnboarding(true)
+        }
+    }
+
+    fun afterOnboardingConsumed() {
+        _afterOnboarding.value = null
     }
 
     fun refreshPermissions() = permissions.refresh()
@@ -220,6 +249,7 @@ class AppViewModel @Inject constructor(
             pendingInvite.value != null ||
             pendingPaywall.value != null ||
             pendingTodos.value ||
+            _afterOnboarding.value != null ||
             status.requiresUpdate ||
             status.pendingNotice != null
     }

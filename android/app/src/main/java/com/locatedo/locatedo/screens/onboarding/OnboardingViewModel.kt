@@ -7,66 +7,93 @@ import com.locatedo.locatedo.core.analytics.AnalyticsConsent
 import com.locatedo.locatedo.core.analytics.AnalyticsEvent
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.analyticsKey
-import com.locatedo.locatedo.core.datastore.AppPreferences
-import com.locatedo.locatedo.core.permissions.NotificationAuth
+import com.locatedo.locatedo.core.permissions.LocationAuth
+import com.locatedo.locatedo.core.permissions.Permissions
 import com.locatedo.locatedo.core.permissions.PermissionsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.Duration
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+enum class OnboardingChoice(val key: String) {
+    ADD_PLACE("add_place"),
+    LATER("later"),
+    INVITE("invite"),
+    SIGN_IN("sign_in"),
+}
 
 enum class OnboardingStep(val key: String) {
     INTRO("intro"),
+    STORE_KIND("store_kind"),
+    STORE_NAME("store_name"),
+    TODOS("todos"),
     PRIVACY("privacy"),
-    NOTIFICATIONS("notifications"),
+    DONE("done"),
+    RETURNING("returning"),
     ANALYTICS("analytics"),
 }
 
+data class OnboardingResult(val choice: OnboardingChoice, val placeName: String?)
+
+// What onboarding decided across its pages: the way chosen, the first place saved, and when it ends.
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val preferences: AppPreferences,
     private val permissions: PermissionsRepository,
     private val analytics: Analytics,
     private val analyticsConsent: AnalyticsConsent,
     private val clock: Clock,
 ) : ViewModel() {
-    private val _step = MutableStateFlow(OnboardingStep.INTRO)
     private val startedAt = clock.instant()
+    private val _result = MutableStateFlow<OnboardingResult?>(null)
+    private var choice = OnboardingChoice.LATER
+    private var addedKind: StoreKind? = null
+    private var addedName: String? = null
+    private var todosStore: FirstStore? = null
 
-    val step: StateFlow<OnboardingStep> = _step
+    val result: StateFlow<OnboardingResult?> = _result
 
-    // The intro leads to the privacy page, which asks for location.
-    fun start() {
-        _step.value = OnboardingStep.PRIVACY
+    val currentPermissions: StateFlow<Permissions?> =
+        permissions.observe().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    suspend fun needsLocation(): Boolean = permissions.observe().first().location == LocationAuth.NOT_DETERMINED
+
+    // To-dos written for one store do not carry over to another picked after going back.
+    fun startsNewTodos(store: FirstStore): Boolean {
+        val isNew = store != todosStore
+        todosStore = store
+        return isNew
     }
 
-    // Called once the system's location dialog closes, whatever the user chose.
+    fun choose(choice: OnboardingChoice) {
+        this.choice = choice
+    }
+
     fun locationRequested() {
         viewModelScope.launch {
             permissions.markLocationRequested()
-            if (permissions.observe().first().notifications == NotificationAuth.NOT_DETERMINED) {
-                _step.value = OnboardingStep.NOTIFICATIONS
-            } else {
-                finish()
-            }
+            permissions.refresh()
         }
     }
 
-    fun notificationsRequested() {
-        viewModelScope.launch {
-            permissions.markNotificationsRequested()
-            finish()
-        }
+    fun firstPlaceSaved(kind: StoreKind, name: String) {
+        choice = OnboardingChoice.ADD_PLACE
+        addedKind = kind
+        addedName = name
     }
 
-    fun skipNotifications() {
-        viewModelScope.launch {
-            finish()
+    // True when the usage data question comes first; otherwise onboarding ends here.
+    suspend fun finish(): Boolean {
+        if (analyticsConsent.state.first().needsAnswer) {
+            return true
         }
+        complete()
+        return false
     }
 
     // Asked last in the EEA and the UK; what was logged before the answer is sent or dropped with it.
@@ -77,24 +104,16 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private suspend fun finish() {
-        if (analyticsConsent.state.first().needsAnswer) {
-            _step.value = OnboardingStep.ANALYTICS
-            return
-        }
-        complete()
-    }
-
     private suspend fun complete() {
         val granted = permissions.observe().first()
-        analytics.log(
-            AnalyticsEvent.ONBOARDING_COMPLETED,
-            mapOf(
-                AnalyticsParameter.LOCATION_AUTH to granted.location.analyticsKey,
-                AnalyticsParameter.NOTIFICATION_AUTH to granted.notifications.analyticsKey,
-                AnalyticsParameter.DURATION_S to Duration.between(startedAt, clock.instant()).seconds.coerceAtLeast(0),
-            ),
+        val parameters = mutableMapOf<AnalyticsParameter, Any>(
+            AnalyticsParameter.CHOICE to choice.key,
+            AnalyticsParameter.LOCATION_AUTH to granted.location.analyticsKey,
+            AnalyticsParameter.NOTIFICATION_AUTH to granted.notifications.analyticsKey,
+            AnalyticsParameter.DURATION_S to Duration.between(startedAt, clock.instant()).seconds.coerceAtLeast(0),
         )
-        preferences.setCompletedOnboarding(true)
+        addedKind?.let { parameters[AnalyticsParameter.KIND] = it.key }
+        analytics.log(AnalyticsEvent.ONBOARDING_COMPLETED, parameters)
+        _result.value = OnboardingResult(choice, addedName)
     }
 }

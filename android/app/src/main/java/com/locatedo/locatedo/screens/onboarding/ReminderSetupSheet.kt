@@ -61,6 +61,7 @@ import com.locatedo.locatedo.ui.analytics.TrackScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderSetupSheet(
+    placeName: String,
     permissions: Permissions,
     asksForPreciseLocation: Boolean,
     onNotificationsRequested: () -> Unit,
@@ -107,7 +108,7 @@ fun ReminderSetupSheet(
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = stringResource(R.string.reminder_setup_description),
+                text = stringResource(R.string.reminder_setup_place_description, placeName),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

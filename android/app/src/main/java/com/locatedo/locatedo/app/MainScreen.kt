@@ -249,7 +249,7 @@ private fun handlePlaceEditor(
                 if (draft.isForTodo) {
                     todoEditor.placeAdded(event.placeId)
                 }
-                appViewModel.placeAdded()
+                appViewModel.placeAdded(draft.name.trim())
             }
         }
     }
@@ -265,6 +265,7 @@ private fun FromOutside(navigator: Navigator, appViewModel: AppViewModel) {
     val pendingPaywall by appViewModel.pendingPaywall.collectAsStateWithLifecycle()
     val reminderSetup by appViewModel.reminderSetup.collectAsStateWithLifecycle()
     val isAskingPromotions by appViewModel.isAskingPromotions.collectAsStateWithLifecycle()
+    val afterOnboarding by appViewModel.afterOnboarding.collectAsStateWithLifecycle()
 
     LaunchedEffect(pendingPlace) {
         pendingPlace?.let {
@@ -283,6 +284,14 @@ private fun FromOutside(navigator: Navigator, appViewModel: AppViewModel) {
             navigator.push(AcceptInviteKey(it))
             appViewModel.inviteConsumed(it)
         }
+    }
+    LaunchedEffect(afterOnboarding) {
+        when (afterOnboarding) {
+            AfterOnboarding.INVITE -> navigator.push(AcceptInviteKey())
+            AfterOnboarding.ACCOUNT -> navigator.push(AccountKey)
+            null -> return@LaunchedEffect
+        }
+        appViewModel.afterOnboardingConsumed()
     }
     LaunchedEffect(pendingPaywall) {
         pendingPaywall?.let {
@@ -344,6 +353,7 @@ private fun OverlayContent(
         )
         is Overlay.ReminderSetup -> permissions?.let { current ->
             ReminderSetupSheet(
+                placeName = overlay.request.placeName,
                 permissions = current,
                 asksForPreciseLocation = ReminderSetupNeed.PRECISE_LOCATION in overlay.request.missing,
                 onNotificationsRequested = appViewModel::notificationsRequested,

@@ -8,6 +8,8 @@ home.my_location:
   platforms: [android]
 always_prompt.android_choose:
   platforms: [android]
+first_place.android_store_hint:
+  platforms: [android]
 settings.location.android_needs_always:
   platforms: [android]
 home.permission_banner.android_location:
@@ -60,80 +62,6 @@ update.android_open_play:
 place.detail.check_off_tip_title:
   platforms: [ios]
 place.detail.check_off_tip_message:
-  platforms: [ios]
-first_place.kind_title:
-  platforms: [ios]
-first_place.kind_message:
-  platforms: [ios]
-first_place.ideas_title:
-  platforms: [ios]
-first_place.permissions:
-  platforms: [ios]
-first_place.later_permissions:
-  platforms: [ios]
-first_place.grocery.name:
-  platforms: [ios]
-first_place.grocery.todos_title:
-  platforms: [ios]
-first_place.grocery.store_title:
-  platforms: [ios]
-first_place.grocery.idea_1:
-  platforms: [ios]
-first_place.grocery.idea_2:
-  platforms: [ios]
-first_place.grocery.idea_3:
-  platforms: [ios]
-first_place.grocery.idea_4:
-  platforms: [ios]
-first_place.grocery.idea_5:
-  platforms: [ios]
-first_place.drugstore.name:
-  platforms: [ios]
-first_place.drugstore.todos_title:
-  platforms: [ios]
-first_place.drugstore.store_title:
-  platforms: [ios]
-first_place.drugstore.idea_1:
-  platforms: [ios]
-first_place.drugstore.idea_2:
-  platforms: [ios]
-first_place.drugstore.idea_3:
-  platforms: [ios]
-first_place.drugstore.idea_4:
-  platforms: [ios]
-first_place.drugstore.idea_5:
-  platforms: [ios]
-first_place.convenience.name:
-  platforms: [ios]
-first_place.convenience.todos_title:
-  platforms: [ios]
-first_place.convenience.store_title:
-  platforms: [ios]
-first_place.convenience.idea_1:
-  platforms: [ios]
-first_place.convenience.idea_2:
-  platforms: [ios]
-first_place.convenience.idea_3:
-  platforms: [ios]
-first_place.convenience.idea_4:
-  platforms: [ios]
-first_place.convenience.idea_5:
-  platforms: [ios]
-first_place.hardware.name:
-  platforms: [ios]
-first_place.hardware.todos_title:
-  platforms: [ios]
-first_place.hardware.store_title:
-  platforms: [ios]
-first_place.hardware.idea_1:
-  platforms: [ios]
-first_place.hardware.idea_2:
-  platforms: [ios]
-first_place.hardware.idea_3:
-  platforms: [ios]
-first_place.hardware.idea_4:
-  platforms: [ios]
-first_place.hardware.idea_5:
   platforms: [ios]
 notification.press_and_hold_hint:
   platforms: [ios]
@@ -191,69 +119,3 @@ sharing.ios_leave_confirm_message:
   platforms: [ios]
 sharing.ios_shared_header_message:
   platforms: [ios]
-onboarding.headline:
-  platforms: [ios]
-onboarding.tagline:
-  platforms: [android]
-onboarding.permissions:
-  platforms: [android]
-onboarding.feature_arrival_title:
-  platforms: [android]
-onboarding.feature_arrival_message:
-  platforms: [android]
-onboarding.feature_lists_title:
-  platforms: [android]
-onboarding.feature_lists_message:
-  platforms: [android]
-onboarding.feature_family_title:
-  platforms: [android]
-onboarding.feature_family_message:
-  platforms: [android]
-onboarding.notifications_title:
-  platforms: [android]
-onboarding.notifications_description:
-  platforms: [android]
-onboarding.allow_notifications:
-  platforms: [android]
-first_place.other.label:
-  platforms: [ios]
-first_place.other.name:
-  platforms: [ios]
-first_place.other.name_title:
-  platforms: [ios]
-first_place.other.name_placeholder:
-  platforms: [ios]
-first_place.other.store_title:
-  platforms: [ios]
-place.editor.preview_empty:
-  platforms: [android]
-place.editor.preview_caption:
-  platforms: [ios]
-place.editor.preview_example:
-  platforms: [ios]
-onboarding.returning_link:
-  platforms: [ios]
-onboarding.returning_title:
-  platforms: [ios]
-onboarding.returning_invite:
-  platforms: [ios]
-onboarding.returning_invite_message:
-  platforms: [ios]
-onboarding.returning_sign_in:
-  platforms: [ios]
-onboarding.returning_sign_in_message:
-  platforms: [ios]
-onboarding.subheadline:
-  platforms: [ios]
-reminder_setup.place_description:
-  platforms: [ios]
-first_place.done_title:
-  platforms: [ios]
-first_place.done_ready:
-  platforms: [ios]
-first_place.done_almost:
-  platforms: [ios]
-first_place.done_continue:
-  platforms: [ios]
-reminder_setup.description:
-  platforms: [android]

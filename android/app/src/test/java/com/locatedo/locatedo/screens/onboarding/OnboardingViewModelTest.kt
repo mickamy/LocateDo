@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -47,105 +48,89 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun startingMovesFromTheIntroToThePrivacyPage() = runTest(dispatcher) {
+    fun locationIsNeededOnlyUntilItHasBeenAsked() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
         val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
         val viewModel = viewModel(preferences, permissions)
-        assertEquals(OnboardingStep.INTRO, viewModel.step.value)
-
-        viewModel.start()
-
-        assertEquals(OnboardingStep.PRIVACY, viewModel.step.value)
-        assertFalse(permissions.locationRequested)
-    }
-
-    @Test
-    fun asksForNotificationsAfterLocationWhenTheyAreStillUndecided() = runTest(dispatcher) {
-        val preferences = testPreferences(folder.root, backgroundScope)
-        val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
-        val viewModel = viewModel(preferences, permissions)
+        assertTrue(viewModel.needsLocation())
 
         viewModel.locationRequested()
+        permissions.state.value = permissions.state.value.copy(location = LocationAuth.WHEN_IN_USE)
 
         assertTrue(permissions.locationRequested)
-        assertEquals(OnboardingStep.NOTIFICATIONS, viewModel.step.value)
-        assertFalse(preferences.data.first().hasCompletedOnboarding)
-
-        viewModel.notificationsRequested()
-
-        assertTrue(permissions.notificationsRequested)
-        assertTrue(preferences.data.first().hasCompletedOnboarding)
+        assertFalse(viewModel.needsLocation())
     }
 
     @Test
-    fun finishesRightAfterLocationWhenNotificationsAreAlreadyDecided() = runTest(dispatcher) {
+    fun theFirstPlaceEndsOnboardingWithItsKindAndName() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        val permissions = FakePermissionsRepository(LocationAuth.WHEN_IN_USE, NotificationAuth.AUTHORIZED)
+        val permissions = FakePermissionsRepository(LocationAuth.WHEN_IN_USE, NotificationAuth.NOT_DETERMINED)
         val viewModel = viewModel(preferences, permissions)
+        clock.now = now.plusSeconds(42)
 
-        viewModel.locationRequested()
+        viewModel.firstPlaceSaved(StoreKind.GROCERY, "Corner Market")
+        val asks = viewModel.finish()
 
-        assertEquals(OnboardingStep.INTRO, viewModel.step.value)
-        assertTrue(preferences.data.first().hasCompletedOnboarding)
-    }
-
-    @Test
-    fun skippingNotificationsCompletesOnboardingWithoutAsking() = runTest(dispatcher) {
-        val preferences = testPreferences(folder.root, backgroundScope)
-        val permissions = FakePermissionsRepository()
-        val viewModel = viewModel(preferences, permissions)
-        viewModel.locationRequested()
-
-        viewModel.skipNotifications()
-
-        assertFalse(permissions.notificationsRequested)
-        assertTrue(preferences.data.first().hasCompletedOnboarding)
-    }
-
-    @Test
-    fun finishingLogsWhatWasGrantedAndHowLongItTook() = runTest(dispatcher) {
-        val preferences = testPreferences(folder.root, backgroundScope)
-        val permissions = FakePermissionsRepository(LocationAuth.WHEN_IN_USE, NotificationAuth.DENIED)
-        val viewModel = viewModel(preferences, permissions)
-        clock.now = now.plusSeconds(15)
-
-        viewModel.locationRequested()
-
+        assertFalse(asks)
+        assertEquals(OnboardingResult(OnboardingChoice.ADD_PLACE, "Corner Market"), viewModel.result.value)
         assertEquals(
-            mapOf("location_auth" to "when_in_use", "notification_auth" to "denied", "duration_s" to 15L),
+            mapOf(
+                "choice" to "add_place",
+                "kind" to "grocery",
+                "location_auth" to "when_in_use",
+                "notification_auth" to "not_determined",
+                "duration_s" to 42L,
+            ),
             analytics.values(AnalyticsEvent.ONBOARDING_COMPLETED),
         )
     }
 
     @Test
+    fun theOtherWaysEndWithoutAPlace() = runTest(dispatcher) {
+        val preferences = testPreferences(folder.root, backgroundScope)
+        val viewModel = viewModel(preferences, FakePermissionsRepository())
+
+        viewModel.choose(OnboardingChoice.SIGN_IN)
+        viewModel.finish()
+
+        assertEquals(OnboardingResult(OnboardingChoice.SIGN_IN, null), viewModel.result.value)
+        assertEquals("sign_in", analytics.values(AnalyticsEvent.ONBOARDING_COMPLETED)["choice"])
+        assertNull(analytics.values(AnalyticsEvent.ONBOARDING_COMPLETED)["kind"])
+    }
+
+    @Test
+    fun notNowIsTheChoiceWhenNothingElseWasMade() = runTest(dispatcher) {
+        val viewModel = viewModel(testPreferences(folder.root, backgroundScope), FakePermissionsRepository())
+
+        viewModel.finish()
+
+        assertEquals(OnboardingResult(OnboardingChoice.LATER, null), viewModel.result.value)
+    }
+
+    @Test
     fun asksAboutUsageDataLastInTheEeaAndTheUk() = runTest(dispatcher) {
         val preferences = testPreferences(folder.root, backgroundScope)
-        val permissions = FakePermissionsRepository(LocationAuth.NOT_DETERMINED, NotificationAuth.NOT_DETERMINED)
-        val viewModel = viewModel(preferences, permissions, inScope = true)
-        viewModel.locationRequested()
+        val viewModel = viewModel(preferences, FakePermissionsRepository(), inScope = true)
 
-        viewModel.notificationsRequested()
-
-        assertEquals(OnboardingStep.ANALYTICS, viewModel.step.value)
-        assertFalse(preferences.data.first().hasCompletedOnboarding)
+        assertTrue(viewModel.finish())
+        assertNull(viewModel.result.value)
+        assertEquals(0, analytics.count(AnalyticsEvent.ONBOARDING_COMPLETED))
 
         viewModel.answerAnalytics(false)
 
         assertEquals(false, preferences.analyticsConsent.first().answer)
-        assertTrue(preferences.data.first().hasCompletedOnboarding)
+        assertEquals(OnboardingResult(OnboardingChoice.LATER, null), viewModel.result.value)
         assertEquals(1, analytics.count(AnalyticsEvent.ONBOARDING_COMPLETED))
     }
 
     @Test
-    fun doesNotAskAboutUsageDataElsewhere() = runTest(dispatcher) {
-        val preferences = testPreferences(folder.root, backgroundScope)
-        val viewModel = viewModel(preferences, FakePermissionsRepository())
-        viewModel.locationRequested()
+    fun todosStartOverOnlyForADifferentStore() = runTest(dispatcher) {
+        val viewModel = viewModel(testPreferences(folder.root, backgroundScope), FakePermissionsRepository())
 
-        viewModel.skipNotifications()
-
-        assertTrue(preferences.data.first().hasCompletedOnboarding)
-        assertEquals(null, preferences.analyticsConsent.first().answer)
+        assertTrue(viewModel.startsNewTodos(FirstStore(StoreKind.GROCERY)))
+        assertFalse(viewModel.startsNewTodos(FirstStore(StoreKind.GROCERY)))
+        assertTrue(viewModel.startsNewTodos(FirstStore(StoreKind.OTHER, "Bakery")))
+        assertTrue(viewModel.startsNewTodos(FirstStore(StoreKind.OTHER, "Bookstore")))
     }
 
     // The region is set explicitly, so the result does not depend on the machine's locale.
@@ -155,6 +140,6 @@ class OnboardingViewModelTest {
         inScope: Boolean = false,
     ): OnboardingViewModel {
         preferences.setAnalyticsConsentRequired(inScope)
-        return OnboardingViewModel(preferences, permissions, analytics, fakeAnalyticsConsent(preferences, analytics), clock)
+        return OnboardingViewModel(permissions, analytics, fakeAnalyticsConsent(preferences, analytics), clock)
     }
 }

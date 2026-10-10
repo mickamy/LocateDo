@@ -78,6 +78,7 @@ fun PlaceTodosScreen(viewModel: PlaceEditorViewModel) {
             NotificationPreview(
                 placeName = draft.name.trim(),
                 titles = draft.todos + draft.todoDraft,
+                example = stringResource(todoExample(builtin)),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
             Text(
@@ -100,16 +101,30 @@ fun PlaceTodosScreen(viewModel: PlaceEditorViewModel) {
     }
 }
 
-// Follows the typing, with the same wording and cut-off as the real notification.
+// Follows the typing, with the same wording and cut-off as the real notification; an example of what to write stands
+// in while nothing is.
 @Composable
-private fun NotificationPreview(placeName: String, titles: List<String>, modifier: Modifier = Modifier) {
+internal fun NotificationPreview(placeName: String, titles: List<String>, example: String, modifier: Modifier = Modifier) {
     val resources = LocalResources.current
     val shown = titles.map(String::trim).filter(String::isNotEmpty)
-    var message = stringResource(R.string.place_editor_preview_empty)
+    var message = example
     if (shown.isNotEmpty()) {
         message = arrivalNotificationText(resources, shown)
     }
-    ArrivalNotificationCard(title = placeName, message = message, modifier = modifier, isMessageMuted = shown.isEmpty())
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.place_editor_preview_caption),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        ArrivalNotificationCard(title = placeName, message = message, isMessageMuted = shown.isEmpty())
+    }
+}
+
+private fun todoExample(builtin: BuiltinCategory?): Int = when (builtin) {
+    BuiltinCategory.LIFE -> R.string.place_editor_todo_example_life
+    BuiltinCategory.WORK -> R.string.place_editor_todo_example_work
+    BuiltinCategory.SHOPPING, BuiltinCategory.OTHER, null -> R.string.place_editor_todo_example_shopping
 }
 
 private fun todoPlaceholder(builtin: BuiltinCategory?): Int = when (builtin) {
@@ -122,7 +137,7 @@ private fun todoPlaceholder(builtin: BuiltinCategory?): Int = when (builtin) {
 // Rows of plain text (a checkbox would look tickable), then "Add to-do", which turns into a field where Next adds the
 // row and moves on to the next; an empty Next closes it again.
 @Composable
-private fun DraftTodos(
+internal fun DraftTodos(
     todos: List<String>,
     todoDraft: String,
     todosLeft: Int?,

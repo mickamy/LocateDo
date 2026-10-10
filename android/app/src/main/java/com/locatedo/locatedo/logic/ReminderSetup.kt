@@ -13,7 +13,7 @@ enum class ReminderSetupNeed(val key: String) {
     PRECISE_LOCATION("precise_location"),
 }
 
-data class ReminderSetupRequest(val missing: List<ReminderSetupNeed>, val shownCount: Int)
+data class ReminderSetupRequest(val missing: List<ReminderSetupNeed>, val shownCount: Int, val placeName: String)
 
 // What arrival reminders still need, and whether to ask for it after a place is saved: at most once a week, until the
 // user says not to.

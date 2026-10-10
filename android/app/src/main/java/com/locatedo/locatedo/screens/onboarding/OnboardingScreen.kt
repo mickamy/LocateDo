@@ -1,292 +1,278 @@
 package com.locatedo.locatedo.screens.onboarding
 
 import android.Manifest
-import android.os.Build
-import android.provider.Settings
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.StringRes
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.locatedo.locatedo.R
 import com.locatedo.locatedo.core.analytics.AnalyticsParameter
 import com.locatedo.locatedo.core.analytics.AnalyticsScreen
-import com.locatedo.locatedo.core.common.LegalLinks
+import com.locatedo.locatedo.core.analytics.ScreenEntry
+import com.locatedo.locatedo.core.model.BuiltinCategory
+import com.locatedo.locatedo.logic.ReminderSetup
+import com.locatedo.locatedo.navigation.LocalNavigator
+import com.locatedo.locatedo.navigation.Navigator
+import com.locatedo.locatedo.screens.placeeditor.PlaceEditorEvent
+import com.locatedo.locatedo.screens.placeeditor.PlaceEditorViewModel
+import com.locatedo.locatedo.screens.placeeditor.PlacePickScreen
+import com.locatedo.locatedo.screens.placeeditor.PlaceSearchScreen
 import com.locatedo.locatedo.ui.analytics.TrackScreen
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
-// What the app does, then why location is safe with it (asking for it there), then notifications.
+@Serializable
+private data object IntroKey : NavKey
+
+@Serializable
+private data object ReturningKey : NavKey
+
+@Serializable
+private data object StoreKindKey : NavKey
+
+@Serializable
+private data object StoreNameKey : NavKey
+
+@Serializable
+private data class FirstTodosKey(val store: FirstStore) : NavKey
+
+// With no store, location is asked on its own: for "Not now" or a way that skips the first place.
+@Serializable
+private data class PrivacyKey(val store: FirstStore?) : NavKey
+
+@Serializable
+private data object StoreSearchKey : NavKey
+
+@Serializable
+private data class StorePickKey(val store: FirstStore) : NavKey
+
+@Serializable
+private data class DoneKey(val placeName: String, val kind: StoreKind) : NavKey
+
+@Serializable
+private data object AnalyticsKey : NavKey
+
+// The first page, then the first place asked the other way round from adding one: the kind of store, what to do
+// there, and only then the store itself, picked on the map around you or searched for by name. Location is asked
+// right before the map needs it. Someone invited or coming back skips the first place.
 @Composable
-fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
-    val step by viewModel.step.collectAsStateWithLifecycle()
-    TrackScreen(AnalyticsScreen.ONBOARDING, mapOf(AnalyticsParameter.STEP to step.key))
-    var isRequesting by rememberSaveable { mutableStateOf(false) }
-    val requestLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        isRequesting = false
-        viewModel.locationRequested()
-    }
-    val requestNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        isRequesting = false
-        viewModel.notificationsRequested()
+fun OnboardingScreen(
+    pendingInvite: String?,
+    onFinished: (OnboardingResult) -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel(),
+) {
+    val activity = LocalActivity.current as ComponentActivity
+    // The search and the map are the ones adding a place uses, with the same draft.
+    val placeEditor: PlaceEditorViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val backStack = rememberNavBackStack(IntroKey)
+    val navigator = remember(backStack) { Navigator(backStack) }
+    val scope = rememberCoroutineScope()
+    val resources = LocalResources.current
+    val result by viewModel.result.collectAsStateWithLifecycle()
+    val permissions by viewModel.currentPermissions.collectAsStateWithLifecycle()
+    var isRequestingLocation by rememberSaveable { mutableStateOf(false) }
+
+    // Done and the usage data question start over as the only page, so going back never saves the place twice.
+    fun replaceWith(key: NavKey) {
+        backStack.clear()
+        backStack.add(key)
     }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            when (step) {
-                OnboardingStep.INTRO -> Intro(onStart = viewModel::start)
-                OnboardingStep.PRIVACY -> Privacy(
-                    isRequesting = isRequesting,
-                    onAllow = {
-                        isRequesting = true
-                        requestLocation.launch(
-                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                        )
-                    },
-                )
-                OnboardingStep.NOTIFICATIONS -> Notifications(
-                    isRequesting = isRequesting,
-                    onAllow = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            isRequesting = true
-                            requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            viewModel.skipNotifications()
-                        }
-                    },
-                    onLater = viewModel::skipNotifications,
-                )
-                OnboardingStep.ANALYTICS -> AnalyticsConsentStep(onAnswer = viewModel::answerAnalytics)
+    fun finish() {
+        scope.launch {
+            if (viewModel.finish()) {
+                replaceWith(AnalyticsKey)
             }
         }
     }
-}
 
-private enum class IntroStage { TITLE, NOTIFICATION, FEATURES }
-
-// Top to bottom: the title, then the notification drops in, then what the app does, so the space waiting for the
-// notification never reads as a gap.
-@Composable
-private fun ColumnScope.Intro(onStart: () -> Unit) {
-    val context = LocalContext.current
-    var stage by rememberSaveable { mutableStateOf(IntroStage.TITLE) }
-    LaunchedEffect(Unit) {
-        val animations = Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
-        if (animations == 0f) {
-            stage = IntroStage.FEATURES
-            return@LaunchedEffect
-        }
-        delay(NOTIFICATION_DELAY_MILLIS)
-        if (stage < IntroStage.NOTIFICATION) {
-            stage = IntroStage.NOTIFICATION
-        }
-        delay(FEATURES_DELAY_MILLIS)
-        stage = IntroStage.FEATURES
-    }
-    val featuresAlpha by animateFloatAsState(
-        targetValue = if (stage >= IntroStage.FEATURES) 1f else 0f,
-        animationSpec = tween(FEATURES_FADE_MILLIS),
-        label = "features",
-    )
-
-    Spacer(Modifier.weight(1f))
-    Text(
-        text = stringResource(R.string.app_name),
-        style = MaterialTheme.typography.headlineLarge,
-        fontWeight = FontWeight.Bold,
-    )
-    Text(
-        text = stringResource(R.string.onboarding_tagline),
-        style = MaterialTheme.typography.titleMedium,
-        textAlign = TextAlign.Center,
-    )
-    SampleArrivalNotification(isShown = stage >= IntroStage.NOTIFICATION, modifier = Modifier.padding(vertical = 8.dp))
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(featuresAlpha),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Point(Icons.Filled.NotificationsActive, R.string.onboarding_feature_arrival_title, R.string.onboarding_feature_arrival_message)
-        Point(Icons.Filled.ShoppingCart, R.string.onboarding_feature_lists_title, R.string.onboarding_feature_lists_message)
-        Point(Icons.Filled.Group, R.string.onboarding_feature_family_title, R.string.onboarding_feature_family_message)
-    }
-    Spacer(Modifier.weight(1f))
-    Button(
-        onClick = onStart,
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(featuresAlpha),
-    ) {
-        Text(stringResource(R.string.onboarding_start))
-    }
-}
-
-// Right before the system asks for location, which is when people wonder where it goes.
-@Composable
-private fun ColumnScope.Privacy(isRequesting: Boolean, onAllow: () -> Unit) {
-    Spacer(Modifier.weight(1f))
-    Hero(Icons.Filled.Lock)
-    Text(
-        text = stringResource(R.string.onboarding_privacy_title),
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
-    )
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Point(Icons.Filled.PhoneAndroid, R.string.onboarding_privacy_on_device)
-        Point(Icons.Filled.CloudOff, R.string.onboarding_privacy_not_sent)
-        Point(Icons.Filled.Block, R.string.onboarding_privacy_no_ads)
-    }
-    Spacer(Modifier.weight(1f))
-    Text(
-        text = stringResource(R.string.onboarding_permissions),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-    )
-    Button(onClick = onAllow, modifier = Modifier.fillMaxWidth(), enabled = !isRequesting) {
-        Text(stringResource(R.string.onboarding_allow_location))
-    }
-}
-
-@Composable
-private fun Point(icon: ImageVector, @StringRes title: Int, @StringRes message: Int? = null) {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
-        Column {
-            if (message == null) {
-                Text(stringResource(title), style = MaterialTheme.typography.bodyLarge)
+    fun choose(choice: OnboardingChoice) {
+        viewModel.choose(choice)
+        scope.launch {
+            if (viewModel.needsLocation()) {
+                navigator.push(PrivacyKey(store = null))
             } else {
-                Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = stringResource(message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                finish()
             }
+        }
+    }
+
+    fun startTodos(store: FirstStore) {
+        if (viewModel.startsNewTodos(store)) {
+            placeEditor.start(placeId = null, entry = ScreenEntry.ONBOARDING)
+        }
+        navigator.push(FirstTodosKey(store))
+    }
+
+    fun pickStore(store: FirstStore) {
+        navigator.push(StorePickKey(store))
+    }
+
+    fun todosDone(store: FirstStore) {
+        scope.launch {
+            if (viewModel.needsLocation()) {
+                navigator.push(PrivacyKey(store))
+            } else {
+                pickStore(store)
+            }
+        }
+    }
+
+    // Any other store is filed by what was picked, as adding a place does; the kinds are all shopping.
+    fun save(store: FirstStore) {
+        var category = BuiltinCategory.SHOPPING
+        if (store.kind == StoreKind.OTHER) {
+            category = placeEditor.uiState.value.draft.suggestion ?: BuiltinCategory.SHOPPING
+        }
+        placeEditor.saveFirstPlace(defaultName = store.name(resources), category = category)
+    }
+
+    val requestLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        isRequestingLocation = false
+        viewModel.locationRequested()
+        val privacy = backStack.lastOrNull() as? PrivacyKey ?: return@rememberLauncherForActivityResult
+        val store = privacy.store
+        if (store == null) {
+            finish()
+            return@rememberLauncherForActivityResult
+        }
+        backStack.removeAt(backStack.lastIndex)
+        pickStore(store)
+    }
+
+    LaunchedEffect(result) {
+        result?.let(onFinished)
+    }
+    LaunchedEffect(Unit) {
+        placeEditor.events.collect { event ->
+            val store = backStack.filterIsInstance<StorePickKey>().lastOrNull()?.store ?: return@collect
+            when (event) {
+                PlaceEditorEvent.PredictionFetched -> navigator.pop()
+                PlaceEditorEvent.LocationChosen -> save(store)
+                // Only a place already saved, which a fresh install does not have.
+                is PlaceEditorEvent.OpenSavedPlace -> choose(OnboardingChoice.LATER)
+                is PlaceEditorEvent.Saved -> {
+                    val name = placeEditor.uiState.value.draft.name.trim()
+                    viewModel.firstPlaceSaved(store.kind, name)
+                    replaceWith(DoneKey(name, store.kind))
+                }
+            }
+        }
+    }
+    // An invite link opened mid-onboarding: the household's places replace a first place, so skip to it.
+    LaunchedEffect(pendingInvite) {
+        val top = backStack.lastOrNull()
+        val isDeciding = top !is DoneKey && top != AnalyticsKey && !(top is PrivacyKey && top.store == null)
+        if (pendingInvite != null && isDeciding) {
+            choose(OnboardingChoice.INVITE)
+        }
+    }
+
+    CompositionLocalProvider(LocalNavigator provides navigator) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = navigator::pop,
+                entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+                entryProvider = entryProvider {
+                    entry<IntroKey> {
+                        TrackStep(OnboardingStep.INTRO)
+                        IntroPage(onStart = { navigator.push(StoreKindKey) }, onReturning = { navigator.push(ReturningKey) })
+                    }
+                    entry<StoreKindKey> {
+                        TrackStep(OnboardingStep.STORE_KIND)
+                        StoreKindPage(
+                            onPick = { kind ->
+                                if (kind == StoreKind.OTHER) {
+                                    navigator.push(StoreNameKey)
+                                } else {
+                                    startTodos(FirstStore(kind))
+                                }
+                            },
+                            onLater = { choose(OnboardingChoice.LATER) },
+                        )
+                    }
+                    entry<StoreNameKey> {
+                        TrackStep(OnboardingStep.STORE_NAME)
+                        StoreNamePage(onNext = { name -> startTodos(FirstStore(StoreKind.OTHER, name)) })
+                    }
+                    entry<FirstTodosKey> { key ->
+                        TrackStep(OnboardingStep.TODOS)
+                        FirstTodosPage(store = key.store, placeEditor = placeEditor, onNext = { todosDone(key.store) })
+                    }
+                    entry<PrivacyKey> { key ->
+                        TrackStep(OnboardingStep.PRIVACY)
+                        var reason = stringResource(R.string.first_place_permissions)
+                        if (key.store == null) {
+                            reason = stringResource(R.string.first_place_later_permissions)
+                        }
+                        PrivacyPage(
+                            reason = reason,
+                            isRequesting = isRequestingLocation,
+                            onAllow = {
+                                isRequestingLocation = true
+                                requestLocation.launch(
+                                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                                )
+                            },
+                        )
+                    }
+                    entry<StorePickKey> { key ->
+                        PlacePickScreen(
+                            viewModel = placeEditor,
+                            onOpenSearch = { navigator.push(StoreSearchKey) },
+                            heading = key.store.storeTitle(resources),
+                        )
+                    }
+                    entry<StoreSearchKey> {
+                        PlaceSearchScreen(viewModel = placeEditor)
+                    }
+                    entry<DoneKey> { key ->
+                        TrackStep(OnboardingStep.DONE)
+                        var needsSetup = false
+                        permissions?.let { current -> needsSetup = ReminderSetup.missing(current).isNotEmpty() }
+                        DonePage(placeName = key.placeName, needsSetup = needsSetup, onContinue = ::finish)
+                    }
+                    entry<ReturningKey> {
+                        TrackStep(OnboardingStep.RETURNING)
+                        ReturningPage(
+                            onInvite = { choose(OnboardingChoice.INVITE) },
+                            onSignIn = { choose(OnboardingChoice.SIGN_IN) },
+                            onBack = navigator::pop,
+                        )
+                    }
+                    entry<AnalyticsKey> {
+                        TrackStep(OnboardingStep.ANALYTICS)
+                        AnalyticsConsentPage(onAnswer = viewModel::answerAnalytics)
+                    }
+                },
+            )
         }
     }
 }
 
-private const val NOTIFICATION_DELAY_MILLIS = 400L
-private const val FEATURES_DELAY_MILLIS = 500L
-private const val FEATURES_FADE_MILLIS = 400
-
 @Composable
-private fun ColumnScope.Notifications(isRequesting: Boolean, onAllow: () -> Unit, onLater: () -> Unit) {
-    Spacer(Modifier.weight(1f))
-    Hero(Icons.Filled.NotificationsActive)
-    Text(
-        text = stringResource(R.string.onboarding_notifications_title),
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
-    )
-    Text(
-        text = stringResource(R.string.onboarding_notifications_description),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-    )
-    Spacer(Modifier.weight(1f))
-    Button(onClick = onAllow, modifier = Modifier.fillMaxWidth(), enabled = !isRequesting) {
-        Text(stringResource(R.string.onboarding_allow_notifications))
-    }
-    TextButton(onClick = onLater, enabled = !isRequesting) {
-        Text(stringResource(R.string.onboarding_later))
-    }
-}
-
-@Composable
-private fun ColumnScope.AnalyticsConsentStep(onAnswer: (Boolean) -> Unit) {
-    val uriHandler = LocalUriHandler.current
-    val locale = LocalConfiguration.current.locales[0]
-    Spacer(Modifier.weight(1f))
-    Hero(Icons.Filled.BarChart)
-    Text(
-        text = stringResource(R.string.onboarding_analytics_title),
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
-    )
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Point(Icons.Filled.Person, R.string.onboarding_analytics_message)
-        Point(Icons.Filled.Lock, R.string.onboarding_analytics_not_sent)
-        Point(Icons.Filled.Settings, R.string.onboarding_analytics_settings)
-    }
-    TextButton(onClick = { uriHandler.openUri(LegalLinks.privacyPolicy(locale)) }) {
-        Text(stringResource(R.string.settings_about_privacy_policy))
-    }
-    Spacer(Modifier.weight(1f))
-    // Same size and place, so declining is as easy as agreeing.
-    Button(onClick = { onAnswer(true) }, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.onboarding_analytics_allow))
-    }
-    OutlinedButton(onClick = { onAnswer(false) }, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.onboarding_analytics_deny))
-    }
-}
-
-@Composable
-private fun Hero(icon: ImageVector) {
-    Icon(
-        icon,
-        contentDescription = null,
-        modifier = Modifier.size(88.dp),
-        tint = MaterialTheme.colorScheme.primary,
-    )
+private fun TrackStep(step: OnboardingStep) {
+    TrackScreen(AnalyticsScreen.ONBOARDING, mapOf(AnalyticsParameter.STEP to step.key))
 }
