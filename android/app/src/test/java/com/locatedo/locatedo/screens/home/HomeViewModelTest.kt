@@ -114,7 +114,7 @@ class HomeViewModelTest {
         viewModel.alwaysLocationAnswered(AlwaysPromptAnswer.DISMISSED)
 
         assertEquals(
-            mapOf("result" to "dismissed", "duration_s" to 4L),
+            mapOf("missing" to "location_always", "result" to "dismissed", "duration_s" to 4L),
             analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
         )
     }

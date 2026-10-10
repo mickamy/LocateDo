@@ -104,7 +104,7 @@ class PromotionsConsentTest {
             analytics.values(AnalyticsEvent.PROMOTIONS_PROMPT_ANSWERED),
         )
         assertEquals(
-            mapOf("to" to "on", "source" to "first_arrival"),
+            mapOf("to" to "on", "source" to "first_reminder"),
             analytics.values(AnalyticsEvent.PROMOTIONS_CONSENT_CHANGED),
         )
     }

@@ -200,7 +200,7 @@ class SettingsViewModelTest {
 
         assertFalse(viewModel.isExplainingAlwaysLocation.value)
         assertEquals(
-            mapOf("result" to "later", "duration_s" to 8L),
+            mapOf("missing" to "location_always", "result" to "later", "duration_s" to 8L),
             analytics.values(AnalyticsEvent.ALWAYS_PROMPT_ANSWERED),
         )
     }
