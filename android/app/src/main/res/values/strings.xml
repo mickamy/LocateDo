@@ -70,6 +70,7 @@
     <string name="home_permission_banner_location">Allow “Always” location to get reminders while the app is closed.</string>
     <string name="home_permission_banner_location_denied">Allow location access in Settings to get reminders.</string>
     <string name="home_permission_banner_notifications">Allow notifications to get reminders.</string>
+    <string name="home_permission_banner_precise_location">Allow precise location to get arrival reminders.</string>
     <string name="invite_already_member">You’re already in this household.</string>
     <string name="invite_android_message">You’ll share places and to-dos with the people in this household. The places and to-dos on this phone are added to it.</string>
     <string name="invite_android_paste">Paste</string>
@@ -173,12 +174,16 @@
     <string name="promotions_prompt_title">Want news from StopBy?</string>
     <string name="reminder_setup_allow">Allow</string>
     <string name="reminder_setup_allowed">Allowed</string>
-    <string name="reminder_setup_description">StopBy needs two settings to remind you when you arrive, even with the app closed.</string>
+    <string name="reminder_setup_description">StopBy needs these settings to remind you when you arrive, even with the app closed.</string>
     <string name="reminder_setup_later">Not now</string>
     <string name="reminder_setup_location">Location set to “Always”</string>
     <string name="reminder_setup_never">Don’t show again</string>
     <string name="reminder_setup_notifications">Notifications</string>
+    <!-- Row in the reminder setup sheet for the precise location switch; approximate location gets no arrival reminders. -->
+    <string name="reminder_setup_precise_location">Precise location</string>
     <string name="reminder_setup_title">To be reminded when you arrive</string>
+    <!-- Shown with a check in place of the button once precise location is on. -->
+    <string name="reminder_setup_turned_on">On</string>
     <string name="removed_android_message">You were removed from the shared household, so the data on this phone was removed and you’re starting over on your own.</string>
     <string name="removed_message">You were removed from the shared household, so the data on this iPhone was removed and you’re starting over on your own.</string>
     <string name="removed_title">Removed from Sharing</string>
@@ -229,6 +234,7 @@
     <string name="settings_location_android_needs_always">Arrival reminders need “%1$s” so StopBy can notice when you arrive while it is closed.</string>
     <string name="settings_location_denied">Not allowed</string>
     <string name="settings_location_needs_always">Arrival reminders need “Always” so StopBy can notice when you arrive while it is closed.</string>
+    <string name="settings_location_needs_precise">Arrival reminders need precise location to tell when you reach a place.</string>
     <string name="settings_location_not_determined">Not asked yet</string>
     <string name="settings_location_title">Location</string>
     <string name="settings_location_when_in_use">While using the app</string>

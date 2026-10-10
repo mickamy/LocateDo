@@ -87,9 +87,11 @@ promotions_prompt:
   decline: "今はいい"
 reminder_setup:
   title: "着いたらお知らせするには"
-  description: "アプリを閉じている間も到着をお知らせするため、2 つの設定が必要です。"
+  description: "アプリを閉じている間も到着をお知らせするため、次の設定が必要です。"
   notifications: "通知"
   location: "位置情報を「常に許可」"
+  precise_location: "正確な位置情報"
+  turned_on: "オン"
   allow: "許可する"
   allowed: "許可済み"
   later: "あとで"
@@ -110,6 +112,7 @@ settings:
     not_determined: "未設定"
     needs_always: "アプリを閉じている間も到着をお知らせするには「常に許可」が必要です。"
     android_needs_always: "アプリを閉じている間も到着をお知らせするには「{option}」が必要です。"
+    needs_precise: "到着を判定するには、正確な位置情報が必要です。"
     allow: "位置情報を許可"
   notifications:
     title: "通知"
@@ -192,6 +195,7 @@ home:
     location: "アプリを閉じている間もお知らせするには、位置情報を「常に許可」にしてください。"
     location_denied: "お知らせを受け取るには、設定で位置情報を許可してください。"
     notifications: "お知らせを受け取るには、通知を許可してください。"
+    precise_location: "到着をお知らせするには、正確な位置情報の使用を許可してください。"
     android_location: "アプリを閉じている間もお知らせするには、位置情報を「{option}」にしてください。"
   empty:
     title: "場所がまだありません"
