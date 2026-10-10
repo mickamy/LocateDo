@@ -10,18 +10,28 @@ struct LocationPicker: View {
 
     let closesOnPick: Bool
     let entry: ScreenEntry?
+    let title: LocalizedStringResource
+    let initialSearch: LocalizedStringResource?
+    let showsCancel: Bool
     let onPick: (PlacePick) -> Void
     @State private var model: LocationPickerModel
     @State private var query = ""
     @State private var isSearching = false
+    @State private var hasSearchedInitially = false
 
     init(
         initialCoordinate: CLLocationCoordinate2D?,
         closesOnPick: Bool,
         entry: ScreenEntry? = nil,
+        title: LocalizedStringResource = .placePickerTitle,
+        initialSearch: LocalizedStringResource? = nil,
+        showsCancel: Bool = true,
         onPick: @escaping (PlacePick) -> Void
     ) {
         self.entry = entry
+        self.title = title
+        self.initialSearch = initialSearch
+        self.showsCancel = showsCancel
         self.closesOnPick = closesOnPick
         self.onPick = onPick
         _model = State(initialValue: LocationPickerModel(initialCoordinate: initialCoordinate))
@@ -73,14 +83,16 @@ struct LocationPicker: View {
             .presentationBackground(.thickMaterial)
             .presentationDragIndicator(.visible)
         }
-        .navigationTitle(Text(.placePickerTitle))
+        .navigationTitle(Text(title))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.thickMaterial, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button(.commonCancel) {
-                    dismiss()
+            if showsCancel {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(.commonCancel) {
+                        dismiss()
+                    }
                 }
             }
             ToolbarItem(placement: .bottomBar) {
@@ -91,6 +103,18 @@ struct LocationPicker: View {
         .onAppear {
             model.currentLocation = { [locationProvider] in locationProvider.location }
         }
+        .task(id: locationProvider.location == nil) {
+            await searchInitially()
+        }
+    }
+
+    // The stores of the kind around you, once where you are is known.
+    private func searchInitially() async {
+        guard let initialSearch, !hasSearchedInitially, locationProvider.location != nil else {
+            return
+        }
+        hasSearchedInitially = true
+        await model.searchNearby(String(localized: initialSearch))
     }
 
     private var isSheetPresented: Binding<Bool> {

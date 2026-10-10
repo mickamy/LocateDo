@@ -15,6 +15,12 @@ struct PermissionBannerTests {
         #expect(banner(.authorizedAlways, .denied) == .notifications)
     }
 
+    @Test func unaskedNotificationsShowOnceLocationIsAlways() {
+        #expect(banner(.authorizedAlways, .notDetermined) == .notifications)
+        #expect(banner(.authorizedWhenInUse, .notDetermined) == .locationAlways)
+        #expect(banner(.notDetermined, .notDetermined) == nil)
+    }
+
     @Test func approximateLocationComesAfterAlwaysAndBeforeNotifications() {
         #expect(banner(.authorizedAlways, precise: false, .denied) == .preciseLocation)
         #expect(banner(.authorizedWhenInUse, precise: false, .authorized) == .locationAlways)

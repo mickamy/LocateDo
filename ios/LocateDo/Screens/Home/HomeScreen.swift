@@ -95,6 +95,12 @@ struct HomeScreen: View {
     private func permissionBanner(_ issue: PermissionBanner) -> some View {
         Button {
             Analytics.log(.permissionBannerTapped, parameters: [.kind: issue.rawValue])
+            if issue == .notifications, notifier.authorizationStatus == .notDetermined {
+                Task {
+                    await notifier.requestAuthorization()
+                }
+                return
+            }
             navigator.present(.settings(.permissionBanner))
         } label: {
             Label {
@@ -104,6 +110,7 @@ struct HomeScreen: View {
                     .foregroundStyle(.orange)
             }
         }
+        .accessibilityIdentifier("home.permissionBanner")
         .listRowBackground(Color.orange.opacity(0.12))
     }
 

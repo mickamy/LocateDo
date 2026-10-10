@@ -39,6 +39,10 @@ struct MainScreen: View {
         .task {
             locationProvider.start()
             await notifier.refreshAuthorizationStatus()
+            // The place saved in onboarding gets its reminder setup over Home.
+            if navigator.didAddPlace, !navigator.isPresenting {
+                sheetsClosed()
+            }
         }
         .task(id: scenePhase) {
             await becameActive()

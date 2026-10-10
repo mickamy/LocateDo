@@ -71,14 +71,15 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 10))
         // The intro reveals itself top to bottom; the button fades in last.
         sleep(1)
-        // "Always" is granted before launch, so only the notification alert appears.
+        // "Always" is granted before launch, so onboarding skips location, and only the notification alert appears,
+        // asked from Home's banner.
         start.tap()
-        let allowLocation = app.buttons["onboarding.allowLocation"]
-        XCTAssertTrue(allowLocation.waitForExistence(timeout: 5))
-        allowLocation.tap()
-        let allowNotifications = app.buttons["onboarding.allowNotifications"]
-        XCTAssertTrue(allowNotifications.waitForExistence(timeout: 5))
-        allowNotifications.tap()
+        let later = app.buttons["onboarding.later"]
+        XCTAssertTrue(later.waitForExistence(timeout: 5))
+        later.tap()
+        let banner = app.buttons["home.permissionBanner"]
+        XCTAssertTrue(banner.waitForExistence(timeout: 5))
+        banner.tap()
         allowSystemAlert()
     }
 

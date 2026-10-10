@@ -135,6 +135,7 @@ nonisolated enum ScreenEntry: String {
     case mapPin = "map_pin"
     case newPlace = "new_place"
     case notification
+    case onboarding
     case permissionBanner = "permission_banner"
     case place
     case todoEditor = "todo_editor"

@@ -23,7 +23,7 @@ nonisolated enum PermissionBanner: String {
             self = .preciseLocation
             return
         }
-        guard notifications == .denied else {
+        guard notifications == .denied || (notifications == .notDetermined && location == .authorizedAlways) else {
             return nil
         }
         self = .notifications

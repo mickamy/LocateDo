@@ -785,6 +785,635 @@
         }
       }
     },
+    "first_place.convenience.idea_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Water"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公共料金の支払い"
+          }
+        }
+      }
+    },
+    "first_place.convenience.idea_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snacks"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "荷物を出す"
+          }
+        }
+      }
+    },
+    "first_place.convenience.idea_3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteries"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切手"
+          }
+        }
+      }
+    },
+    "first_place.convenience.idea_4" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コピー"
+          }
+        }
+      }
+    },
+    "first_place.convenience.idea_5" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gum"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "おにぎり"
+          }
+        }
+      }
+    },
+    "first_place.convenience.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convenience store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンビニ"
+          }
+        }
+      }
+    },
+    "first_place.convenience.store_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which convenience store do you go to?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつも行くコンビニは？"
+          }
+        }
+      }
+    },
+    "first_place.convenience.todos_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What do you need at the convenience store?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンビニでやることは？"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.idea_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toothpaste"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "歯みがき粉"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.idea_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shampoo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャンプー"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.idea_3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tissues"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ティッシュ"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.idea_4" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitamins"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目薬"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.idea_5" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laundry detergent"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "洗剤"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drugstore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドラッグストア"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.store_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which drugstore do you go to?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつも行くドラッグストアは？"
+          }
+        }
+      }
+    },
+    "first_place.drugstore.todos_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What do you need at the drugstore?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドラッグストアで買うものは？"
+          }
+        }
+      }
+    },
+    "first_place.grocery.idea_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Milk"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "牛乳"
+          }
+        }
+      }
+    },
+    "first_place.grocery.idea_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eggs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卵"
+          }
+        }
+      }
+    },
+    "first_place.grocery.idea_3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bread"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "食パン"
+          }
+        }
+      }
+    },
+    "first_place.grocery.idea_4" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bananas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "納豆"
+          }
+        }
+      }
+    },
+    "first_place.grocery.idea_5" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coffee"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バナナ"
+          }
+        }
+      }
+    },
+    "first_place.grocery.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grocery store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スーパー"
+          }
+        }
+      }
+    },
+    "first_place.grocery.store_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which grocery store do you go to?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつも行くスーパーは？"
+          }
+        }
+      }
+    },
+    "first_place.grocery.todos_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What do you need at the grocery store?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スーパーで買うものは？"
+          }
+        }
+      }
+    },
+    "first_place.hardware.idea_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light bulbs"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電球"
+          }
+        }
+      }
+    },
+    "first_place.hardware.idea_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteries"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "乾電池"
+          }
+        }
+      }
+    },
+    "first_place.hardware.idea_3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trash bags"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ゴミ袋"
+          }
+        }
+      }
+    },
+    "first_place.hardware.idea_4" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tape"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ガムテープ"
+          }
+        }
+      }
+    },
+    "first_place.hardware.idea_5" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screws"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ねじ"
+          }
+        }
+      }
+    },
+    "first_place.hardware.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hardware store"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホームセンター"
+          }
+        }
+      }
+    },
+    "first_place.hardware.store_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which hardware store do you go to?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつも行くホームセンターは？"
+          }
+        }
+      }
+    },
+    "first_place.hardware.todos_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What do you need at the hardware store?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホームセンターで買うものは？"
+          }
+        }
+      }
+    },
+    "first_place.ideas_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ideas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "よく書かれるもの"
+          }
+        }
+      }
+    },
+    "first_place.kind_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick one. StopBy reminds you when you get there."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 つ選んでください。そのお店に着いたら、やることをお知らせします。"
+          }
+        }
+      }
+    },
+    "first_place.kind_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where do you forget things most?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "よく買い忘れるのは、どこ？"
+          }
+        }
+      }
+    },
+    "first_place.later_permissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StopBy asks for your location to show the places near you and the distance to them."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近くの場所と、そこまでの距離を表示するために、位置情報の許可をお願いします。"
+          }
+        }
+      }
+    },
+    "first_place.permissions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "StopBy asks for your location to find stores near you."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近くのお店を探すために、位置情報の許可をお願いします。"
+          }
+        }
+      }
+    },
     "home.add_place" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1299,23 +1928,6 @@
         }
       }
     },
-    "onboarding.allow_notifications" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow notifications"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知を許可"
-          }
-        }
-      }
-    },
     "onboarding.analytics_allow" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1435,104 +2047,19 @@
         }
       }
     },
-    "onboarding.feature_arrival_message" : {
+    "onboarding.headline" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Even with the app closed"
+            "value" : "Get to the store, and your list pops up."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アプリを閉じていても届きます"
-          }
-        }
-      }
-    },
-    "onboarding.feature_arrival_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminded when you arrive"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "着いたら、すぐお知らせ"
-          }
-        }
-      }
-    },
-    "onboarding.feature_family_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Know when someone picks it up"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "誰かが買ったら、すぐ分かる"
-          }
-        }
-      }
-    },
-    "onboarding.feature_family_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shared with your family"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "家族と共有"
-          }
-        }
-      }
-    },
-    "onboarding.feature_lists_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down where you'll buy it"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "買う場所ごとに書いておくだけ"
-          }
-        }
-      }
-    },
-    "onboarding.feature_lists_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A list for every store"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "お店ごとの買い物リスト"
+            "value" : "お店に着いたら、買うものをお知らせ。"
           }
         }
       }
@@ -1550,57 +2077,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "あとで"
-          }
-        }
-      }
-    },
-    "onboarding.notifications_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "StopBy sends a notification when you arrive at a place that still has open to-dos."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "やることが残っている場所に着くと、通知でお知らせします。"
-          }
-        }
-      }
-    },
-    "onboarding.notifications_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get notified when you arrive"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "着いたらお知らせ"
-          }
-        }
-      }
-    },
-    "onboarding.permissions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "StopBy asks for your location to do that."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "そのために位置情報の許可をお願いします。"
           }
         }
       }
@@ -1737,23 +2213,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "はじめる"
-          }
-        }
-      }
-    },
-    "onboarding.tagline" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Where you go reminds you what to do."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "行く場所が、やることを思い出させる。"
           }
         }
       }

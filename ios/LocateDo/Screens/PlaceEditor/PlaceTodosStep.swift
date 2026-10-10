@@ -19,6 +19,7 @@ struct PlaceTodosStep: View {
         Form {
             DraftTodosSection(
                 placeName: placeName,
+                title: .placeEditorTodosTitle(placeName),
                 todos: $todos,
                 draft: $draft,
                 remaining: remaining,
@@ -47,8 +48,9 @@ struct PlaceTodosStep: View {
 
 // To-dos typed while adding a place, under a preview of the arrival notification they will make. "Add To-Do" turns
 // into a field where Return adds the row and moves on to the next. Rows carry no circle, which would look checkable.
-private struct DraftTodosSection: View {
+struct DraftTodosSection: View {
     let placeName: String
+    let title: LocalizedStringResource
     @Binding var todos: [DraftTodo]
     @Binding var draft: String
     let remaining: Int?
@@ -83,7 +85,7 @@ private struct DraftTodosSection: View {
         } header: {
             VStack(alignment: .leading, spacing: 20) {
                 preview
-                Text(.placeEditorTodosTitle(placeName))
+                Text(title)
                     .font(.title3.bold())
                     .foregroundStyle(.primary)
             }
