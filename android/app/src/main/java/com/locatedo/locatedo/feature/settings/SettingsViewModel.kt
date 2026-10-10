@@ -59,6 +59,8 @@ data class SettingsUiState(
     val isSignedIn: Boolean = false,
     val location: LocationAuth = LocationAuth.NOT_DETERMINED,
     val notifications: NotificationAuth = NotificationAuth.NOT_DETERMINED,
+    val needsPreciseLocation: Boolean = false,
+    val hasRequestedPreciseLocation: Boolean = false,
     val promotionsConsent: Boolean = false,
     val completionNotices: Boolean = true,
     val defaultRadiusMeters: Double = Place.DEFAULT_RADIUS_METERS,
@@ -118,12 +120,21 @@ class SettingsViewModel @Inject constructor(
             isSignedIn = session != null,
             location = granted.location,
             notifications = granted.notifications,
+            needsPreciseLocation = granted.needsPreciseLocation,
+            hasRequestedPreciseLocation = granted.hasRequestedPreciseLocation,
             promotionsConsent = promotions,
             completionNotices = completion,
             defaultRadiusMeters = stored.defaultRadiusMeters,
             pro = pro,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), SettingsUiState())
+
+    fun preciseLocationRequested() {
+        viewModelScope.launch {
+            permissions.markPreciseLocationRequested()
+            permissions.refresh()
+        }
+    }
 
     fun upgrade() = paywallRequests.request(PaywallTrigger.SETTINGS)
 

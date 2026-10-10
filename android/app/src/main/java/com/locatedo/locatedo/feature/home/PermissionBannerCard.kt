@@ -28,6 +28,7 @@ fun PermissionBannerCard(banner: PermissionBanner, onClick: () -> Unit) {
     val message = when (banner) {
         PermissionBanner.LOCATION_ALWAYS -> stringResource(R.string.home_permission_banner_android_location, backgroundOption)
         PermissionBanner.LOCATION_DENIED -> stringResource(R.string.home_permission_banner_location_denied)
+        PermissionBanner.PRECISE_LOCATION -> stringResource(R.string.home_permission_banner_precise_location)
         PermissionBanner.NOTIFICATIONS -> stringResource(R.string.home_permission_banner_notifications)
     }
     Card(

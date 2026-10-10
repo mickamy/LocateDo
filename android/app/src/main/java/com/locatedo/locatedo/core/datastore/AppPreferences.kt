@@ -20,6 +20,7 @@ data class UserPreferences(
     val hasCompletedOnboarding: Boolean = false,
     val hasRequestedLocation: Boolean = false,
     val hasRequestedNotifications: Boolean = false,
+    val hasRequestedPreciseLocation: Boolean = false,
     val reminderSetupShownAt: Instant? = null,
     val reminderSetupShownCount: Int = 0,
     val reminderSetupNever: Boolean = false,
@@ -56,6 +57,7 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
         val completedOnboarding = booleanPreferencesKey("completedOnboarding")
         val requestedLocation = booleanPreferencesKey("requestedLocation")
         val requestedNotifications = booleanPreferencesKey("requestedNotifications")
+        val requestedPreciseLocation = booleanPreferencesKey("requestedPreciseLocation")
         val reminderSetupShownAt = longPreferencesKey("reminderSetupShownAt")
         val reminderSetupShownCount = intPreferencesKey("reminderSetupShownCount")
         val reminderSetupNever = booleanPreferencesKey("reminderSetupNever")
@@ -113,6 +115,7 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             hasCompletedOnboarding = preferences[Keys.completedOnboarding] ?: false,
             hasRequestedLocation = preferences[Keys.requestedLocation] ?: false,
             hasRequestedNotifications = preferences[Keys.requestedNotifications] ?: false,
+            hasRequestedPreciseLocation = preferences[Keys.requestedPreciseLocation] ?: false,
             reminderSetupShownAt = preferences[Keys.reminderSetupShownAt]?.let(Instant::ofEpochMilli),
             reminderSetupShownCount = preferences[Keys.reminderSetupShownCount] ?: 0,
             reminderSetupNever = preferences[Keys.reminderSetupNever] ?: false,
@@ -136,6 +139,10 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
 
     suspend fun setRequestedNotifications(requested: Boolean) {
         dataStore.edit { it[Keys.requestedNotifications] = requested }
+    }
+
+    suspend fun setRequestedPreciseLocation(requested: Boolean) {
+        dataStore.edit { it[Keys.requestedPreciseLocation] = requested }
     }
 
     // Returns which showing this is, counting from 1.
@@ -221,6 +228,7 @@ class AppPreferences @Inject constructor(private val dataStore: DataStore<Prefer
             it.remove(Keys.completedOnboarding)
             it.remove(Keys.requestedLocation)
             it.remove(Keys.requestedNotifications)
+            it.remove(Keys.requestedPreciseLocation)
             it.remove(Keys.reminderSetupShownAt)
             it.remove(Keys.reminderSetupShownCount)
             it.remove(Keys.reminderSetupNever)

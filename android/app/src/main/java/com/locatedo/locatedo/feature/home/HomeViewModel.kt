@@ -38,6 +38,7 @@ data class HomeUiState(
     val isSignedIn: Boolean = false,
     val isRefreshing: Boolean = false,
     val permissionBanner: PermissionBanner? = null,
+    val hasRequestedPreciseLocation: Boolean = false,
 ) {
     val openTodoCount: Int
         get() = places.sumOf { it.openTodos.size }
@@ -80,10 +81,20 @@ class HomeViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<HomeUiState> = combine(content, permissions.observe()) { state, granted ->
-        state.copy(permissionBanner = PermissionBanner.of(granted.location, granted.notifications, state.places.isNotEmpty()))
+        state.copy(
+            permissionBanner = PermissionBanner.of(granted, state.places.isNotEmpty()),
+            hasRequestedPreciseLocation = granted.hasRequestedPreciseLocation,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState())
 
     fun refreshPermissions() = permissions.refresh()
+
+    fun preciseLocationRequested() {
+        viewModelScope.launch {
+            permissions.markPreciseLocationRequested()
+            permissions.refresh()
+        }
+    }
 
     // The "all the time" banner explains first, as the Settings button does; the others go straight to system settings.
     fun permissionBannerTapped(banner: PermissionBanner) {

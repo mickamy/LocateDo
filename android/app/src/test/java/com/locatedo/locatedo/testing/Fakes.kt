@@ -203,6 +203,7 @@ class FakePermissionsRepository(
     var refreshCount = 0
     var locationRequested = false
     var notificationsRequested = false
+    var preciseLocationRequested = false
     var batteryOptimizationExempt = false
 
     override fun observe(): Flow<Permissions> = state
@@ -219,6 +220,10 @@ class FakePermissionsRepository(
 
     override suspend fun markNotificationsRequested() {
         notificationsRequested = true
+    }
+
+    override suspend fun markPreciseLocationRequested() {
+        preciseLocationRequested = true
     }
 }
 

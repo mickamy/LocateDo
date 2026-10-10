@@ -62,6 +62,7 @@ import com.locatedo.locatedo.core.common.SystemSettings
 import com.locatedo.locatedo.core.permissions.LocationAuth
 import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.feature.onboarding.AlwaysLocationSheet
+import com.locatedo.locatedo.feature.onboarding.rememberPreciseLocationRequest
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 import com.locatedo.locatedo.ui.components.RadiusSlider
 import java.time.Instant
@@ -85,6 +86,10 @@ fun SettingsScreen(
     val uriHandler = LocalUriHandler.current
     val locale = LocalConfiguration.current.locales[0]
     val isExplainingAlwaysLocation by viewModel.isExplainingAlwaysLocation.collectAsStateWithLifecycle()
+    val requestPreciseLocation = rememberPreciseLocationRequest(
+        hasRequested = uiState.hasRequestedPreciseLocation,
+        onRequested = viewModel::preciseLocationRequested,
+    )
     val requestLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         viewModel.locationRequested()
     }
@@ -130,6 +135,11 @@ fun SettingsScreen(
             HorizontalDivider()
             LocationSection(
                 auth = uiState.location,
+                needsPreciseLocation = uiState.needsPreciseLocation,
+                onRequestPreciseLocation = {
+                    viewModel.permissionActionTapped(PermissionKind.PRECISE_LOCATION, PermissionAction.REQUEST)
+                    requestPreciseLocation()
+                },
                 onAllow = {
                     viewModel.permissionActionTapped(PermissionKind.LOCATION, PermissionAction.REQUEST)
                     requestLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -289,6 +299,8 @@ private fun formatDate(at: Instant, locale: Locale): String =
 @Composable
 private fun LocationSection(
     auth: LocationAuth,
+    needsPreciseLocation: Boolean,
+    onRequestPreciseLocation: () -> Unit,
     onAllow: () -> Unit,
     onExplainAlways: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -301,7 +313,10 @@ private fun LocationSection(
         trailingContent = { Text(locationStatus(auth)) },
     )
     when (auth) {
-        LocationAuth.ALWAYS -> Unit
+        LocationAuth.ALWAYS -> if (needsPreciseLocation) {
+            SectionNote(stringResource(R.string.settings_location_needs_precise))
+            SectionAction(stringResource(R.string.settings_open_settings), onRequestPreciseLocation)
+        }
         LocationAuth.WHEN_IN_USE -> {
             SectionNote(stringResource(R.string.settings_location_android_needs_always, backgroundOption))
             SectionAction(stringResource(R.string.settings_open_settings), onExplainAlways)

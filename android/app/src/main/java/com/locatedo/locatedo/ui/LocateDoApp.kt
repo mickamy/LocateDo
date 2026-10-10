@@ -51,6 +51,7 @@ import com.locatedo.locatedo.feature.categories.CategoriesScreen
 import com.locatedo.locatedo.feature.home.HomeScreen
 import com.locatedo.locatedo.feature.map.MapScreen
 import com.locatedo.locatedo.feature.onboarding.OnboardingScreen
+import com.locatedo.locatedo.feature.onboarding.ReminderSetupNeed
 import com.locatedo.locatedo.feature.onboarding.ReminderSetupSheet
 import com.locatedo.locatedo.feature.paywall.PaywallScreen
 import com.locatedo.locatedo.feature.place.PlaceDetailScreen
@@ -122,10 +123,13 @@ fun LocateDoApp(appViewModel: AppViewModel = hiltViewModel()) {
         )
     }
     val currentPermissions = permissions
-    if (appState.reminderSetup != null && currentPermissions != null) {
+    val reminderSetup = appState.reminderSetup
+    if (reminderSetup != null && currentPermissions != null) {
         ReminderSetupSheet(
             permissions = currentPermissions,
+            asksForPreciseLocation = ReminderSetupNeed.PRECISE_LOCATION in reminderSetup.missing,
             onNotificationsRequested = appViewModel::notificationsRequested,
+            onPreciseLocationRequested = appViewModel::preciseLocationRequested,
             onRefresh = appViewModel::refreshPermissions,
             onClose = appViewModel::closeReminderSetup,
         )

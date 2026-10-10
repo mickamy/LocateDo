@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Notifications
@@ -51,13 +52,16 @@ import com.locatedo.locatedo.core.permissions.NotificationAuth
 import com.locatedo.locatedo.core.permissions.Permissions
 import com.locatedo.locatedo.ui.analytics.TrackScreen
 
-// What arrival reminders still need, offered right after a place is saved: notifications and "all the time" location,
-// each with a check once done. The background location text stays as Play's prominent disclosure.
+// What arrival reminders still need, offered right after a place is saved: notifications, "all the time" location, and
+// precise location when it was approximate, each with a check once done. The background location text stays as Play's
+// prominent disclosure.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderSetupSheet(
     permissions: Permissions,
+    asksForPreciseLocation: Boolean,
     onNotificationsRequested: () -> Unit,
+    onPreciseLocationRequested: () -> Unit,
     onRefresh: () -> Unit,
     onClose: (AlwaysPromptAnswer) -> Unit,
 ) {
@@ -70,6 +74,7 @@ fun ReminderSetupSheet(
     val requestBackgroundLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         onRefresh()
     }
+    val requestPreciseLocation = rememberPreciseLocationRequest(permissions.hasRequestedPreciseLocation, onPreciseLocationRequested)
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         onRefresh()
@@ -137,6 +142,19 @@ fun ReminderSetupSheet(
                         }
                     },
                 )
+                if (asksForPreciseLocation) {
+                    SetupRow(
+                        title = stringResource(R.string.reminder_setup_precise_location),
+                        icon = Icons.Filled.GpsFixed,
+                        done = if (permissions.needsPreciseLocation) null else stringResource(R.string.reminder_setup_turned_on),
+                        action = if (permissions.hasRequestedPreciseLocation) {
+                            stringResource(R.string.settings_open_settings)
+                        } else {
+                            stringResource(R.string.reminder_setup_allow)
+                        },
+                        onAction = requestPreciseLocation,
+                    )
+                }
             }
             if (ReminderSetup.needsAlways(permissions)) {
                 Text(

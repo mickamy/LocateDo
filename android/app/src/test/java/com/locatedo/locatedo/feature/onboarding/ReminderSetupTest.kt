@@ -7,7 +7,6 @@ import java.time.Duration
 import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -17,11 +16,39 @@ class ReminderSetupTest {
 
     @Test
     fun missingNamesWhatIsNotYetAllowed() {
-        assertEquals(ReminderSetupMissing.BOTH, ReminderSetup.missing(Permissions(LocationAuth.WHEN_IN_USE, NotificationAuth.DENIED)))
-        assertEquals(ReminderSetupMissing.NOTIFICATIONS, ReminderSetup.missing(Permissions(LocationAuth.ALWAYS, NotificationAuth.NOT_DETERMINED)))
-        assertEquals(ReminderSetupMissing.LOCATION_ALWAYS, ReminderSetup.missing(whenInUse))
-        assertEquals(ReminderSetupMissing.LOCATION_ALWAYS, ReminderSetup.missing(Permissions(LocationAuth.DENIED, NotificationAuth.AUTHORIZED)))
-        assertNull(ReminderSetup.missing(Permissions(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED)))
+        assertEquals(
+            listOf(ReminderSetupNeed.NOTIFICATIONS, ReminderSetupNeed.LOCATION_ALWAYS),
+            ReminderSetup.missing(Permissions(LocationAuth.WHEN_IN_USE, NotificationAuth.DENIED)),
+        )
+        assertEquals(listOf(ReminderSetupNeed.NOTIFICATIONS), ReminderSetup.missing(Permissions(LocationAuth.ALWAYS, NotificationAuth.NOT_DETERMINED)))
+        assertEquals(listOf(ReminderSetupNeed.LOCATION_ALWAYS), ReminderSetup.missing(whenInUse))
+        assertEquals(listOf(ReminderSetupNeed.LOCATION_ALWAYS), ReminderSetup.missing(Permissions(LocationAuth.DENIED, NotificationAuth.AUTHORIZED)))
+        assertEquals(emptyList<ReminderSetupNeed>(), ReminderSetup.missing(Permissions(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED)))
+    }
+
+    @Test
+    fun approximateLocationIsMissingOnlyOnceLocationIsAllowed() {
+        assertEquals(
+            listOf(ReminderSetupNeed.LOCATION_ALWAYS, ReminderSetupNeed.PRECISE_LOCATION),
+            ReminderSetup.missing(whenInUse.copy(preciseLocation = false)),
+        )
+        assertEquals(
+            listOf(ReminderSetupNeed.LOCATION_ALWAYS),
+            ReminderSetup.missing(Permissions(LocationAuth.DENIED, NotificationAuth.AUTHORIZED, preciseLocation = false)),
+        )
+    }
+
+    @Test
+    fun onlyApproximateLocationMissingIsDue() {
+        val approximate = Permissions(LocationAuth.ALWAYS, NotificationAuth.AUTHORIZED, preciseLocation = false)
+
+        assertTrue(ReminderSetup.isDue(approximate, shownAt = null, never = false, now = now))
+    }
+
+    @Test
+    fun analyticsNameEveryMissingStepInOrder() {
+        assertEquals("notifications,location_always,precise_location", ReminderSetup.analyticsValue(ReminderSetupNeed.entries))
+        assertEquals("precise_location", ReminderSetup.analyticsValue(listOf(ReminderSetupNeed.PRECISE_LOCATION)))
     }
 
     @Test
