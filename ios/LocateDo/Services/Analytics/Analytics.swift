@@ -75,7 +75,9 @@ nonisolated enum AnalyticsParameter: String {
     case signedIn = "signed_in"
     case source
     case step
+    case suggestedCategory = "suggested_category"
     case to
+    case todoCount = "todo_count"
     case trigger
     case via
     case watchAppInstalled = "watch_app_installed"

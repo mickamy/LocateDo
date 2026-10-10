@@ -15,6 +15,11 @@ struct FirebaseAnalyticsSink: AnalyticsSink {
     }
 }
 
+nonisolated enum TodoAddVia: String {
+    case todoEditor = "todo_editor"
+    case placeEditor = "place_editor"
+}
+
 nonisolated enum PlaceSource: String {
     case search
     case map

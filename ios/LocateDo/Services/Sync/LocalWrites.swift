@@ -23,11 +23,21 @@ final class LocalWrites {
         self.onQueued = onQueued
     }
 
+    // To-dos typed while adding the place follow it, as many as the free limit leaves room for.
     @discardableResult
-    func add(_ place: Place, source: PlaceSource? = nil) -> FreeLimit? {
+    func add(
+        _ place: Place,
+        source: PlaceSource? = nil,
+        todoTitles: [String] = [],
+        suggestedCategory: BuiltinCategory? = nil
+    ) -> FreeLimit? {
         if reached(.places) {
             logLimitReached(.places)
             return .places
+        }
+        var titles = todoTitles
+        if let remaining = remaining(.openTodos) {
+            titles = Array(titles.prefix(remaining))
         }
         context.insert(place)
         commit([.put(place)])
@@ -35,6 +45,8 @@ final class LocalWrites {
             .placeCount: count(FetchDescriptor<Place>()),
             .category: place.analyticsCategory,
             .radiusM: Int(place.radiusMeters),
+            .todoCount: titles.count,
+            .suggestedCategory: suggestedCategory?.rawValue ?? "none",
             .daysSinceInstall: daysSinceInstall()
         ]
         if let source {
@@ -42,7 +54,23 @@ final class LocalWrites {
         }
         analytics.log(.placeAdded, parameters: parameters)
         updateCountProperties()
+        for title in titles {
+            add(Todo(title: title, place: place), via: .placeEditor)
+        }
         return nil
+    }
+
+    // nil when there is no limit (Pro).
+    func remaining(_ limit: FreeLimit) -> Int? {
+        if isPro() {
+            return nil
+        }
+        switch limit {
+        case .places:
+            return max(FreeLimit.maxPlaces - count(FetchDescriptor<Place>()), 0)
+        case .openTodos:
+            return max(FreeLimit.maxOpenTodos - count(Self.openTodos), 0)
+        }
     }
 
     func update(_ place: Place, now: Date = .now) {
@@ -65,7 +93,7 @@ final class LocalWrites {
     }
 
     @discardableResult
-    func add(_ todo: Todo) -> FreeLimit? {
+    func add(_ todo: Todo, via: TodoAddVia = .todoEditor) -> FreeLimit? {
         if reached(.openTodos) {
             logLimitReached(.openTodos)
             return .openTodos
@@ -74,6 +102,7 @@ final class LocalWrites {
         todo.place?.todos.append(todo)
         commit([Write.put(todo)].compactMap(\.self))
         analytics.log(.todoAdded, parameters: [
+            .via: via.rawValue,
             .openTodoCount: count(Self.openTodos),
             .placeOpenTodos: todo.place?.openTodos.count ?? 0,
             .assigned: todo.assigneeID != nil,

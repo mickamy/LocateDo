@@ -3,7 +3,13 @@ import MapKit
 import SwiftData
 import SwiftUI
 
+// A new place is added in three screens (details, category, to-dos); an existing one is edited in this one form.
 struct PlaceEditorView: View {
+    private enum Step: Hashable {
+        case category
+        case todos
+    }
+
     @Environment(LocalWrites.self) private var writes
     @Environment(\.dismiss) private var dismiss
     @Environment(GeofenceMonitor.self) private var geofence
@@ -19,6 +25,11 @@ struct PlaceEditorView: View {
     @State private var isPickingLocation = false
     @FocusState private var isNameFocused: Bool
     @State private var paywall: PaywallTrigger?
+    @State private var todos: [DraftTodo] = []
+    @State private var todoDraft = ""
+    @State private var suggestion: BuiltinCategory?
+    @State private var hasChosenCategory = false
+    @State private var path: [Step] = []
 
     init(place: Place? = nil, defaultRadiusMeters: Double = Place.defaultRadiusMeters, onSave: (() -> Void)? = nil) {
         self.place = place
@@ -34,7 +45,7 @@ struct PlaceEditorView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
                 Section {
                     TextField(text: $name, prompt: Text(.placeEditorNamePlaceholder)) {
@@ -68,33 +79,32 @@ struct PlaceEditorView: View {
                 } header: {
                     Text(.placeEditorRadiusLabel)
                 }
-                Section {
-                    Picker(selection: $category) {
-                        ForEach(categories) { candidate in
-                            categoryLabel(candidate)
-                                .tag(Optional(candidate))
+                if place != nil {
+                    Section {
+                        Picker(selection: $category) {
+                            ForEach(categories) { candidate in
+                                categoryLabel(candidate)
+                                    .tag(Optional(candidate))
+                            }
+                            categoryLabel(nil)
+                                .tag(PlaceCategory?.none)
+                        } label: {
+                            Text(.placeEditorCategoryLabel)
                         }
-                        categoryLabel(nil)
-                            .tag(PlaceCategory?.none)
-                    } label: {
+                        .pickerStyle(.inline)
+                        .labelsHidden()
+                        NavigationLink {
+                            CategoriesView()
+                        } label: {
+                            Label(.categoryManage, systemImage: "slider.horizontal.3")
+                        }
+                    } header: {
                         Text(.placeEditorCategoryLabel)
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                    NavigationLink {
-                        CategoriesView()
-                    } label: {
-                        Label(.categoryManage, systemImage: "slider.horizontal.3")
-                    }
-                } header: {
-                    Text(.placeEditorCategoryLabel)
                 }
             }
-            .trackScreen(.placeEditor, parameters: [.mode: EditorMode(editing: place).rawValue])
+            .trackScreen(.placeEditor, parameters: screenParameters)
             .navigationTitle(Text(place == nil ? .placeEditorTitleNew : .placeEditorTitleEdit))
-            .sheet(item: $paywall) { trigger in
-                PaywallView(trigger: trigger)
-            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -103,18 +113,16 @@ struct PlaceEditorView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(.commonSave) {
-                        save()
-                    }
-                    .disabled(!canSave)
-                }
-            }
-            .sheet(isPresented: $isPickingLocation) {
-                PlacePickerMapView(initialCoordinate: coordinate) { picked, suggestedName, pickedFrom in
-                    coordinate = picked
-                    source = pickedFrom
-                    if name.isEmpty, let suggestedName {
-                        name = suggestedName
+                    if place == nil {
+                        Button(.placeEditorNext) {
+                            path.append(.category)
+                        }
+                        .disabled(!canSave)
+                    } else {
+                        Button(.commonSave) {
+                            save()
+                        }
+                        .disabled(!canSave)
                     }
                 }
             }
@@ -123,12 +131,48 @@ struct PlaceEditorView: View {
                     self.category = nil
                 }
             }
+            .navigationDestination(for: Step.self, destination: destination)
             .onAppear {
                 if place == nil {
-                    category = categories.first { $0.builtin == .other }
                     isNameFocused = true
                 }
             }
+        }
+        // Presented from the stack, not from inside it, so pushing the next screens never disturbs the picker.
+        .sheet(isPresented: $isPickingLocation) {
+            PlacePickerMapView(initialCoordinate: coordinate) { picked, suggestedName, pickedFrom, guessed in
+                coordinate = picked
+                source = pickedFrom
+                suggest(guessed)
+                if name.isEmpty, let suggestedName {
+                    name = suggestedName
+                }
+            }
+        }
+        .sheet(item: $paywall) { trigger in
+            PaywallView(trigger: trigger)
+        }
+    }
+
+    @ViewBuilder
+    private func destination(_ step: Step) -> some View {
+        switch step {
+        case .category:
+            PlaceCategoryStep(
+                category: $category,
+                isSuggested: suggestion != nil && !hasChosenCategory,
+                onChoose: { hasChosenCategory = true },
+                onNext: { path.append(.todos) }
+            )
+        case .todos:
+            PlaceTodosStep(
+                placeName: name.trimmingCharacters(in: .whitespaces),
+                category: category,
+                todos: $todos,
+                draft: $todoDraft,
+                remaining: writes.remaining(.openTodos),
+                onSave: save
+            )
         }
     }
 
@@ -157,6 +201,29 @@ struct PlaceEditorView: View {
         .listRowInsets(EdgeInsets())
     }
 
+    private var screenParameters: AnalyticsParameters {
+        let mode = EditorMode(editing: place)
+        if mode == .new {
+            return [.mode: mode.rawValue, .step: "details"]
+        }
+        return [.mode: mode.rawValue]
+    }
+
+    // A new pick guesses again, unless the category was already chosen by hand.
+    private func suggest(_ guessed: BuiltinCategory?) {
+        suggestion = guessed
+        if hasChosenCategory {
+            return
+        }
+        category = categories.first { $0.builtin == guessed && guessed != nil }
+    }
+
+    private var todoTitles: [String] {
+        (todos.map(\.title) + [todoDraft])
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
     private func save() {
         guard let coordinate else {
             return
@@ -175,8 +242,8 @@ struct PlaceEditorView: View {
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
                 radiusMeters: radiusMeters,
-                category: category
-            ), source: source)
+                category: category ?? categories.first { $0.builtin == .other }
+            ), source: source, todoTitles: todoTitles, suggestedCategory: suggestion)
             if let limit {
                 paywall = limit.trigger
                 return

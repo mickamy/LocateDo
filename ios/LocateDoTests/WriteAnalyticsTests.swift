@@ -18,6 +18,8 @@ struct WriteAnalyticsTests {
         #expect(values["place_count"] as? Int == 1)
         #expect(values["category"] as? String == "shopping")
         #expect(values["radius_m"] as? Int == 150)
+        #expect(values["todo_count"] as? Int == 0)
+        #expect(values["suggested_category"] as? String == "none")
         #expect(values["source"] as? String == "search")
         #expect(values["days_since_install"] as? Int == 4)
         #expect(fixture.recorder.userProperties[.placeCount] == "1")
@@ -80,7 +82,62 @@ struct WriteAnalyticsTests {
         #expect(values["open_todo_count"] as? Int == 2)
         #expect(values["place_open_todos"] as? Int == 1)
         #expect(values["assigned"] as? Int == 1)
+        #expect(values["via"] as? String == "todo_editor")
         #expect(fixture.recorder.userProperties[.openTodoCount] == "2")
+    }
+
+    @Test func todosTypedWithANewPlaceFollowIt() throws {
+        let fixture = try Fixture()
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+
+        fixture.writes.add(place, todoTitles: ["Milk", "Eggs"])
+
+        #expect(place.todos.map(\.title).sorted() == ["Eggs", "Milk"])
+        #expect(try fixture.recorder.values(of: .placeAdded)["todo_count"] as? Int == 2)
+        let added = fixture.recorder.events.filter { $0.name == .todoAdded }
+        #expect(added.count == 2)
+        #expect(added.allSatisfy { $0.values["via"] as? String == "place_editor" })
+        #expect(fixture.recorder.names.first == .placeAdded)
+    }
+
+    @Test func aGuessedCategoryIsLoggedBesideTheChosenOne() throws {
+        let fixture = try Fixture()
+        let life = try fixture.builtin(.life)
+
+        fixture.writes.add(
+            Place(name: "Post office", latitude: 35.0, longitude: 139.0, category: life),
+            suggestedCategory: .shopping
+        )
+
+        let values = try fixture.recorder.values(of: .placeAdded)
+        #expect(values["suggested_category"] as? String == "shopping")
+        #expect(values["category"] as? String == "life")
+    }
+
+    @Test func todosTypedWithANewPlaceStopAtTheFreeLimit() throws {
+        let fixture = try Fixture()
+        let other = Place(name: "Pharmacy", latitude: 35.1, longitude: 139.1)
+        fixture.writes.add(other)
+        for index in 0..<(FreeLimit.maxOpenTodos - 1) {
+            fixture.writes.add(Todo(title: "Todo \(index)", place: other))
+        }
+        #expect(fixture.writes.remaining(.openTodos) == 1)
+        let place = Place(name: "Grocery", latitude: 35.0, longitude: 139.0)
+
+        fixture.writes.add(place, todoTitles: ["Milk", "Eggs"])
+
+        #expect(place.todos.map(\.title) == ["Milk"])
+        #expect(try fixture.recorder.values(of: .placeAdded)["todo_count"] as? Int == 1)
+        #expect(fixture.writes.remaining(.openTodos) == 0)
+        #expect(!fixture.recorder.names.contains(.limitReached))
+    }
+
+    @Test func proHasNoRemainingCount() throws {
+        let fixture = try Fixture()
+        fixture.writes.isPro = { true }
+
+        #expect(fixture.writes.remaining(.openTodos) == nil)
+        #expect(fixture.writes.remaining(.places) == nil)
     }
 
     @Test func reopeningOverTheFreeLimitLogsTheLimit() throws {

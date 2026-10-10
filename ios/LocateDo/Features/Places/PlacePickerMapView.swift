@@ -6,7 +6,7 @@ struct PlacePickerMapView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationProvider.self) private var locationProvider
 
-    let onPick: (CLLocationCoordinate2D, String?, PlaceSource) -> Void
+    let onPick: (CLLocationCoordinate2D, String?, PlaceSource, BuiltinCategory?) -> Void
 
     @State private var position: MapCameraPosition
     @State private var query = ""
@@ -29,6 +29,7 @@ struct PlacePickerMapView: View {
         let source: PlaceSource
         var name: String?
         var address: String?
+        var suggestion: BuiltinCategory?
 
         func isAt(_ other: CLLocationCoordinate2D) -> Bool {
             coordinate.latitude == other.latitude && coordinate.longitude == other.longitude
@@ -37,7 +38,7 @@ struct PlacePickerMapView: View {
 
     init(
         initialCoordinate: CLLocationCoordinate2D?,
-        onPick: @escaping (CLLocationCoordinate2D, String?, PlaceSource) -> Void
+        onPick: @escaping (CLLocationCoordinate2D, String?, PlaceSource, BuiltinCategory?) -> Void
     ) {
         self.onPick = onPick
         if let initialCoordinate {
@@ -73,7 +74,7 @@ struct PlacePickerMapView: View {
                 }
                 .onTapGesture { point in
                     if let tapped = proxy.convert(point, from: .local) {
-                        select(tapped, source: .map, name: nil, address: nil)
+                        selectTapped(tapped)
                     }
                 }
             }
@@ -147,7 +148,8 @@ struct PlacePickerMapView: View {
     private var resultList: some View {
         List(results, id: \.self) { item in
             Button {
-                select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress)
+                select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress,
+                       suggestion: CategoryGuess.category(for: item.pointOfInterestCategory))
             } label: {
                 HStack {
                     VStack(alignment: .leading) {
@@ -223,8 +225,55 @@ struct PlacePickerMapView: View {
         }
     }
 
-    private func select(_ coordinate: CLLocationCoordinate2D, source: PlaceSource, name: String?, address: String?) {
-        selection = Selection(coordinate: coordinate, source: source, name: name, address: address)
+    // The picker closes from the sheet's onDismiss so the two presentations
+    // do not dismiss at the same time.
+    private func finishIfConfirmed() {
+        guard let confirmed else {
+            return
+        }
+        onPick(confirmed.coordinate, confirmed.name, confirmed.source, confirmed.suggestion)
+        dismiss()
+    }
+
+    private static func region(around coordinate: CLLocationCoordinate2D) -> MKCoordinateRegion {
+        MKCoordinateRegion(center: coordinate, latitudinalMeters: 600, longitudinalMeters: 600)
+    }
+}
+
+extension PlacePickerMapView {
+    private static let storeTapRadius: CLLocationDistance = 20
+
+    private func selectTapped(_ coordinate: CLLocationCoordinate2D) {
+        select(coordinate, source: .map, name: nil, address: nil)
+        Task {
+            await lookUpStore(at: coordinate)
+        }
+    }
+
+    // A tap on a store's label lands within a few meters of it; the nearest store there names the pick and guesses
+    // its category.
+    private func lookUpStore(at coordinate: CLLocationCoordinate2D) async {
+        let request = MKLocalPointsOfInterestRequest(center: coordinate, radius: Self.storeTapRadius)
+        let items = (try? await MKLocalSearch(request: request).start())?.mapItems ?? []
+        let tapped = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        guard let store = items.min(by: { $0.location.distance(from: tapped) < $1.location.distance(from: tapped) }),
+              var current = selection, current.isAt(coordinate) else {
+            return
+        }
+        current.name = store.name
+        current.suggestion = CategoryGuess.category(for: store.pointOfInterestCategory)
+        selection = current
+    }
+
+    private func select(
+        _ coordinate: CLLocationCoordinate2D,
+        source: PlaceSource,
+        name: String?,
+        address: String?,
+        suggestion: BuiltinCategory? = nil
+    ) {
+        selection = Selection(coordinate: coordinate, source: source, name: name, address: address,
+                              suggestion: suggestion)
         detent = cardDetent
         withAnimation {
             position = .region(Self.region(around: coordinate))
@@ -246,22 +295,6 @@ struct PlacePickerMapView: View {
         selection = current
     }
 
-    // The picker closes from the sheet's onDismiss so the two presentations
-    // do not dismiss at the same time.
-    private func finishIfConfirmed() {
-        guard let confirmed else {
-            return
-        }
-        onPick(confirmed.coordinate, confirmed.name, confirmed.source)
-        dismiss()
-    }
-
-    private static func region(around coordinate: CLLocationCoordinate2D) -> MKCoordinateRegion {
-        MKCoordinateRegion(center: coordinate, latitudinalMeters: 600, longitudinalMeters: 600)
-    }
-}
-
-extension PlacePickerMapView {
     private var searchCenter: CLLocationCoordinate2D? {
         selection?.coordinate ?? locationProvider.location?.coordinate
     }
@@ -293,7 +326,8 @@ extension PlacePickerMapView {
         isSearching = false
         if items.count == 1, let item = items.first {
             results = []
-            select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress)
+            select(item.location.coordinate, source: .search, name: item.name, address: item.address?.shortAddress,
+                   suggestion: CategoryGuess.category(for: item.pointOfInterestCategory))
             return
         }
         show(items)
