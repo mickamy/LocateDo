@@ -155,7 +155,8 @@ private fun NewPlaceTodos(
     onDraftChange: (String) -> Unit,
     onAddDraft: () -> Unit,
 ) {
-    var isTyping by rememberSaveable { mutableStateOf(todos.isEmpty()) }
+    // Text left half-typed when going back comes back open, so it is never hidden yet saved.
+    var isTyping by rememberSaveable { mutableStateOf(todos.isEmpty() || todoDraft.isNotEmpty()) }
     val focusRequester = remember { FocusRequester() }
     todos.forEachIndexed { index, title ->
         ListItem(
